@@ -593,7 +593,7 @@
                 document.getElementById('btn-port2').className = "flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all";
             }
             if(document.getElementById('tab-settings').classList.contains('active')) initSettings();
-            updateDashboard();
+            updateDashboard(); renderMonthlyTiers();
         }
 
         function computeData() {
@@ -877,8 +877,10 @@
                 for (const t of sortedTiers) { if (yr >= t.year) m = t.amount; }
                 return m;
             };
+            // Start from next month — current month is already in progress, not a full invest month
+            const firstMonth = currentMonth + 1; // 0-indexed, so March=2 -> start April=3
             for (let yr = currentYear; yr <= endYear; yr++) {
-                const startM = (yr === currentYear) ? currentMonth : 0;
+                const startM = (yr === currentYear) ? firstMonth : 0;
                 const endM = (yr === endYear) ? endMonth : 11;
                 for (let mo = startM; mo <= endM; mo++) {
                     const monthly = getMonthly(yr);
@@ -1018,7 +1020,7 @@
                 const row = document.createElement('div');
                 row.className = 'goal-tier-row flex items-center gap-1';
                 row.innerHTML = `<input type="number" class="tier-year bg-slate-800 border-none text-white rounded px-1 py-1 w-16 text-xs focus:ring-1 focus:ring-blue-500" value="${tier.year}" onchange="updateGoal()" placeholder="Year">
-                    <input type="text" class="tier-amount bg-slate-800 border-none text-white rounded px-1 py-1 w-24 text-xs focus:ring-1 focus:ring-blue-500" value="${tier.amount.toLocaleString()}" oninput="formatNumberInput(this); updateGoal();" placeholder="Amount">
+                    <input type="text" class="tier-amount bg-slate-800 border-none text-white rounded px-1 py-1 w-24 text-xs focus:ring-1 focus:ring-blue-500" value="${tier.amount.toLocaleString()}" oninput="formatNumberInput(this);" onblur="updateGoal();" placeholder="Amount">
                     ${idx > 0 ? `<button type="button" onclick="removeMonthlyTier(this)" class="text-slate-500 hover:text-red-400 text-xs px-1 transition-colors">✕</button>` : '<span class="w-4"></span>'}`;
                 container.appendChild(row);
             });
@@ -1049,6 +1051,7 @@
                 monthlyTiers: tiers
             };
             saveGoals();
+            renderMonthlyTiers();
             updateDashboard();
         }
 
@@ -1056,7 +1059,6 @@
             document.getElementById('goal-amt-input').value = pState().goal.amount.toLocaleString();
             document.getElementById('goal-year-input').value = pState().goal.year;
             if(document.getElementById('goal-return-input')) document.getElementById('goal-return-input').value = pState().goal.return;
-            renderMonthlyTiers();
             computeData();
             const rate = getActiveRate();
             document.getElementById('header-rate').innerText = rate.toFixed(2);
@@ -1280,7 +1282,7 @@
             document.getElementById('goal-heatmap-container').innerHTML = html;
         }
 
-        window.onload = () => { try { const f1 = localStorage.getItem('flows_port1'); if(f1) state.portfolios.port1.flows = JSON.parse(f1); const f2 = localStorage.getItem('flows_port2'); if(f2) state.portfolios.port2.flows = JSON.parse(f2); const s1 = localStorage.getItem('settings_port1'); if(s1) { const d=JSON.parse(s1); if(d.begBalances) state.portfolios.port1.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port1.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port1.benchmarks=d.benchmarks; } const s2 = localStorage.getItem('settings_port2'); if(s2) { const d=JSON.parse(s2); if(d.begBalances) state.portfolios.port2.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port2.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port2.benchmarks=d.benchmarks; } const g1=localStorage.getItem('goal_port1'); if(g1){const d=JSON.parse(g1); if(d) state.portfolios.port1.goal=Object.assign(state.portfolios.port1.goal,d);} const g2=localStorage.getItem('goal_port2'); if(g2){const d=JSON.parse(g2); if(d) state.portfolios.port2.goal=Object.assign(state.portfolios.port2.goal,d);} } catch(e) {} updateDashboard(); document.getElementById('tx-date').valueAsDate = new Date(); };
+        window.onload = () => { try { const f1 = localStorage.getItem('flows_port1'); if(f1) state.portfolios.port1.flows = JSON.parse(f1); const f2 = localStorage.getItem('flows_port2'); if(f2) state.portfolios.port2.flows = JSON.parse(f2); const s1 = localStorage.getItem('settings_port1'); if(s1) { const d=JSON.parse(s1); if(d.begBalances) state.portfolios.port1.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port1.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port1.benchmarks=d.benchmarks; } const s2 = localStorage.getItem('settings_port2'); if(s2) { const d=JSON.parse(s2); if(d.begBalances) state.portfolios.port2.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port2.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port2.benchmarks=d.benchmarks; } const g1=localStorage.getItem('goal_port1'); if(g1){const d=JSON.parse(g1); if(d) state.portfolios.port1.goal=Object.assign(state.portfolios.port1.goal,d);} const g2=localStorage.getItem('goal_port2'); if(g2){const d=JSON.parse(g2); if(d) state.portfolios.port2.goal=Object.assign(state.portfolios.port2.goal,d);} } catch(e) {} updateDashboard(); renderMonthlyTiers(); document.getElementById('tx-date').valueAsDate = new Date(); };
     </script>
 </body>
 </html>
