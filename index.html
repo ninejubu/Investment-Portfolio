@@ -186,18 +186,22 @@
 
                         <!-- V1 Content -->
                         <div id="goal-view-v1" class="flex flex-col flex-1">
-                            <div class="flex justify-end items-start mb-3">
-                                <div class="text-right flex flex-col items-end">
+                            <div class="flex items-start gap-4 mb-3">
+                                <!-- Left: progress bar + text -->
+                                <div class="flex-1 flex flex-col justify-center">
+                                    <div class="w-full bg-slate-800 rounded-full h-2 mb-2">
+                                        <div id="goal-progress-bar" class="bg-gradient-to-r from-blue-600 to-emerald-400 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400" id="goal-suggestion-text"></p>
+                                </div>
+                                <!-- Right: % + status + badge -->
+                                <div class="text-right flex flex-col items-end flex-shrink-0">
                                     <span class="text-2xl font-bold text-blue-400" id="goal-pct-display">0%</span>
                                     <p class="text-[10px] text-slate-500 uppercase tracking-tighter" id="goal-status-text">In Progress</p>
-                                    <span id="goal-feasibility-badge" class="mt-2 px-2 py-0.5 rounded text-[10px] font-bold"></span>
+                                    <span id="goal-feasibility-badge" class="mt-1 px-2 py-0.5 rounded text-[10px] font-bold"></span>
                                 </div>
                             </div>
-                            <div class="w-full bg-slate-800 rounded-full h-2 mb-2">
-                                <div id="goal-progress-bar" class="bg-gradient-to-r from-blue-600 to-emerald-400 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
-                            </div>
-                            <p class="text-[11px] text-slate-400 text-center" id="goal-suggestion-text"></p>
-                            <div class="h-[100px] mt-4 relative w-full border-t border-slate-700/50 pt-3">
+                            <div class="h-[100px] mt-2 relative w-full border-t border-slate-700/50 pt-3">
                                 <canvas id="goalChart"></canvas>
                             </div>
                         </div>
