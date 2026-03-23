@@ -171,9 +171,12 @@
                                 <span class="text-slate-500">By Year</span>
                                 <input type="number" id="goal-year-input" onchange="updateGoal()" class="bg-slate-800 border-none text-white rounded px-2 py-1 w-20 focus:ring-1 focus:ring-blue-500">
                             </div>
-                            <div class="flex flex-col">
-                                <span class="text-slate-500">Monthly Invest (THB)</span>
-                                <input type="text" id="goal-monthly-input" oninput="formatNumberInput(this); updateGoal();" class="bg-slate-800 border-none text-white rounded px-2 py-1 w-28 focus:ring-1 focus:ring-blue-500">
+                            <div class="flex flex-col gap-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-slate-500">Monthly Invest (THB)</span>
+                                    <button type="button" onclick="addMonthlyTier()" class="w-4 h-4 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center text-[10px] font-bold leading-none transition-colors" title="Add tier">+</button>
+                                </div>
+                                <div id="goal-monthly-tiers" class="flex flex-col gap-1"></div>
                             </div>
                             <div class="flex flex-col">
                                 <span class="text-slate-500">Exp. Return (%)</span>
@@ -515,14 +518,14 @@
             rates: savedRates,
             portfolios: {
                 port1: {
-                    goal: { amount: 10000000, year: 2029, monthly: 20000, return: 12 },
+                    goal: { amount: 10000000, year: 2029, monthly: 20000, return: 12, monthlyTiers: [{year: 2025, amount: 20000}] },
                     begBalances: { stocks: 628474.25, bonds: 1016754.58, crypto: 1679416.42, gold: 85468.76 },
                     endBalances: getEmptyEndBalances(),
                     benchmarks: getEmptyBenchmarks(),
                     flows: []
                 },
                 port2: {
-                    goal: { amount: 10000000, year: 2029, monthly: 20000, return: 12 },
+                    goal: { amount: 10000000, year: 2029, monthly: 20000, return: 12, monthlyTiers: [{year: 2025, amount: 20000}] },
                     begBalances: { stocks: 0, bonds: 0, crypto: 0, gold: 0 },
                     endBalances: getEmptyEndBalances(),
                     benchmarks: getEmptyBenchmarks(),
@@ -852,10 +855,42 @@
             });
         }
 
+        function projectWithTiers(startBal, tiers, goalYear, annualReturn) {
+            // tiers: [{year, amount}] sorted ascending
+            // Returns final projected value, simulating month by month with tier changes
+            const now = new Date();
+            const r = annualReturn / 100 / 12;
+            let bal = startBal;
+            let currentYear = now.getFullYear();
+            let currentMonth = now.getMonth(); // 0-indexed
+            // Build month sequence from now to end of goalYear
+            const endYear = goalYear;
+            const endMonth = 11; // December
+            if (currentYear > endYear) return bal;
+            const sortedTiers = [...tiers].sort((a, b) => a.year - b.year);
+            const getMonthly = (yr) => {
+                let m = sortedTiers[0]?.amount || 0;
+                for (const t of sortedTiers) { if (yr >= t.year) m = t.amount; }
+                return m;
+            };
+            for (let yr = currentYear; yr <= endYear; yr++) {
+                const startM = (yr === currentYear) ? currentMonth : 0;
+                const endM = (yr === endYear) ? endMonth : 11;
+                for (let mo = startM; mo <= endM; mo++) {
+                    const monthly = getMonthly(yr);
+                    if (r === 0) { bal += monthly; }
+                    else { bal = bal * (1 + r) + monthly; }
+                }
+            }
+            return bal;
+        }
+
         function updateGoalCalculation() {
             const goalAmt = pState().goal.amount;
             const goalYear = pState().goal.year;
-            const monthlyInvest = pState().goal.monthly;
+            const tiers = (pState().goal.monthlyTiers && pState().goal.monthlyTiers.length > 0)
+                ? pState().goal.monthlyTiers
+                : [{ year: new Date().getFullYear(), amount: pState().goal.monthly || 0 }];
             const annualReturn = pState().goal.return;
             const currentBal = state.computed.portfolio.currentBal || 0;
             const now = new Date();
@@ -866,16 +901,12 @@
             let requiredMonthly = 0;
             let isAchievable = false;
             if (totalRemainingMonths > 0) {
+                futureValue = projectWithTiers(currentBal, tiers, goalYear, annualReturn);
+                // requiredMonthly (flat) for suggestion
                 const r = annualReturn / 100 / 12;
                 const n = totalRemainingMonths;
-                if (r === 0) {
-                    futureValue = currentBal + (monthlyInvest * n);
-                    requiredMonthly = Math.max(0, (goalAmt - currentBal) / n);
-                } else {
-                    futureValue = currentBal * Math.pow(1 + r, n) + monthlyInvest * ((Math.pow(1 + r, n) - 1) / r);
-                    const fvCurrent = currentBal * Math.pow(1 + r, n);
-                    requiredMonthly = goalAmt > fvCurrent ? (goalAmt - fvCurrent) * r / (Math.pow(1 + r, n) - 1) : 0;
-                }
+                if (r === 0) { requiredMonthly = Math.max(0, (goalAmt - currentBal) / n); }
+                else { const fvC = currentBal * Math.pow(1+r,n); requiredMonthly = goalAmt > fvC ? (goalAmt - fvC) * r / (Math.pow(1+r,n) - 1) : 0; }
                 isAchievable = futureValue >= goalAmt;
             } else { isAchievable = currentBal >= goalAmt; }
             const goalPct = goalAmt > 0 ? (currentBal / goalAmt) * 100 : 0;
@@ -898,10 +929,10 @@
                 text.innerHTML = `Projected: <span class="text-white font-medium">฿${futureValue.toLocaleString(undefined, {maximumFractionDigits:0})}</span> (Short by ฿${diff.toLocaleString(undefined, {maximumFractionDigits:0})})<br>
                 <span class="text-[10px] text-blue-400 mt-1 inline-block">Suggestion: Increase monthly to <span class="font-bold">฿${requiredMonthly.toLocaleString(undefined, {maximumFractionDigits:0})}</span></span>`;
             }
-            renderGoalChart(goalAmt, totalRemainingMonths, currentBal, monthlyInvest, annualReturn);
+            renderGoalChart(goalAmt, totalRemainingMonths, currentBal, tiers[0]?.amount || 0, annualReturn, tiers, goalYear);
         }
 
-        function renderGoalChart(target, months, currentBal, userMonthly, userReturn) {
+        function renderGoalChart(target, months, currentBal, userMonthly, userReturn, tiers, goalYear) {
             const ctx = document.getElementById('goalChart');
             if (!ctx) return;
             let dataPoints = [];
@@ -917,29 +948,45 @@
                 }
                 dataPoints.push({x: rPct, y: Math.max(0, reqM)});
             }
+            // Projected value line using tiers across return range
+            let projPoints = [];
+            if (tiers && tiers.length > 0 && goalYear) {
+                for (let rPct = 0; rPct <= 20; rPct += 1) {
+                    const proj = projectWithTiers(currentBal, tiers, goalYear, rPct);
+                    projPoints.push({x: rPct, y: proj});
+                }
+            }
+            // Current plan dot: use weighted average monthly for display
+            const avgMonthly = tiers && tiers.length > 0 ? tiers.reduce((s,t)=>s+t.amount,0)/tiers.length : userMonthly;
             if (window.goalChartInstance) window.goalChartInstance.destroy();
+            const datasets = [
+                { label: 'Required Monthly', data: dataPoints, borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.4, pointRadius: 2, pointHitRadius: 10, hoverRadius: 5, yAxisID: 'y' },
+                { label: 'Your Plan', data: [{x: userReturn, y: avgMonthly}], backgroundColor: '#F59E0B', borderColor: '#fff', pointRadius: 6, hoverRadius: 8, type: 'scatter', yAxisID: 'y' }
+            ];
+            if (projPoints.length > 0) {
+                datasets.push({ label: 'Projected Value', data: projPoints, borderColor: '#10B981', backgroundColor: 'rgba(16,185,129,0.05)', fill: false, tension: 0.4, pointRadius: 1, pointHitRadius: 8, hoverRadius: 4, yAxisID: 'y2', borderDash: [4,3] });
+            }
             window.goalChartInstance = new Chart(ctx.getContext('2d'), {
                 type: 'line',
-                data: {
-                    datasets: [{ label: 'Required Monthly', data: dataPoints, borderColor: '#3B82F6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4, pointRadius: 2, pointHitRadius: 10, hoverRadius: 5 },
-                    { label: 'Current Plan', data: [{x: userReturn, y: userMonthly}], backgroundColor: '#F59E0B', borderColor: '#fff', pointRadius: 6, hoverRadius: 8, type: 'scatter' }]
-                },
+                data: { datasets },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
                     scales: {
                         x: { type: 'linear', title: { display: true, text: 'Expected Return (%)', font: {size: 9} }, ticks: { font: {size: 9}, stepSize: 1 } },
-                        y: { ticks: { font: {size: 9}, callback: v => (v/1000).toFixed(0) + 'k' } }
+                        y: { position: 'left', ticks: { font: {size: 9}, callback: v => (v/1000).toFixed(0) + 'k' } },
+                        y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { font: {size: 9}, callback: v => v >= 1000000 ? (v/1000000).toFixed(1)+'M' : (v/1000).toFixed(0)+'k' } }
                     },
                     plugins: { 
                         legend: { display: false }, 
                         datalabels: { display: false },
                         tooltip: {
-                            enabled: true,
-                            position: 'nearest',
+                            enabled: true, position: 'nearest',
                             callbacks: {
                                 title: (items) => `Expected Return: ${items[0].parsed.x}%`,
-                                label: (item) => `${item.dataset.label}: ฿${item.parsed.y.toLocaleString(undefined, {maximumFractionDigits: 0})}`
+                                label: (item) => item.dataset.yAxisID === 'y2'
+                                    ? `${item.dataset.label}: ฿${item.parsed.y.toLocaleString(undefined,{maximumFractionDigits:0})}`
+                                    : `${item.dataset.label}: ฿${item.parsed.y.toLocaleString(undefined,{maximumFractionDigits:0})}`
                             }
                         }
                     }
@@ -947,21 +994,65 @@
             });
         }
 
+        function getGoalTiers() {
+            const tiers = [];
+            document.querySelectorAll('.goal-tier-row').forEach(row => {
+                const yr = parseInt(row.querySelector('.tier-year').value);
+                const amt = getRawValue(row.querySelector('.tier-amount').value);
+                if (!isNaN(yr) && amt > 0) tiers.push({ year: yr, amount: amt });
+            });
+            tiers.sort((a, b) => a.year - b.year);
+            return tiers.length > 0 ? tiers : [{ year: new Date().getFullYear(), amount: 0 }];
+        }
+
+        function renderMonthlyTiers() {
+            const container = document.getElementById('goal-monthly-tiers');
+            if (!container) return;
+            const tiers = pState().goal.monthlyTiers || [{ year: new Date().getFullYear(), amount: pState().goal.monthly || 0 }];
+            container.innerHTML = '';
+            tiers.forEach((tier, idx) => {
+                const row = document.createElement('div');
+                row.className = 'goal-tier-row flex items-center gap-1';
+                row.innerHTML = `<input type="number" class="tier-year bg-slate-800 border-none text-white rounded px-1 py-1 w-16 text-xs focus:ring-1 focus:ring-blue-500" value="${tier.year}" onchange="updateGoal()" placeholder="Year">
+                    <input type="text" class="tier-amount bg-slate-800 border-none text-white rounded px-1 py-1 w-24 text-xs focus:ring-1 focus:ring-blue-500" value="${tier.amount.toLocaleString()}" oninput="formatNumberInput(this); updateGoal();" placeholder="Amount">
+                    ${idx > 0 ? `<button type="button" onclick="removeMonthlyTier(this)" class="text-slate-500 hover:text-red-400 text-xs px-1 transition-colors">✕</button>` : '<span class="w-4"></span>'}`;
+                container.appendChild(row);
+            });
+        }
+
+        function addMonthlyTier() {
+            const tiers = getGoalTiers();
+            const lastYear = tiers.length > 0 ? tiers[tiers.length - 1].year : new Date().getFullYear();
+            const lastAmt = tiers.length > 0 ? tiers[tiers.length - 1].amount : 0;
+            pState().goal.monthlyTiers = [...tiers, { year: lastYear + 1, amount: lastAmt }];
+            renderMonthlyTiers();
+        }
+
+        function removeMonthlyTier(btn) {
+            const row = btn.closest('.goal-tier-row');
+            row.remove();
+            pState().goal.monthlyTiers = getGoalTiers();
+            updateDashboard();
+        }
+
         function updateGoal() {
+            const tiers = getGoalTiers();
             pState().goal = { 
                 amount: getRawValue(document.getElementById('goal-amt-input').value), 
                 year: parseInt(document.getElementById('goal-year-input').value), 
-                monthly: getRawValue(document.getElementById('goal-monthly-input')?.value || 0), 
-                return: parseFloat(document.getElementById('goal-return-input')?.value || 0) 
+                monthly: tiers[0]?.amount || 0,
+                return: parseFloat(document.getElementById('goal-return-input')?.value || 0),
+                monthlyTiers: tiers
             };
+            saveGoals();
             updateDashboard();
         }
 
         function updateDashboard() {
             document.getElementById('goal-amt-input').value = pState().goal.amount.toLocaleString();
             document.getElementById('goal-year-input').value = pState().goal.year;
-            if(document.getElementById('goal-monthly-input')) document.getElementById('goal-monthly-input').value = pState().goal.monthly.toLocaleString();
             if(document.getElementById('goal-return-input')) document.getElementById('goal-return-input').value = pState().goal.return;
+            renderMonthlyTiers();
             computeData();
             const rate = getActiveRate();
             document.getElementById('header-rate').innerText = rate.toFixed(2);
@@ -1021,6 +1112,7 @@
 
         function onTxAssetChange(val) { const row = document.getElementById('tx-currency-row'); if (val === 'crypto') { row.style.display = ''; } else { row.style.display = 'none'; document.querySelector('input[name="txCurrency"][value="THB"]').checked = true; } }
         function saveFlows() { localStorage.setItem('flows_port1', JSON.stringify(state.portfolios.port1.flows)); localStorage.setItem('flows_port2', JSON.stringify(state.portfolios.port2.flows)); }
+        function saveGoals() { localStorage.setItem('goal_port1', JSON.stringify(state.portfolios.port1.goal)); localStorage.setItem('goal_port2', JSON.stringify(state.portfolios.port2.goal)); }
         function deleteTxById(id) { pState().flows = pState().flows.filter(f => f.id !== id); saveFlows(); updateDashboard(); }
         function handleManualTx(e) { e.preventDefault(); const asset = document.getElementById('tx-asset').value; const currencyEl = document.querySelector('input[name="txCurrency"]:checked'); const currency = (asset === 'crypto' && currencyEl) ? currencyEl.value : 'THB'; pState().flows.push({ id: Date.now(), date: document.getElementById('tx-date').value, asset: asset, type: document.querySelector('input[name="txType"]:checked').value, amount: getRawValue(document.getElementById('tx-amount').value), memo: document.getElementById('tx-memo').value, currency: currency }); saveFlows(); updateDashboard(); e.target.reset(); document.getElementById('tx-date').valueAsDate = new Date(); document.getElementById('tx-currency-row').style.display = 'none'; }
         
@@ -1118,6 +1210,8 @@
             localStorage.setItem('exchangeRateDefaults', JSON.stringify(state.rates));
             localStorage.setItem('settings_port1', JSON.stringify({ begBalances: state.portfolios.port1.begBalances, endBalances: state.portfolios.port1.endBalances, benchmarks: state.portfolios.port1.benchmarks }));
             localStorage.setItem('settings_port2', JSON.stringify({ begBalances: state.portfolios.port2.begBalances, endBalances: state.portfolios.port2.endBalances, benchmarks: state.portfolios.port2.benchmarks }));
+            localStorage.setItem('goal_port1', JSON.stringify(state.portfolios.port1.goal));
+            localStorage.setItem('goal_port2', JSON.stringify(state.portfolios.port2.goal));
             updateDashboard(); alert(`Applied successfully!`);
         }
 
@@ -1145,7 +1239,7 @@
         function renderGoalHeatmap() {
             const goalAmt = getRawValue(document.getElementById('goal-amt-input').value) || 0;
             const goalYear = parseInt(document.getElementById('goal-year-input').value) || 2030;
-            const currentMonthly = getRawValue(document.getElementById('goal-monthly-input').value) || 0;
+            const currentMonthly = (pState().goal.monthlyTiers && pState().goal.monthlyTiers.length > 0) ? pState().goal.monthlyTiers[0].amount : (pState().goal.monthly || 0);
             const currentReturn = parseFloat(document.getElementById('goal-return-input').value) || 0;
             const currentBal = state.computed.portfolio.currentBal || 0;
             const now = new Date();
@@ -1182,7 +1276,7 @@
             document.getElementById('goal-heatmap-container').innerHTML = html;
         }
 
-        window.onload = () => { try { const f1 = localStorage.getItem('flows_port1'); if(f1) state.portfolios.port1.flows = JSON.parse(f1); const f2 = localStorage.getItem('flows_port2'); if(f2) state.portfolios.port2.flows = JSON.parse(f2); const s1 = localStorage.getItem('settings_port1'); if(s1) { const d=JSON.parse(s1); if(d.begBalances) state.portfolios.port1.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port1.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port1.benchmarks=d.benchmarks; } const s2 = localStorage.getItem('settings_port2'); if(s2) { const d=JSON.parse(s2); if(d.begBalances) state.portfolios.port2.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port2.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port2.benchmarks=d.benchmarks; } } catch(e) {} updateDashboard(); document.getElementById('tx-date').valueAsDate = new Date(); };
+        window.onload = () => { try { const f1 = localStorage.getItem('flows_port1'); if(f1) state.portfolios.port1.flows = JSON.parse(f1); const f2 = localStorage.getItem('flows_port2'); if(f2) state.portfolios.port2.flows = JSON.parse(f2); const s1 = localStorage.getItem('settings_port1'); if(s1) { const d=JSON.parse(s1); if(d.begBalances) state.portfolios.port1.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port1.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port1.benchmarks=d.benchmarks; } const s2 = localStorage.getItem('settings_port2'); if(s2) { const d=JSON.parse(s2); if(d.begBalances) state.portfolios.port2.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port2.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port2.benchmarks=d.benchmarks; } const g1=localStorage.getItem('goal_port1'); if(g1){const d=JSON.parse(g1); if(d) state.portfolios.port1.goal=Object.assign(state.portfolios.port1.goal,d);} const g2=localStorage.getItem('goal_port2'); if(g2){const d=JSON.parse(g2); if(d) state.portfolios.port2.goal=Object.assign(state.portfolios.port2.goal,d);} } catch(e) {} updateDashboard(); document.getElementById('tx-date').valueAsDate = new Date(); };
     </script>
 </body>
 </html>
