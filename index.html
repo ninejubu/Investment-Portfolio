@@ -179,7 +179,11 @@
                                 <div id="goal-monthly-tiers" class="flex flex-col gap-1"></div>
                             </div>
                             <div class="flex flex-col">
-                                <span class="text-slate-500">Exp. Return (%)</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-slate-500">Exp. Return (%)</span>
+                                    <span class="text-slate-600 text-[10px]">/ Breakeven:</span>
+                                    <span id="goal-breakeven-display" class="font-bold text-xs">—</span>
+                                </div>
                                 <input type="number" id="goal-return-input" onchange="updateGoal()" class="bg-slate-800 border-none text-white rounded px-2 py-1 w-20 focus:ring-1 focus:ring-blue-500" step="0.1">
                             </div>
                         </div>
@@ -374,7 +378,7 @@
                                         <option value="gold">Gold</option>
                                     </select>
                                 </div>
-                                <div id="tx-currency-row" style="display:none;">
+                                <div id="tx-currency-row">
                                     <label class="text-[10px] text-slate-500 uppercase block mb-1">Currency</label>
                                     <div class="flex gap-2">
                                         <label class="flex-1 cursor-pointer">
@@ -416,27 +420,55 @@
                             </div>
                         </div>
                     </div>
-                    <div class="lg:col-span-2 bg-card p-6 rounded-xl border border-slate-700">
-                        <div class="flex justify-between items-center mb-4">
-                            <h4 class="text-white font-bold">Transaction Ledger</h4>
-                            <div class="flex gap-4">
-                                <p class="text-[10px] text-slate-500 italic mt-1 self-center">*Click on cells to edit</p>
-                                <button onclick="clearLedger()" class="text-red-500 hover:text-red-400 text-xs"><i class="fa-solid fa-trash-can"></i> Clear All</button>
+                    <div class="lg:col-span-2 bg-card rounded-xl border border-slate-700 flex flex-col" style="max-height: 720px;">
+                        <!-- Ledger Header -->
+                        <div class="px-6 py-4 border-b border-slate-700/60 flex justify-between items-center flex-shrink-0">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-blue-600/15 flex items-center justify-center">
+                                    <i class="fa-solid fa-list-ul text-blue-400 text-xs"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-white font-bold text-sm">Transaction Ledger</h4>
+                                    <p class="text-[10px] text-slate-500" id="tx-count-label">0 transactions</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] text-slate-600 italic hidden sm:block">Click cells to edit</span>
+                                <button onclick="clearLedger()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] text-red-400 border border-red-500/20 hover:bg-red-500/10 transition-colors">
+                                    <i class="fa-solid fa-trash-can text-[10px]"></i> Clear All
+                                </button>
                             </div>
                         </div>
-                        <div class="overflow-y-auto max-h-[600px] hide-scrollbar">
-                            <table class="w-full text-left">
-                                <thead class="text-[10px] uppercase text-slate-500 sticky top-0 bg-card">
-                                    <tr class="border-b border-slate-800">
-                                        <th class="py-3">Date</th>
-                                        <th class="py-3">Asset</th>
-                                        <th class="py-3">Type</th>
-                                        <th class="py-3 text-right">Amount</th>
-                                        <th class="py-3 text-right">Action</th>
+                        <!-- Ledger Table -->
+                        <div class="overflow-y-auto hide-scrollbar flex-1">
+                            <table class="w-full text-left border-collapse" style="table-layout:fixed;">
+                                <colgroup>
+                                    <col style="width:110px;">
+                                    <col style="width:100px;">
+                                    <col style="width:108px;">
+                                    <col style="width:56px;">
+                                    <col style="width:130px;">
+                                    <col style="width:40px;">
+                                </colgroup>
+                                <thead class="text-[10px] uppercase text-slate-500 sticky top-0 z-10" style="background:#1E293B;">
+                                    <tr>
+                                        <th class="px-4 py-3 font-semibold tracking-wide">Date</th>
+                                        <th class="px-2 py-3 font-semibold tracking-wide">Asset</th>
+                                        <th class="px-2 py-3 font-semibold tracking-wide">Type</th>
+                                        <th class="px-2 py-3 font-semibold tracking-wide">Cur</th>
+                                        <th class="px-2 py-3 font-semibold tracking-wide text-right">Amount</th>
+                                        <th class="px-4 py-3 font-semibold tracking-wide text-right">Del</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tx-tbody" class="text-xs"></tbody>
                             </table>
+                            <div id="tx-empty-state" class="hidden flex-col items-center justify-center py-16 text-center">
+                                <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mb-3 mx-auto">
+                                    <i class="fa-solid fa-inbox text-slate-600 text-lg"></i>
+                                </div>
+                                <p class="text-slate-500 text-sm font-medium">No transactions yet</p>
+                                <p class="text-slate-600 text-xs mt-1">Add a transaction or import a CSV file</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -522,14 +554,14 @@
             rates: savedRates,
             portfolios: {
                 port1: {
-                    goal: { amount: 10000000, year: 2029, monthly: 20000, return: 12, monthlyTiers: [{year: 2025, amount: 20000}] },
+                    goal: { amount: 10000000, year: 2031, monthly: 20000, return: 12, monthlyTiers: [{year: 2026, amount: 20000},{year: 2028, amount: 36000}] },
                     begBalances: { stocks: 628474.25, bonds: 1016754.58, crypto: 1679416.42, gold: 85468.76 },
                     endBalances: getEmptyEndBalances(),
                     benchmarks: getEmptyBenchmarks(),
                     flows: []
                 },
                 port2: {
-                    goal: { amount: 10000000, year: 2029, monthly: 20000, return: 12, monthlyTiers: [{year: 2025, amount: 20000}] },
+                    goal: { amount: 10000000, year: 2031, monthly: 20000, return: 12, monthlyTiers: [{year: 2026, amount: 20000},{year: 2028, amount: 36000}] },
                     begBalances: { stocks: 0, bonds: 0, crypto: 0, gold: 0 },
                     endBalances: getEmptyEndBalances(),
                     benchmarks: getEmptyBenchmarks(),
@@ -609,7 +641,7 @@
                     let netFlow = 0;
                     pState().flows.filter(tx => tx.asset === asset && getQuarterByDate(tx.date) === q).forEach(tx => {
                         let amt = tx.amount;
-                        if (asset === 'crypto' && tx.currency === 'USD') {
+                        if (tx.currency === 'USD') {
                             const rate = state.rates['q' + q] || state.rates.beginning || 31.07;
                             amt = tx.amount * parseFloat(rate);
                         }
@@ -935,6 +967,24 @@
                 text.innerHTML = `Projected: <span class="text-white font-medium">฿${futureValue.toLocaleString(undefined, {maximumFractionDigits:0})}</span> (Short by ฿${diff.toLocaleString(undefined, {maximumFractionDigits:0})})<br>
                 <span class="text-[10px] text-blue-400 mt-1 inline-block">Suggestion: Increase monthly to <span class="font-bold">฿${requiredMonthly.toLocaleString(undefined, {maximumFractionDigits:0})}</span></span>`;
             }
+            // Breakeven return: binary search for minimum annual return % to hit goal
+            const beEl = document.getElementById('goal-breakeven-display');
+            if (beEl && goalAmt > 0 && totalRemainingMonths > 0) {
+                if (projectWithTiers(currentBal, tiers, goalYear, 0) >= goalAmt) {
+                    beEl.innerHTML = '<span style="color:#34D399;">0.0%</span>';
+                } else if (projectWithTiers(currentBal, tiers, goalYear, 100) < goalAmt) {
+                    beEl.innerHTML = '<span style="color:#F87171;">&gt;100%</span>';
+                } else {
+                    let lo = 0, hi = 100;
+                    for (let i = 0; i < 40; i++) {
+                        const mid = (lo + hi) / 2;
+                        projectWithTiers(currentBal, tiers, goalYear, mid) >= goalAmt ? hi = mid : lo = mid;
+                    }
+                    const be = ((lo + hi) / 2);
+                    const beColor = be <= annualReturn ? '#34D399' : '#F87171';
+                    beEl.innerHTML = `<span style="color:${beColor};font-weight:700;">${be.toFixed(1)}%</span>`;
+                }
+            } else if (beEl) { beEl.innerHTML = '—'; }
             renderGoalChart(goalAmt, totalRemainingMonths, currentBal, tiers[0]?.amount || 0, annualReturn, tiers, goalYear);
         }
 
@@ -1105,22 +1155,76 @@
         }
 
         function renderLedger() {
-            const tbody = document.getElementById('tx-tbody'); tbody.innerHTML = '';
-            pState().flows.slice().sort((a,b) => new Date(b.date) - new Date(a.date)).forEach((tx) => {
-                const cur = tx.asset === 'crypto' ? (tx.currency || 'THB') : 'THB';
-                const amountDisplay = (tx.type === 'withdraw' ? `-${tx.amount.toLocaleString()}` : tx.amount.toLocaleString());
-                const currencyCell = tx.asset === 'crypto'
-                    ? `<select onchange="updateTx(${tx.id}, 'currency', this.value)" class="edit-input ${cur === 'USD' ? 'text-yellow-400' : 'text-blue-300'}"><option value="THB" ${cur === 'THB' ? 'selected' : ''}>THB</option><option value="USD" ${cur === 'USD' ? 'selected' : ''}>USD</option></select>`
-                    : `<span class="text-slate-500 text-[10px]">THB</span>`;
-                tbody.innerHTML += `<tr class="border-b border-slate-800 hover:bg-slate-800/20 group"><td class="py-2 pr-2"><input type="date" value="${tx.date}" onchange="updateTx(${tx.id}, 'date', this.value)" class="edit-input"></td><td class="py-2 pr-2"><select onchange="updateTx(${tx.id}, 'asset', this.value)" class="edit-input"><option value="stocks" ${tx.asset === 'stocks' ? 'selected' : ''}>Stocks</option><option value="bonds" ${tx.asset === 'bonds' ? 'selected' : ''}>Bonds</option><option value="crypto" ${tx.asset === 'crypto' ? 'selected' : ''}>Crypto</option><option value="gold" ${tx.asset === 'gold' ? 'selected' : ''}>Gold</option></select></td><td class="py-2 pr-2"><select onchange="updateTx(${tx.id}, 'type', this.value)" class="edit-input ${tx.type === 'deposit' ? 'text-green-400' : 'text-red-400'}"><option value="deposit" ${tx.type === 'deposit' ? 'selected' : ''}>Deposit</option><option value="withdraw" ${tx.type === 'withdraw' ? 'selected' : ''}>Withdraw</option></select></td><td class="py-2 pr-2">${currencyCell}</td><td class="py-2 text-right"><input type="text" value="${amountDisplay}" onblur="updateTx(${tx.id}, 'amount', this.value)" class="edit-input text-right font-bold ${tx.type === 'withdraw' ? 'text-red-400' : 'text-white'}" onfocus="this.value = this.value.replace(/,/g, '')"></td><td class="py-2 text-right"><button onclick="deleteTxById(${tx.id})" class="text-slate-600 hover:text-red-500 ml-4"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
+            const tbody = document.getElementById('tx-tbody');
+            const emptyState = document.getElementById('tx-empty-state');
+            const countLabel = document.getElementById('tx-count-label');
+            tbody.innerHTML = '';
+            const flows = pState().flows.slice().sort((a,b) => new Date(b.date) - new Date(a.date));
+            if (countLabel) countLabel.innerText = flows.length + ' transaction' + (flows.length !== 1 ? 's' : '');
+            if (emptyState) emptyState.classList.toggle('hidden', flows.length > 0);
+            const assetMeta = {
+                stocks: { dot: '#10B981' },
+                bonds:  { dot: '#F59E0B' },
+                crypto: { dot: '#3B82F6' },
+                gold:   { dot: '#FACC15' }
+            };
+            const fmtAmt = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            flows.forEach((tx, i) => {
+                const cur = tx.currency || 'THB';
+                const isDeposit = tx.type === 'deposit';
+                const amountDisplay = (isDeposit ? '' : '-') + fmtAmt(tx.amount);
+                const meta = assetMeta[tx.asset] || { dot: '#64748b' };
+                const rowBg = i % 2 === 0 ? 'rgba(15,23,42,0.0)' : 'rgba(15,23,42,0.22)';
+                // Currency cell: fixed-width container so THB text & USD dropdown occupy same space
+                const currencyCell = `<div style="width:40px;"><select onchange="updateTx(${tx.id},'currency',this.value)" style="background:transparent;border:none;color:${cur==='USD'?'#FCD34D':'#93C5FD'};font-size:10px;padding:0;cursor:pointer;outline:none;width:40px;"><option value="THB" ${cur==='THB'?'selected':''}>THB</option><option value="USD" ${cur==='USD'?'selected':''}>USD</option></select></div>`;
+                tbody.innerHTML += `
+                <tr style="background:${rowBg};transition:background 0.15s;" onmouseover="this.style.background='rgba(59,130,246,0.06)'" onmouseout="this.style.background='${rowBg}'">
+                    <td style="padding:8px 8px 8px 16px;vertical-align:middle;overflow:hidden;">
+                        <input type="date" value="${tx.date}" onchange="updateTx(${tx.id},'date',this.value)"
+                            style="background:transparent;border:none;color:#94A3B8;font-size:11px;padding:0;outline:none;cursor:pointer;width:98px;display:block;">
+                    </td>
+                    <td style="padding:8px;vertical-align:middle;overflow:hidden;">
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span style="width:6px;height:6px;border-radius:50%;background:${meta.dot};flex-shrink:0;"></span>
+                            <select onchange="updateTx(${tx.id},'asset',this.value)"
+                                style="background:transparent;border:none;color:#CBD5E1;font-size:11px;padding:0;outline:none;cursor:pointer;max-width:80px;">
+                                <option value="stocks" ${tx.asset==='stocks'?'selected':''}>Stocks</option>
+                                <option value="bonds"  ${tx.asset==='bonds' ?'selected':''}>Bonds</option>
+                                <option value="crypto" ${tx.asset==='crypto'?'selected':''}>Crypto</option>
+                                <option value="gold"   ${tx.asset==='gold'  ?'selected':''}>Gold</option>
+                            </select>
+                        </div>
+                    </td>
+                    <td style="padding:8px;vertical-align:middle;overflow:hidden;">
+                        <select onchange="updateTx(${tx.id},'type',this.value)"
+                            style="background:transparent;border:none;color:${isDeposit?'#34D399':'#F87171'};font-size:11px;padding:0;outline:none;cursor:pointer;font-weight:500;width:96px;">
+                            <option value="deposit"  ${isDeposit ?'selected':''}>Deposit</option>
+                            <option value="withdraw" ${!isDeposit?'selected':''}>Withdraw</option>
+                        </select>
+                    </td>
+                    <td style="padding:8px;vertical-align:middle;overflow:hidden;">${currencyCell}</td>
+                    <td style="padding:8px;vertical-align:middle;overflow:hidden;text-align:right;">
+                        <input type="text" value="${amountDisplay}"
+                            onblur="updateTx(${tx.id},'amount',this.value)"
+                            onfocus="this.value=this.value.replace(/,/g,'')"
+                            style="background:transparent;border:none;color:${isDeposit?'#F8FAFC':'#F87171'};font-size:11px;font-weight:600;text-align:right;padding:0;outline:none;width:100%;display:block;">
+                    </td>
+                    <td style="padding:8px 16px 8px 4px;vertical-align:middle;text-align:right;">
+                        <button onclick="deleteTxById(${tx.id})"
+                            style="color:#334155;transition:color 0.15s;"
+                            onmouseover="this.style.color='#EF4444'" onmouseout="this.style.color='#334155'">
+                            <i class="fa-solid fa-trash-can" style="font-size:11px;"></i>
+                        </button>
+                    </td>
+                </tr>`;
             });
         }
 
-        function onTxAssetChange(val) { const row = document.getElementById('tx-currency-row'); if (val === 'crypto') { row.style.display = ''; } else { row.style.display = 'none'; document.querySelector('input[name="txCurrency"][value="THB"]').checked = true; } }
+        function onTxAssetChange(val) { /* currency available for all assets */ }
         function saveFlows() { localStorage.setItem('flows_port1', JSON.stringify(state.portfolios.port1.flows)); localStorage.setItem('flows_port2', JSON.stringify(state.portfolios.port2.flows)); }
         function saveGoals() { localStorage.setItem('goal_port1', JSON.stringify(state.portfolios.port1.goal)); localStorage.setItem('goal_port2', JSON.stringify(state.portfolios.port2.goal)); }
         function deleteTxById(id) { pState().flows = pState().flows.filter(f => f.id !== id); saveFlows(); updateDashboard(); }
-        function handleManualTx(e) { e.preventDefault(); const asset = document.getElementById('tx-asset').value; const currencyEl = document.querySelector('input[name="txCurrency"]:checked'); const currency = (asset === 'crypto' && currencyEl) ? currencyEl.value : 'THB'; pState().flows.push({ id: Date.now(), date: document.getElementById('tx-date').value, asset: asset, type: document.querySelector('input[name="txType"]:checked').value, amount: getRawValue(document.getElementById('tx-amount').value), memo: document.getElementById('tx-memo').value, currency: currency }); saveFlows(); updateDashboard(); e.target.reset(); document.getElementById('tx-date').valueAsDate = new Date(); document.getElementById('tx-currency-row').style.display = 'none'; }
+        function handleManualTx(e) { e.preventDefault(); const asset = document.getElementById('tx-asset').value; const currencyEl = document.querySelector('input[name="txCurrency"]:checked'); const currency = currencyEl ? currencyEl.value : 'THB'; pState().flows.push({ id: Date.now(), date: document.getElementById('tx-date').value, asset: asset, type: document.querySelector('input[name="txType"]:checked').value, amount: getRawValue(document.getElementById('tx-amount').value), memo: document.getElementById('tx-memo').value, currency: currency }); saveFlows(); updateDashboard(); e.target.reset(); document.getElementById('tx-date').valueAsDate = new Date(); document.querySelector('input[name="txCurrency"][value="THB"]').checked = true; }
         
         // แก้ไขฟังก์ชัน handleImport เพื่อดึงวันที่มาใช้งานด้วย
         function handleImport(input) { 
