@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Investment Portfolio Pro 2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -99,12 +99,69 @@
         .asset-row {
             background-color: rgba(30, 41, 59, 0.4);
         }
+
+        /* ── Desktop sidebar ── */
+        #app-body { height: 100vh; overflow: hidden; }
+        #sidebar { width: 256px; flex-shrink: 0; border-right: 1px solid #334155; }
+        #sidebar .sidebar-header { display: block; }
+        #sidebar-nav { display: flex; flex-direction: column; padding: 1rem; gap: 0.5rem; }
+        #app-main { flex: 1; overflow-y: auto; }
+
+        /* ── Mobile / tablet (≤1023px) ── */
+        @media (max-width: 1023px) {
+            #app-body { flex-direction: column; height: 100dvh; }
+
+            /* Sidebar becomes a top bar */
+            #sidebar {
+                width: 100%;
+                flex-direction: row;
+                align-items: center;
+                border-right: none;
+                border-bottom: 1px solid #334155;
+                flex-shrink: 0;
+                overflow: hidden;
+            }
+            #sidebar .sidebar-header { display: none; }
+
+            /* Nav becomes horizontal icon bar */
+            #sidebar-nav {
+                flex-direction: row;
+                flex: 1;
+                padding: 0.5rem 1rem;
+                gap: 0.25rem;
+                align-items: center;
+            }
+            #sidebar-nav .nav-btn {
+                flex: 1;
+                flex-direction: column;
+                gap: 2px;
+                padding: 0.4rem 0.25rem;
+                font-size: 10px;
+                align-items: center;
+                justify-content: center;
+            }
+            #sidebar-nav .nav-label { font-size: 10px; }
+
+            #app-main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+            #app-main header { padding: 10px 16px; }
+            #app-main header h2 { font-size: 14px; }
+            #app-main .p-8 { padding: 1rem; }
+
+            /* Portfolio toggle shown inline in nav */
+            #sidebar-nav .port-toggle { display: flex !important; min-width: 80px; }
+        }
+
+        /* ── Small phone (≤640px) ── */
+        @media (max-width: 640px) {
+            #app-main .p-8 { padding: 0.75rem; }
+            .grid { gap: 0.75rem !important; }
+        }
     </style>
 </head>
-<body class="flex h-screen text-sm">
+<body id="app-body" class="flex text-sm">
 
-    <aside class="w-64 bg-card border-r border-slate-700 flex flex-col">
-        <div class="p-6 pb-5 border-b border-slate-700">
+    <aside id="sidebar" class="bg-card flex flex-col">
+        <div class="sidebar-header p-6 pb-5 border-b border-slate-700">
             <h1 class="font-bold text-xl text-white tracking-tight">NINE's<span class="text-blue-500"> PORTFOLIO</span></h1>
             <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-widest mb-4">FY 2026 Edition</p>
             
@@ -114,20 +171,24 @@
             </div>
         </div>
 
-        <nav class="flex-1 p-4 space-y-2">
+        <nav id="sidebar-nav" class="flex-1 p-4 space-y-2">
             <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600/20 text-blue-400 font-medium">
-                <i class="fa-solid fa-chart-line"></i> Dashboard
+                <i class="fa-solid fa-chart-line"></i> <span class="nav-label">Dashboard</span>
             </button>
             <button onclick="switchTab('transactions')" id="btn-transactions" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-700">
-                <i class="fa-solid fa-money-bill-transfer"></i> Transactions
+                <i class="fa-solid fa-money-bill-transfer"></i> <span class="nav-label">Transactions</span>
             </button>
             <button onclick="switchTab('settings')" id="btn-settings" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-700">
-                <i class="fa-solid fa-sliders"></i> Setting
+                <i class="fa-solid fa-sliders"></i> <span class="nav-label">Setting</span>
             </button>
+            <div class="port-toggle bg-slate-800/80 p-1 rounded-lg flex space-x-1 border border-slate-700" style="display:none;">
+                <button id="btn-port1-m" onclick="switchPortfolio('port1')" class="flex-1 py-1 text-[10px] font-bold rounded-md bg-blue-600 text-white shadow transition-all">Core</button>
+                <button id="btn-port2-m" onclick="switchPortfolio('port2')" class="flex-1 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:bg-slate-700/50 transition-all">Sat.</button>
+            </div>
         </nav>
     </aside>
 
-    <main class="flex-1 overflow-y-auto hide-scrollbar">
+    <main id="app-main" class="flex-1 overflow-y-auto hide-scrollbar">
         <header class="sticky top-0 z-10 bg-dark/90 backdrop-blur-md border-b border-slate-700 px-8 py-4 flex justify-between items-center">
             <h2 id="page-title" class="text-lg font-bold">Portfolio Overview</h2>
             <div class="flex items-center gap-6">
@@ -615,14 +676,20 @@
 
         function switchPortfolio(id) {
             state.currentPort = id;
+            const mBtn1 = document.getElementById('btn-port1-m');
+            const mBtn2 = document.getElementById('btn-port2-m');
             if(id === 'port2') {
                 document.body.classList.add('theme-port2');
                 document.getElementById('btn-port1').className = "flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all";
                 document.getElementById('btn-port2').className = "flex-1 py-1.5 text-xs font-bold rounded-md bg-slate-600 text-white shadow transition-all";
+                if(mBtn1) mBtn1.className = "flex-1 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:bg-slate-700/50 transition-all";
+                if(mBtn2) mBtn2.className = "flex-1 py-1 text-[10px] font-bold rounded-md bg-slate-600 text-white shadow transition-all";
             } else {
                 document.body.classList.remove('theme-port2');
                 document.getElementById('btn-port1').className = "flex-1 py-1.5 text-xs font-bold rounded-md bg-blue-600 text-white shadow transition-all";
                 document.getElementById('btn-port2').className = "flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all";
+                if(mBtn1) mBtn1.className = "flex-1 py-1 text-[10px] font-bold rounded-md bg-blue-600 text-white shadow transition-all";
+                if(mBtn2) mBtn2.className = "flex-1 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:bg-slate-700/50 transition-all";
             }
             if(document.getElementById('tab-settings').classList.contains('active')) initSettings();
             updateDashboard(); renderMonthlyTiers();
