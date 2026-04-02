@@ -604,10 +604,10 @@
         });
 
         const getEmptyBenchmarks = () => ({
-            stocks: { name: 'S&P 500', q1: null, q2: null, q3: null, q4: null },
-            bonds: { name: 'Bond', q1: null, q2: null, q3: null, q4: null },
-            crypto: { name: 'Bitcoin', q1: null, q2: null, q3: null, q4: null },
-            gold: { name: 'Gold', q1: null, q2: null, q3: null, q4: null }
+            stocks: { name: 'S&P 500', q1: -5.08, q2: null, q3: null, q4: null },
+            bonds: { name: 'Bond', q1: 1, q2: null, q3: null, q4: null },
+            crypto: { name: 'Bitcoin', q1: -22.13, q2: null, q3: null, q4: null },
+            gold: { name: 'Gold', q1: 7.89, q2: null, q3: null, q4: null }
         });
 
         const state = {
@@ -619,7 +619,7 @@
                     begBalances: { stocks: 628474.25, bonds: 1016754.58, crypto: 1679416.42, gold: 85468.76 },
                     endBalances: getEmptyEndBalances(),
                     benchmarks: getEmptyBenchmarks(),
-                    flows: []
+                    flows: [{"id": 1000, "date": "2026-01-02", "asset": "stocks", "type": "deposit", "amount": 100000, "memo": "", "currency": "THB"}, {"id": 1001, "date": "2026-01-02", "asset": "crypto", "type": "deposit", "amount": 3000, "memo": "", "currency": "THB"}, {"id": 1002, "date": "2026-01-14", "asset": "stocks", "type": "deposit", "amount": 13551, "memo": "", "currency": "THB"}, {"id": 1003, "date": "2026-01-15", "asset": "gold", "type": "deposit", "amount": 2000, "memo": "", "currency": "THB"}, {"id": 1004, "date": "2026-01-28", "asset": "stocks", "type": "deposit", "amount": 42881.61, "memo": "SCBFP(SSFE) to SCBEUROPE(SSPE)", "currency": "THB"}, {"id": 1005, "date": "2026-01-28", "asset": "bonds", "type": "withdraw", "amount": 42881.61, "memo": "SCBFP(SSFE) to SCBEUROPE(SSPE)", "currency": "THB"}, {"id": 1006, "date": "2026-02-03", "asset": "stocks", "type": "deposit", "amount": 4000, "memo": "", "currency": "THB"}, {"id": 1007, "date": "2026-02-03", "asset": "crypto", "type": "deposit", "amount": 3000, "memo": "", "currency": "THB"}, {"id": 1008, "date": "2026-02-03", "asset": "gold", "type": "deposit", "amount": 2000, "memo": "", "currency": "THB"}, {"id": 1009, "date": "2026-02-03", "asset": "bonds", "type": "deposit", "amount": 13616, "memo": "", "currency": "THB"}, {"id": 1010, "date": "2026-02-28", "asset": "crypto", "type": "deposit", "amount": 3000, "memo": "", "currency": "THB"}, {"id": 1011, "date": "2026-02-28", "asset": "gold", "type": "deposit", "amount": 2000, "memo": "", "currency": "THB"}, {"id": 1012, "date": "2026-03-02", "asset": "stocks", "type": "deposit", "amount": 9456.47, "memo": "", "currency": "THB"}, {"id": 1013, "date": "2026-03-20", "asset": "crypto", "type": "withdraw", "amount": 50, "memo": "", "currency": "USD"}, {"id": 1014, "date": "2026-03-20", "asset": "crypto", "type": "withdraw", "amount": 49.98, "memo": "", "currency": "USD"}, {"id": 1015, "date": "2026-04-01", "asset": "stocks", "type": "deposit", "amount": 4000, "memo": "", "currency": "THB"}, {"id": 1016, "date": "2026-04-01", "asset": "crypto", "type": "deposit", "amount": 3000, "memo": "", "currency": "THB"}, {"id": 1017, "date": "2026-04-01", "asset": "gold", "type": "deposit", "amount": 2000, "memo": "", "currency": "THB"}, {"id": 1018, "date": "2026-04-02", "asset": "stocks", "type": "deposit", "amount": 9827, "memo": "", "currency": "THB"}, {"id": 1019, "date": "2026-04-02", "asset": "stocks", "type": "deposit", "amount": 6000, "memo": "", "currency": "THB"}]
                 },
                 port2: {
                     goal: { amount: 10000000, year: 2031, monthly: 20000, return: 12, monthlyTiers: [{year: 2026, amount: 20000},{year: 2028, amount: 36000}] },
@@ -641,9 +641,12 @@
         const fmt = (v) => '฿' + (v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         
         const getActiveRate = () => {
-            const q = Math.floor(new Date().getMonth() / 3) + 1;
-            const r = state.rates[`q${q}`] || state.rates.beginning;
-            return parseFloat(r) || 31.07;
+            // Use the most recent quarter rate available, fallback to beginning rate
+            for (let q = 4; q >= 1; q--) {
+                const r = parseFloat(state.rates[`q${q}`]);
+                if (r && r > 0) return r;
+            }
+            return parseFloat(state.rates.beginning) || 31.07;
         };
 
         const getQuarterByDate = (dateStr) => Math.floor(new Date(dateStr).getMonth() / 3) + 1;
@@ -721,7 +724,13 @@
                         const hasData = qEndInput.thb !== null || qEndInput.usds !== null || qEndInput.usdo !== null;
                         if (hasData) {
                             const rate = state.rates[`q${q}`] || state.rates.beginning;
-                            qEnd = (qEndInput.thb || 0) + (((qEndInput.usds || 0) + (qEndInput.usdo || 0)) * rate);
+                            if (qEndInput.thb !== null) {
+                                // thb is the total THB value; usds/usdo are USD sub-breakdowns already included in thb
+                                qEnd = qEndInput.thb;
+                            } else {
+                                // No THB total provided — convert USD amounts to THB
+                                qEnd = (((qEndInput.usds || 0) + (qEndInput.usdo || 0)) * parseFloat(rate));
+                            }
                         }
                     } else if (qEndInput !== null && qEndInput !== '' && !isNaN(qEndInput)) {
                         qEnd = parseFloat(qEndInput);
@@ -794,36 +803,69 @@
 
             const getBenchGrowth = (aKey, qNum, ytdFlag) => {
                 const assets = ['stocks', 'bonds', 'crypto', 'gold'];
-                const getSettingBM = (asset, q) => pState().benchmarks[asset][`q${q}`] || 0;
+                // Return null if benchmark not set (do not treat null as 0)
+                const getSettingBM = (asset, q) => {
+                    const v = pState().benchmarks[asset][`q${q}`];
+                    return (v !== null && v !== undefined && v !== '') ? parseFloat(v) : null;
+                };
+
+                // QoQ from YTD values — returns null if either quarter missing
+                const calcQoQ_ = (asset, q) => {
+                    const currentYTD = getSettingBM(asset, q);
+                    if (currentYTD === null) return null;
+                    if (q === 1) return currentYTD;
+                    const prevYTD = getSettingBM(asset, q - 1);
+                    if (prevYTD === null) return null;
+                    return (((1 + currentYTD/100) / (1 + prevYTD/100)) - 1) * 100;
+                };
+
+                // Effective crypto benchmark: weighted avg of bond BM (stablecoins) + crypto BM (others)
+                const getCryptoBM = (q, ytd) => {
+                    const rate = parseFloat(state.rates[`q${q}`] || state.rates.beginning) || 31.07;
+                    let usds = 0, usdo = 0;
+                    for (let qi = q; qi >= 1; qi--) {
+                        const eb = pState().endBalances.crypto[`q${qi}`];
+                        if (eb && (eb.usds !== null || eb.usdo !== null)) {
+                            usds = (eb.usds || 0) * rate;
+                            usdo = (eb.usdo || 0) * rate;
+                            break;
+                        }
+                    }
+                    const totalUSD = usds + usdo;
+                    const bmS = ytd ? getSettingBM('bonds', q)  : calcQoQ_('bonds', q);
+                    const bmO = ytd ? getSettingBM('crypto', q) : calcQoQ_('crypto', q);
+                    if (totalUSD === 0) return bmO; // no split info, use crypto BM as-is
+                    const wS = usds / totalUSD;
+                    const wO = usdo / totalUSD;
+                    if (bmS === null && bmO === null) return null;
+                    return (wS * (bmS ?? 0)) + (wO * (bmO ?? 0));
+                };
 
                 if (ytdFlag) {
+                    if (aKey === 'crypto') return getCryptoBM(qNum, true);
                     if (aKey === 'all' || aKey === 'all-sep') {
-                        let weightedSum = 0, totalWeight = 0;
+                        let weightedSum = 0, totalWeight = 0, hasAny = false;
                         assets.forEach(a => {
                             const assetBal = state.computed[a][`q${qNum}`].start;
-                            const bmVal = getSettingBM(a, qNum);
-                            weightedSum += (bmVal * assetBal);
-                            totalWeight += assetBal;
+                            const bmVal = a === 'crypto' ? getCryptoBM(qNum, true) : getSettingBM(a, qNum);
+                            if (bmVal !== null) { weightedSum += (bmVal * assetBal); totalWeight += assetBal; hasAny = true; }
                         });
-                        return totalWeight > 0 ? weightedSum / totalWeight : 0;
+                        return (hasAny && totalWeight > 0) ? weightedSum / totalWeight : null;
                     }
                     return getSettingBM(aKey, qNum);
                 } else {
                     const calcQoQ = (asset, q) => {
-                        const currentYTD = getSettingBM(asset, q);
-                        if (q === 1) return currentYTD;
-                        const prevYTD = getSettingBM(asset, q - 1);
-                        return (((1 + currentYTD/100) / (1 + prevYTD/100)) - 1) * 100;
+                        if (asset === 'crypto') return getCryptoBM(q, false);
+                        return calcQoQ_(asset, q);
                     };
                     if (aKey === 'all' || aKey === 'all-sep') {
-                        let weightedSum = 0, totalWeight = 0;
+                        let weightedSum = 0, totalWeight = 0, hasAny = false;
                         assets.forEach(a => {
                             const assetBal = state.computed[a][`q${qNum}`].start;
                             const qoqVal = calcQoQ(a, qNum);
-                            weightedSum += (qoqVal * assetBal);
-                            totalWeight += assetBal;
+                            if (qoqVal !== null) { weightedSum += (qoqVal * assetBal); totalWeight += assetBal; hasAny = true; }
                         });
-                        return totalWeight > 0 ? weightedSum / totalWeight : 0;
+                        return (hasAny && totalWeight > 0) ? weightedSum / totalWeight : null;
                     }
                     return calcQoQ(aKey, qNum);
                 }
@@ -873,12 +915,12 @@
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     scales: {
-                        y: { ticks: { color: '#94A3B8', callback: v => v + '%' }, grid: { color: 'rgba(51, 65, 85, 0.5)' } },
+                        y: { ticks: { color: '#94A3B8', callback: v => parseFloat(v.toFixed(2)) + '%' }, grid: { color: 'rgba(51, 65, 85, 0.5)' } },
                         x: { ticks: { color: '#94A3B8' }, grid: { display: false } }
                     },
                     plugins: {
                         legend: { labels: { color: '#F8FAFC', boxWidth: 10, font: { size: 9 } } },
-                        datalabels: { color: '#fff', anchor: 'end', align: 'top', offset: 2, formatter: (v) => v ? v.toFixed(1) + '%' : '0%', font: { size: assetKey === 'all-sep' ? 8 : 10 }, padding: 2, clip: false }
+                        datalabels: { color: '#fff', anchor: 'end', align: 'top', offset: 2, formatter: (v) => (v !== null && v !== undefined) ? v.toFixed(1) + '%' : null, font: { size: assetKey === 'all-sep' ? 8 : 10 }, padding: 2, clip: false }
                     }
                 }
             });
@@ -1293,12 +1335,11 @@
         function deleteTxById(id) { pState().flows = pState().flows.filter(f => f.id !== id); saveFlows(); updateDashboard(); }
         function handleManualTx(e) { e.preventDefault(); const asset = document.getElementById('tx-asset').value; const currencyEl = document.querySelector('input[name="txCurrency"]:checked'); const currency = currencyEl ? currencyEl.value : 'THB'; pState().flows.push({ id: Date.now(), date: document.getElementById('tx-date').value, asset: asset, type: document.querySelector('input[name="txType"]:checked').value, amount: getRawValue(document.getElementById('tx-amount').value), memo: document.getElementById('tx-memo').value, currency: currency }); saveFlows(); updateDashboard(); e.target.reset(); document.getElementById('tx-date').valueAsDate = new Date(); document.querySelector('input[name="txCurrency"][value="THB"]').checked = true; }
         
-        // แก้ไขฟังก์ชัน handleImport เพื่อดึงวันที่มาใช้งานด้วย
-        function handleImport(input) { 
-            const file = input.files[0]; 
-            if(!file) return; 
-            const reader = new FileReader(); 
-            reader.onload = (e) => { 
+        function handleImport(input) {
+            const file = input.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
                 const parseCSVLine = (line) => {
                     const result = []; let cur = ''; let inQuote = false;
                     for (let i = 0; i < line.length; i++) {
@@ -1309,44 +1350,54 @@
                     }
                     result.push(cur.trim()); return result;
                 };
-                const rows = e.target.result.split(/\r?\n/); 
+                const rows = e.target.result.split(/\r?\n/);
+                // Detect header columns dynamically
+                let currencyIdx = -1, noteIdx = 3;
                 let imported = 0;
-                rows.forEach((line, idx) => { 
-                    if (idx === 0 || !line.trim()) return; 
-                    const cols = parseCSVLine(line);
-                    if (cols.length < 3) return; 
-                    
-                    const assetMap = {'stocks':'stocks','equity':'stocks','bond':'bonds','bonds':'bonds','crypto':'crypto','gold':'gold'}; 
-                    let asset = ''; 
-                    const typeRaw = cols[2].toLowerCase().trim();
-                    for(let k in assetMap) {
-                        if(typeRaw === k || typeRaw.includes(k)) asset = assetMap[k]; 
+                rows.forEach((line, idx) => {
+                    if (idx === 0) {
+                        const headers = parseCSVLine(line).map(h => h.toLowerCase().trim());
+                        const ci = headers.indexOf('currency');
+                        if (ci !== -1) { currencyIdx = ci; noteIdx = ci + 1; }
+                        return;
                     }
-                    
+                    if (!line.trim()) return;
+                    const cols = parseCSVLine(line);
+                    if (cols.length < 3) return;
+                    const assetMap = {'stocks':'stocks','equity':'stocks','bond':'bonds','bonds':'bonds','crypto':'crypto','gold':'gold'};
+                    let asset = '';
+                    const typeRaw = cols[2].toLowerCase().trim();
+                    for(let k in assetMap) { if(typeRaw === k || typeRaw.includes(k)) asset = assetMap[k]; }
                     const amt = getRawValue(cols[1]);
                     const parseDate = (s) => { const d = new Date(s); if (!isNaN(d)) { const y = d.getFullYear(); const m = String(d.getMonth()+1).padStart(2,'0'); const day = String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; } return s; };
+                    // Read currency from column if present, else default to THB (backward-compatible)
+                    let currency = 'THB';
+                    if (currencyIdx !== -1 && cols[currencyIdx]) {
+                        const cur = cols[currencyIdx].toUpperCase().trim();
+                        if (cur === 'USD' || cur === 'THB') currency = cur;
+                    }
                     if(asset) {
-                        pState().flows.push({ 
-                            id: Date.now() + Math.random(), 
+                        pState().flows.push({
+                            id: Date.now() + Math.random(),
                             date: parseDate(cols[0]),
-                            asset: asset, 
-                            type: amt >= 0 ? 'deposit' : 'withdraw', 
-                            amount: Math.abs(amt), 
-                            memo: cols[3] || '',
-                            currency: 'THB'
-                        }); 
+                            asset: asset,
+                            type: amt >= 0 ? 'deposit' : 'withdraw',
+                            amount: Math.abs(amt),
+                            memo: (noteIdx < cols.length ? cols[noteIdx] : '') || '',
+                            currency: currency
+                        });
                         imported++;
                     }
-                }); 
-                updateDashboard(); 
+                });
+                updateDashboard();
                 saveFlows();
-                alert('Import complete: ' + imported + ' transactions added'); 
-                input.value = ''; 
-            }; 
-            reader.readAsText(file); 
+                alert('Import complete: ' + imported + ' transactions added');
+                input.value = '';
+            };
+            reader.readAsText(file);
         }
 
-        function handleExport() { if (!pState().flows.length) return; let csv = "Date,Amount,Type,Note\n"; pState().flows.forEach(tx => csv += `${tx.date},${tx.type==='withdraw'?'-':''}${tx.amount},${tx.asset},${tx.memo||''}\n`); const blob = new Blob([csv], { type: 'text/csv' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "export.csv"; link.click(); }
+        function handleExport() { if (!pState().flows.length) return; let csv = "Date,Amount,Asset,Currency,Note\n"; pState().flows.forEach(tx => csv += `${tx.date},${tx.type==='withdraw'?'-':''}${tx.amount},${tx.asset},${tx.currency||'THB'},${tx.memo||''}\n`); const blob = new Blob([csv], { type: 'text/csv' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "export.csv"; link.click(); }
         function clearLedger() { if(confirm("Clear all?")) { pState().flows = []; saveFlows(); updateDashboard(); } }
         function switchTab(id) { document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => { b.classList.replace('bg-blue-600/20', 'hover:bg-slate-700'); b.classList.replace('text-blue-400', 'text-slate-400'); }); document.getElementById('tab-'+id).classList.add('active'); const btn = document.getElementById('btn-'+id); btn.classList.replace('hover:bg-slate-700', 'bg-blue-600/20'); btn.classList.replace('text-slate-400', 'text-blue-400'); if(id === 'settings') initSettings(); else updateDashboard(); }
 
