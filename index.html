@@ -191,10 +191,15 @@
     <main id="app-main" class="flex-1 overflow-y-auto hide-scrollbar">
         <header class="sticky top-0 z-10 bg-dark/90 backdrop-blur-md border-b border-slate-700 px-8 py-4 flex justify-between items-center">
             <h2 id="page-title" class="text-lg font-bold">Portfolio Overview</h2>
-            <div class="flex items-center gap-6">
+            <div class="flex items-center gap-4">
                 <div class="text-xs text-slate-400">
                     USD/THB Rate: <span id="header-rate" class="text-white font-bold">31.07</span>
                 </div>
+                <button id="sync-btn" onclick="loadFromGSheet().then(ok=>{ if(ok){ updateDashboard(); renderMonthlyTiers(); } })"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 border border-slate-700 hover:border-blue-500 hover:text-blue-400 transition-colors"
+                    title="Sync transactions from Google Sheets">
+                    <i class="fa-solid fa-rotate text-[10px]"></i> Sync
+                </button>
             </div>
         </header>
 
@@ -1504,7 +1509,49 @@
             document.getElementById('goal-heatmap-container').innerHTML = html;
         }
 
-        window.onload = () => { try { const f1 = localStorage.getItem('flows_port1'); if(f1) state.portfolios.port1.flows = JSON.parse(f1); const f2 = localStorage.getItem('flows_port2'); if(f2) state.portfolios.port2.flows = JSON.parse(f2); const s1 = localStorage.getItem('settings_port1'); if(s1) { const d=JSON.parse(s1); if(d.begBalances) state.portfolios.port1.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port1.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port1.benchmarks=d.benchmarks; } const s2 = localStorage.getItem('settings_port2'); if(s2) { const d=JSON.parse(s2); if(d.begBalances) state.portfolios.port2.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port2.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port2.benchmarks=d.benchmarks; } const g1=localStorage.getItem('goal_port1'); if(g1){const d=JSON.parse(g1); if(d) state.portfolios.port1.goal=Object.assign(state.portfolios.port1.goal,d);} const g2=localStorage.getItem('goal_port2'); if(g2){const d=JSON.parse(g2); if(d) state.portfolios.port2.goal=Object.assign(state.portfolios.port2.goal,d);} } catch(e) {} updateDashboard(); renderMonthlyTiers(); document.getElementById('tx-date').valueAsDate = new Date(); };
+        // ====== Google Sheets Sync ======
+        // Paste your Apps Script Web App URL here
+        const GSHEET_URL = 'https://script.google.com/macros/s/AKfycbyu-FotwVgEwwWAcBYvtGh71yvpO_VqTSV_TQJgFMOEbf3V1GuqdHnl9TgoHjw8jXGA3Q/exec';
+
+        async function loadFromGSheet() {
+            if (!GSHEET_URL) return false;
+            const syncBtn = document.getElementById('sync-btn');
+            try {
+                if (syncBtn) { syncBtn.innerHTML = '<i class="fa-solid fa-rotate fa-spin text-[10px]"></i> Syncing...'; syncBtn.disabled = true; }
+                const res = await fetch(GSHEET_URL);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const flows = await res.json();
+                if (!Array.isArray(flows)) throw new Error('Invalid data');
+                state.portfolios.port1.flows = flows;
+                localStorage.setItem('flows_port1', JSON.stringify(flows));
+                const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+                if (syncBtn) { syncBtn.innerHTML = '<i class="fa-solid fa-check text-[10px] text-green-400"></i> Synced ' + now; syncBtn.disabled = false; }
+                return true;
+            } catch(err) {
+                console.warn('GSheet sync failed:', err);
+                if (syncBtn) { syncBtn.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-[10px] text-red-400"></i> Sync failed'; syncBtn.disabled = false; }
+                return false;
+            }
+        }
+
+        window.onload = async () => {
+            try {
+                const s1 = localStorage.getItem('settings_port1'); if(s1) { const d=JSON.parse(s1); if(d.begBalances) state.portfolios.port1.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port1.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port1.benchmarks=d.benchmarks; }
+                const s2 = localStorage.getItem('settings_port2'); if(s2) { const d=JSON.parse(s2); if(d.begBalances) state.portfolios.port2.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port2.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port2.benchmarks=d.benchmarks; }
+                const g1 = localStorage.getItem('goal_port1'); if(g1){const d=JSON.parse(g1); if(d) state.portfolios.port1.goal=Object.assign(state.portfolios.port1.goal,d);}
+                const g2 = localStorage.getItem('goal_port2'); if(g2){const d=JSON.parse(g2); if(d) state.portfolios.port2.goal=Object.assign(state.portfolios.port2.goal,d);}
+                const f2 = localStorage.getItem('flows_port2'); if(f2) state.portfolios.port2.flows = JSON.parse(f2);
+                if (!GSHEET_URL) { const f1 = localStorage.getItem('flows_port1'); if(f1) state.portfolios.port1.flows = JSON.parse(f1); }
+            } catch(e) {}
+
+            updateDashboard(); renderMonthlyTiers();
+            document.getElementById('tx-date').valueAsDate = new Date();
+
+            if (GSHEET_URL) {
+                const synced = await loadFromGSheet();
+                if (synced) { updateDashboard(); renderMonthlyTiers(); }
+            }
+        };
     </script>
 </body>
 </html>
