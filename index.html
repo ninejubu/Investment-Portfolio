@@ -574,20 +574,22 @@
                     </div>
                 </div>
 
-                <!-- Wheel History sub-page (kept as separate sub-tab) -->
+                <!-- Wheel History sub-page -->
+                <div class="wheel-page space-y-4" id="w-history" style="display:none;">
                     <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:stretch">
                         <div class="wheel-stat-box" style="flex:1;min-width:130px"><div class="wheel-stat-label">Total Premium</div><div class="wheel-stat-val w-green" id="hTotPrem">—</div></div>
                         <div class="wheel-stat-box" style="flex:1;min-width:110px"><div class="wheel-stat-label">Closed Orders</div><div class="wheel-stat-val w-blue" id="hTotOrd">—</div></div>
                         <div class="wheel-stat-box" style="flex:1;min-width:110px"><div class="wheel-stat-label">Win Rate</div><div class="wheel-stat-val w-yellow" id="hWinRate">—</div></div>
                         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
                             <button class="w-btn w-btn-primary" onclick="openWheelHistModal()">+ Add Entry</button>
-                            <button class="w-btn w-btn-secondary" onclick="wExportData()">⬇ Export</button>
-                            <label class="w-btn w-btn-secondary" style="cursor:pointer">⬆ Import<input type="file" accept=".json" id="importFile" style="display:none" onchange="wImportData(event)"></label>
+                            <button class="w-btn w-btn-secondary" onclick="wExportXlsx()">⬇ Export .xlsx</button>
+                            <label class="w-btn w-btn-secondary" style="cursor:pointer">⬆ Import .xlsx<input type="file" accept=".xlsx,.xls" id="importFile" style="display:none" onchange="wImportXlsx(event)"></label>
                         </div>
                     </div>
                     <div id="histMonths"></div>
                 </div>
             </div>
+        </div>
 
             <!-- ══════════ SETTINGS TAB ══════════ -->
             <div id="tab-settings" class="tab-content space-y-6">
@@ -1333,9 +1335,79 @@
         {id:7,name:'Short call L7',price:66200,   amount:0.05000,target:78000, accRealPL:52.88},
         {id:8,name:'Short call L8',price:0,       amount:0.05000,target:75000, accRealPL:0,problem:true},
     ];
-    let wClosed = [];
+    let wClosed = [
+      {id:2001,cex:'BINANCE',product:'Short Put',openDate:'2025-12-22',expiryDate:'2026-01-02',closedDate:'2026-01-02',strike:75000,contracts:0.05,premium:115,currency:'Contracts',status:'closed',note:''},
+      {id:2002,cex:'BINANCE',product:'Short Put',openDate:'2025-12-22',expiryDate:'2026-01-02',closedDate:'2026-01-02',strike:80000,contracts:0.03,premium:340,currency:'Contracts',status:'closed',note:''},
+      {id:2003,cex:'BINANCE',product:'Short Put',openDate:'2025-12-26',expiryDate:'2026-01-02',closedDate:'2026-01-02',strike:82000,contracts:0.05,premium:200,currency:'Contracts',status:'closed',note:''},
+      {id:2004,cex:'BINANCE',product:'Short Put',openDate:'2025-12-26',expiryDate:'2026-01-02',closedDate:'2026-01-02',strike:80000,contracts:0.02,premium:110,currency:'Contracts',status:'closed',note:''},
+      {id:2005,cex:'BINANCE',product:'Short Put',openDate:'2025-12-26',expiryDate:'2026-01-02',closedDate:'2026-01-02',strike:83000,contracts:0.03,premium:270,currency:'Contracts',status:'closed',note:''},
+      {id:2006,cex:'BINANCE',product:'Short Put',openDate:'2025-12-27',expiryDate:'2026-01-09',closedDate:'2026-01-09',strike:80000,contracts:0.03,premium:420,currency:'Contracts',status:'closed',note:''},
+      {id:2007,cex:'BINANCE',product:'Short Put',openDate:'2026-01-02',expiryDate:'2026-01-09',closedDate:'2026-01-09',strike:80000,contracts:0.03,premium:130,currency:'Contracts',status:'closed',note:''},
+      {id:2008,cex:'BINANCE',product:'Short Put',openDate:'2026-01-02',expiryDate:'2026-01-09',closedDate:'2026-01-09',strike:82000,contracts:0.04,premium:210,currency:'Contracts',status:'closed',note:''},
+      {id:2009,cex:'BINANCE',product:'Short Put',openDate:'2026-01-02',expiryDate:'2026-01-09',closedDate:'2026-01-09',strike:83000,contracts:0.03,premium:275,currency:'Contracts',status:'closed',note:''},
+      {id:2010,cex:'BINANCE',product:'Short Put',openDate:'2026-01-06',expiryDate:'2026-01-09',closedDate:'2026-01-09',strike:89000,contracts:0.03,premium:230,currency:'Contracts',status:'closed',note:''},
+      {id:2011,cex:'BINANCE',product:'Short Put',openDate:'2026-01-06',expiryDate:'2026-01-09',closedDate:'2026-01-09',strike:87000,contracts:0.05,premium:100,currency:'Contracts',status:'closed',note:''},
+      {id:2012,cex:'BINANCE',product:'Short Put',openDate:'2026-01-07',expiryDate:'2026-01-10',closedDate:'2026-01-10',strike:86000,contracts:0.03,premium:120,currency:'Contracts',status:'closed',note:''},
+      {id:2013,cex:'BINANCE',product:'Short Put',openDate:'2026-01-11',expiryDate:'2026-01-14',closedDate:'2026-01-14',strike:86000,contracts:0.03,premium:115,currency:'Contracts',status:'closed',note:''},
+      {id:2014,cex:'BINANCE',product:'Short Put',openDate:'2026-01-11',expiryDate:'2026-01-16',closedDate:'2026-01-16',strike:84000,contracts:0.03,premium:170,currency:'Contracts',status:'closed',note:''},
+      {id:2015,cex:'BINANCE',product:'Short Put',openDate:'2026-01-02',expiryDate:'2026-01-16',closedDate:'2026-01-16',strike:80000,contracts:0.03,premium:390,currency:'Contracts',status:'closed',note:''},
+      {id:2016,cex:'BINANCE',product:'Short Put',openDate:'2026-01-09',expiryDate:'2026-01-16',closedDate:'2026-01-16',strike:82000,contracts:0.05,premium:170,currency:'Contracts',status:'closed',note:''},
+      {id:2017,cex:'BINANCE',product:'Short Put',openDate:'2026-01-09',expiryDate:'2026-01-16',closedDate:'2026-01-16',strike:80000,contracts:0.02,premium:95,currency:'Contracts',status:'closed',note:''},
+      {id:2018,cex:'BINANCE',product:'Short Put',openDate:'2026-01-09',expiryDate:'2026-01-16',closedDate:'2026-01-16',strike:84000,contracts:0.03,premium:285,currency:'Contracts',status:'closed',note:''},
+      {id:2019,cex:'BINANCE',product:'Short Put',openDate:'2026-01-09',expiryDate:'2026-01-16',closedDate:'2026-01-16',strike:85000,contracts:0.03,premium:375,currency:'Contracts',status:'closed',note:''},
+      {id:2020,cex:'BINANCE',product:'Short Put',openDate:'2026-01-14',expiryDate:'2026-01-16',closedDate:'2026-01-16',strike:92000,contracts:0.04,premium:50,currency:'Contracts',status:'closed',note:''},
+      {id:2021,cex:'BINANCE',product:'Short Call',openDate:'2026-01-09',expiryDate:'2026-01-16',closedDate:'2026-01-16',strike:95000,contracts:0.04,premium:-52.5,currency:'Contracts',status:'exercised',note:''},
+      {id:2022,cex:'BINANCE',product:'Short Put',openDate:'2026-01-19',expiryDate:'2026-01-21',closedDate:'2026-01-21',strike:88000,contracts:0.04,premium:65,currency:'Contracts',status:'closed',note:''},
+      {id:2023,cex:'BINANCE',product:'Short Call',openDate:'2026-01-20',expiryDate:'2026-01-21',closedDate:'2026-01-21',strike:95000,contracts:0.04,premium:50,currency:'Contracts',status:'closed',note:''},
+      {id:2024,cex:'BINANCE',product:'Short Put',openDate:'2026-01-16',expiryDate:'2026-01-23',closedDate:'2026-01-23',strike:90000,contracts:0.04,premium:365,currency:'Contracts',status:'exercised',note:'$89,635'},
+      {id:2025,cex:'BINANCE',product:'Short Put',openDate:'2026-01-16',expiryDate:'2026-01-23',closedDate:'2026-01-23',strike:89000,contracts:0.05,premium:265,currency:'Contracts',status:'closed',note:''},
+      {id:2026,cex:'BINANCE',product:'Short Put',openDate:'2026-01-16',expiryDate:'2026-01-23',closedDate:'2026-01-23',strike:88000,contracts:0.05,premium:210,currency:'Contracts',status:'closed',note:''},
+      {id:2027,cex:'BINANCE',product:'Short Put',openDate:'2026-01-16',expiryDate:'2026-01-23',closedDate:'2026-01-23',strike:86000,contracts:0.04,premium:105,currency:'Contracts',status:'closed',note:''},
+      {id:2028,cex:'BINANCE',product:'Short Call',openDate:'2025-12-26',expiryDate:'2026-01-30',closedDate:'2026-01-30',strike:104000,contracts:0.12,premium:560,currency:'Contracts',status:'closed',note:'L1-L3'},
+      {id:2029,cex:'BINANCE',product:'Short Call',openDate:'2026-01-23',expiryDate:'2026-01-30',closedDate:'2026-01-30',strike:95000,contracts:0.04,premium:225,currency:'Contracts',status:'closed',note:''},
+      {id:2030,cex:'BINANCE',product:'Short Put',openDate:'2026-01-24',expiryDate:'2026-01-30',closedDate:'2026-01-30',strike:84000,contracts:0.06,premium:280,currency:'Contracts',status:'exercised',note:''},
+      {id:2031,cex:'BINANCE',product:'Short Put',openDate:'2026-01-24',expiryDate:'2026-01-30',closedDate:'2026-01-30',strike:85000,contracts:0.05,premium:380,currency:'Contracts',status:'exercised',note:''},
+      {id:2032,cex:'BINANCE',product:'Short Put',openDate:'2026-01-24',expiryDate:'2026-01-30',closedDate:'2026-01-30',strike:82000,contracts:0.05,premium:155,currency:'Contracts',status:'closed',note:''},
+      {id:2033,cex:'BINANCE',product:'Short Put',openDate:'2026-01-24',expiryDate:'2026-01-30',closedDate:'2026-01-30',strike:80000,contracts:0.05,premium:95,currency:'Contracts',status:'closed',note:''},
+      {id:2034,cex:'BINANCE',product:'Short Put',openDate:'2026-01-30',expiryDate:'2026-02-06',closedDate:'2026-02-06',strike:75000,contracts:0.05,premium:350,currency:'Contracts',status:'exercised',note:''},
+      {id:2035,cex:'BINANCE',product:'Short Put',openDate:'2026-01-30',expiryDate:'2026-02-06',closedDate:'2026-02-06',strike:78000,contracts:0.05,premium:710,currency:'Contracts',status:'exercised',note:'L7'},
+      {id:2036,cex:'BINANCE',product:'Short Put',openDate:'2026-03-11',expiryDate:'2026-03-13',closedDate:'2026-03-13',strike:64000,contracts:0.04,premium:125,currency:'Contracts',status:'closed',note:''},
+      {id:2037,cex:'BINANCE',product:'Short Put',openDate:'2026-03-11',expiryDate:'2026-03-20',closedDate:'2026-03-20',strike:60000,contracts:0.03,premium:245,currency:'Contracts',status:'closed',note:''},
+      {id:2038,cex:'BINANCE',product:'Short Put',openDate:'2026-03-11',expiryDate:'2026-03-20',closedDate:'2026-03-20',strike:58000,contracts:0.03,premium:155,currency:'Contracts',status:'closed',note:''},
+      {id:2039,cex:'BINANCE',product:'Short Put',openDate:'2026-03-12',expiryDate:'2026-03-20',closedDate:'2026-03-20',strike:63000,contracts:0.03,premium:510,currency:'Contracts',status:'closed',note:''},
+      {id:2040,cex:'BINANCE',product:'Short Put',openDate:'2026-03-13',expiryDate:'2026-03-20',closedDate:'2026-03-20',strike:66000,contracts:0.03,premium:365,currency:'Contracts',status:'closed',note:''},
+      {id:2041,cex:'BINANCE',product:'Short Put',openDate:'2026-03-13',expiryDate:'2026-03-27',closedDate:'2026-03-27',strike:65000,contracts:0.03,premium:725,currency:'Contracts',status:'closed',note:''},
+      {id:2042,cex:'BINANCE',product:'Short Put',openDate:'2026-03-14',expiryDate:'2026-03-27',closedDate:'2026-03-27',strike:62000,contracts:0.03,premium:575,currency:'Contracts',status:'closed',note:''},
+      {id:2043,cex:'BINANCE',product:'Short Put',openDate:'2026-03-20',expiryDate:'2026-03-27',closedDate:'2026-03-27',strike:64000,contracts:0.04,premium:345,currency:'Contracts',status:'closed',note:''},
+      {id:2044,cex:'BINANCE',product:'Short Put',openDate:'2026-03-20',expiryDate:'2026-03-27',closedDate:'2026-03-27',strike:65000,contracts:0.03,premium:395,currency:'Contracts',status:'closed',note:''},
+      {id:2045,cex:'BINANCE',product:'Short Call',openDate:'2026-02-12',expiryDate:'2026-03-27',closedDate:'2026-03-27',strike:78000,contracts:0.05,premium:1175,currency:'Contracts',status:'closed',note:'L7'},
+      {id:2046,cex:'BINANCE',product:'Short Call',openDate:'2026-02-04',expiryDate:'2026-03-27',closedDate:'2026-03-27',strike:94000,contracts:0.04,premium:855,currency:'Contracts',status:'closed',note:'L4'},
+      {id:2047,cex:'BINANCE',product:'Short Put',openDate:'2026-03-26',expiryDate:'2026-04-03',closedDate:'2026-04-03',strike:60000,contracts:0.05,premium:150,currency:'Contracts',status:'closed',note:''},
+      {id:2048,cex:'BINANCE',product:'Short Put',openDate:'2026-03-26',expiryDate:'2026-04-03',closedDate:'2026-04-03',strike:65000,contracts:0.04,premium:565,currency:'Contracts',status:'closed',note:''},
+      {id:2049,cex:'BINANCE',product:'Short Put',openDate:'2026-03-26',expiryDate:'2026-04-03',closedDate:'2026-04-03',strike:64000,contracts:0.03,premium:425,currency:'Contracts',status:'closed',note:''},
+      {id:2050,cex:'BINANCE',product:'Short Put',openDate:'2026-04-03',expiryDate:'2026-04-10',closedDate:'2026-04-10',strike:60000,contracts:0.04,premium:225,currency:'Contracts',status:'closed',note:''},
+      {id:2051,cex:'BINANCE',product:'Short Put',openDate:'2026-04-03',expiryDate:'2026-04-10',closedDate:'2026-04-10',strike:62000,contracts:0.04,premium:415,currency:'Contracts',status:'closed',note:''},
+      {id:2052,cex:'BINANCE',product:'Short Put',openDate:'2026-04-07',expiryDate:'2026-04-10',closedDate:'2026-04-10',strike:63000,contracts:0.04,premium:160,currency:'Contracts',status:'closed',note:''},
+      {id:2053,cex:'BINANCE',product:'Short Put',openDate:'2026-04-10',expiryDate:'2026-04-17',closedDate:'2026-04-17',strike:66000,contracts:0.05,premium:240,currency:'Contracts',status:'closed',note:''},
+      {id:2054,cex:'BINANCE',product:'Short Put',openDate:'2026-04-10',expiryDate:'2026-04-17',closedDate:'2026-04-17',strike:65000,contracts:0.04,premium:170,currency:'Contracts',status:'closed',note:''},
+      {id:2055,cex:'BINANCE',product:'Short Put',openDate:'2026-04-10',expiryDate:'2026-04-17',closedDate:'2026-04-17',strike:63000,contracts:0.05,premium:80,currency:'Contracts',status:'closed',note:''},
+      {id:2056,cex:'BINANCE',product:'Short Put',openDate:'2026-04-11',expiryDate:'2026-04-17',closedDate:'2026-04-17',strike:67000,contracts:0.02,premium:205,currency:'Contracts',status:'closed',note:''},
+      {id:2057,cex:'BINANCE',product:'Short Call',openDate:'2026-02-01',expiryDate:'2026-04-24',closedDate:'2026-04-24',strike:86000,contracts:0.11,premium:3915,currency:'Contracts',status:'closed',note:'L5-L6'},
+      {id:2058,cex:'BINANCE',product:'Short Put',openDate:'2026-04-17',expiryDate:'2026-04-24',closedDate:'2026-04-24',strike:64000,contracts:0.04,premium:80,currency:'Contracts',status:'closed',note:''},
+      {id:2059,cex:'BINANCE',product:'Short Put',openDate:'2026-04-17',expiryDate:'2026-04-24',closedDate:'2026-04-24',strike:66000,contracts:0.04,premium:105,currency:'Contracts',status:'closed',note:''},
+      {id:2060,cex:'BINANCE',product:'Short Put',openDate:'2026-04-18',expiryDate:'2026-04-24',closedDate:'2026-04-24',strike:70000,contracts:0.04,premium:145,currency:'Contracts',status:'closed',note:''},
+      {id:2061,cex:'BINANCE',product:'Short Put',openDate:'2026-04-18',expiryDate:'2026-04-24',closedDate:'2026-04-24',strike:68000,contracts:0.04,premium:90,currency:'Contracts',status:'closed',note:''},
+      {id:2062,cex:'BINANCE',product:'Short Put',openDate:'2026-04-28',expiryDate:'2026-04-30',closedDate:'2026-04-30',strike:72000,contracts:0.03,premium:60,currency:'Contracts',status:'closed',note:''},
+      {id:2063,cex:'BINANCE',product:'Short Call',openDate:'2026-04-28',expiryDate:'2026-04-30',closedDate:'2026-04-30',strike:80000,contracts:0.03,premium:70,currency:'Contracts',status:'closed',note:''},
+      {id:2064,cex:'BINANCE',product:'Short Put',openDate:'2026-04-24',expiryDate:'2026-05-01',closedDate:'2026-05-01',strike:70000,contracts:0.04,premium:145,currency:'Contracts',status:'closed',note:''},
+      {id:2065,cex:'BINANCE',product:'Short Put',openDate:'2026-04-24',expiryDate:'2026-05-01',closedDate:'2026-05-01',strike:71000,contracts:0.04,premium:205,currency:'Contracts',status:'closed',note:''},
+      {id:2066,cex:'BINANCE',product:'Short Put',openDate:'2026-04-24',expiryDate:'2026-05-01',closedDate:'2026-05-01',strike:72000,contracts:0.04,premium:280,currency:'Contracts',status:'closed',note:''},
+      {id:2067,cex:'BINANCE',product:'Short Put',openDate:'2026-04-24',expiryDate:'2026-05-01',closedDate:'2026-05-01',strike:74000,contracts:0.02,premium:535,currency:'Contracts',status:'closed',note:''},
+      {id:2068,cex:'BINANCE',product:'Short Put',openDate:'2026-05-01',expiryDate:'2026-05-03',closedDate:'2026-05-03',strike:75000,contracts:0.03,premium:60,currency:'Contracts',status:'closed',note:''},
+      {id:2069,cex:'BINANCE',product:'Short Call',openDate:'2026-05-01',expiryDate:'2026-05-03',closedDate:'2026-05-03',strike:79500,contracts:0.03,premium:60,currency:'Contracts',status:'closed',note:''},
+    ];
     let wOrderFilter = 'all';
-    let wNextId = 10;
+    let wNextId = 2100;
     let wEditOrderId = null;
     let wEditLotId = null;
 
@@ -1347,7 +1419,7 @@
         try { const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'); const d = await r.json(); btcPrice = parseFloat(d.lastPrice); const chg = parseFloat(d.priceChangePercent); document.getElementById('btcPrice').textContent = wusd(btcPrice,2); const ce = document.getElementById('btcChange'); ce.textContent = (chg>=0?'+':'')+chg.toFixed(2)+'%'; ce.className = 'btc-change-val '+(chg>=0?'up':'down'); const cs = document.getElementById('calcBtcShow'); if(cs) cs.textContent = wusd(btcPrice,2); wCalcAll(); } catch(e) {}
     }
 
-    function wCalcAll() { wRenderSummary(); wRenderLots(); wRenderOrders(); wRenderCalc(); }
+    function wCalcAll() { wRenderSummary(); wRenderLots(); wRenderOrders(); wRenderCalc(); wRenderHistory(); }
 
     function wRenderSummary() {
         const bal = wpn(document.getElementById('optBalance').value);
@@ -1442,6 +1514,83 @@
 
     document.querySelectorAll('.wheel-modal-overlay').forEach(m=>{ m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}); });
 
+    // ── XLSX Export / Import for History ──────────────────
+    function wExportXlsx() {
+        const headers = ['CEX','Product','Open Date','Expiry Date','Strike','Contracts','Premium/Ct','Total P&L','Status','Note'];
+        const rows = wClosed.map(o => [
+            o.cex, o.product, o.openDate, o.closedDate || o.expiryDate,
+            o.strike, o.contracts, o.premium,
+            +(o.premium * o.contracts).toFixed(2),
+            o.status, o.note || ''
+        ]);
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        // column widths
+        ws['!cols'] = [10,12,12,12,12,10,13,11,10,18].map(w=>({wch:w}));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Wheel_History');
+        XLSX.writeFile(wb, 'wheel-history-' + new Date().toISOString().slice(0,10) + '.xlsx');
+    }
+
+    function wImportXlsx(e) {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            try {
+                const wb = XLSX.read(ev.target.result, { type: 'array', cellDates: true });
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                let added = 0;
+                rows.forEach(row => {
+                    // flexible column name mapping
+                    const get = (...keys) => { for (const k of keys) { const v = row[k]; if (v !== undefined && v !== '') return v; } return ''; };
+                    const product = String(get('Product','product') || 'Short Put');
+                    const openDate = fmtXlsxDate(get('Open Date','openDate','Open'));
+                    const expDate  = fmtXlsxDate(get('Expiry Date','Expiry','expiryDate','Close Date','Closed'));
+                    const strike   = parseXlsxNum(get('Strike Price','Strike','strike'));
+                    const contracts= parseXlsxNum(get('Contracts','contracts')) || 0.04;
+                    const premium  = parseXlsxNum(get('Premium/Ct','Premium','Returned','premium','Prem/Ct'));
+                    const status   = String(get('Position/Curr.','Status','status') || 'closed').toLowerCase().includes('exercis') ? 'exercised' : 'closed';
+                    const note     = String(get('Note','note') || '');
+                    const cex      = String(get('CEX','cex') || 'BINANCE');
+                    if (!openDate || strike <= 0) return;
+                    wClosed.push({
+                        id: wNextId++,
+                        cex, product, openDate,
+                        expiryDate: expDate || openDate,
+                        closedDate: expDate || openDate,
+                        strike, contracts, premium,
+                        currency: 'Contracts', status, note
+                    });
+                    added++;
+                });
+                alert('Imported ' + added + ' history entries.');
+                wCalcAll(); wAutoPush();
+            } catch(err) {
+                alert('Import failed: ' + err.message);
+            }
+        };
+        reader.readAsArrayBuffer(file);
+        e.target.value = '';
+    }
+
+    function fmtXlsxDate(v) {
+        if (!v) return '';
+        if (v instanceof Date) { const y=v.getFullYear(),m=String(v.getMonth()+1).padStart(2,'0'),d=String(v.getDate()).padStart(2,'0'); return `${y}-${m}-${d}`; }
+        const s = String(v).trim();
+        // already yyyy-mm-dd
+        if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+        // try parse
+        const d = new Date(s); if (!isNaN(d)) { return d.toISOString().slice(0,10); }
+        return s;
+    }
+
+    function parseXlsxNum(v) {
+        if (v === '' || v === null || v === undefined) return 0;
+        if (typeof v === 'number') return v;
+        return parseFloat(String(v).replace(/[$,\s()]/g,'').replace(/[^0-9.\-]/g,'')) || 0;
+    }
+
+    // Legacy JSON export (keep for backward compat)
     function wExportData(){ const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),orders:wOrders,lots:wLots,closed:wClosed,nextId:wNextId},null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='wheel-'+new Date().toISOString().slice(0,10)+'.json'; a.click(); }
     function wImportData(e){ const f=e.target.files[0];if(!f)return; const r=new FileReader(); r.onload=ev=>{ try{ const d=JSON.parse(ev.target.result); if(d.orders) wOrders=d.orders; if(d.lots) wLots=d.lots; if(d.closed) wClosed=d.closed; if(d.nextId) wNextId=d.nextId; alert('Imported successfully!');wCalcAll(); }catch{alert('Import failed: invalid file.')} }; r.readAsText(f); e.target.value=''; }
 
