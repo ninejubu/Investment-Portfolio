@@ -68,6 +68,33 @@
         .pct-suffix::after { content: '%'; position: absolute; right: 8px; color: #64748b; font-size: 10px; pointer-events: none; }
         .pct-suffix input { padding-right: 20px; }
         .edit-input { background: #0F172A; border: 1px solid #334155; color: white; padding: 2px 4px; border-radius: 4px; font-size: 11px; width: 100%; }
+
+        /* ── Skeleton loading ── */
+        @keyframes shimmer {
+            0% { background-position: -600px 0; }
+            100% { background-position: 600px 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #1E293B 25%, #2D3F55 50%, #1E293B 75%);
+            background-size: 600px 100%;
+            animation: shimmer 1.4s infinite linear;
+            border-radius: 6px;
+            color: transparent !important;
+            pointer-events: none;
+            user-select: none;
+        }
+        .skeleton * { visibility: hidden !important; }
+        .skeleton-inline {
+            display: inline-block;
+            background: linear-gradient(90deg, #1E293B 25%, #2D3F55 50%, #1E293B 75%);
+            background-size: 600px 100%;
+            animation: shimmer 1.4s infinite linear;
+            border-radius: 4px;
+            color: transparent !important;
+            min-width: 80px;
+            height: 0.9em;
+            vertical-align: middle;
+        }
         .asset-row { background-color: rgba(30, 41, 59, 0.4); }
 
         /* ── Desktop sidebar ── */
@@ -1099,6 +1126,42 @@
         if (ugsEl) ugsEl.value = savedUrl;
     }
 
+    const SKELETON_IDS = [
+        'total-net-worth', 'total-return-badge',
+        'stock-bal', 'bond-bal', 'crypto-bal', 'gold-bal',
+        'stock-ytd', 'bond-ytd', 'crypto-ytd', 'gold-ytd',
+        's-q1','s-q2','s-q3','s-q4','s-ytd',
+        'b-q1','b-q2','b-q3','b-q4','b-ytd',
+        'c-q1','c-q2','c-q3','c-q4','c-ytd',
+        'g-q1','g-q2','g-q3','g-q4','g-ytd',
+    ];
+    const SKELETON_CARDS = ['stock-bal','bond-bal','crypto-bal','gold-bal'];
+
+    function showSkeleton() {
+        // Big net worth number
+        const nw = document.getElementById('total-net-worth');
+        if (nw) { nw.dataset.real = nw.innerText; nw.innerHTML = '<span class="skeleton-inline" style="min-width:180px;height:1.2em;display:inline-block;"></span>'; }
+        const badge = document.getElementById('total-return-badge');
+        if (badge) { badge.dataset.real = badge.innerText; badge.innerHTML = '<span class="skeleton-inline" style="min-width:60px;"></span>'; badge.className = 'px-2 py-0.5 rounded text-xs font-bold bg-slate-700/40 text-transparent'; }
+        // Asset cards
+        ['stock','bond','crypto','gold'].forEach(a => {
+            const bal = document.getElementById(a+'-bal');
+            if (bal) { bal.dataset.real = bal.innerText; bal.innerHTML = '<span class="skeleton-inline" style="min-width:140px;height:1em;display:inline-block;"></span>'; }
+            const ytd = document.getElementById(a+'-ytd');
+            if (ytd) { ytd.dataset.real = ytd.innerText; ytd.innerHTML = '<span class="skeleton-inline" style="min-width:45px;"></span>'; }
+            ['q1','q2','q3','q4','ytd'].forEach(q => {
+                const prefix = a === 'stocks' ? 's' : a === 'bonds' ? 'b' : a === 'crypto' ? 'c' : 'g';
+                const el = document.getElementById(prefix+'-'+q);
+                if (el) { el.dataset.real = el.innerText; el.innerHTML = '<span class="skeleton-inline" style="min-width:32px;"></span>'; }
+            });
+        });
+    }
+
+    function hideSkeleton() {
+        // Simply re-run updateDashboard which will overwrite all the skeleton spans
+        // with real values — no need to restore manually
+    }
+
     function fixCryptoBalance() {
         ['port1','port2'].forEach(port => {
             const key = 'settings_' + port;
@@ -1671,11 +1734,15 @@
 
         const gsUrl = getGsUrl();
         if (gsUrl) {
+            // Show skeleton while waiting for Google Sheets sync
+            showSkeleton();
             setSyncPill('loading', 'Connecting…');
             setRefreshSpin(true);
             let invOk = false, wheelOk = false;
             try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
             try { wheelOk = await wPullFromSheets(true); } catch(e) {}
+            // updateDashboard() above already replaced skeleton content with real values
+            if (!invOk) { updateDashboard(); } // ensure skeleton is cleared even on failure
             setRefreshSpin(false);
             const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
             if (invOk || wheelOk) setSyncPill('ok', 'Synced ' + now);
