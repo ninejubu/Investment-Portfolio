@@ -1567,6 +1567,31 @@
 
     let wCalcMode = 'put'; // 'put' or 'call'
 
+    function wCalcPremChange(i, val) {
+        window.wCalcRowState[i].premiumVal = val;
+        // Recalculate APY for this row only and update span in-place
+        const bal = wpn(document.getElementById('optBalance')?.value) || 0;
+        const cfg = W_CALC_ROWS[i];
+        const rs  = window.wCalcRowState[i];
+        const today = new Date();
+        const [thisFri, nextFri] = nextFriday(today);
+        let expDate = cfg.expIdx !== null
+            ? [thisFri, nextFri][cfg.expIdx].toISOString().split('T')[0]
+            : (rs.customDate || '');
+        const premium = wpn(val) || 0;
+        const span = document.getElementById('apy-span-' + i);
+        if (!span) return;
+        if (premium && expDate && bal) {
+            const days = Math.max(1, (new Date(expDate + 'T00:00:00') - today) / 86400000);
+            const apy  = (premium / bal) * (365 / days) * 100;
+            span.textContent = apy.toFixed(1) + '%';
+            span.style.color = '#F59E0B';
+        } else {
+            span.textContent = '—';
+            span.style.color = '#475569';
+        }
+    }
+
     function wSetCalcMode(mode) {
         wCalcMode = mode;
         const putBtn  = document.getElementById('calcTogglePut');
@@ -1647,17 +1672,21 @@
 
             // Determine gap and strike — put = negative, call = positive
             const modeSign = wCalcMode === 'put' ? -1 : 1;
-            let gapPct, strikeVal;
+            let gapPct, strikeVal, actualGapPct;
             if (isStrikeMode) {
-                strikeVal = wpn(rs.customStrike) || null;
-                gapPct = strikeVal ? ((strikeVal - btcPrice) / btcPrice * 100) : null;
+                strikeVal   = wpn(rs.customStrike) || null;
+                gapPct      = strikeVal ? ((strikeVal - btcPrice) / btcPrice * 100) : null;
+                actualGapPct = gapPct;
             } else if (cfg.gap !== null) {
-                gapPct    = cfg.gap * modeSign;
-                strikeVal = Math.round(btcPrice * (1 + gapPct / 100) / 100) * 100;
+                gapPct       = cfg.gap * modeSign;
+                // Round to nearest 1000
+                strikeVal    = Math.round(btcPrice * (1 + gapPct / 100) / 1000) * 1000;
+                actualGapPct = strikeVal ? ((strikeVal - btcPrice) / btcPrice * 100) : gapPct;
             } else {
-                const raw = rs.customGap !== '' ? parseFloat(rs.customGap) : null;
-                gapPct    = raw !== null ? Math.abs(raw) * modeSign : null;
-                strikeVal = gapPct !== null ? Math.round(btcPrice * (1 + gapPct / 100) / 100) * 100 : null;
+                const raw    = rs.customGap !== '' ? parseFloat(rs.customGap) : null;
+                gapPct       = raw !== null ? Math.abs(raw) * modeSign : null;
+                strikeVal    = gapPct !== null ? Math.round(btcPrice * (1 + gapPct / 100) / 1000) * 1000 : null;
+                actualGapPct = strikeVal ? ((strikeVal - btcPrice) / btcPrice * 100) : gapPct;
             }
 
             // Determine expire date
@@ -1682,7 +1711,14 @@
             }
 
             const gapColor = wCalcMode === 'put' ? '#FCA5A5' : '#86EFAC';
-            const gapDisplay = gapPct !== null ? (gapPct > 0 ? '+' : '') + gapPct.toFixed(1) + '%' : '';
+            // Show preset gap + actual gap after rounding (if different)
+            const presetLabel  = gapPct !== null ? (gapPct > 0 ? '+' : '') + gapPct.toFixed(0) + '%' : '';
+            const actualLabel  = actualGapPct !== null ? (actualGapPct > 0 ? '+' : '') + actualGapPct.toFixed(1) + '%' : '';
+            const gapDisplay   = cfg.gap !== null && actualGapPct !== null
+                ? `<span style="font-size:12px;font-weight:600;color:${gapColor}">${presetLabel}</span><br><span style="font-size:9px;color:#64748b">${actualLabel}</span>`
+                : actualGapPct !== null
+                    ? `<span style="font-size:11px;font-weight:500;color:${gapColor}">${actualLabel}</span>`
+                    : '';
             const strikeDisplay = strikeVal ? strikeVal.toLocaleString('en-US') : '';
 
             const row = document.createElement('div');
@@ -1692,9 +1728,9 @@
 
             // Col 1: Gap %
             const col1 = cfg.gap !== null
-                ? `<span style="font-size:12px;font-weight:600;color:${gapColor}">${gapDisplay}</span>`
+                ? gapDisplay
                 : isStrikeMode
-                    ? `<span style="font-size:11px;font-weight:500;color:${gapColor}">${gapDisplay || '—'}</span>`
+                    ? (gapDisplay || '<span style="color:#475569">—</span>')
                     : `<input value="${rs.customGap}" style="width:54px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:${gapColor};font-size:11px;font-weight:600;padding:3px 5px;text-align:center" oninput="wCalcRowState[${i}].customGap=this.value;wRenderCalc()" />`;
 
             // Col 2: Strike Price
@@ -1707,17 +1743,19 @@
                 ? `<span style="font-size:11px;color:#94A3B8">${expDisplay}</span>`
                 : `<input type="date" value="${expDate}" style="width:120px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:#94A3B8;font-size:11px;padding:3px 5px" oninput="wCalcRowState[${i}].customDate=this.value;wRenderCalc()" />`;
 
-            // Col 4: Premium input
-            const col4 = `<input value="${rs.premiumVal}" style="width:100px;background:#0F172A;border:1px solid #3B82F6;border-radius:4px;color:#10B981;font-size:12px;font-weight:500;padding:3px 6px" oninput="wCalcRowState[${i}].premiumVal=this.value;wRenderCalc()" />`;
+            // Col 4: Premium input — use onInput that updates APY in-place without full re-render
+            const col4 = `<input id="prem-input-${i}" value="${rs.premiumVal}" style="width:100px;background:#0F172A;border:1px solid #3B82F6;border-radius:4px;color:#10B981;font-size:12px;font-weight:500;padding:3px 6px" oninput="wCalcPremChange(${i},this.value)" />`;
 
             // Col 5: APY
             const apyColor = premium ? '#F59E0B' : '#475569';
-            const col5 = `<span style="font-size:11px;font-weight:600;color:${apyColor}">${apyStr}</span>`;
+            const col5 = `<span id="apy-span-${i}" style="font-size:11px;font-weight:600;color:${apyColor}">${apyStr}</span>`;
 
-            // Col 6: + Add button
-            const col6 = `<button onclick="wQuickAddCalc(${i})" style="background:#3B82F6;border:none;border-radius:5px;color:#fff;font-size:10px;padding:4px 8px;cursor:pointer;font-weight:600;white-space:nowrap" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">+ Add</button>`;
+            // Col 6: + Add — pass strikeVal directly to avoid recalculation bug
+            const safeStrike = strikeVal || 0;
+            const safeExp    = expDate   || '';
+            const col6 = `<button onclick="wQuickAddCalc(${i},${safeStrike},'${safeExp}')" style="background:#3B82F6;border:none;border-radius:5px;color:#fff;font-size:10px;padding:4px 8px;cursor:pointer;font-weight:600;white-space:nowrap" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">+ Add</button>`;
 
-            // Col 7: Edit toggle (small pencil to unlock fixed fields)
+            // Col 7: Edit
             const col7 = `<button onclick="wCalcEditRow(${i})" title="Edit row" style="background:transparent;border:1px solid #334155;border-radius:4px;color:#64748b;font-size:10px;padding:3px 6px;cursor:pointer" onmouseover="this.style.borderColor='#94A3B8';this.style.color='#94A3B8'" onmouseout="this.style.borderColor='#334155';this.style.color='#64748b'">✎</button>`;
 
             row.innerHTML = col1 + col2 + col3 + col4 + col5 + col6 + col7;
@@ -1744,38 +1782,18 @@
         }
     }
 
-    function wQuickAddCalc(i) {
-        const cfg  = W_CALC_ROWS[i];
-        const rs   = window.wCalcRowState[i];
-        const today = new Date();
-        const [thisFri, nextFri] = nextFriday(today);
-
-        let strikeVal;
-        if (cfg.strikeMode) {
-            strikeVal = wpn(rs.customStrike) || 0;
-        } else if (cfg.gap !== null) {
-            strikeVal = Math.round(btcPrice * (1 + cfg.gap / 100) / 100) * 100;
-        } else {
-            const g = wpn(rs.customGap) || 0;
-            strikeVal = Math.round(btcPrice * (1 + g / 100) / 100) * 100;
-        }
-
-        let expDate;
-        if (cfg.expIdx !== null) {
-            expDate = [thisFri, nextFri][cfg.expIdx].toISOString().split('T')[0];
-        } else {
-            expDate = rs.customDate || '';
-        }
-
+    function wQuickAddCalc(i, strikeVal, expDate) {
+        const rs      = window.wCalcRowState[i];
+        const today   = new Date();
         const product = wCalcMode === 'put' ? 'Short Put' : 'Short Call';
 
         openWheelOrderModal(null);
         setTimeout(() => {
-            document.getElementById('mo_product').value  = product;
-            document.getElementById('mo_strike').value   = strikeVal.toLocaleString('en-US');
-            document.getElementById('mo_prem').value     = rs.premiumVal || '';
-            document.getElementById('mo_open').value     = today.toISOString().split('T')[0];
-            document.getElementById('mo_expiry').value   = expDate;
+            document.getElementById('mo_product').value = product;
+            document.getElementById('mo_strike').value  = strikeVal ? strikeVal.toLocaleString('en-US') : '';
+            document.getElementById('mo_prem').value    = rs.premiumVal || '';
+            document.getElementById('mo_open').value    = today.toISOString().split('T')[0];
+            document.getElementById('mo_expiry').value  = expDate || '';
         }, 10);
     }
 
