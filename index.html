@@ -560,7 +560,7 @@
 
                             <div>
                                 <!-- Header -->
-                                <div style="display:grid;grid-template-columns:60px 110px 130px 110px 80px 70px 60px;gap:6px;font-size:9px;color:#475569;letter-spacing:.05em;text-transform:uppercase;padding:0 10px;margin-bottom:5px;font-weight:600">
+                                <div style="display:grid;grid-template-columns:75px 110px 115px 120px 72px 70px 36px;gap:6px;font-size:9px;color:#475569;letter-spacing:.05em;text-transform:uppercase;padding:0 10px;margin-bottom:5px;font-weight:600">
                                     <span>Gap %</span><span>Strike</span><span>Expire Date</span><span>Prem/Contract</span><span>APY %</span><span></span><span></span>
                                 </div>
                                 <div id="strikeRows" style="display:flex;flex-direction:column;gap:4px"></div>
@@ -1711,46 +1711,42 @@
             }
 
             const gapColor = wCalcMode === 'put' ? '#FCA5A5' : '#86EFAC';
-            // Show preset gap + actual gap after rounding (if different)
-            const presetLabel  = gapPct !== null ? (gapPct > 0 ? '+' : '') + gapPct.toFixed(0) + '%' : '';
-            const actualLabel  = actualGapPct !== null ? (actualGapPct > 0 ? '+' : '') + actualGapPct.toFixed(1) + '%' : '';
-            const gapDisplay   = cfg.gap !== null && actualGapPct !== null
-                ? `<span style="font-size:12px;font-weight:600;color:${gapColor}">${presetLabel}</span><br><span style="font-size:9px;color:#64748b">${actualLabel}</span>`
-                : actualGapPct !== null
-                    ? `<span style="font-size:11px;font-weight:500;color:${gapColor}">${actualLabel}</span>`
-                    : '';
+            // Show actual gap% (after rounding to 1000) as the primary label
+            const actualLabel = actualGapPct !== null ? (actualGapPct > 0 ? '+' : '') + actualGapPct.toFixed(1) + '%' : '';
             const strikeDisplay = strikeVal ? strikeVal.toLocaleString('en-US') : '';
+            // Expire display as YYYY-MM-DD
+            const expLabel = expDate || '';
 
             const row = document.createElement('div');
-            row.style.cssText = 'display:grid;grid-template-columns:60px 110px 130px 110px 80px 70px 60px;gap:6px;align-items:center;background:#0F172A;border:1px solid #334155;border-radius:7px;padding:7px 10px;transition:border-color .15s';
+            row.style.cssText = 'display:grid;grid-template-columns:75px 110px 115px 120px 72px 70px 36px;gap:6px;align-items:center;background:#0F172A;border:1px solid #334155;border-radius:7px;padding:7px 10px;transition:border-color .15s';
             row.onmouseenter = () => row.style.borderColor = '#3B82F6';
             row.onmouseleave = () => row.style.borderColor = '#334155';
 
-            // Col 1: Gap %
+            // Col 1: Gap % — show actual% for preset rows, input for custom
             const col1 = cfg.gap !== null
-                ? gapDisplay
+                ? `<span style="font-size:12px;font-weight:600;color:${gapColor}">${actualLabel}</span>`
                 : isStrikeMode
-                    ? (gapDisplay || '<span style="color:#475569">—</span>')
-                    : `<input value="${rs.customGap}" style="width:54px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:${gapColor};font-size:11px;font-weight:600;padding:3px 5px;text-align:center" oninput="wCalcRowState[${i}].customGap=this.value;wRenderCalc()" />`;
+                    ? `<span style="font-size:11px;font-weight:500;color:${gapColor}">${actualLabel || '—'}</span>`
+                    : `<input value="${rs.customGap}" style="width:68px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:${gapColor};font-size:11px;font-weight:600;padding:3px 5px;text-align:center" oninput="wCalcRowState[${i}].customGap=this.value;wRenderCalc()" />`;
 
             // Col 2: Strike Price
             const col2 = isStrikeMode
                 ? `<input value="${rs.customStrike}" style="width:100px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:#F8FAFC;font-size:12px;font-weight:500;padding:3px 5px" oninput="wCalcRowState[${i}].customStrike=this.value.replace(/,/g,'');wRenderCalc()" />`
                 : `<span style="font-size:13px;font-weight:500;color:#F8FAFC">${strikeDisplay ? '$' + strikeDisplay : '—'}</span>`;
 
-            // Col 3: Expire date
+            // Col 3: Expire date as YYYY-MM-DD
             const col3 = cfg.expIdx !== null
-                ? `<span style="font-size:11px;color:#94A3B8">${expDisplay}</span>`
-                : `<input type="date" value="${expDate}" style="width:120px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:#94A3B8;font-size:11px;padding:3px 5px" oninput="wCalcRowState[${i}].customDate=this.value;wRenderCalc()" />`;
+                ? `<span style="font-size:11px;color:#94A3B8">${expLabel}</span>`
+                : `<input type="date" value="${expDate}" style="width:108px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:#94A3B8;font-size:11px;padding:3px 5px" oninput="wCalcRowState[${i}].customDate=this.value;wRenderCalc()" />`;
 
-            // Col 4: Premium input — use onInput that updates APY in-place without full re-render
-            const col4 = `<input id="prem-input-${i}" value="${rs.premiumVal}" style="width:100px;background:#0F172A;border:1px solid #3B82F6;border-radius:4px;color:#10B981;font-size:12px;font-weight:500;padding:3px 6px" oninput="wCalcPremChange(${i},this.value)" />`;
+            // Col 4: Premium input
+            const col4 = `<input id="prem-input-${i}" value="${rs.premiumVal}" style="width:112px;background:#0F172A;border:1px solid #3B82F6;border-radius:4px;color:#10B981;font-size:12px;font-weight:500;padding:3px 6px" oninput="wCalcPremChange(${i},this.value)" />`;
 
             // Col 5: APY
             const apyColor = premium ? '#F59E0B' : '#475569';
             const col5 = `<span id="apy-span-${i}" style="font-size:11px;font-weight:600;color:${apyColor}">${apyStr}</span>`;
 
-            // Col 6: + Add — pass strikeVal directly to avoid recalculation bug
+            // Col 6: + Add
             const safeStrike = strikeVal || 0;
             const safeExp    = expDate   || '';
             const col6 = `<button onclick="wQuickAddCalc(${i},${safeStrike},'${safeExp}')" style="background:#3B82F6;border:none;border-radius:5px;color:#fff;font-size:10px;padding:4px 8px;cursor:pointer;font-weight:600;white-space:nowrap" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">+ Add</button>`;
