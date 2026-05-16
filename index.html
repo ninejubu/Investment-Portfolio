@@ -68,6 +68,10 @@
         .pct-suffix::after { content: '%'; position: absolute; right: 8px; color: #64748b; font-size: 10px; pointer-events: none; }
         .pct-suffix input { padding-right: 20px; }
         .edit-input { background: #0F172A; border: 1px solid #334155; color: white; padding: 2px 4px; border-radius: 4px; font-size: 11px; width: 100%; }
+        @keyframes pulse-red {
+            0%, 100% { border-color: rgba(239,68,68,.4); background: rgba(239,68,68,.1); }
+            50%       { border-color: rgba(239,68,68,.9); background: rgba(239,68,68,.2); }
+        }
 
         /* ── Skeleton loading ── */
         @keyframes shimmer {
@@ -532,6 +536,20 @@
                                 <div class="wheel-stat-box"><div class="wheel-stat-label">Free Collateral</div><div class="wheel-stat-val w-green" id="sumFree">—</div></div>
                                 <div class="wheel-stat-box"><div class="wheel-stat-label">Open Premium</div><div class="wheel-stat-val w-blue" id="sumPutPrem">—</div></div>
                                 <div class="wheel-stat-box"><div class="wheel-stat-label">Avg Exercise Price</div><div class="wheel-stat-val" id="sumAvgEx">—</div></div>
+                            </div>
+                            <!-- Exercise Amount -->
+                            <div style="margin-top:10px;padding:10px 12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px">
+                                <div style="font-size:9px;color:#92400E;letter-spacing:.06em;text-transform:uppercase;font-weight:700;margin-bottom:6px">Exercise Exposure (if assigned)</div>
+                                <div id="exerciseRows" style="display:flex;flex-direction:column;gap:4px"></div>
+                                <div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(245,158,11,.15);display:flex;justify-content:space-between;align-items:center">
+                                    <span style="font-size:10px;color:#94A3B8">Total to Exercise</span>
+                                    <span id="totalExercise" style="font-size:13px;font-weight:700;color:#F59E0B">—</span>
+                                </div>
+                            </div>
+                            <!-- Strike Alert Banner -->
+                            <div id="strikeAlertBanner" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.4);border-radius:8px;animation:pulse-red 1.5s infinite">
+                                <div style="font-size:9px;color:#FCA5A5;letter-spacing:.06em;text-transform:uppercase;font-weight:700;margin-bottom:4px">⚠️ Strike Price Alert</div>
+                                <div id="strikeAlertText" style="font-size:11px;color:#FCA5A5;line-height:1.6"></div>
                             </div>
                             <div class="cover-bar-wrap">
                                 <div class="cover-bar-label">Collateral Coverage</div>
@@ -1491,11 +1509,71 @@
     const wpn = s => parseFloat((s+'').replace(/,/g,'')) || 0;
     const wusd = (n,d=0) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
 
-    async function fetchBtc() {
-        try { const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'); const d = await r.json(); btcPrice = parseFloat(d.lastPrice); const chg = parseFloat(d.priceChangePercent); document.getElementById('btcPrice').textContent = wusd(btcPrice,2); const ce = document.getElementById('btcChange'); ce.textContent = (chg>=0?'+':'')+chg.toFixed(2)+'%'; ce.className = 'btc-change-val '+(chg>=0?'up':'down'); const cs = document.getElementById('calcBtcShow'); if(cs) cs.textContent = wusd(btcPrice,2); wCalcAll(); } catch(e) {}
+    let alertedStrikes = new Set(); // track which strikes already popped up
+
+    function wUpdateExerciseAndAlerts() {
+        const openPuts = wOrders.filter(o => o.product === 'Short Put' && o.status === 'open');
+
+        // ── Exercise Exposure ──────────────────────────────────────────
+        const exRows = document.getElementById('exerciseRows');
+        const exTotal = document.getElementById('totalExercise');
+        if (exRows) {
+            exRows.innerHTML = '';
+            let total = 0;
+            openPuts.forEach(o => {
+                const amt = o.strike * o.contracts;
+                total += amt;
+                const atRisk = btcPrice <= o.strike * 1.02; // within 2% of strike
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;font-size:11px';
+                row.innerHTML = `
+                    <span style="color:#94A3B8">$${o.strike.toLocaleString()} × ${o.contracts} BTC ${atRisk ? '<span style="color:#F87171;font-size:9px;margin-left:4px">⚠ near</span>' : ''}</span>
+                    <span style="font-weight:600;color:${atRisk ? '#F87171' : '#F59E0B'}">$${amt.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</span>
+                `;
+                exRows.appendChild(row);
+            });
+            if (exTotal) exTotal.textContent = openPuts.length ? '$' + total.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0}) : '—';
+        }
+
+        // ── Strike Price Alert ─────────────────────────────────────────
+        const banner   = document.getElementById('strikeAlertBanner');
+        const alertTxt = document.getElementById('strikeAlertText');
+        const breached = openPuts.filter(o => btcPrice <= o.strike);
+
+        if (breached.length > 0 && banner && alertTxt) {
+            banner.style.display = 'block';
+            alertTxt.innerHTML = breached.map(o =>
+                `Strike $${o.strike.toLocaleString()} × ${o.contracts} BTC &nbsp;→&nbsp; Exercise $${(o.strike * o.contracts).toLocaleString('en-US', {maximumFractionDigits:0})}`
+            ).join('<br>');
+
+            // Pop-up alert once per strike (not every 15s)
+            breached.forEach(o => {
+                const key = `${o.id}-${o.strike}`;
+                if (!alertedStrikes.has(key)) {
+                    alertedStrikes.add(key);
+                    // Small delay so multiple alerts don't stack instantly
+                    setTimeout(() => {
+                        const msg = `⚠️ BTC Price Alert!\n\nBTC is now $${btcPrice.toLocaleString('en-US', {maximumFractionDigits:0})}\nBelow your Short Put strike of $${o.strike.toLocaleString()}\n\nExercise amount: $${(o.strike * o.contracts).toLocaleString('en-US', {maximumFractionDigits:0})} (${o.contracts} BTC @ $${o.strike.toLocaleString()})`;
+                        if (window.Notification && Notification.permission === 'granted') {
+                            new Notification('⚠️ BTC Below Strike', { body: `BTC $${btcPrice.toLocaleString('en-US',{maximumFractionDigits:0})} < Strike $${o.strike.toLocaleString()} — Exercise $${(o.strike*o.contracts).toLocaleString('en-US',{maximumFractionDigits:0})}`, icon: '' });
+                        } else {
+                            alert(msg);
+                        }
+                    }, 200);
+                }
+            });
+        } else if (banner) {
+            banner.style.display = 'none';
+            // Clear alerted cache when price recovers above all strikes
+            if (breached.length === 0) alertedStrikes = new Set();
+        }
     }
 
-    function wCalcAll() { wRenderSummary(); wRenderLots(); wRenderOrders(); wRenderCalc(); wRenderHistory(); }
+    async function fetchBtc() {
+        try { const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'); const d = await r.json(); btcPrice = parseFloat(d.lastPrice); const chg = parseFloat(d.priceChangePercent); document.getElementById('btcPrice').textContent = wusd(btcPrice,2); const ce = document.getElementById('btcChange'); ce.textContent = (chg>=0?'+':'')+chg.toFixed(2)+'%'; ce.className = 'btc-change-val '+(chg>=0?'up':'down'); const cs = document.getElementById('calcBtcShow'); if(cs) cs.textContent = wusd(btcPrice,2); wCalcAll(); wUpdateExerciseAndAlerts(); } catch(e) {}
+    }
+
+    function wCalcAll() { wRenderSummary(); wRenderLots(); wRenderOrders(); wRenderCalc(); wRenderHistory(); wUpdateExerciseAndAlerts(); }
 
     function wRenderSummary() {
         const bal = wpn(document.getElementById('optBalance').value);
@@ -1938,6 +2016,7 @@
 
         // BTC price polling
         fetchBtc(); setInterval(fetchBtc, 15000);
+        if (window.Notification && Notification.permission === 'default') Notification.requestPermission();
 
         const gsUrl = getGsUrl();
         if (gsUrl) {
