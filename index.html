@@ -521,9 +521,9 @@
 
                 <!-- Wheel Dashboard sub-page -->
                 <div class="wheel-page active space-y-4" id="w-dashboard">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4" style="align-items:stretch">
                         <!-- Balance Card -->
-                        <div class="wheel-card">
+                        <div class="wheel-card" style="display:flex;flex-direction:column">
                             <div class="wheel-card-title"><span class="ctl">Options Balance</span></div>
                             <div class="mb-3">
                                 <div class="wheel-input-group">
@@ -537,9 +537,9 @@
                                 <div class="wheel-stat-box"><div class="wheel-stat-label">Open Premium</div><div class="wheel-stat-val w-blue" id="sumPutPrem">—</div></div>
                                 <div class="wheel-stat-box"><div class="wheel-stat-label">Avg Exercise Price</div><div class="wheel-stat-val" id="sumAvgEx">—</div></div>
                             </div>
-                            <!-- Exercise Amount -->
-                            <div style="margin-top:10px;padding:10px 12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px">
-                                <div style="font-size:9px;color:#92400E;letter-spacing:.06em;text-transform:uppercase;font-weight:700;margin-bottom:6px">Exercise Exposure (if assigned)</div>
+                            <!-- Exercise Exposure — ITM + within 2% only -->
+                            <div id="exercisePanel" style="margin-top:10px;padding:10px 12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;display:none">
+                                <div style="font-size:9px;color:#92400E;letter-spacing:.06em;text-transform:uppercase;font-weight:700;margin-bottom:6px">⚠ Exercise Exposure (ITM / Near)</div>
                                 <div id="exerciseRows" style="display:flex;flex-direction:column;gap:4px"></div>
                                 <div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(245,158,11,.15);display:flex;justify-content:space-between;align-items:center">
                                     <span style="font-size:10px;color:#94A3B8">Total to Exercise</span>
@@ -551,7 +551,7 @@
                                 <div style="font-size:9px;color:#FCA5A5;letter-spacing:.06em;text-transform:uppercase;font-weight:700;margin-bottom:4px">⚠️ Strike Price Alert</div>
                                 <div id="strikeAlertText" style="font-size:11px;color:#FCA5A5;line-height:1.6"></div>
                             </div>
-                            <div class="cover-bar-wrap">
+                            <div class="cover-bar-wrap" style="margin-top:auto;padding-top:10px">
                                 <div class="cover-bar-label">Collateral Coverage</div>
                                 <div class="bar-track"><div class="bar-fill" id="coverBar" style="width:0%"></div></div>
                                 <div class="bar-txt"><span id="coverPct">0%</span><span id="coverStatus">—</span></div>
@@ -560,7 +560,7 @@
                         </div>
 
                         <!-- Options Calculator -->
-                        <div class="wheel-card lg:col-span-2">
+                        <div class="wheel-card lg:col-span-2" style="display:flex;flex-direction:column">
                             <div class="wheel-card-title">
                                 <div style="display:flex;align-items:center;gap:10px">
                                     <span class="ctl">Options Calculator</span>
@@ -578,7 +578,7 @@
 
                             <div>
                                 <!-- Header -->
-                                <div style="display:grid;grid-template-columns:75px 110px 115px 120px 72px 70px 36px;gap:6px;font-size:9px;color:#475569;letter-spacing:.05em;text-transform:uppercase;padding:0 10px;margin-bottom:5px;font-weight:600">
+                                <div style="display:grid;grid-template-columns:75px 110px 115px 1fr 72px 36px 30px;gap:6px;font-size:9px;color:#475569;letter-spacing:.05em;text-transform:uppercase;padding:0 10px;margin-bottom:5px;font-weight:600">
                                     <span>Gap %</span><span>Strike</span><span>Expire Date</span><span>Prem/Contract</span><span>APY %</span><span></span><span></span>
                                 </div>
                                 <div id="strikeRows" style="display:flex;flex-direction:column;gap:4px"></div>
@@ -1514,25 +1514,31 @@
     function wUpdateExerciseAndAlerts() {
         const openPuts = wOrders.filter(o => o.product === 'Short Put' && o.status === 'open');
 
-        // ── Exercise Exposure ──────────────────────────────────────────
-        const exRows = document.getElementById('exerciseRows');
+        // ── Exercise Exposure — ITM (btcPrice ≤ strike) or within 2% of strike ──
+        const atRiskOrders = openPuts.filter(o => btcPrice <= o.strike * 1.02);
+        const exPanel = document.getElementById('exercisePanel');
+        const exRows  = document.getElementById('exerciseRows');
         const exTotal = document.getElementById('totalExercise');
+
+        if (exPanel) exPanel.style.display = atRiskOrders.length ? 'block' : 'none';
+
         if (exRows) {
             exRows.innerHTML = '';
             let total = 0;
-            openPuts.forEach(o => {
-                const amt = o.strike * o.contracts;
-                total += amt;
-                const atRisk = btcPrice <= o.strike * 1.02; // within 2% of strike
-                const row = document.createElement('div');
+            atRiskOrders.forEach(o => {
+                const amt   = o.strike * o.contracts;
+                total      += amt;
+                const isITM = btcPrice <= o.strike;
+                const row   = document.createElement('div');
                 row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;font-size:11px';
                 row.innerHTML = `
-                    <span style="color:#94A3B8">$${o.strike.toLocaleString()} × ${o.contracts} BTC ${atRisk ? '<span style="color:#F87171;font-size:9px;margin-left:4px">⚠ near</span>' : ''}</span>
-                    <span style="font-weight:600;color:${atRisk ? '#F87171' : '#F59E0B'}">$${amt.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</span>
-                `;
+                    <span style="color:#94A3B8">$${o.strike.toLocaleString()} × ${o.contracts} BTC
+                        <span style="font-size:9px;margin-left:4px;padding:1px 5px;border-radius:3px;font-weight:700;background:${isITM ? 'rgba(239,68,68,.2)' : 'rgba(245,158,11,.2)'};color:${isITM ? '#F87171' : '#FCD34D'}">${isITM ? 'ITM' : 'NEAR'}</span>
+                    </span>
+                    <span style="font-weight:600;color:${isITM ? '#F87171' : '#F59E0B'}">$${amt.toLocaleString('en-US',{maximumFractionDigits:0})}</span>`;
                 exRows.appendChild(row);
             });
-            if (exTotal) exTotal.textContent = openPuts.length ? '$' + total.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0}) : '—';
+            if (exTotal) exTotal.textContent = atRiskOrders.length ? '$' + total.toLocaleString('en-US',{maximumFractionDigits:0}) : '—';
         }
 
         // ── Strike Price Alert ─────────────────────────────────────────
@@ -1543,28 +1549,22 @@
         if (breached.length > 0 && banner && alertTxt) {
             banner.style.display = 'block';
             alertTxt.innerHTML = breached.map(o =>
-                `Strike $${o.strike.toLocaleString()} × ${o.contracts} BTC &nbsp;→&nbsp; Exercise $${(o.strike * o.contracts).toLocaleString('en-US', {maximumFractionDigits:0})}`
+                `Strike $${o.strike.toLocaleString()} × ${o.contracts} BTC &nbsp;→&nbsp; $${(o.strike * o.contracts).toLocaleString('en-US',{maximumFractionDigits:0})}`
             ).join('<br>');
-
-            // Pop-up alert once per strike (not every 15s)
             breached.forEach(o => {
                 const key = `${o.id}-${o.strike}`;
                 if (!alertedStrikes.has(key)) {
                     alertedStrikes.add(key);
-                    // Small delay so multiple alerts don't stack instantly
                     setTimeout(() => {
-                        const msg = `⚠️ BTC Price Alert!\n\nBTC is now $${btcPrice.toLocaleString('en-US', {maximumFractionDigits:0})}\nBelow your Short Put strike of $${o.strike.toLocaleString()}\n\nExercise amount: $${(o.strike * o.contracts).toLocaleString('en-US', {maximumFractionDigits:0})} (${o.contracts} BTC @ $${o.strike.toLocaleString()})`;
+                        const msg = `⚠️ BTC Price Alert!\n\nBTC is now $${btcPrice.toLocaleString('en-US',{maximumFractionDigits:0})}\nBelow your Short Put strike of $${o.strike.toLocaleString()}\n\nExercise amount: $${(o.strike*o.contracts).toLocaleString('en-US',{maximumFractionDigits:0})} (${o.contracts} BTC @ $${o.strike.toLocaleString()})`;
                         if (window.Notification && Notification.permission === 'granted') {
-                            new Notification('⚠️ BTC Below Strike', { body: `BTC $${btcPrice.toLocaleString('en-US',{maximumFractionDigits:0})} < Strike $${o.strike.toLocaleString()} — Exercise $${(o.strike*o.contracts).toLocaleString('en-US',{maximumFractionDigits:0})}`, icon: '' });
-                        } else {
-                            alert(msg);
-                        }
+                            new Notification('⚠️ BTC Below Strike', { body: `BTC $${btcPrice.toLocaleString('en-US',{maximumFractionDigits:0})} < Strike $${o.strike.toLocaleString()} — $${(o.strike*o.contracts).toLocaleString('en-US',{maximumFractionDigits:0})}` });
+                        } else { alert(msg); }
                     }, 200);
                 }
             });
         } else if (banner) {
             banner.style.display = 'none';
-            // Clear alerted cache when price recovers above all strikes
             if (breached.length === 0) alertedStrikes = new Set();
         }
     }
@@ -1796,7 +1796,7 @@
             const expLabel = expDate || '';
 
             const row = document.createElement('div');
-            row.style.cssText = 'display:grid;grid-template-columns:75px 110px 115px 120px 72px 70px 36px;gap:6px;align-items:center;background:#0F172A;border:1px solid #334155;border-radius:7px;padding:7px 10px;transition:border-color .15s';
+            row.style.cssText = 'display:grid;grid-template-columns:75px 110px 115px 1fr 72px 36px 30px;gap:6px;align-items:center;background:#0F172A;border:1px solid #334155;border-radius:7px;padding:7px 10px;transition:border-color .15s';
             row.onmouseenter = () => row.style.borderColor = '#3B82F6';
             row.onmouseleave = () => row.style.borderColor = '#334155';
 
@@ -1827,7 +1827,7 @@
             // Col 6: + Add
             const safeStrike = strikeVal || 0;
             const safeExp    = expDate   || '';
-            const col6 = `<button onclick="wQuickAddCalc(${i},${safeStrike},'${safeExp}')" style="background:#3B82F6;border:none;border-radius:5px;color:#fff;font-size:10px;padding:4px 8px;cursor:pointer;font-weight:600;white-space:nowrap" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">+ Add</button>`;
+            const col6 = `<button onclick="wQuickAddCalc(${i},${safeStrike},'${safeExp}')" title="Add to orders" style="background:#3B82F6;border:none;border-radius:5px;color:#fff;font-size:14px;font-weight:700;padding:3px 10px;cursor:pointer;line-height:1" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">+</button>`;
 
             // Col 7: Edit
             const col7 = `<button onclick="wCalcEditRow(${i})" title="Edit row" style="background:transparent;border:1px solid #334155;border-radius:4px;color:#64748b;font-size:10px;padding:3px 6px;cursor:pointer" onmouseover="this.style.borderColor='#94A3B8';this.style.color='#94A3B8'" onmouseout="this.style.borderColor='#334155';this.style.color='#64748b'">✎</button>`;
