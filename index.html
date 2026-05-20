@@ -491,22 +491,22 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-stock">
                         <div class="flex justify-between items-center mb-3"><span class="text-slate-300 font-semibold">Stocks</span><span id="stock-ytd" class="text-xs text-stock font-bold">-</span></div>
-                        <h4 class="text-xl font-bold text-white mb-4" id="stock-bal">฿ 0.00</h4>
+                        <h4 class="text-xl font-bold text-white mb-4 cursor-pointer hover:text-stock transition-colors" id="stock-bal" onclick="openDrillDown('stocks')" title="Click for details">฿ 0.00</h4>
                         <div class="asset-stat-grid text-center"><div><div class="text-slate-500">Q1</div><div id="s-q1" class="text-white">-</div></div><div><div class="text-slate-500">Q2</div><div id="s-q2" class="text-white">-</div></div><div><div class="text-slate-500">Q3</div><div id="s-q3" class="text-white">-</div></div><div><div class="text-slate-500">Q4</div><div id="s-q4" class="text-white">-</div></div><div><div class="text-blue-400">YTD</div><div id="s-ytd" class="text-white">-</div></div></div>
                     </div>
                     <div class="bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-bond">
                         <div class="flex justify-between items-center mb-3"><span class="text-slate-300 font-semibold">Bonds</span><span id="bond-ytd" class="text-xs text-bond font-bold">-</span></div>
-                        <h4 class="text-xl font-bold text-white mb-4" id="bond-bal">฿ 0.00</h4>
+                        <h4 class="text-xl font-bold text-white mb-4 cursor-pointer hover:text-bond transition-colors" id="bond-bal" onclick="openDrillDown('bonds')" title="Click for details">฿ 0.00</h4>
                         <div class="asset-stat-grid text-center"><div><div class="text-slate-500">Q1</div><div id="b-q1" class="text-white">-</div></div><div><div class="text-slate-500">Q2</div><div id="b-q2" class="text-white">-</div></div><div><div class="text-slate-500">Q3</div><div id="b-q3" class="text-white">-</div></div><div><div class="text-slate-500">Q4</div><div id="b-q4" class="text-white">-</div></div><div><div class="text-blue-400">YTD</div><div id="b-ytd" class="text-white">-</div></div></div>
                     </div>
                     <div class="bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-crypto">
                         <div class="flex justify-between items-center mb-3"><span class="text-slate-300 font-semibold">Crypto</span><span id="crypto-ytd" class="text-xs text-crypto font-bold">-</span></div>
-                        <h4 class="text-xl font-bold text-white mb-4" id="crypto-bal">฿ 0.00</h4>
+                        <h4 class="text-xl font-bold text-white mb-4 cursor-pointer hover:text-crypto transition-colors" id="crypto-bal" onclick="openDrillDown('crypto')" title="Click for details">฿ 0.00</h4>
                         <div class="asset-stat-grid text-center"><div><div class="text-slate-500">Q1</div><div id="c-q1" class="text-white">-</div></div><div><div class="text-slate-500">Q2</div><div id="c-q2" class="text-white">-</div></div><div><div class="text-slate-500">Q3</div><div id="c-q3" class="text-white">-</div></div><div><div class="text-slate-500">Q4</div><div id="c-q4" class="text-white">-</div></div><div><div class="text-blue-400">YTD</div><div id="c-ytd" class="text-white">-</div></div></div>
                     </div>
                     <div class="bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-gold">
                         <div class="flex justify-between items-center mb-3"><span class="text-slate-300 font-semibold">Gold</span><span id="gold-ytd" class="text-xs text-gold font-bold">-</span></div>
-                        <h4 class="text-xl font-bold text-white mb-4" id="gold-bal">฿ 0.00</h4>
+                        <h4 class="text-xl font-bold text-white mb-4 cursor-pointer hover:text-gold transition-colors" id="gold-bal" onclick="openDrillDown('gold')" title="Click for details">฿ 0.00</h4>
                         <div class="asset-stat-grid text-center"><div><div class="text-slate-500">Q1</div><div id="g-q1" class="text-white">-</div></div><div><div class="text-slate-500">Q2</div><div id="g-q2" class="text-white">-</div></div><div><div class="text-slate-500">Q3</div><div id="g-q3" class="text-white">-</div></div><div><div class="text-slate-500">Q4</div><div id="g-q4" class="text-white">-</div></div><div><div class="text-blue-400">YTD</div><div id="g-ytd" class="text-white">-</div></div></div>
                     </div>
                 </div>
@@ -529,7 +529,7 @@
                             <div class="h-56 relative mb-4"><canvas id="allocChart"></canvas></div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-center text-[10px] text-slate-400">
-                                    <thead class="border-b border-slate-700 text-slate-500 uppercase"><tr><th class="text-left pb-1">Period</th><th class="pb-1 text-stock">Stocks</th><th class="pb-1 text-bond">Bonds</th><th class="pb-1 text-crypto">Crypto</th><th class="pb-1 text-gold">Gold</th></tr></thead>
+                                    <thead class="border-b border-slate-700 text-slate-500 uppercase"><tr><th class="text-left pb-1">Period</th><th class="pb-1 text-stock cursor-pointer hover:text-white" onclick="openDrillDown('stocks')" title="Click for details">Stocks ↗</th><th class="pb-1 text-bond cursor-pointer hover:text-white" onclick="openDrillDown('bonds')" title="Click for details">Bonds ↗</th><th class="pb-1 text-crypto cursor-pointer hover:text-white" onclick="openDrillDown('crypto')" title="Click for details">Crypto ↗</th><th class="pb-1 text-gold cursor-pointer hover:text-white" onclick="openDrillDown('gold')" title="Click for details">Gold ↗</th></tr></thead>
                                     <tbody id="alloc-history-tbody"></tbody>
                                 </table>
                             </div>
@@ -2117,6 +2117,240 @@
             wCalcAll();
         }
     };
+    </script>
+
+    <!-- ══════════ DRILL-DOWN MODAL ══════════ -->
+    <div id="drilldown-overlay" onclick="if(event.target===this)closeDrillDown()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:16px">
+        <div id="drilldown-modal" style="background:#1E293B;border:1px solid #334155;border-radius:16px;width:700px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.5)">
+            <div id="dd-header" style="padding:20px 24px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #334155">
+                <div style="display:flex;align-items:center;gap:10px">
+                    <div id="dd-accent" style="width:4px;height:28px;border-radius:2px;background:#10B981;transition:background .2s"></div>
+                    <div>
+                        <div id="dd-title" style="font-size:16px;font-weight:700;color:#F8FAFC">Stocks Holdings</div>
+                        <div id="dd-subtitle" style="font-size:11px;color:#64748b;margin-top:2px">Click a quarter to view or edit holdings</div>
+                    </div>
+                </div>
+                <button onclick="closeDrillDown()" style="background:rgba(100,116,139,.12);border:1px solid #334155;border-radius:8px;color:#94A3B8;width:32px;height:32px;cursor:pointer;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='rgba(239,68,68,.15)';this.style.borderColor='#EF4444';this.style.color='#F87171'" onmouseout="this.style.background='rgba(100,116,139,.12)';this.style.borderColor='#334155';this.style.color='#94A3B8'">×</button>
+            </div>
+            <!-- Quarter tabs -->
+            <div style="padding:14px 24px 0;display:flex;gap:6px;flex-wrap:wrap" id="dd-tabs"></div>
+            <!-- Summary stats -->
+            <div id="dd-summary" style="margin:12px 24px 0;padding:12px 16px;background:#0F172A;border:1px solid #334155;border-radius:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;text-align:center"></div>
+            <!-- Holdings -->
+            <div style="padding:16px 24px 24px">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                    <span style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.08em;font-weight:600">Holdings Detail</span>
+                    <button onclick="ddAddRow()" style="background:#3B82F6;border:none;border-radius:6px;color:#fff;font-size:11px;padding:5px 14px;cursor:pointer;font-weight:600" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">+ Add</button>
+                </div>
+                <div style="display:grid;grid-template-columns:2fr 130px 100px 72px;gap:8px;font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.06em;font-weight:600;padding:0 8px;margin-bottom:6px">
+                    <span>Name / Ticker</span><span style="text-align:right">Amount (THB)</span><span style="text-align:right">% of Asset</span><span></span>
+                </div>
+                <div id="dd-holdings-list" style="display:flex;flex-direction:column;gap:4px"></div>
+                <div id="dd-total-row" style="margin-top:10px;padding-top:10px;border-top:1px solid #334155;display:grid;grid-template-columns:2fr 130px 100px 72px;gap:8px;font-size:12px;font-weight:700;color:#F8FAFC;padding-left:8px;padding-right:8px"></div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    @keyframes ddIn { from{opacity:0;transform:scale(.96) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    #drilldown-modal { animation: ddIn .2s cubic-bezier(.34,1.26,.64,1); }
+    </style>
+
+    <script>
+    // ══════════════════════════════════════════════════════
+    //  DRILL-DOWN — Holdings per Quarter
+    // ══════════════════════════════════════════════════════
+    const DD_COLORS = { stocks:'#10B981', bonds:'#F59E0B', crypto:'#3B82F6', gold:'#FACC15' };
+    const DD_LABELS = { stocks:'Stocks', bonds:'Bonds', crypto:'Crypto', gold:'Gold' };
+
+    let ddAsset    = 'stocks';
+    let ddQuarter  = 'Q1';
+
+    // Storage key for holdings per port/asset/quarter
+    function ddKey(asset, quarter) {
+        return `holdings_${state.currentPort}_${asset}_${quarter}`;
+    }
+
+    function ddLoad(asset, quarter) {
+        try { return JSON.parse(localStorage.getItem(ddKey(asset, quarter))) || []; }
+        catch { return []; }
+    }
+
+    function ddSave(asset, quarter, rows) {
+        localStorage.setItem(ddKey(asset, quarter), JSON.stringify(rows));
+    }
+
+    function openDrillDown(asset) {
+        ddAsset   = asset;
+        ddQuarter = 'Q1';
+        const overlay = document.getElementById('drilldown-overlay');
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        ddRender();
+    }
+
+    function closeDrillDown() {
+        document.getElementById('drilldown-overlay').style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    function ddRender() {
+        const color = DD_COLORS[ddAsset];
+        const label = DD_LABELS[ddAsset];
+
+        // Accent + title
+        document.getElementById('dd-accent').style.background  = color;
+        document.getElementById('dd-title').textContent        = label + ' — Holdings';
+        document.getElementById('dd-subtitle').textContent     = 'Select a quarter to view or edit holdings';
+
+        // Quarter tabs: Beg + Q1–Q4
+        const periods = ['Beg','Q1','Q2','Q3','Q4'];
+        const tabsEl  = document.getElementById('dd-tabs');
+        tabsEl.innerHTML = '';
+        periods.forEach(p => {
+            const active = p === ddQuarter;
+            const btn = document.createElement('button');
+            btn.textContent = p;
+            btn.onclick = () => { ddQuarter = p; ddRender(); };
+            btn.style.cssText = `padding:5px 14px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid ${active ? color : '#334155'};background:${active ? color+'22' : 'transparent'};color:${active ? color : '#64748b'};cursor:pointer;transition:all .15s`;
+            tabsEl.appendChild(btn);
+        });
+
+        // Summary stats for selected quarter
+        const qKey = ddQuarter === 'Beg' ? 'beg' : ddQuarter.toLowerCase();
+        let qBal = 0, qGrowth = null;
+
+        if (ddQuarter === 'Beg') {
+            qBal = pState().begBalances[ddAsset] || 0;
+        } else {
+            const qNum = parseInt(ddQuarter[1]);
+            const computed = state.computed[ddAsset];
+            if (computed && computed[`q${qNum}`]) {
+                qBal    = computed[`q${qNum}`].end    ?? 0;
+                qGrowth = computed[`q${qNum}`].growth ?? null;
+            }
+        }
+
+        const totalPort = ['stocks','bonds','crypto','gold'].reduce((s,a) => {
+            if (ddQuarter === 'Beg') return s + (pState().begBalances[a]||0);
+            const qNum = parseInt(ddQuarter[1]);
+            return s + (state.computed[a]?.[`q${qNum}`]?.end ?? 0);
+        }, 0);
+
+        const allocPct = totalPort > 0 ? (qBal / totalPort * 100) : 0;
+
+        document.getElementById('dd-summary').innerHTML = `
+            <div><div style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Balance</div><div style="font-size:15px;font-weight:700;color:${color}">฿${qBal.toLocaleString('en-US',{maximumFractionDigits:0})}</div></div>
+            <div><div style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Allocation</div><div style="font-size:15px;font-weight:700;color:#F8FAFC">${allocPct.toFixed(1)}%</div></div>
+            <div><div style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Growth</div><div style="font-size:15px;font-weight:700;color:${qGrowth===null?'#64748b':qGrowth>=0?'#10B981':'#EF4444'}">${qGrowth===null?'—':(qGrowth>=0?'+':'')+qGrowth.toFixed(2)+'%'}</div></div>
+            <div><div style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Holdings</div><div style="font-size:15px;font-weight:700;color:#F8FAFC" id="dd-count">—</div></div>`;
+
+        ddRenderHoldings(qBal);
+    }
+
+    function ddRenderHoldings(assetBal) {
+        const rows  = ddLoad(ddAsset, ddQuarter);
+        const listEl = document.getElementById('dd-holdings-list');
+        const color  = DD_COLORS[ddAsset];
+        listEl.innerHTML = '';
+
+        document.getElementById('dd-count').textContent = rows.length || '0';
+
+        if (rows.length === 0) {
+            listEl.innerHTML = `<div style="text-align:center;padding:24px;color:#475569;font-size:12px">No holdings recorded for ${ddQuarter}.<br><span style="font-size:10px">Click + Add to start tracking.</span></div>`;
+            document.getElementById('dd-total-row').innerHTML = '';
+            return;
+        }
+
+        let totalAmt = 0;
+        rows.forEach((row, i) => {
+            totalAmt += row.amount || 0;
+        });
+
+        rows.forEach((row, i) => {
+            const pct     = assetBal > 0 ? (row.amount / assetBal * 100) : (totalAmt > 0 ? row.amount / totalAmt * 100 : 0);
+            const barW    = Math.min(100, pct);
+            const rowEl   = document.createElement('div');
+            rowEl.style.cssText = 'background:#0F172A;border:1px solid #334155;border-radius:8px;padding:10px 10px 8px;transition:border-color .15s';
+            rowEl.onmouseenter = () => rowEl.style.borderColor = color + '66';
+            rowEl.onmouseleave = () => rowEl.style.borderColor = '#334155';
+
+            rowEl.innerHTML = `
+                <div style="display:grid;grid-template-columns:2fr 130px 100px 72px;gap:8px;align-items:center;margin-bottom:6px">
+                    <input value="${row.name||''}" placeholder="Name / Ticker" oninput="ddUpdateRow(${i},'name',this.value)"
+                        style="background:transparent;border:none;color:#F8FAFC;font-size:12px;font-weight:600;outline:none;padding:0;width:100%" />
+                    <input value="${row.amount?row.amount.toLocaleString('en-US',{maximumFractionDigits:0}):''}" placeholder="0" oninput="ddUpdateRow(${i},'amount',this.value)" onfocus="this.value=this.value.replace(/,/g,'')"
+                        style="background:transparent;border:none;color:#F8FAFC;font-size:12px;font-weight:500;outline:none;text-align:right;width:100%" />
+                    <div style="text-align:right;font-size:12px;font-weight:500;color:${color}">${pct.toFixed(1)}%</div>
+                    <div style="text-align:right">
+                        <button onclick="ddDeleteRow(${i})" style="background:transparent;border:1px solid #334155;border-radius:4px;color:#64748b;font-size:10px;padding:2px 7px;cursor:pointer" onmouseover="this.style.borderColor='#EF4444';this.style.color='#F87171'" onmouseout="this.style.borderColor='#334155';this.style.color='#64748b'">✕</button>
+                    </div>
+                </div>
+                <div style="height:3px;background:#1E293B;border-radius:2px;overflow:hidden">
+                    <div style="height:100%;width:${barW}%;background:${color};border-radius:2px;transition:width .4s ease"></div>
+                </div>`;
+            listEl.appendChild(rowEl);
+        });
+
+        // Total row
+        const totalPct = assetBal > 0 ? (totalAmt / assetBal * 100) : 100;
+        const unaccounted = assetBal - totalAmt;
+        document.getElementById('dd-total-row').innerHTML = `
+            <span style="color:#64748b;font-size:11px">Total recorded</span>
+            <span style="text-align:right">฿${totalAmt.toLocaleString('en-US',{maximumFractionDigits:0})}</span>
+            <span style="text-align:right;color:${Math.abs(totalPct-100)<0.5?'#10B981':'#F59E0B'}">${totalPct.toFixed(1)}%</span>
+            <span style="text-align:right;font-size:10px;color:${unaccounted<0?'#F87171':'#64748b'}">${unaccounted>=0?'+':'-'}฿${Math.abs(unaccounted).toLocaleString('en-US',{maximumFractionDigits:0})}</span>`;
+    }
+
+    function ddUpdateRow(i, field, val) {
+        const rows = ddLoad(ddAsset, ddQuarter);
+        if (field === 'amount') {
+            const num = parseFloat(val.replace(/,/g,''));
+            rows[i].amount = isNaN(num) ? 0 : num;
+        } else {
+            rows[i][field] = val;
+        }
+        ddSave(ddAsset, ddQuarter, rows);
+        // Re-render just totals to avoid losing focus
+        const assetBal = ddGetAssetBal();
+        const totalAmt = rows.reduce((s,r)=>s+(r.amount||0),0);
+        const totalPct = assetBal > 0 ? (totalAmt / assetBal * 100) : 100;
+        const unaccounted = assetBal - totalAmt;
+        const tr = document.getElementById('dd-total-row');
+        if (tr) tr.innerHTML = `
+            <span style="color:#64748b;font-size:11px">Total recorded</span>
+            <span style="text-align:right">฿${totalAmt.toLocaleString('en-US',{maximumFractionDigits:0})}</span>
+            <span style="text-align:right;color:${Math.abs(totalPct-100)<0.5?'#10B981':'#F59E0B'}">${totalPct.toFixed(1)}%</span>
+            <span style="text-align:right;font-size:10px;color:${unaccounted<0?'#F87171':'#64748b'}">${unaccounted>=0?'+':'-'}฿${Math.abs(unaccounted).toLocaleString('en-US',{maximumFractionDigits:0})}</span>`;
+    }
+
+    function ddAddRow() {
+        const rows = ddLoad(ddAsset, ddQuarter);
+        rows.push({ name: '', amount: 0 });
+        ddSave(ddAsset, ddQuarter, rows);
+        ddRenderHoldings(ddGetAssetBal());
+        // Focus last name input
+        setTimeout(() => {
+            const inputs = document.querySelectorAll('#dd-holdings-list input[placeholder="Name / Ticker"]');
+            if (inputs.length) inputs[inputs.length-1].focus();
+        }, 30);
+    }
+
+    function ddDeleteRow(i) {
+        const rows = ddLoad(ddAsset, ddQuarter);
+        rows.splice(i, 1);
+        ddSave(ddAsset, ddQuarter, rows);
+        ddRenderHoldings(ddGetAssetBal());
+    }
+
+    function ddGetAssetBal() {
+        if (ddQuarter === 'Beg') return pState().begBalances[ddAsset] || 0;
+        const qNum = parseInt(ddQuarter[1]);
+        return state.computed[ddAsset]?.[`q${qNum}`]?.end ?? 0;
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrillDown(); });
     </script>
 </body>
 </html>
