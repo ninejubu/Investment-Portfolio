@@ -2142,11 +2142,11 @@
                     <span style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.08em;font-weight:600">Holdings Detail</span>
                     <button onclick="ddAddRow()" style="background:#3B82F6;border:none;border-radius:6px;color:#fff;font-size:11px;padding:5px 14px;cursor:pointer;font-weight:600" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">+ Add</button>
                 </div>
-                <div style="display:grid;grid-template-columns:2fr 130px 100px 72px;gap:8px;font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.06em;font-weight:600;padding:0 8px;margin-bottom:6px">
-                    <span>Name / Ticker</span><span style="text-align:right">Amount (THB)</span><span style="text-align:right">% of Asset</span><span></span>
+                <div style="display:grid;grid-template-columns:2fr 130px 90px 90px 52px;gap:6px;font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.06em;font-weight:600;padding:0 8px;margin-bottom:6px">
+                    <span>Name / Ticker</span><span style="text-align:right">Amount (THB)</span><span style="text-align:right">% of Asset</span><span style="text-align:right">Movement</span><span></span>
                 </div>
                 <div id="dd-holdings-list" style="display:flex;flex-direction:column;gap:4px"></div>
-                <div id="dd-total-row" style="margin-top:10px;padding-top:10px;border-top:1px solid #334155;display:grid;grid-template-columns:2fr 130px 100px 72px;gap:8px;font-size:12px;font-weight:700;color:#F8FAFC;padding-left:8px;padding-right:8px"></div>
+                <div id="dd-total-row" style="margin-top:10px;padding-top:10px;border-top:1px solid #334155;display:grid;grid-template-columns:2fr 130px 90px 90px 52px;gap:6px;font-size:12px;font-weight:700;color:#F8FAFC;padding-left:8px;padding-right:8px"></div>
             </div>
         </div>
     </div>
@@ -2163,80 +2163,90 @@
     const DD_COLORS = { stocks:'#10B981', bonds:'#F59E0B', crypto:'#3B82F6', gold:'#FACC15' };
     const DD_LABELS = { stocks:'Stocks', bonds:'Bonds', crypto:'Crypto', gold:'Gold' };
 
-    let ddAsset    = 'stocks';
-    let ddQuarter  = 'Q1';
+    let ddAsset   = 'stocks';
+    let ddQuarter = 'Beg';
 
-    // Storage key for holdings per port/asset/quarter
     function ddKey(asset, quarter) {
         return `holdings_${state.currentPort}_${asset}_${quarter}`;
     }
-
     function ddLoad(asset, quarter) {
         try { return JSON.parse(localStorage.getItem(ddKey(asset, quarter))) || []; }
         catch { return []; }
     }
-
     function ddSave(asset, quarter, rows) {
         localStorage.setItem(ddKey(asset, quarter), JSON.stringify(rows));
     }
 
     function openDrillDown(asset) {
         ddAsset   = asset;
-        ddQuarter = 'Q1';
-        const overlay = document.getElementById('drilldown-overlay');
-        overlay.style.display = 'flex';
+        ddQuarter = 'Beg';
+        document.getElementById('drilldown-overlay').style.display = 'flex';
         document.body.style.overflow = 'hidden';
         ddRender();
     }
-
     function closeDrillDown() {
         document.getElementById('drilldown-overlay').style.display = 'none';
         document.body.style.overflow = '';
+    }
+
+    // Get named rows from previous period to carry forward
+    function ddPrevRows(asset, quarter) {
+        const periods = ['Beg','Q1','Q2','Q3','Q4'];
+        const idx = periods.indexOf(quarter);
+        if (idx <= 0) return [];
+        return ddLoad(asset, periods[idx - 1]);
+    }
+
+    // When opening a quarter with no data, pre-populate names from previous period
+    function ddEnsureCarryForward(asset, quarter) {
+        if (quarter === 'Beg') return;
+        const existing = ddLoad(asset, quarter);
+        if (existing.length > 0) return; // already has data
+        const prev = ddPrevRows(asset, quarter);
+        if (prev.length === 0) return;
+        // Carry forward names only, amount = 0 (user must fill)
+        const carried = prev
+            .filter(r => r.name && r.name !== 'Untracked')
+            .map(r => ({ name: r.name, amount: 0 }));
+        if (carried.length > 0) ddSave(asset, quarter, carried);
     }
 
     function ddRender() {
         const color = DD_COLORS[ddAsset];
         const label = DD_LABELS[ddAsset];
 
-        // Accent + title
-        document.getElementById('dd-accent').style.background  = color;
-        document.getElementById('dd-title').textContent        = label + ' — Holdings';
-        document.getElementById('dd-subtitle').textContent     = 'Select a quarter to view or edit holdings';
+        document.getElementById('dd-accent').style.background = color;
+        document.getElementById('dd-title').textContent       = label + ' — Holdings';
+        document.getElementById('dd-subtitle').textContent    = 'Track holdings per quarter · Movement auto-calculated from previous period';
 
-        // Quarter tabs: Beg + Q1–Q4
+        // Quarter tabs
         const periods = ['Beg','Q1','Q2','Q3','Q4'];
         const tabsEl  = document.getElementById('dd-tabs');
         tabsEl.innerHTML = '';
         periods.forEach(p => {
+            ddEnsureCarryForward(ddAsset, p);
             const active = p === ddQuarter;
             const btn = document.createElement('button');
             btn.textContent = p;
             btn.onclick = () => { ddQuarter = p; ddRender(); };
-            btn.style.cssText = `padding:5px 14px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid ${active ? color : '#334155'};background:${active ? color+'22' : 'transparent'};color:${active ? color : '#64748b'};cursor:pointer;transition:all .15s`;
+            btn.style.cssText = `padding:5px 14px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid ${active?color:'#334155'};background:${active?color+'22':'transparent'};color:${active?color:'#64748b'};cursor:pointer;transition:all .15s`;
             tabsEl.appendChild(btn);
         });
 
-        // Summary stats for selected quarter
-        const qKey = ddQuarter === 'Beg' ? 'beg' : ddQuarter.toLowerCase();
+        // Summary stats
         let qBal = 0, qGrowth = null;
-
         if (ddQuarter === 'Beg') {
             qBal = pState().begBalances[ddAsset] || 0;
         } else {
             const qNum = parseInt(ddQuarter[1]);
-            const computed = state.computed[ddAsset];
-            if (computed && computed[`q${qNum}`]) {
-                qBal    = computed[`q${qNum}`].end    ?? 0;
-                qGrowth = computed[`q${qNum}`].growth ?? null;
-            }
+            const c = state.computed[ddAsset];
+            if (c?.[`q${qNum}`]) { qBal = c[`q${qNum}`].end ?? 0; qGrowth = c[`q${qNum}`].growth ?? null; }
         }
-
         const totalPort = ['stocks','bonds','crypto','gold'].reduce((s,a) => {
             if (ddQuarter === 'Beg') return s + (pState().begBalances[a]||0);
             const qNum = parseInt(ddQuarter[1]);
             return s + (state.computed[a]?.[`q${qNum}`]?.end ?? 0);
         }, 0);
-
         const allocPct = totalPort > 0 ? (qBal / totalPort * 100) : 0;
 
         document.getElementById('dd-summary').innerHTML = `
@@ -2249,57 +2259,121 @@
     }
 
     function ddRenderHoldings(assetBal) {
-        const rows  = ddLoad(ddAsset, ddQuarter);
+        const rows   = ddLoad(ddAsset, ddQuarter);
+        const prev   = ddPrevRows(ddAsset, ddQuarter);
         const listEl = document.getElementById('dd-holdings-list');
         const color  = DD_COLORS[ddAsset];
         listEl.innerHTML = '';
 
+        // Build prev lookup by name
+        const prevMap = {};
+        prev.forEach(r => { if (r.name) prevMap[r.name] = r.amount || 0; });
+
+        // Calculate total assigned
+        let totalAssigned = rows.reduce((s,r) => s + (r.amount||0), 0);
+
+        // Untracked = assetBal - totalAssigned
+        const untracked = assetBal - totalAssigned;
+
+        // Count for display (exclude auto untracked)
         document.getElementById('dd-count').textContent = rows.length || '0';
 
-        if (rows.length === 0) {
-            listEl.innerHTML = `<div style="text-align:center;padding:24px;color:#475569;font-size:12px">No holdings recorded for ${ddQuarter}.<br><span style="font-size:10px">Click + Add to start tracking.</span></div>`;
+        if (rows.length === 0 && assetBal === 0) {
+            listEl.innerHTML = `<div style="text-align:center;padding:24px;color:#475569;font-size:12px">No holdings for ${ddQuarter}.<br><span style="font-size:10px">Click + Add to start tracking.</span></div>`;
             document.getElementById('dd-total-row').innerHTML = '';
             return;
         }
 
-        let totalAmt = 0;
+        // Render tracked rows
         rows.forEach((row, i) => {
-            totalAmt += row.amount || 0;
-        });
+            const pct      = assetBal > 0 ? (row.amount / assetBal * 100) : 0;
+            const barW     = Math.min(100, pct);
+            const prevAmt  = prevMap[row.name] ?? null;
+            const movement = (prevAmt !== null && row.name && ddQuarter !== 'Beg') ? (row.amount||0) - prevAmt : null;
+            const movColor = movement === null ? '' : movement >= 0 ? '#10B981' : '#EF4444';
+            const movStr   = movement === null ? '' : (movement >= 0 ? '+' : '') + '฿' + Math.abs(movement).toLocaleString('en-US',{maximumFractionDigits:0});
 
-        rows.forEach((row, i) => {
-            const pct     = assetBal > 0 ? (row.amount / assetBal * 100) : (totalAmt > 0 ? row.amount / totalAmt * 100 : 0);
-            const barW    = Math.min(100, pct);
-            const rowEl   = document.createElement('div');
+            const rowEl = document.createElement('div');
             rowEl.style.cssText = 'background:#0F172A;border:1px solid #334155;border-radius:8px;padding:10px 10px 8px;transition:border-color .15s';
-            rowEl.onmouseenter = () => rowEl.style.borderColor = color + '66';
+            rowEl.onmouseenter = () => rowEl.style.borderColor = color+'66';
             rowEl.onmouseleave = () => rowEl.style.borderColor = '#334155';
 
             rowEl.innerHTML = `
-                <div style="display:grid;grid-template-columns:2fr 130px 100px 72px;gap:8px;align-items:center;margin-bottom:6px">
-                    <input value="${row.name||''}" placeholder="Name / Ticker" oninput="ddUpdateRow(${i},'name',this.value)"
+                <div style="display:grid;grid-template-columns:2fr 130px 90px 90px 52px;gap:6px;align-items:center;margin-bottom:6px">
+                    <input value="${row.name||''}" placeholder="Name / Ticker"
+                        oninput="ddUpdateRow(${i},'name',this.value)"
                         style="background:transparent;border:none;color:#F8FAFC;font-size:12px;font-weight:600;outline:none;padding:0;width:100%" />
-                    <input value="${row.amount?row.amount.toLocaleString('en-US',{maximumFractionDigits:0}):''}" placeholder="0" oninput="ddUpdateRow(${i},'amount',this.value)" onfocus="this.value=this.value.replace(/,/g,'')"
+                    <input value="${row.amount ? row.amount.toLocaleString('en-US',{maximumFractionDigits:0}) : ''}" placeholder="0"
+                        oninput="ddUpdateRow(${i},'amount',this.value)"
+                        onfocus="this.value=this.value.replace(/,/g,'')"
                         style="background:transparent;border:none;color:#F8FAFC;font-size:12px;font-weight:500;outline:none;text-align:right;width:100%" />
-                    <div style="text-align:right;font-size:12px;font-weight:500;color:${color}">${pct.toFixed(1)}%</div>
+                    <div style="text-align:right;font-size:11px;font-weight:500;color:${color}">${pct.toFixed(1)}%</div>
+                    <div style="text-align:right;font-size:11px;font-weight:600;color:${movColor}">${movStr || '<span style="color:#334155">—</span>'}</div>
                     <div style="text-align:right">
-                        <button onclick="ddDeleteRow(${i})" style="background:transparent;border:1px solid #334155;border-radius:4px;color:#64748b;font-size:10px;padding:2px 7px;cursor:pointer" onmouseover="this.style.borderColor='#EF4444';this.style.color='#F87171'" onmouseout="this.style.borderColor='#334155';this.style.color='#64748b'">✕</button>
+                        <button onclick="ddDeleteRow(${i})" style="background:transparent;border:1px solid #334155;border-radius:4px;color:#64748b;font-size:10px;padding:2px 6px;cursor:pointer"
+                            onmouseover="this.style.borderColor='#EF4444';this.style.color='#F87171'"
+                            onmouseout="this.style.borderColor='#334155';this.style.color='#64748b'">✕</button>
                     </div>
                 </div>
                 <div style="height:3px;background:#1E293B;border-radius:2px;overflow:hidden">
-                    <div style="height:100%;width:${barW}%;background:${color};border-radius:2px;transition:width .4s ease"></div>
+                    <div style="height:100%;width:${barW}%;background:${color};border-radius:2px;transition:width .5s ease"></div>
                 </div>`;
             listEl.appendChild(rowEl);
         });
 
+        // Untracked row (auto, read-only) — only show if there's a gap
+        if (assetBal > 0 && Math.abs(untracked) > 0.5) {
+            const utPct  = assetBal > 0 ? (untracked / assetBal * 100) : 0;
+            const utBarW = Math.min(100, Math.max(0, utPct));
+            // Movement for untracked: compare to previous untracked
+            const prevTotalAssigned = prev.reduce((s,r)=>s+(r.amount||0),0);
+            const prevBal = ddGetAssetBalForPeriod(ddAsset, ddPrevPeriod(ddQuarter));
+            const prevUntracked = prevBal > 0 ? prevBal - prevTotalAssigned : null;
+            const utMov  = (prevUntracked !== null && ddQuarter !== 'Beg') ? untracked - prevUntracked : null;
+            const utMovColor = utMov === null ? '#475569' : utMov >= 0 ? '#10B981' : '#EF4444';
+            const utMovStr   = utMov === null ? '—' : (utMov>=0?'+':'')+'฿'+Math.abs(utMov).toLocaleString('en-US',{maximumFractionDigits:0});
+
+            const utEl = document.createElement('div');
+            utEl.style.cssText = 'background:rgba(71,85,105,.08);border:1px dashed #334155;border-radius:8px;padding:10px 10px 8px;opacity:.8';
+            utEl.innerHTML = `
+                <div style="display:grid;grid-template-columns:2fr 130px 90px 90px 52px;gap:6px;align-items:center;margin-bottom:6px">
+                    <span style="font-size:12px;font-weight:600;color:#475569;font-style:italic">Untracked</span>
+                    <span style="text-align:right;font-size:12px;color:#475569">฿${untracked.toLocaleString('en-US',{maximumFractionDigits:0})}</span>
+                    <span style="text-align:right;font-size:11px;color:#475569">${utPct.toFixed(1)}%</span>
+                    <span style="text-align:right;font-size:11px;font-weight:600;color:${utMovColor}">${utMovStr}</span>
+                    <span></span>
+                </div>
+                <div style="height:3px;background:#1E293B;border-radius:2px;overflow:hidden">
+                    <div style="height:100%;width:${utBarW}%;background:#334155;border-radius:2px"></div>
+                </div>`;
+            listEl.appendChild(utEl);
+        }
+
+        // Column headers for movement column
+        const headerEl = listEl.previousElementSibling;
+
         // Total row
-        const totalPct = assetBal > 0 ? (totalAmt / assetBal * 100) : 100;
-        const unaccounted = assetBal - totalAmt;
+        const totalPct = assetBal > 0 ? (totalAssigned / assetBal * 100) : 100;
+        const diff = assetBal - totalAssigned;
         document.getElementById('dd-total-row').innerHTML = `
-            <span style="color:#64748b;font-size:11px">Total recorded</span>
-            <span style="text-align:right">฿${totalAmt.toLocaleString('en-US',{maximumFractionDigits:0})}</span>
-            <span style="text-align:right;color:${Math.abs(totalPct-100)<0.5?'#10B981':'#F59E0B'}">${totalPct.toFixed(1)}%</span>
-            <span style="text-align:right;font-size:10px;color:${unaccounted<0?'#F87171':'#64748b'}">${unaccounted>=0?'+':'-'}฿${Math.abs(unaccounted).toLocaleString('en-US',{maximumFractionDigits:0})}</span>`;
+            <span style="color:#64748b;font-size:11px">Assigned total</span>
+            <span style="text-align:right">฿${totalAssigned.toLocaleString('en-US',{maximumFractionDigits:0})}</span>
+            <span style="text-align:right;color:${Math.abs(diff)<1?'#10B981':'#F59E0B'}">${totalPct.toFixed(1)}%</span>
+            <span></span>
+            <span style="text-align:right;font-size:10px;color:${diff<-1?'#F87171':diff>1?'#F59E0B':'#10B981'}">${Math.abs(diff)<1?'✓':((diff>=0?'+':'-')+'฿'+Math.abs(diff).toLocaleString('en-US',{maximumFractionDigits:0}))}</span>`;
+    }
+
+    function ddPrevPeriod(quarter) {
+        const periods = ['Beg','Q1','Q2','Q3','Q4'];
+        const idx = periods.indexOf(quarter);
+        return idx > 0 ? periods[idx-1] : null;
+    }
+
+    function ddGetAssetBalForPeriod(asset, quarter) {
+        if (!quarter) return 0;
+        if (quarter === 'Beg') return pState().begBalances[asset] || 0;
+        const qNum = parseInt(quarter[1]);
+        return state.computed[asset]?.[`q${qNum}`]?.end ?? 0;
     }
 
     function ddUpdateRow(i, field, val) {
@@ -2311,17 +2385,9 @@
             rows[i][field] = val;
         }
         ddSave(ddAsset, ddQuarter, rows);
-        // Re-render just totals to avoid losing focus
-        const assetBal = ddGetAssetBal();
-        const totalAmt = rows.reduce((s,r)=>s+(r.amount||0),0);
-        const totalPct = assetBal > 0 ? (totalAmt / assetBal * 100) : 100;
-        const unaccounted = assetBal - totalAmt;
-        const tr = document.getElementById('dd-total-row');
-        if (tr) tr.innerHTML = `
-            <span style="color:#64748b;font-size:11px">Total recorded</span>
-            <span style="text-align:right">฿${totalAmt.toLocaleString('en-US',{maximumFractionDigits:0})}</span>
-            <span style="text-align:right;color:${Math.abs(totalPct-100)<0.5?'#10B981':'#F59E0B'}">${totalPct.toFixed(1)}%</span>
-            <span style="text-align:right;font-size:10px;color:${unaccounted<0?'#F87171':'#64748b'}">${unaccounted>=0?'+':'-'}฿${Math.abs(unaccounted).toLocaleString('en-US',{maximumFractionDigits:0})}</span>`;
+        // Lightweight update: re-render holdings without touching tabs/summary
+        ddRenderHoldings(ddGetAssetBal());
+        // But refocus to avoid jarring re-render (we re-render so refocus via timeout)
     }
 
     function ddAddRow() {
@@ -2329,7 +2395,6 @@
         rows.push({ name: '', amount: 0 });
         ddSave(ddAsset, ddQuarter, rows);
         ddRenderHoldings(ddGetAssetBal());
-        // Focus last name input
         setTimeout(() => {
             const inputs = document.querySelectorAll('#dd-holdings-list input[placeholder="Name / Ticker"]');
             if (inputs.length) inputs[inputs.length-1].focus();
@@ -2344,12 +2409,9 @@
     }
 
     function ddGetAssetBal() {
-        if (ddQuarter === 'Beg') return pState().begBalances[ddAsset] || 0;
-        const qNum = parseInt(ddQuarter[1]);
-        return state.computed[ddAsset]?.[`q${qNum}`]?.end ?? 0;
+        return ddGetAssetBalForPeriod(ddAsset, ddQuarter);
     }
 
-    // Close on Escape key
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrillDown(); });
     </script>
 </body>
