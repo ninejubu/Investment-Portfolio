@@ -511,7 +511,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">
                     <div class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-2 flex flex-col h-full">
                         <div class="flex justify-between items-center mb-4">
                             <h4 class="text-white font-bold">Performance vs Benchmarks</h4>
@@ -526,13 +526,45 @@
                     <div class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-1 flex flex-col h-full">
                         <h4 class="text-white font-bold mb-4">Asset Allocation (%)</h4>
                         <div class="flex-1 flex flex-col justify-between">
-                            <div class="h-56 relative mb-4"><canvas id="allocChart"></canvas></div>
+                            <div class="h-56 relative mb-4" style="cursor:pointer" title="Click a segment to drill down">
+                                <canvas id="allocChart"></canvas>
+                            </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-center text-[10px] text-slate-400">
                                     <thead class="border-b border-slate-700 text-slate-500 uppercase"><tr><th class="text-left pb-1">Period</th><th class="pb-1 text-stock cursor-pointer hover:text-white" onclick="openDrillDown('stocks')" title="Click for details">Stocks ↗</th><th class="pb-1 text-bond cursor-pointer hover:text-white" onclick="openDrillDown('bonds')" title="Click for details">Bonds ↗</th><th class="pb-1 text-crypto cursor-pointer hover:text-white" onclick="openDrillDown('crypto')" title="Click for details">Crypto ↗</th><th class="pb-1 text-gold cursor-pointer hover:text-white" onclick="openDrillDown('gold')" title="Click for details">Gold ↗</th></tr></thead>
                                     <tbody id="alloc-history-tbody"></tbody>
                                 </table>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Holdings Breakdown Panel -->
+                    <div class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-1 flex flex-col">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-white font-bold">Holdings Breakdown</h4>
+                            <div style="display:flex;gap:6px;align-items:center">
+                                <select id="hb-asset" onchange="renderHoldingsBreakdown()" style="background:#0F172A;border:1px solid #334155;color:#F8FAFC;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">
+                                    <option value="stocks">Stocks</option>
+                                    <option value="bonds">Bonds</option>
+                                    <option value="crypto">Crypto</option>
+                                    <option value="gold">Gold</option>
+                                </select>
+                                <select id="hb-quarter" onchange="renderHoldingsBreakdown()" style="background:#0F172A;border:1px solid #334155;color:#F8FAFC;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">
+                                    <option value="Beg">Beg</option>
+                                    <option value="Q1">Q1</option>
+                                    <option value="Q2">Q2</option>
+                                    <option value="Q3">Q3</option>
+                                    <option value="Q4">Q4</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Mini donut -->
+                        <div style="height:160px;position:relative;margin-bottom:12px"><canvas id="hbChart"></canvas></div>
+                        <!-- Holdings list -->
+                        <div id="hb-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;max-height:200px"></div>
+                        <div style="margin-top:10px;padding-top:8px;border-top:1px solid #1E293B;display:flex;justify-content:space-between;font-size:10px;color:#64748b">
+                            <span>Click row to edit</span>
+                            <span id="hb-total" style="color:#F8FAFC;font-weight:600"></span>
                         </div>
                     </div>
                 </div>
@@ -741,7 +773,20 @@
                     <h4 class="text-white font-bold mb-2">Benchmarks (YTD %)</h4>
                     <div id="benchmarks-container" class="space-y-6"></div>
                 </div>
-                <!-- Google Sheets URL Settings -->
+                <!-- Platform Settings -->
+                <div class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-cyan-500">
+                    <h4 class="text-white font-bold mb-1">Platform List</h4>
+                    <p class="text-xs text-slate-400 mb-5">Define platforms for each asset class. These appear as dropdown options in Holdings Detail.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div id="platform-stocks-wrap"></div>
+                        <div id="platform-bonds-wrap"></div>
+                        <div id="platform-crypto-wrap"></div>
+                        <div id="platform-gold-wrap"></div>
+                    </div>
+                    <div class="mt-4">
+                        <button onclick="savePlatforms()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded-lg text-xs font-bold transition-colors">Save Platforms</button>
+                    </div>
+                </div>
                 <div class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-emerald-500">
                     <h4 class="text-white font-bold mb-2">Google Sheets Integration</h4>
                     <p class="text-xs text-slate-400 mb-4">Both Investment Dashboard and Wheel Strategy can share the same Apps Script URL — set it here once.</p>
@@ -1030,7 +1075,8 @@
     function renderAllocationChart(data) {
         const ctx = document.getElementById('allocChart').getContext('2d');
         if(charts.alloc) charts.alloc.destroy();
-        charts.alloc = new Chart(ctx, { type: 'doughnut', data: { labels: ['Stocks', 'Bonds', 'Crypto', 'Gold'], datasets: [{ data, backgroundColor: ['#10B981', '#F59E0B', '#3B82F6', '#FACC15'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { color: '#94A3B8', boxWidth: 8, font: { size: 9 } } }, datalabels: { color: '#fff', font: { weight: 'bold', size: 9 }, formatter: (v, c) => { const sum = c.chart.data.datasets[0].data.reduce((a, b) => a + b, 0); return sum > 0 ? (v * 100 / sum).toFixed(1) + '%' : ''; } } } } });
+        const assetKeys = ['stocks','bonds','crypto','gold'];
+        charts.alloc = new Chart(ctx, { type: 'doughnut', data: { labels: ['Stocks', 'Bonds', 'Crypto', 'Gold'], datasets: [{ data, backgroundColor: ['#10B981', '#F59E0B', '#3B82F6', '#FACC15'], borderWidth: 0, hoverOffset: 8 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%', onClick: (e, elements) => { if (elements.length > 0) openDrillDown(assetKeys[elements[0].index]); }, plugins: { legend: { position: 'bottom', labels: { color: '#94A3B8', boxWidth: 8, font: { size: 9 } } }, datalabels: { color: '#fff', font: { weight: 'bold', size: 9 }, formatter: (v, c) => { const sum = c.chart.data.datasets[0].data.reduce((a, b) => a + b, 0); return sum > 0 ? (v * 100 / sum).toFixed(1) + '%' : ''; } } } } });
     }
 
     function renderAllocationHistory() {
@@ -1116,6 +1162,7 @@
         ['stock','bond','crypto','gold'].forEach((id, i) => updateAssetCard(id, ['stocks','bonds','crypto','gold'][i]));
         renderAllocationChart([state.computed.stocks.currentBal, state.computed.bonds.currentBal, state.computed.crypto.currentBal, state.computed.gold.currentBal]);
         renderAllocationHistory(); renderPerformanceChart(); renderQuarterlyTable(); renderLedger();
+        if (typeof renderHoldingsBreakdown === 'function') renderHoldingsBreakdown();
     }
 
     function updateTx(id, field, value) { const tx = pState().flows.find(f => f.id === id); if (!tx) return; if (field === 'date') tx.date = value; else if (field === 'asset') tx.asset = value; else if (field === 'amount') { const raw = getRawValue(value); tx.amount = Math.abs(raw); tx.type = raw < 0 ? 'withdraw' : 'deposit'; } else if (field === 'type') tx.type = value; else if (field === 'currency') tx.currency = value; updateDashboard(); }
@@ -1218,6 +1265,8 @@
     }
 
     function initSettings() {
+        // Platform lists
+        renderPlatformSettings();
         const begC = document.getElementById('beg-balances-container'); begC.innerHTML = '';
         ['stocks', 'bonds', 'crypto', 'gold'].forEach(a => { begC.innerHTML += `<div class="bg-slate-800/40 p-3 rounded-lg border border-slate-700"><label class="text-[10px] text-slate-500 uppercase block mb-1">${a}</label><input type="text" oninput="formatNumberInput(this)" value="${pState().begBalances[a].toLocaleString()}" id="input-beg-${a}" class="bg-transparent text-white font-bold border-none p-0 w-full focus:outline-none"></div>`; });
         const endC = document.getElementById('end-balances-container'); endC.innerHTML = '';
@@ -2142,11 +2191,11 @@
                     <span style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.08em;font-weight:600">Holdings Detail</span>
                     <button onclick="ddAddRow()" style="background:#3B82F6;border:none;border-radius:6px;color:#fff;font-size:11px;padding:5px 14px;cursor:pointer;font-weight:600" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">+ Add</button>
                 </div>
-                <div style="display:grid;grid-template-columns:2fr 130px 90px 90px 52px;gap:6px;font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.06em;font-weight:600;padding:0 8px;margin-bottom:6px">
-                    <span>Name / Ticker</span><span style="text-align:right">Amount (THB)</span><span style="text-align:right">% of Asset</span><span style="text-align:right">Movement</span><span></span>
+                <div style="display:grid;grid-template-columns:2fr 1fr 90px 90px 90px 52px;gap:6px;font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.06em;font-weight:600;padding:0 8px;margin-bottom:6px">
+                    <span>Name / Ticker</span><span>Platform</span><span style="text-align:right">Amount (THB)</span><span style="text-align:right">% of Asset</span><span style="text-align:right">Movement</span><span></span>
                 </div>
                 <div id="dd-holdings-list" style="display:flex;flex-direction:column;gap:4px"></div>
-                <div id="dd-total-row" style="margin-top:10px;padding-top:10px;border-top:1px solid #334155;display:grid;grid-template-columns:2fr 130px 90px 90px 52px;gap:6px;font-size:12px;font-weight:700;color:#F8FAFC;padding-left:8px;padding-right:8px"></div>
+                <div id="dd-total-row" style="margin-top:10px;padding-top:10px;border-top:1px solid #334155;display:grid;grid-template-columns:2fr 1fr 90px 90px 90px 52px;gap:6px;font-size:12px;font-weight:700;color:#F8FAFC;padding-left:8px;padding-right:8px"></div>
             </div>
         </div>
     </div>
@@ -2160,7 +2209,119 @@
     // ══════════════════════════════════════════════════════
     //  DRILL-DOWN — Holdings per Quarter
     // ══════════════════════════════════════════════════════
-    const DD_COLORS = { stocks:'#10B981', bonds:'#F59E0B', crypto:'#3B82F6', gold:'#FACC15' };
+    // ══════════════════════════════════════════════════════
+    //  PLATFORM SETTINGS
+    // ══════════════════════════════════════════════════════
+    const PLATFORM_ASSETS = ['stocks','bonds','crypto','gold'];
+    const PLATFORM_COLORS = { stocks:'#10B981', bonds:'#F59E0B', crypto:'#3B82F6', gold:'#FACC15' };
+    const PLATFORM_DEFAULTS = {
+        stocks: ['Finnomena', 'Jitta', 'Interactive Brokers', 'Krungsri'],
+        bonds:  ['Krungsri', 'KBank', 'SCB', 'Direct'],
+        crypto: ['Binance', 'Coinbase', 'Bitkub', 'Ledger (Cold)'],
+        gold:   ['MTS Gold', 'YLG', 'Physical', 'Hua Seng Heng']
+    };
+
+    function loadPlatforms(asset) {
+        try { return JSON.parse(localStorage.getItem(`platforms_${asset}`)) || PLATFORM_DEFAULTS[asset]; }
+        catch { return PLATFORM_DEFAULTS[asset]; }
+    }
+    function savePlatforms() {
+        PLATFORM_ASSETS.forEach(a => {
+            const textarea = document.getElementById(`platform-textarea-${a}`);
+            if (!textarea) return;
+            const list = textarea.value.split('\n').map(s=>s.trim()).filter(Boolean);
+            localStorage.setItem(`platforms_${a}`, JSON.stringify(list));
+        });
+        alert('Platforms saved!');
+    }
+    function renderPlatformSettings() {
+        PLATFORM_ASSETS.forEach(a => {
+            const wrap = document.getElementById(`platform-${a}-wrap`);
+            if (!wrap) return;
+            const list = loadPlatforms(a);
+            const color = PLATFORM_COLORS[a];
+            wrap.innerHTML = `
+                <div style="border-left:3px solid ${color};padding-left:10px">
+                    <div style="font-size:10px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${a}</div>
+                    <textarea id="platform-textarea-${a}" rows="6" style="width:100%;background:#0F172A;border:1px solid #334155;color:#F8FAFC;border-radius:6px;padding:8px;font-size:11px;line-height:1.8;resize:vertical" placeholder="One platform per line">${list.join('\n')}</textarea>
+                    <div style="font-size:9px;color:#475569;margin-top:3px">One platform per line</div>
+                </div>`;
+        });
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  HOLDINGS BREAKDOWN PANEL
+    // ══════════════════════════════════════════════════════
+    let hbChartInst = null;
+
+    function renderHoldingsBreakdown() {
+        const asset   = document.getElementById('hb-asset')?.value   || 'stocks';
+        const quarter = document.getElementById('hb-quarter')?.value || 'Q1';
+        const color   = DD_COLORS[asset];
+        const rows    = ddLoad(asset, quarter);
+        const assetBal = ddGetAssetBalForPeriod(asset, quarter);
+
+        let totalAssigned = rows.reduce((s,r)=>s+(r.amount||0),0);
+        const untracked   = Math.max(0, assetBal - totalAssigned);
+
+        // Build chart data including Untracked
+        const labels = [...rows.map(r=>r.name||'—'), ...(untracked > 1 ? ['Untracked'] : [])];
+        const amounts = [...rows.map(r=>r.amount||0), ...(untracked > 1 ? [untracked] : [])];
+        const colors  = rows.map((_,i) => {
+            const hue = (i * 47 + (asset==='stocks'?160:asset==='bonds'?38:asset==='crypto'?220:48)) % 360;
+            return `hsl(${hue},65%,55%)`;
+        });
+        if (untracked > 1) colors.push('#334155');
+
+        // Mini donut
+        const ctx2 = document.getElementById('hbChart');
+        if (ctx2) {
+            if (hbChartInst) hbChartInst.destroy();
+            if (amounts.some(v=>v>0)) {
+                hbChartInst = new Chart(ctx2.getContext('2d'), {
+                    type: 'doughnut',
+                    data: { labels, datasets: [{ data: amounts, backgroundColor: colors, borderWidth: 0, hoverOffset: 6 }] },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '65%',
+                        onClick: (e, els) => { if (els.length && labels[els[0].index] !== 'Untracked') { openDrillDown(asset); } },
+                        plugins: { legend: { display: false }, datalabels: { display: false },
+                            tooltip: { callbacks: { label: (c) => ` ${c.label}: ฿${c.raw.toLocaleString('en-US',{maximumFractionDigits:0})} (${assetBal>0?(c.raw/assetBal*100).toFixed(1):0}%)` } } } }
+                });
+            }
+        }
+
+        // List
+        const listEl = document.getElementById('hb-list');
+        if (!listEl) return;
+        listEl.innerHTML = '';
+
+        if (rows.length === 0 && assetBal === 0) {
+            listEl.innerHTML = `<div style="color:#475569;font-size:11px;text-align:center;padding:16px">No data for ${asset} ${quarter}.<br>Click the balance card to add holdings.</div>`;
+        } else {
+            [...rows.map((r,i)=>({...r,_color:colors[i]})), ...(untracked>1?[{name:'Untracked',amount:untracked,_color:'#334155'}]:[])].forEach((r,i) => {
+                const pct  = assetBal>0 ? (r.amount/assetBal*100) : 0;
+                const isUT = r.name === 'Untracked';
+                const el   = document.createElement('div');
+                el.style.cssText = `display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;background:#0F172A;cursor:${isUT?'default':'pointer'};transition:background .15s`;
+                el.onmouseenter = () => { if(!isUT) el.style.background = '#1E293B'; };
+                el.onmouseleave = () => { el.style.background = '#0F172A'; };
+                if (!isUT) el.onclick = () => openDrillDown(asset);
+                el.innerHTML = `
+                    <div style="width:8px;height:8px;border-radius:50%;background:${r._color};flex-shrink:0"></div>
+                    <div style="flex:1;font-size:11px;color:${isUT?'#475569':'#F8FAFC'};font-style:${isUT?'italic':'normal'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name||'—'}</div>
+                    <div style="font-size:11px;font-weight:600;color:${isUT?'#475569':color};white-space:nowrap">${pct.toFixed(1)}%</div>
+                    <div style="font-size:10px;color:#64748b;white-space:nowrap">฿${(r.amount||0).toLocaleString('en-US',{maximumFractionDigits:0})}</div>`;
+                listEl.appendChild(el);
+            });
+        }
+
+        const totalEl = document.getElementById('hb-total');
+        if (totalEl) totalEl.textContent = `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+    }
+
+    // Re-render breakdown after drill-down closes
+    const _origCloseDrillDown = window.closeDrillDown;
+
+    
     const DD_LABELS = { stocks:'Stocks', bonds:'Bonds', crypto:'Crypto', gold:'Gold' };
 
     let ddAsset   = 'stocks';
@@ -2187,6 +2348,7 @@
     function closeDrillDown() {
         document.getElementById('drilldown-overlay').style.display = 'none';
         document.body.style.overflow = '';
+        renderHoldingsBreakdown();
     }
 
     // Get named rows from previous period to carry forward
@@ -2298,11 +2460,18 @@
             rowEl.onmouseenter = () => rowEl.style.borderColor = color+'66';
             rowEl.onmouseleave = () => rowEl.style.borderColor = '#334155';
 
+            const platforms = loadPlatforms(ddAsset);
+            const platformOpts = ['', ...platforms].map(p=>`<option value="${p}" ${p===(row.platform||'')?'selected':''}>${p||'— Platform —'}</option>`).join('');
+
             rowEl.innerHTML = `
-                <div style="display:grid;grid-template-columns:2fr 130px 90px 90px 52px;gap:6px;align-items:center;margin-bottom:6px">
+                <div style="display:grid;grid-template-columns:2fr 1fr 130px 90px 90px 52px;gap:6px;align-items:center;margin-bottom:6px">
                     <input value="${row.name||''}" placeholder="Name / Ticker"
                         oninput="ddUpdateRow(${i},'name',this.value)"
                         style="background:transparent;border:none;color:#F8FAFC;font-size:12px;font-weight:600;outline:none;padding:0;width:100%" />
+                    <select onchange="ddUpdateRow(${i},'platform',this.value)"
+                        style="background:#0F172A;border:1px solid #334155;color:#94A3B8;font-size:10px;padding:2px 4px;border-radius:4px;width:100%">
+                        ${platformOpts}
+                    </select>
                     <input value="${row.amount ? row.amount.toLocaleString('en-US',{maximumFractionDigits:0}) : ''}" placeholder="0"
                         oninput="ddUpdateRow(${i},'amount',this.value)"
                         onfocus="this.value=this.value.replace(/,/g,'')"
@@ -2357,6 +2526,7 @@
         const diff = assetBal - totalAssigned;
         document.getElementById('dd-total-row').innerHTML = `
             <span style="color:#64748b;font-size:11px">Assigned total</span>
+            <span></span>
             <span style="text-align:right">฿${totalAssigned.toLocaleString('en-US',{maximumFractionDigits:0})}</span>
             <span style="text-align:right;color:${Math.abs(diff)<1?'#10B981':'#F59E0B'}">${totalPct.toFixed(1)}%</span>
             <span></span>
