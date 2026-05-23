@@ -69,12 +69,64 @@
         .pct-suffix input { padding-right: 20px; }
         .edit-input { background: #0F172A; border: 1px solid #334155; color: white; padding: 2px 4px; border-radius: 4px; font-size: 11px; width: 100%; }
 
-        /* ── Panel collapse ── */
-        .panel-body { transition: all .25s ease; overflow: hidden; }
+        /* ── Panel collapse — horizontal ── */
+        .panel-collapsible {
+            transition: all .3s cubic-bezier(.4,0,.2,1);
+            overflow: hidden;
+        }
         .panel-collapsed .panel-body { display: none !important; }
         .panel-collapsed { align-self: start !important; }
-        .panel-toggle { background: transparent; border: none; cursor: pointer; color: #64748b; padding: 2px 4px; border-radius: 4px; font-size: 11px; line-height: 1; transition: color .15s, transform .25s; display: flex; align-items: center; justify-content: center; }
+
+        /* Horizontal collapse: shrink to just the header bar */
+        .panel-h-collapsible {
+            transition: width .3s cubic-bezier(.4,0,.2,1), min-width .3s, padding .3s;
+            overflow: hidden;
+            min-width: 0;
+        }
+        .panel-h-collapsed .panel-header-text,
+        .panel-h-collapsed select.panel-header-text,
+        .panel-h-collapsed .panel-header-text select { display: none !important; }
+        .panel-h-collapsed .panel-body { display: none !important; }
+        .panel-h-collapsed {
+            width: 44px !important;
+            min-width: 44px !important;
+            padding: 12px 10px !important;
+            flex: none !important;
+        }
+        .panel-h-collapsed .panel-header-text { display: none !important; }
+        .panel-h-collapsed .panel-title-v {
+            display: flex !important;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            font-size: 10px;
+            font-weight: 700;
+            color: #64748b;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .panel-title-v { display: none; }
+
+        .panel-toggle {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #64748b;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 11px;
+            line-height: 1;
+            transition: color .15s, transform .3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
         .panel-toggle:hover { color: #F8FAFC; background: rgba(100,116,139,.15); }
+        .panel-h-collapsed .panel-toggle { transform: rotate(-90deg); }
         .panel-collapsed .panel-toggle { transform: rotate(-90deg); }
         @keyframes pulse-red {
             0%, 100% { border-color: rgba(239,68,68,.4); background: rgba(239,68,68,.1); }
@@ -443,10 +495,11 @@
         <div class="p-8">
             <!-- ══════════ DASHBOARD TAB ══════════ -->
             <div id="tab-dashboard" class="tab-content active space-y-6">
-                <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
-                    <div id="panel-networth" class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-2 flex flex-col justify-center">
+                <div style="display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:nowrap">
+                    <div id="panel-networth" class="panel-h-collapsible bg-card rounded-xl p-6 border border-slate-700 flex flex-col justify-center" style="flex:2;min-width:0">
                         <div class="flex justify-between items-center">
-                            <p class="text-slate-400 font-medium">Total Net Worth</p>
+                            <p class="panel-header-text text-slate-400 font-medium">Total Net Worth</p>
+                            <span class="panel-title-v" onclick="togglePanel('panel-networth')">Net Worth</span>
                             <button class="panel-toggle" onclick="togglePanel('panel-networth')" title="Collapse">▾</button>
                         </div>
                         <div class="panel-body">
@@ -458,11 +511,12 @@
                         </div>
                     </div>
 
-                    <div id="panel-goal" class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-3 flex flex-col">
+                    <div id="panel-goal" class="panel-h-collapsible bg-card rounded-xl p-6 border border-slate-700 flex flex-col" style="flex:3;min-width:0">
                         <div class="flex justify-between items-center mb-4">
-                            <h4 class="text-white font-bold flex items-center gap-2">
+                            <h4 class="panel-header-text text-white font-bold flex items-center gap-2">
                                 <i class="fa-solid fa-bullseye text-red-500"></i> Financial Goal
                             </h4>
+                            <span class="panel-title-v" onclick="togglePanel('panel-goal')">Goal</span>
                             <div class="flex items-center gap-2">
                                 <div class="bg-slate-800/80 p-0.5 rounded-lg flex space-x-0.5 border border-slate-700">
                                     <button id="goal-v1-btn" onclick="switchGoalView('v1')" class="px-3 py-1 text-[10px] font-bold rounded-md bg-blue-600 text-white shadow transition-all">Graph</button>
@@ -506,41 +560,45 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
-                    <div id="panel-stocks" class="bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-stock">
+                <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:nowrap">
+                    <div id="panel-stocks" class="panel-h-collapsible bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-stock" style="flex:1;min-width:0">
                         <div class="flex justify-between items-center mb-3">
-                            <span class="text-slate-300 font-semibold">Stocks</span>
-                            <div class="flex items-center gap-2"><span id="stock-ytd" class="text-xs text-stock font-bold">-</span><button class="panel-toggle" onclick="togglePanel('panel-stocks')" title="Collapse">▾</button></div>
+                            <span class="panel-header-text text-slate-300 font-semibold">Stocks</span>
+                            <span class="panel-title-v" onclick="togglePanel('panel-stocks')">Stocks</span>
+                            <div class="flex items-center gap-2 flex-shrink-0"><span id="stock-ytd" class="panel-header-text text-xs text-stock font-bold">-</span><button class="panel-toggle" onclick="togglePanel('panel-stocks')" title="Collapse">▾</button></div>
                         </div>
                         <div class="panel-body">
                             <h4 class="text-xl font-bold text-white mb-4 cursor-pointer hover:text-stock transition-colors" id="stock-bal" onclick="openDrillDown('stocks')" title="Click for details">฿ 0.00</h4>
                             <div class="asset-stat-grid text-center"><div><div class="text-slate-500">Q1</div><div id="s-q1" class="text-white">-</div></div><div><div class="text-slate-500">Q2</div><div id="s-q2" class="text-white">-</div></div><div><div class="text-slate-500">Q3</div><div id="s-q3" class="text-white">-</div></div><div><div class="text-slate-500">Q4</div><div id="s-q4" class="text-white">-</div></div><div><div class="text-blue-400">YTD</div><div id="s-ytd" class="text-white">-</div></div></div>
                         </div>
                     </div>
-                    <div id="panel-bonds" class="bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-bond">
+                    <div id="panel-bonds" class="panel-h-collapsible bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-bond" style="flex:1;min-width:0">
                         <div class="flex justify-between items-center mb-3">
-                            <span class="text-slate-300 font-semibold">Bonds</span>
-                            <div class="flex items-center gap-2"><span id="bond-ytd" class="text-xs text-bond font-bold">-</span><button class="panel-toggle" onclick="togglePanel('panel-bonds')" title="Collapse">▾</button></div>
+                            <span class="panel-header-text text-slate-300 font-semibold">Bonds</span>
+                            <span class="panel-title-v" onclick="togglePanel('panel-bonds')">Bonds</span>
+                            <div class="flex items-center gap-2 flex-shrink-0"><span id="bond-ytd" class="panel-header-text text-xs text-bond font-bold">-</span><button class="panel-toggle" onclick="togglePanel('panel-bonds')" title="Collapse">▾</button></div>
                         </div>
                         <div class="panel-body">
                             <h4 class="text-xl font-bold text-white mb-4 cursor-pointer hover:text-bond transition-colors" id="bond-bal" onclick="openDrillDown('bonds')" title="Click for details">฿ 0.00</h4>
                             <div class="asset-stat-grid text-center"><div><div class="text-slate-500">Q1</div><div id="b-q1" class="text-white">-</div></div><div><div class="text-slate-500">Q2</div><div id="b-q2" class="text-white">-</div></div><div><div class="text-slate-500">Q3</div><div id="b-q3" class="text-white">-</div></div><div><div class="text-slate-500">Q4</div><div id="b-q4" class="text-white">-</div></div><div><div class="text-blue-400">YTD</div><div id="b-ytd" class="text-white">-</div></div></div>
                         </div>
                     </div>
-                    <div id="panel-crypto" class="bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-crypto">
+                    <div id="panel-crypto" class="panel-h-collapsible bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-crypto" style="flex:1;min-width:0">
                         <div class="flex justify-between items-center mb-3">
-                            <span class="text-slate-300 font-semibold">Crypto</span>
-                            <div class="flex items-center gap-2"><span id="crypto-ytd" class="text-xs text-crypto font-bold">-</span><button class="panel-toggle" onclick="togglePanel('panel-crypto')" title="Collapse">▾</button></div>
+                            <span class="panel-header-text text-slate-300 font-semibold">Crypto</span>
+                            <span class="panel-title-v" onclick="togglePanel('panel-crypto')">Crypto</span>
+                            <div class="flex items-center gap-2 flex-shrink-0"><span id="crypto-ytd" class="panel-header-text text-xs text-crypto font-bold">-</span><button class="panel-toggle" onclick="togglePanel('panel-crypto')" title="Collapse">▾</button></div>
                         </div>
                         <div class="panel-body">
                             <h4 class="text-xl font-bold text-white mb-4 cursor-pointer hover:text-crypto transition-colors" id="crypto-bal" onclick="openDrillDown('crypto')" title="Click for details">฿ 0.00</h4>
                             <div class="asset-stat-grid text-center"><div><div class="text-slate-500">Q1</div><div id="c-q1" class="text-white">-</div></div><div><div class="text-slate-500">Q2</div><div id="c-q2" class="text-white">-</div></div><div><div class="text-slate-500">Q3</div><div id="c-q3" class="text-white">-</div></div><div><div class="text-slate-500">Q4</div><div id="c-q4" class="text-white">-</div></div><div><div class="text-blue-400">YTD</div><div id="c-ytd" class="text-white">-</div></div></div>
                         </div>
                     </div>
-                    <div id="panel-gold" class="bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-gold">
+                    <div id="panel-gold" class="panel-h-collapsible bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-gold" style="flex:1;min-width:0">
                         <div class="flex justify-between items-center mb-3">
-                            <span class="text-slate-300 font-semibold">Gold</span>
-                            <div class="flex items-center gap-2"><span id="gold-ytd" class="text-xs text-gold font-bold">-</span><button class="panel-toggle" onclick="togglePanel('panel-gold')" title="Collapse">▾</button></div>
+                            <span class="panel-header-text text-slate-300 font-semibold">Gold</span>
+                            <span class="panel-title-v" onclick="togglePanel('panel-gold')">Gold</span>
+                            <div class="flex items-center gap-2 flex-shrink-0"><span id="gold-ytd" class="panel-header-text text-xs text-gold font-bold">-</span><button class="panel-toggle" onclick="togglePanel('panel-gold')" title="Collapse">▾</button></div>
                         </div>
                         <div class="panel-body">
                             <h4 class="text-xl font-bold text-white mb-4 cursor-pointer hover:text-gold transition-colors" id="gold-bal" onclick="openDrillDown('gold')" title="Click for details">฿ 0.00</h4>
@@ -549,11 +607,12 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-                    <div id="panel-perf" class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-2 flex flex-col">
+                <div style="display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:nowrap">
+                    <div id="panel-perf" class="panel-h-collapsible bg-card rounded-xl p-6 border border-slate-700 flex flex-col" style="flex:2;min-width:0">
                         <div class="flex justify-between items-center mb-4">
-                            <h4 class="text-white font-bold">Performance vs Benchmarks</h4>
-                            <div class="flex items-center gap-2">
+                            <h4 class="panel-header-text text-white font-bold">Performance vs Benchmarks</h4>
+                            <span class="panel-title-v" onclick="togglePanel('panel-perf')">Performance</span>
+                            <div class="flex items-center gap-2 flex-shrink-0">
                                 <select id="bench-type" onchange="renderPerformanceChart()" class="bg-slate-800 border-none text-[10px] text-white rounded px-2 py-1"><option value="ytd">YTD</option><option value="qoq" selected>QoQ</option></select>
                                 <select id="bench-range" onchange="renderPerformanceChart()" class="bg-slate-800 border-none text-[10px] text-white rounded px-2 py-1"><option value="all" selected>Full Year</option><option value="q1">Quarter 1</option><option value="q2">Quarter 2</option><option value="q3">Quarter 3</option><option value="q4">Quarter 4</option></select>
                                 <select id="bench-asset" onchange="renderPerformanceChart()" class="bg-slate-800 border-none text-[10px] text-white rounded px-2 py-1"><option value="all">Total Assets</option><option value="all-sep">All Assets</option><option value="stocks">Stocks</option><option value="bonds">Bonds</option><option value="crypto">Crypto</option><option value="gold">Gold</option></select>
@@ -562,10 +621,11 @@
                         </div>
                         <div class="panel-body flex-1 min-h-[300px]"><canvas id="perfChart"></canvas></div>
                     </div>
-                    <div id="panel-alloc" class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-1 flex flex-col">
+                    <div id="panel-alloc" class="panel-h-collapsible bg-card rounded-xl p-6 border border-slate-700 flex flex-col" style="flex:1;min-width:0">
                         <div class="flex justify-between items-center mb-4">
-                            <h4 class="text-white font-bold">Asset Allocation (%)</h4>
-                            <button class="panel-toggle" onclick="togglePanel('panel-alloc')" title="Collapse">▾</button>
+                            <h4 class="panel-header-text text-white font-bold">Asset Allocation (%)</h4>
+                            <span class="panel-title-v" onclick="togglePanel('panel-alloc')">Allocation</span>
+                            <button class="panel-toggle flex-shrink-0" onclick="togglePanel('panel-alloc')" title="Collapse">▾</button>
                         </div>
                         <div class="panel-body flex flex-col justify-between">
                             <div class="h-56 relative mb-4" style="cursor:pointer" title="Click a segment to drill down">
@@ -580,9 +640,10 @@
                         </div>
                     </div>
 
-                    <div id="panel-hb" class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-1 flex flex-col">
+                    <div id="panel-hb" class="panel-h-collapsible bg-card rounded-xl p-6 border border-slate-700 flex flex-col" style="flex:1;min-width:0">
                         <div class="flex items-center justify-between mb-4">
-                            <h4 class="text-white font-bold">Holdings Breakdown</h4>
+                            <h4 class="panel-header-text text-white font-bold">Holdings Breakdown</h4>
+                            <span class="panel-title-v" onclick="togglePanel('panel-hb')">Holdings</span>
                             <div style="display:flex;gap:6px;align-items:center">
                                 <select id="hb-asset" onchange="renderHoldingsBreakdown()" style="background:#0F172A;border:1px solid #334155;color:#F8FAFC;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">
                                     <option value="stocks">Stocks</option><option value="bonds">Bonds</option><option value="crypto">Crypto</option><option value="gold">Gold</option>
@@ -606,7 +667,8 @@
 
                 <div id="panel-quarterly" class="bg-card rounded-xl p-6 border border-slate-700">
                     <div class="flex justify-between items-center mb-4">
-                        <h4 class="text-white font-bold">Quarterly Performance</h4>
+                        <h4 class="panel-header-text text-white font-bold">Quarterly Performance</h4>
+                        <span class="panel-title-v" onclick="togglePanel('panel-quarterly')">Quarterly Perf</span>
                         <button class="panel-toggle" onclick="togglePanel('panel-quarterly')" title="Collapse">▾</button>
                     </div>
                     <div class="panel-body overflow-x-auto">
@@ -668,11 +730,12 @@
 
                 <!-- Wheel Dashboard sub-page -->
                 <div class="wheel-page active space-y-4" id="w-dashboard">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4" style="align-items:stretch">
+                    <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:nowrap">
                         <!-- Balance Card -->
-                        <div id="panel-optbal" class="wheel-card" style="display:flex;flex-direction:column">
+                        <div id="panel-optbal" class="panel-h-collapsible wheel-card" style="display:flex;flex-direction:column;flex:1;min-width:0">
                             <div class="wheel-card-title">
-                                <span class="ctl">Options Balance</span>
+                                <span class="panel-header-text ctl">Options Balance</span>
+                                <span class="panel-title-v" onclick="togglePanel('panel-optbal')">Options Bal</span>
                                 <button class="panel-toggle" onclick="togglePanel('panel-optbal')" title="Collapse">▾</button>
                             </div>
                             <div class="panel-body" style="display:flex;flex-direction:column;flex:1">
@@ -710,10 +773,11 @@
                         </div>
 
                         <!-- Options Calculator -->
-                        <div id="panel-calc" class="wheel-card lg:col-span-2" style="display:flex;flex-direction:column">
+                        <div id="panel-calc" class="panel-h-collapsible wheel-card" style="display:flex;flex-direction:column;flex:2;min-width:0">
                             <div class="wheel-card-title">
                                 <div style="display:flex;align-items:center;gap:10px">
-                                    <span class="ctl">Options Calculator</span>
+                                    <span class="panel-header-text ctl">Options Calculator</span>
+                                    <span class="panel-title-v" onclick="togglePanel('panel-calc')">Calculator</span>
                                     <div id="calcToggle" style="display:flex;background:#0F172A;border:1px solid #334155;border-radius:6px;padding:2px;gap:2px">
                                         <button id="calcTogglePut" onclick="wSetCalcMode('put')" style="padding:3px 12px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer;background:#F4884A;color:#fff;transition:all .15s">PUT</button>
                                         <button id="calcToggleCall" onclick="wSetCalcMode('call')" style="padding:3px 12px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer;background:transparent;color:#64748b;transition:all .15s">CALL</button>
@@ -737,7 +801,8 @@
                     <!-- Lots -->
                     <div id="panel-lots" class="wheel-card">
                         <div class="wheel-card-title">
-                            <span class="ctl">BTC Lots — CSP Exercised Positions</span>
+                            <span class="panel-header-text ctl">BTC Lots — CSP Exercised Positions</span>
+                        <span class="panel-title-v" onclick="togglePanel('panel-lots')">BTC Lots</span>
                             <div style="display:flex;align-items:center;gap:8px">
                                 <button class="w-btn w-btn-primary w-btn-sm" onclick="openWheelLotModal(null)">+ Add Lot</button>
                                 <button class="panel-toggle" onclick="togglePanel('panel-lots')" title="Collapse">▾</button>
@@ -755,7 +820,8 @@
                     <!-- Open Orders -->
                     <div id="panel-orders" class="wheel-card">
                         <div class="wheel-card-title">
-                            <span class="ctl">Open Orders</span>
+                            <span class="panel-header-text ctl">Open Orders</span>
+                            <span class="panel-title-v" onclick="togglePanel('panel-orders')">Open Orders</span>
                             <div style="display:flex;align-items:center;gap:8px">
                                 <button class="w-btn w-btn-primary w-btn-sm" onclick="openWheelOrderModal(null)">+ New Order</button>
                                 <button class="panel-toggle" onclick="togglePanel('panel-orders')" title="Collapse">▾</button>
@@ -798,7 +864,8 @@
             <div id="tab-settings" class="tab-content space-y-6">
                 <div id="panel-s-beg" class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-stock">
                     <div class="flex justify-between items-center mb-2">
-                        <h4 class="text-white font-bold">Beginning Balances</h4>
+                        <h4 class="panel-header-text text-white font-bold">Beginning Balances</h4>
+                        <span class="panel-title-v" onclick="togglePanel('panel-s-beg')">Beg Balances</span>
                         <button class="panel-toggle" onclick="togglePanel('panel-s-beg')" title="Collapse">▾</button>
                     </div>
                     <div class="panel-body">
@@ -808,7 +875,8 @@
                 </div>
                 <div id="panel-s-end" class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-blue-500">
                     <div class="flex justify-between items-center mb-2">
-                        <h4 class="text-white font-bold">Quarterly Ending Balances</h4>
+                        <h4 class="panel-header-text text-white font-bold">Quarterly Ending Balances</h4>
+                        <span class="panel-title-v" onclick="togglePanel('panel-s-end')">End Balances</span>
                         <button class="panel-toggle" onclick="togglePanel('panel-s-end')" title="Collapse">▾</button>
                     </div>
                     <div class="panel-body">
@@ -818,7 +886,8 @@
                 </div>
                 <div id="panel-s-fx" class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-amber-500">
                     <div class="flex justify-between items-center mb-4">
-                        <h4 class="text-white font-bold">Exchange Rates (USD/THB)</h4>
+                        <h4 class="panel-header-text text-white font-bold">Exchange Rates (USD/THB)</h4>
+                        <span class="panel-title-v" onclick="togglePanel('panel-s-fx')">FX Rates</span>
                         <button class="panel-toggle" onclick="togglePanel('panel-s-fx')" title="Collapse">▾</button>
                     </div>
                     <div class="panel-body grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -831,14 +900,16 @@
                 </div>
                 <div id="panel-s-bench" class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-purple-500">
                     <div class="flex justify-between items-center mb-2">
-                        <h4 class="text-white font-bold">Benchmarks (YTD %)</h4>
+                        <h4 class="panel-header-text text-white font-bold">Benchmarks (YTD %)</h4>
+                        <span class="panel-title-v" onclick="togglePanel('panel-s-bench')">Benchmarks</span>
                         <button class="panel-toggle" onclick="togglePanel('panel-s-bench')" title="Collapse">▾</button>
                     </div>
                     <div class="panel-body space-y-6" id="benchmarks-container"></div>
                 </div>
                 <div id="panel-s-plat" class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-cyan-500">
                     <div class="flex justify-between items-center mb-1">
-                        <h4 class="text-white font-bold">Platform List</h4>
+                        <h4 class="panel-header-text text-white font-bold">Platform List</h4>
+                        <span class="panel-title-v" onclick="togglePanel('panel-s-plat')">Platforms</span>
                         <button class="panel-toggle" onclick="togglePanel('panel-s-plat')" title="Collapse">▾</button>
                     </div>
                     <div class="panel-body">
@@ -856,7 +927,8 @@
                 </div>
                 <div id="panel-s-gs" class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-emerald-500">
                     <div class="flex justify-between items-center mb-2">
-                        <h4 class="text-white font-bold">Google Sheets Integration</h4>
+                        <h4 class="panel-header-text text-white font-bold">Google Sheets Integration</h4>
+                        <span class="panel-title-v" onclick="togglePanel('panel-s-gs')">Google Sheets</span>
                         <button class="panel-toggle" onclick="togglePanel('panel-s-gs')" title="Collapse">▾</button>
                     </div>
                     <div class="panel-body">
@@ -1070,12 +1142,12 @@
     function togglePanel(id) {
         const panel = document.getElementById(id);
         if (!panel) return;
-        const wasCollapsed = panel.classList.contains('panel-collapsed');
-        panel.classList.toggle('panel-collapsed');
-        // Save state
+        const isH = panel.classList.contains('panel-h-collapsible');
+        const colClass = isH ? 'panel-h-collapsed' : 'panel-collapsed';
+        panel.classList.toggle(colClass);
         try {
             const states = JSON.parse(localStorage.getItem('panel_states') || '{}');
-            states[id] = !wasCollapsed;
+            states[id] = panel.classList.contains(colClass);
             localStorage.setItem('panel_states', JSON.stringify(states));
         } catch(e) {}
     }
@@ -1083,7 +1155,11 @@
         try {
             const states = JSON.parse(localStorage.getItem('panel_states') || '{}');
             Object.entries(states).forEach(([id, collapsed]) => {
-                if (collapsed) document.getElementById(id)?.classList.add('panel-collapsed');
+                if (!collapsed) return;
+                const panel = document.getElementById(id);
+                if (!panel) return;
+                const colClass = panel.classList.contains('panel-h-collapsible') ? 'panel-h-collapsed' : 'panel-collapsed';
+                panel.classList.add(colClass);
             });
         } catch(e) {}
     }
