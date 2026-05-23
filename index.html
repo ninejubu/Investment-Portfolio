@@ -619,10 +619,7 @@
                                 <button class="panel-toggle" onclick="togglePanel('panel-perf')" title="Collapse">▾</button>
                             </div>
                         </div>
-                        <div class="panel-body flex-1 min-h-[300px]">
-                            <div id="perf-legend" style="display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-bottom:10px;padding-right:4px"></div>
-                            <canvas id="perfChart"></canvas>
-                        </div>
+                        <div class="panel-body flex-1 min-h-[300px]"><canvas id="perfChart"></canvas></div>
                     </div>
                     <div id="panel-alloc" class="panel-h-collapsible bg-card rounded-xl p-6 border border-slate-700 flex flex-col" style="flex:1;min-width:0">
                         <div class="flex justify-between items-center mb-4">
@@ -1242,12 +1239,7 @@
             else { datasets = [{ label: 'Portfolio', data: quarters.map(q => getPortGrowth(assetKey, q, false)), backgroundColor: '#3B82F6', borderRadius: 4 }, { label: 'Benchmark', data: quarters.map(q => getBenchGrowth(assetKey, q, false)), backgroundColor: '#475569', borderRadius: 4 }]; }
         }
         if(charts.perf) charts.perf.destroy();
-        charts.perf = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: '#94A3B8', callback: v => parseFloat(v.toFixed(2)) + '%' }, grid: { color: 'rgba(51, 65, 85, 0.5)' } }, x: { ticks: { color: '#94A3B8' }, grid: { display: false } } }, plugins: { legend: { display: false }, datalabels: { color: '#fff', anchor: 'end', align: 'top', offset: 2, formatter: (v) => (v !== null && v !== undefined) ? v.toFixed(1) + '%' : null, font: { size: assetKey === 'all-sep' ? 8 : 10 }, padding: 2, clip: false } } }, datasets: { bar: { barPercentage: 0.5, categoryPercentage: 0.6 } } });
-        // HTML legend — placed above chart via DOM
-        const legendEl = document.getElementById('perf-legend');
-        if (legendEl) {
-            legendEl.innerHTML = datasets.map(ds => `<span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#F8FAFC"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${ds.backgroundColor}"></span>${ds.label}</span>`).join('<span style="display:inline-block;width:20px"></span>');
-        }
+        charts.perf = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: '#94A3B8', callback: v => parseFloat(v.toFixed(2)) + '%' }, grid: { color: 'rgba(51, 65, 85, 0.5)' } }, x: { ticks: { color: '#94A3B8' }, grid: { display: false } } }, plugins: { legend: { labels: { color: '#F8FAFC', boxWidth: 10, font: { size: 9 } } }, datalabels: { color: '#fff', anchor: 'end', align: 'top', offset: 2, formatter: (v) => (v !== null && v !== undefined) ? v.toFixed(1) + '%' : null, font: { size: assetKey === 'all-sep' ? 8 : 10 }, padding: 2, clip: false } } } });
     }
 
     function renderAllocationChart(data) {
