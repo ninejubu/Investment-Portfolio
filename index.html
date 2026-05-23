@@ -644,17 +644,17 @@
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="panel-header-text text-white font-bold">Holdings Breakdown</h4>
                             <span class="panel-title-v" onclick="togglePanel('panel-hb')">Holdings</span>
-                            <div style="display:flex;gap:6px;align-items:center">
-                                <select id="hb-asset" onchange="renderHoldingsBreakdown()" style="background:#0F172A;border:1px solid #334155;color:#F8FAFC;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">
+                            <button class="panel-toggle" onclick="togglePanel('panel-hb')" title="Collapse">▾</button>
+                        </div>
+                        <div class="panel-body flex flex-col flex-1">
+                            <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">
+                                <select id="hb-asset" onchange="renderHoldingsBreakdown()" style="background:#0F172A;border:1px solid #334155;color:#F8FAFC;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer;flex:1">
                                     <option value="stocks">Stocks</option><option value="bonds">Bonds</option><option value="crypto">Crypto</option><option value="gold">Gold</option>
                                 </select>
                                 <select id="hb-quarter" onchange="renderHoldingsBreakdown()" style="background:#0F172A;border:1px solid #334155;color:#F8FAFC;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">
                                     <option value="Beg">Beg</option><option value="Q1">Q1</option><option value="Q2">Q2</option><option value="Q3">Q3</option><option value="Q4">Q4</option>
                                 </select>
-                                <button class="panel-toggle" onclick="togglePanel('panel-hb')" title="Collapse">▾</button>
                             </div>
-                        </div>
-                        <div class="panel-body flex flex-col flex-1">
                             <div style="height:160px;position:relative;margin-bottom:12px"><canvas id="hbChart"></canvas></div>
                             <div id="hb-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;max-height:200px"></div>
                             <div style="margin-top:10px;padding-top:8px;border-top:1px solid #1E293B;display:flex;justify-content:space-between;font-size:10px;color:#64748b">
@@ -1239,7 +1239,7 @@
             else { datasets = [{ label: 'Portfolio', data: quarters.map(q => getPortGrowth(assetKey, q, false)), backgroundColor: '#3B82F6', borderRadius: 4 }, { label: 'Benchmark', data: quarters.map(q => getBenchGrowth(assetKey, q, false)), backgroundColor: '#475569', borderRadius: 4 }]; }
         }
         if(charts.perf) charts.perf.destroy();
-        charts.perf = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 10 } }, scales: { y: { ticks: { color: '#94A3B8', callback: v => parseFloat(v.toFixed(2)) + '%' }, grid: { color: 'rgba(51, 65, 85, 0.5)' } }, x: { ticks: { color: '#94A3B8' }, grid: { display: false } } }, plugins: { legend: { labels: { color: '#F8FAFC', boxWidth: 10, font: { size: 9 }, padding: 24 } }, datalabels: { color: '#fff', anchor: 'end', align: 'top', offset: 2, formatter: (v) => (v !== null && v !== undefined && v !== 0) ? v.toFixed(1) + '%' : null, font: { size: assetKey === 'all-sep' ? 8 : 10 }, padding: 2, clip: false } } } });
+        charts.perf = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 30 } }, scales: { y: { ticks: { color: '#94A3B8', callback: v => parseFloat(v.toFixed(2)) + '%' }, grid: { color: 'rgba(51, 65, 85, 0.5)' } }, x: { ticks: { color: '#94A3B8' }, grid: { display: false } } }, plugins: { legend: { labels: { color: '#F8FAFC', boxWidth: 10, font: { size: 9 }, padding: 24 } }, datalabels: { color: '#fff', anchor: 'end', align: 'top', offset: 2, formatter: (v) => (v !== null && v !== undefined && v !== 0) ? v.toFixed(1) + '%' : null, font: { size: assetKey === 'all-sep' ? 8 : 10 }, padding: 2, clip: false } } } });
     }
 
     function renderAllocationChart(data) {
@@ -1435,8 +1435,14 @@
     }
 
     function initSettings() {
-        // Platform lists
+        // Always render platform settings regardless of panel state
         renderPlatformSettings();
+        // Re-render platforms when panel is expanded
+        const platPanel = document.getElementById('panel-s-plat');
+        if (platPanel) {
+            const obs = new MutationObserver(() => renderPlatformSettings());
+            obs.observe(platPanel, { attributes: true, attributeFilter: ['class'] });
+        }
         const begC = document.getElementById('beg-balances-container'); begC.innerHTML = '';
         ['stocks', 'bonds', 'crypto', 'gold'].forEach(a => { begC.innerHTML += `<div class="bg-slate-800/40 p-3 rounded-lg border border-slate-700"><label class="text-[10px] text-slate-500 uppercase block mb-1">${a}</label><input type="text" oninput="formatNumberInput(this)" value="${pState().begBalances[a].toLocaleString()}" id="input-beg-${a}" class="bg-transparent text-white font-bold border-none p-0 w-full focus:outline-none"></div>`; });
         const endC = document.getElementById('end-balances-container'); endC.innerHTML = '';
@@ -2314,6 +2320,7 @@
         fetchBtc(); setInterval(fetchBtc, 15000);
         restorePanelStates();
         if (window.Notification && Notification.permission === 'default') Notification.requestPermission();
+        if (typeof renderHoldingsBreakdown === 'function') setTimeout(renderHoldingsBreakdown, 200);
 
         const gsUrl = getGsUrl();
         if (gsUrl) {
@@ -2426,8 +2433,10 @@
     let hbChartInst = null;
 
     function renderHoldingsBreakdown() {
-        const asset   = document.getElementById('hb-asset')?.value   || 'stocks';
-        const quarter = document.getElementById('hb-quarter')?.value || 'Q1';
+        const assetEl   = document.getElementById('hb-asset');
+        const quarterEl = document.getElementById('hb-quarter');
+        const asset   = assetEl?.value   || 'stocks';
+        const quarter = quarterEl?.value || 'Q1';
         const color   = DD_COLORS[asset];
         const rows    = ddLoad(asset, quarter);
         const assetBal = ddGetAssetBalForPeriod(asset, quarter);
