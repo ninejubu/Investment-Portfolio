@@ -1435,13 +1435,18 @@
     }
 
     function initSettings() {
-        // Always render platform settings regardless of panel state
-        renderPlatformSettings();
-        // Re-render platforms when panel is expanded
+        // Force-expand platform panel so wraps are visible, then render
         const platPanel = document.getElementById('panel-s-plat');
         if (platPanel) {
-            const obs = new MutationObserver(() => renderPlatformSettings());
-            obs.observe(platPanel, { attributes: true, attributeFilter: ['class'] });
+            platPanel.classList.remove('panel-collapsed');
+            platPanel.classList.remove('panel-h-collapsed');
+        }
+        renderPlatformSettings();
+        // Re-render platforms whenever panel class changes (expand/collapse)
+        if (platPanel && !platPanel._obsAttached) {
+            platPanel._obsAttached = true;
+            new MutationObserver(() => renderPlatformSettings())
+                .observe(platPanel, { attributes: true, attributeFilter: ['class'] });
         }
         const begC = document.getElementById('beg-balances-container'); begC.innerHTML = '';
         ['stocks', 'bonds', 'crypto', 'gold'].forEach(a => { begC.innerHTML += `<div class="bg-slate-800/40 p-3 rounded-lg border border-slate-700"><label class="text-[10px] text-slate-500 uppercase block mb-1">${a}</label><input type="text" oninput="formatNumberInput(this)" value="${pState().begBalances[a].toLocaleString()}" id="input-beg-${a}" class="bg-transparent text-white font-bold border-none p-0 w-full focus:outline-none"></div>`; });
@@ -2502,6 +2507,7 @@
     const _origCloseDrillDown = window.closeDrillDown;
 
     
+    const DD_COLORS = { stocks:'#10B981', bonds:'#F59E0B', crypto:'#3B82F6', gold:'#FACC15' };
     const DD_LABELS = { stocks:'Stocks', bonds:'Bonds', crypto:'Crypto', gold:'Gold' };
 
     let ddAsset   = 'stocks';
