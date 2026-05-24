@@ -437,7 +437,11 @@
             <div id="tab-dashboard" class="tab-content active space-y-6">
                 <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
                     <div class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-2 flex flex-col justify-center">
-                        <p class="text-slate-400 mb-1 font-medium">Total Net Worth</p>
+                        <p class="text-slate-400 mb-1 font-medium flex items-center gap-2">Total Net Worth
+                            <button id="bal-toggle-btn" onclick="toggleBalanceVisibility()" title="Show/Hide balances" style="background:transparent;border:none;cursor:pointer;color:#64748b;padding:2px 4px;border-radius:4px;transition:color .15s" onmouseover="this.style.color='#F8FAFC'" onmouseout="this.style.color='#64748b'">
+                                <i class="fa-solid fa-eye" id="bal-toggle-icon" style="font-size:13px"></i>
+                            </button>
+                        </p>
                         <h3 class="text-4xl font-bold text-white mb-2" id="total-net-worth">฿ 0.00</h3>
                         <div class="flex items-center gap-2">
                             <span id="total-return-badge" class="px-2 py-0.5 rounded text-xs font-bold bg-green-500/10 text-green-400">+0.00%</span>
@@ -1070,7 +1074,7 @@
             else { datasets = [{ label: 'Portfolio', data: quarters.map(q => getPortGrowth(assetKey, q, false)), backgroundColor: '#3B82F6', borderRadius: 4 }, { label: 'Benchmark', data: quarters.map(q => getBenchGrowth(assetKey, q, false)), backgroundColor: '#475569', borderRadius: 4 }]; }
         }
         if(charts.perf) charts.perf.destroy();
-        charts.perf = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: '#94A3B8', callback: v => parseFloat(v.toFixed(2)) + '%' }, grid: { color: 'rgba(51, 65, 85, 0.5)' } }, x: { ticks: { color: '#94A3B8' }, grid: { display: false } } }, plugins: { legend: { labels: { color: '#F8FAFC', boxWidth: 10, font: { size: 9 } } }, datalabels: { color: '#fff', anchor: 'end', align: 'top', offset: 2, formatter: (v) => (v !== null && v !== undefined) ? v.toFixed(1) + '%' : null, font: { size: assetKey === 'all-sep' ? 8 : 10 }, padding: 2, clip: false } } } });
+        charts.perf = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: '#94A3B8', callback: v => parseFloat(v.toFixed(2)) + '%' }, grid: { color: 'rgba(51, 65, 85, 0.5)' } }, x: { ticks: { color: '#94A3B8' }, grid: { display: false } } }, plugins: { legend: { labels: { color: '#F8FAFC', boxWidth: 10, font: { size: 9 } } }, datalabels: { color: '#fff', anchor: 'end', align: 'top', offset: 2, formatter: (v) => (v !== null && v !== undefined && v !== 0) ? v.toFixed(1) + '%' : null, font: { size: assetKey === 'all-sep' ? 8 : 10 }, padding: 2, clip: false } } } });
     }
 
     function renderAllocationChart(data) {
@@ -1731,7 +1735,7 @@
     function wRenderLots() {
         const body = document.getElementById('lotsBody'); const foot = document.getElementById('lotsFoot'); body.innerHTML='';
         let tC=0,tPL=0,tA=0,tN=0;
-        wLots.forEach(lot=>{ const cost = lot.price*lot.amount; const pl = lot.price>0 ? btcPrice*lot.amount-cost : 0; const net = pl+lot.accRealPL; tC+=cost; tPL+=pl; tA+=lot.accRealPL; tN+=net; const covOK = btcPrice>=lot.target; const tr = document.createElement('tr'); if(lot.problem) tr.style.background='rgba(239,68,68,.025)';
+        wLots.forEach(lot=>{ const cost = lot.price*lot.amount; const pl = lot.price>0 ? (lot.price-lot.target)*lot.amount + btcPrice*lot.amount - cost : 0; const net = pl+lot.accRealPL; tC+=cost; tPL+=pl; tA+=lot.accRealPL; tN+=net; const covOK = btcPrice>=lot.target; const tr = document.createElement('tr'); if(lot.problem) tr.style.background='rgba(239,68,68,.025)';
             tr.innerHTML=`<td><div class="lot-name"><div class="lot-dot" style="background:${lot.problem?'#EF4444':'#9B5CF6'}"></div>${lot.name}${lot.problem?'<span class="tag-r">NO BTC</span>':''}</div></td><td>${lot.price>0?wusd(lot.price,2):'—'}</td><td>${lot.amount} BTC</td><td>${lot.price>0?wusd(cost):'—'}</td><td>${wusd(lot.target)}</td><td class="${pl>=0?'p-pos':'p-neg'}">${lot.price>0?(pl>=0?'+':'')+wusd(pl):'—'}</td><td class="p-pos">${wusd(lot.accRealPL,2)}</td><td class="${net>=0?'p-pos':'p-neg'}">${lot.price>0?(net>=0?'+':'')+wusd(net):'—'}</td><td>${covOK?'<span class="fcov">Fully Cover</span>':`<span style="font-size:11px;color:#FCA5A5;font-family:'Inter',sans-serif">${wusd((lot.target-btcPrice)*lot.amount)} short</span>`}</td><td style="text-align:left;white-space:nowrap"><button class="w-btn-icon" onclick="openWheelLotModal(${lot.id})" title="Edit">✎</button><button class="w-btn-icon w-btn-danger" onclick="wDelLot(${lot.id})" title="Delete" style="margin-left:4px">✕</button></td>`;
             body.appendChild(tr); });
         foot.innerHTML=`<tr class="tr-tot"><td>TOTAL</td><td></td><td>${wLots.reduce((s,l)=>s+l.amount,0).toFixed(4)} BTC</td><td>${wusd(tC)}</td><td></td><td class="${tPL>=0?'p-pos':'p-neg'}">${(tPL>=0?'+':'')+wusd(tPL)}</td><td class="p-pos">${wusd(tA,2)}</td><td class="${tN>=0?'p-pos':'p-neg'}">${(tN>=0?'+':'')+wusd(tN)}</td><td></td><td></td></tr>`;
@@ -2128,6 +2132,44 @@
     // ════════════════════════════════════════════════════
     //   INIT
     // ════════════════════════════════════════════════════
+
+    // ════════════════════════════════════════════════════
+    //   BALANCE VISIBILITY TOGGLE
+    // ════════════════════════════════════════════════════
+    let balancesHidden = false;
+
+    function toggleBalanceVisibility() {
+        balancesHidden = !balancesHidden;
+        const icon = document.getElementById('bal-toggle-icon');
+        if (icon) icon.className = balancesHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+        applyBalanceMask();
+    }
+
+    const BALANCE_IDS = ['total-net-worth','stock-bal','bond-bal','crypto-bal','gold-bal'];
+
+    function applyBalanceMask() {
+        if (balancesHidden) {
+            BALANCE_IDS.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.dataset.realVal = el.innerText, el.innerText = '฿ ••••••';
+            });
+        } else {
+            // Re-render to restore real values
+            updateDashboard();
+        }
+    }
+
+    // Hook into updateDashboard so mask is reapplied after each render
+    const _origUpdateDashboard = updateDashboard;
+    function updateDashboard() {
+        _origUpdateDashboard();
+        if (balancesHidden) {
+            BALANCE_IDS.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = '฿ ••••••';
+            });
+        }
+    }
 
     window.onload = async () => {
         try {
