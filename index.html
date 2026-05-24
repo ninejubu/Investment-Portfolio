@@ -2154,37 +2154,24 @@
     //   BALANCE VISIBILITY TOGGLE
     // ════════════════════════════════════════════════════
     let balancesHidden = false;
+    const BALANCE_IDS = ['total-net-worth','stock-bal','bond-bal','crypto-bal','gold-bal'];
+
+    function applyBalanceMask() {
+        if (!balancesHidden) return;
+        BALANCE_IDS.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = '฿ ••••••';
+        });
+    }
 
     function toggleBalanceVisibility() {
         balancesHidden = !balancesHidden;
         const icon = document.getElementById('bal-toggle-icon');
         if (icon) icon.className = balancesHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
-        applyBalanceMask();
-    }
-
-    const BALANCE_IDS = ['total-net-worth','stock-bal','bond-bal','crypto-bal','gold-bal'];
-
-    function applyBalanceMask() {
         if (balancesHidden) {
-            BALANCE_IDS.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.dataset.realVal = el.innerText, el.innerText = '฿ ••••••';
-            });
+            applyBalanceMask();
         } else {
-            // Re-render to restore real values
             updateDashboard();
-        }
-    }
-
-    // Hook into updateDashboard so mask is reapplied after each render
-    const _origUpdateDashboard = updateDashboard;
-    function updateDashboard() {
-        _origUpdateDashboard();
-        if (balancesHidden) {
-            BALANCE_IDS.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.innerText = '฿ ••••••';
-            });
         }
     }
 
