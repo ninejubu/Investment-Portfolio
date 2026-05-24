@@ -68,66 +68,6 @@
         .pct-suffix::after { content: '%'; position: absolute; right: 8px; color: #64748b; font-size: 10px; pointer-events: none; }
         .pct-suffix input { padding-right: 20px; }
         .edit-input { background: #0F172A; border: 1px solid #334155; color: white; padding: 2px 4px; border-radius: 4px; font-size: 11px; width: 100%; }
-
-        /* ── Panel collapse — horizontal ── */
-        .panel-collapsible {
-            transition: all .3s cubic-bezier(.4,0,.2,1);
-            overflow: hidden;
-        }
-        .panel-collapsed .panel-body { display: none !important; }
-        .panel-collapsed { align-self: start !important; }
-
-        /* Horizontal collapse: shrink to just the header bar */
-        .panel-h-collapsible {
-            transition: width .3s cubic-bezier(.4,0,.2,1), min-width .3s, padding .3s;
-            overflow: hidden;
-            min-width: 0;
-        }
-        .panel-h-collapsed .panel-header-text,
-        .panel-h-collapsed select.panel-header-text,
-        .panel-h-collapsed .panel-header-text select { display: none !important; }
-        .panel-h-collapsed .panel-body { display: none !important; }
-        .panel-h-collapsed {
-            width: 44px !important;
-            min-width: 44px !important;
-            padding: 12px 10px !important;
-            flex: none !important;
-        }
-        .panel-h-collapsed .panel-header-text { display: none !important; }
-        .panel-h-collapsed .panel-title-v {
-            display: flex !important;
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            transform: rotate(180deg);
-            font-size: 10px;
-            font-weight: 700;
-            color: #64748b;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-            white-space: nowrap;
-            cursor: pointer;
-            margin-top: 8px;
-        }
-        .panel-title-v { display: none; }
-
-        .panel-toggle {
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            color: #64748b;
-            padding: 2px 4px;
-            border-radius: 4px;
-            font-size: 11px;
-            line-height: 1;
-            transition: color .15s, transform .3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .panel-toggle:hover { color: #F8FAFC; background: rgba(100,116,139,.15); }
-        .panel-h-collapsed .panel-toggle { transform: rotate(-90deg); }
-        .panel-collapsed .panel-toggle { transform: rotate(-90deg); }
         @keyframes pulse-red {
             0%, 100% { border-color: rgba(239,68,68,.4); background: rgba(239,68,68,.1); }
             50%       { border-color: rgba(239,68,68,.9); background: rgba(239,68,68,.2); }
@@ -495,37 +435,26 @@
         <div class="p-8">
             <!-- ══════════ DASHBOARD TAB ══════════ -->
             <div id="tab-dashboard" class="tab-content active space-y-6">
-                <div style="display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:nowrap">
-                    <div id="panel-networth" class="panel-h-collapsible bg-card rounded-xl p-6 border border-slate-700 flex flex-col justify-center" style="flex:2;min-width:0">
-                        <div class="flex justify-between items-center">
-                            <p class="panel-header-text text-slate-400 font-medium">Total Net Worth</p>
-                            <span class="panel-title-v" onclick="togglePanel('panel-networth')">Net Worth</span>
-                            <button class="panel-toggle" onclick="togglePanel('panel-networth')" title="Collapse">▾</button>
-                        </div>
-                        <div class="panel-body">
-                            <h3 class="text-4xl font-bold text-white mb-2 mt-1" id="total-net-worth">฿ 0.00</h3>
-                            <div class="flex items-center gap-2">
-                                <span id="total-return-badge" class="px-2 py-0.5 rounded text-xs font-bold bg-green-500/10 text-green-400">+0.00%</span>
-                                <span class="text-slate-500 text-xs">YTD Growth</span>
-                            </div>
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                    <div class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-2 flex flex-col justify-center">
+                        <p class="text-slate-400 mb-1 font-medium">Total Net Worth</p>
+                        <h3 class="text-4xl font-bold text-white mb-2" id="total-net-worth">฿ 0.00</h3>
+                        <div class="flex items-center gap-2">
+                            <span id="total-return-badge" class="px-2 py-0.5 rounded text-xs font-bold bg-green-500/10 text-green-400">+0.00%</span>
+                            <span class="text-slate-500 text-xs">YTD Growth</span>
                         </div>
                     </div>
 
-                    <div id="panel-goal" class="panel-h-collapsible bg-card rounded-xl p-6 border border-slate-700 flex flex-col" style="flex:3;min-width:0">
+                    <div class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-3 flex flex-col">
                         <div class="flex justify-between items-center mb-4">
-                            <h4 class="panel-header-text text-white font-bold flex items-center gap-2">
+                            <h4 class="text-white font-bold flex items-center gap-2">
                                 <i class="fa-solid fa-bullseye text-red-500"></i> Financial Goal
                             </h4>
-                            <span class="panel-title-v" onclick="togglePanel('panel-goal')">Goal</span>
-                            <div class="flex items-center gap-2">
-                                <div class="bg-slate-800/80 p-0.5 rounded-lg flex space-x-0.5 border border-slate-700">
-                                    <button id="goal-v1-btn" onclick="switchGoalView('v1')" class="px-3 py-1 text-[10px] font-bold rounded-md bg-blue-600 text-white shadow transition-all">Graph</button>
-                                    <button id="goal-v2-btn" onclick="switchGoalView('v2')" class="px-3 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">Heat map</button>
-                                </div>
-                                <button class="panel-toggle" onclick="togglePanel('panel-goal')" title="Collapse">▾</button>
+                            <div class="bg-slate-800/80 p-0.5 rounded-lg flex space-x-0.5 border border-slate-700">
+                                <button id="goal-v1-btn" onclick="switchGoalView('v1')" class="px-3 py-1 text-[10px] font-bold rounded-md bg-blue-600 text-white shadow transition-all">Graph</button>
+                                <button id="goal-v2-btn" onclick="switchGoalView('v2')" class="px-3 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">Heat map</button>
                             </div>
                         </div>
-                        <div class="panel-body flex flex-col flex-1">
                         <div class="flex items-center gap-4 text-xs mb-4 flex-wrap">
                             <div class="flex flex-col"><span class="text-slate-500">Target (THB)</span><input type="text" id="goal-amt-input" oninput="formatNumberInput(this); updateGoal();" class="bg-slate-800 border-none text-white rounded px-2 py-1 w-28 focus:ring-1 focus:ring-blue-500"></div>
                             <div class="flex flex-col"><span class="text-slate-500">By Year</span><input type="number" id="goal-year-input" onchange="updateGoal()" class="bg-slate-800 border-none text-white rounded px-2 py-1 w-20 focus:ring-1 focus:ring-blue-500"></div>
@@ -556,78 +485,47 @@
                             <p class="text-[10px] text-slate-500 mb-2">Each cell = projected portfolio value at goal year. <span class="text-emerald-400 font-bold">Green</span> = reaches goal · <span class="text-red-400 font-bold">Red</span> = falls short · ★ = your current input</p>
                             <div id="goal-heatmap-container" class="overflow-x-auto"></div>
                         </div>
-                        </div><!-- end panel-body -->
                     </div>
                 </div>
 
-                <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:nowrap">
-                    <div id="panel-stocks" class="panel-h-collapsible bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-stock" style="flex:1;min-width:0">
-                        <div class="flex justify-between items-center mb-3">
-                            <span class="panel-header-text text-slate-300 font-semibold">Stocks</span>
-                            <span class="panel-title-v" onclick="togglePanel('panel-stocks')">Stocks</span>
-                            <div class="flex items-center gap-2 flex-shrink-0"><span id="stock-ytd" class="panel-header-text text-xs text-stock font-bold">-</span><button class="panel-toggle" onclick="togglePanel('panel-stocks')" title="Collapse">▾</button></div>
-                        </div>
-                        <div class="panel-body">
-                            <h4 class="text-xl font-bold text-white mb-4 cursor-pointer hover:text-stock transition-colors" id="stock-bal" onclick="openDrillDown('stocks')" title="Click for details">฿ 0.00</h4>
-                            <div class="asset-stat-grid text-center"><div><div class="text-slate-500">Q1</div><div id="s-q1" class="text-white">-</div></div><div><div class="text-slate-500">Q2</div><div id="s-q2" class="text-white">-</div></div><div><div class="text-slate-500">Q3</div><div id="s-q3" class="text-white">-</div></div><div><div class="text-slate-500">Q4</div><div id="s-q4" class="text-white">-</div></div><div><div class="text-blue-400">YTD</div><div id="s-ytd" class="text-white">-</div></div></div>
-                        </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-stock">
+                        <div class="flex justify-between items-center mb-3"><span class="text-slate-300 font-semibold">Stocks</span><span id="stock-ytd" class="text-xs text-stock font-bold">-</span></div>
+                        <h4 class="text-xl font-bold text-white mb-4 cursor-pointer hover:text-stock transition-colors" id="stock-bal" onclick="openDrillDown('stocks')" title="Click for details">฿ 0.00</h4>
+                        <div class="asset-stat-grid text-center"><div><div class="text-slate-500">Q1</div><div id="s-q1" class="text-white">-</div></div><div><div class="text-slate-500">Q2</div><div id="s-q2" class="text-white">-</div></div><div><div class="text-slate-500">Q3</div><div id="s-q3" class="text-white">-</div></div><div><div class="text-slate-500">Q4</div><div id="s-q4" class="text-white">-</div></div><div><div class="text-blue-400">YTD</div><div id="s-ytd" class="text-white">-</div></div></div>
                     </div>
-                    <div id="panel-bonds" class="panel-h-collapsible bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-bond" style="flex:1;min-width:0">
-                        <div class="flex justify-between items-center mb-3">
-                            <span class="panel-header-text text-slate-300 font-semibold">Bonds</span>
-                            <span class="panel-title-v" onclick="togglePanel('panel-bonds')">Bonds</span>
-                            <div class="flex items-center gap-2 flex-shrink-0"><span id="bond-ytd" class="panel-header-text text-xs text-bond font-bold">-</span><button class="panel-toggle" onclick="togglePanel('panel-bonds')" title="Collapse">▾</button></div>
-                        </div>
-                        <div class="panel-body">
-                            <h4 class="text-xl font-bold text-white mb-4 cursor-pointer hover:text-bond transition-colors" id="bond-bal" onclick="openDrillDown('bonds')" title="Click for details">฿ 0.00</h4>
-                            <div class="asset-stat-grid text-center"><div><div class="text-slate-500">Q1</div><div id="b-q1" class="text-white">-</div></div><div><div class="text-slate-500">Q2</div><div id="b-q2" class="text-white">-</div></div><div><div class="text-slate-500">Q3</div><div id="b-q3" class="text-white">-</div></div><div><div class="text-slate-500">Q4</div><div id="b-q4" class="text-white">-</div></div><div><div class="text-blue-400">YTD</div><div id="b-ytd" class="text-white">-</div></div></div>
-                        </div>
+                    <div class="bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-bond">
+                        <div class="flex justify-between items-center mb-3"><span class="text-slate-300 font-semibold">Bonds</span><span id="bond-ytd" class="text-xs text-bond font-bold">-</span></div>
+                        <h4 class="text-xl font-bold text-white mb-4 cursor-pointer hover:text-bond transition-colors" id="bond-bal" onclick="openDrillDown('bonds')" title="Click for details">฿ 0.00</h4>
+                        <div class="asset-stat-grid text-center"><div><div class="text-slate-500">Q1</div><div id="b-q1" class="text-white">-</div></div><div><div class="text-slate-500">Q2</div><div id="b-q2" class="text-white">-</div></div><div><div class="text-slate-500">Q3</div><div id="b-q3" class="text-white">-</div></div><div><div class="text-slate-500">Q4</div><div id="b-q4" class="text-white">-</div></div><div><div class="text-blue-400">YTD</div><div id="b-ytd" class="text-white">-</div></div></div>
                     </div>
-                    <div id="panel-crypto" class="panel-h-collapsible bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-crypto" style="flex:1;min-width:0">
-                        <div class="flex justify-between items-center mb-3">
-                            <span class="panel-header-text text-slate-300 font-semibold">Crypto</span>
-                            <span class="panel-title-v" onclick="togglePanel('panel-crypto')">Crypto</span>
-                            <div class="flex items-center gap-2 flex-shrink-0"><span id="crypto-ytd" class="panel-header-text text-xs text-crypto font-bold">-</span><button class="panel-toggle" onclick="togglePanel('panel-crypto')" title="Collapse">▾</button></div>
-                        </div>
-                        <div class="panel-body">
-                            <h4 class="text-xl font-bold text-white mb-4 cursor-pointer hover:text-crypto transition-colors" id="crypto-bal" onclick="openDrillDown('crypto')" title="Click for details">฿ 0.00</h4>
-                            <div class="asset-stat-grid text-center"><div><div class="text-slate-500">Q1</div><div id="c-q1" class="text-white">-</div></div><div><div class="text-slate-500">Q2</div><div id="c-q2" class="text-white">-</div></div><div><div class="text-slate-500">Q3</div><div id="c-q3" class="text-white">-</div></div><div><div class="text-slate-500">Q4</div><div id="c-q4" class="text-white">-</div></div><div><div class="text-blue-400">YTD</div><div id="c-ytd" class="text-white">-</div></div></div>
-                        </div>
+                    <div class="bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-crypto">
+                        <div class="flex justify-between items-center mb-3"><span class="text-slate-300 font-semibold">Crypto</span><span id="crypto-ytd" class="text-xs text-crypto font-bold">-</span></div>
+                        <h4 class="text-xl font-bold text-white mb-4 cursor-pointer hover:text-crypto transition-colors" id="crypto-bal" onclick="openDrillDown('crypto')" title="Click for details">฿ 0.00</h4>
+                        <div class="asset-stat-grid text-center"><div><div class="text-slate-500">Q1</div><div id="c-q1" class="text-white">-</div></div><div><div class="text-slate-500">Q2</div><div id="c-q2" class="text-white">-</div></div><div><div class="text-slate-500">Q3</div><div id="c-q3" class="text-white">-</div></div><div><div class="text-slate-500">Q4</div><div id="c-q4" class="text-white">-</div></div><div><div class="text-blue-400">YTD</div><div id="c-ytd" class="text-white">-</div></div></div>
                     </div>
-                    <div id="panel-gold" class="panel-h-collapsible bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-gold" style="flex:1;min-width:0">
-                        <div class="flex justify-between items-center mb-3">
-                            <span class="panel-header-text text-slate-300 font-semibold">Gold</span>
-                            <span class="panel-title-v" onclick="togglePanel('panel-gold')">Gold</span>
-                            <div class="flex items-center gap-2 flex-shrink-0"><span id="gold-ytd" class="panel-header-text text-xs text-gold font-bold">-</span><button class="panel-toggle" onclick="togglePanel('panel-gold')" title="Collapse">▾</button></div>
-                        </div>
-                        <div class="panel-body">
-                            <h4 class="text-xl font-bold text-white mb-4 cursor-pointer hover:text-gold transition-colors" id="gold-bal" onclick="openDrillDown('gold')" title="Click for details">฿ 0.00</h4>
-                            <div class="asset-stat-grid text-center"><div><div class="text-slate-500">Q1</div><div id="g-q1" class="text-white">-</div></div><div><div class="text-slate-500">Q2</div><div id="g-q2" class="text-white">-</div></div><div><div class="text-slate-500">Q3</div><div id="g-q3" class="text-white">-</div></div><div><div class="text-slate-500">Q4</div><div id="g-q4" class="text-white">-</div></div><div><div class="text-blue-400">YTD</div><div id="g-ytd" class="text-white">-</div></div></div>
-                        </div>
+                    <div class="bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-gold">
+                        <div class="flex justify-between items-center mb-3"><span class="text-slate-300 font-semibold">Gold</span><span id="gold-ytd" class="text-xs text-gold font-bold">-</span></div>
+                        <h4 class="text-xl font-bold text-white mb-4 cursor-pointer hover:text-gold transition-colors" id="gold-bal" onclick="openDrillDown('gold')" title="Click for details">฿ 0.00</h4>
+                        <div class="asset-stat-grid text-center"><div><div class="text-slate-500">Q1</div><div id="g-q1" class="text-white">-</div></div><div><div class="text-slate-500">Q2</div><div id="g-q2" class="text-white">-</div></div><div><div class="text-slate-500">Q3</div><div id="g-q3" class="text-white">-</div></div><div><div class="text-slate-500">Q4</div><div id="g-q4" class="text-white">-</div></div><div><div class="text-blue-400">YTD</div><div id="g-ytd" class="text-white">-</div></div></div>
                     </div>
                 </div>
 
-                <div style="display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:nowrap">
-                    <div id="panel-perf" class="panel-h-collapsible bg-card rounded-xl p-6 border border-slate-700 flex flex-col" style="flex:2;min-width:0">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">
+                    <div class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-2 flex flex-col h-full">
                         <div class="flex justify-between items-center mb-4">
-                            <h4 class="panel-header-text text-white font-bold">Performance vs Benchmarks</h4>
-                            <span class="panel-title-v" onclick="togglePanel('panel-perf')">Performance</span>
-                            <div class="flex items-center gap-2 flex-shrink-0">
+                            <h4 class="text-white font-bold">Performance vs Benchmarks</h4>
+                            <div class="flex gap-2">
                                 <select id="bench-type" onchange="renderPerformanceChart()" class="bg-slate-800 border-none text-[10px] text-white rounded px-2 py-1"><option value="ytd">YTD</option><option value="qoq" selected>QoQ</option></select>
                                 <select id="bench-range" onchange="renderPerformanceChart()" class="bg-slate-800 border-none text-[10px] text-white rounded px-2 py-1"><option value="all" selected>Full Year</option><option value="q1">Quarter 1</option><option value="q2">Quarter 2</option><option value="q3">Quarter 3</option><option value="q4">Quarter 4</option></select>
                                 <select id="bench-asset" onchange="renderPerformanceChart()" class="bg-slate-800 border-none text-[10px] text-white rounded px-2 py-1"><option value="all">Total Assets</option><option value="all-sep">All Assets</option><option value="stocks">Stocks</option><option value="bonds">Bonds</option><option value="crypto">Crypto</option><option value="gold">Gold</option></select>
-                                <button class="panel-toggle" onclick="togglePanel('panel-perf')" title="Collapse">▾</button>
                             </div>
                         </div>
-                        <div class="panel-body flex-1 min-h-[300px]"><canvas id="perfChart"></canvas></div>
+                        <div class="flex-1 min-h-[300px]"><canvas id="perfChart"></canvas></div>
                     </div>
-                    <div id="panel-alloc" class="panel-h-collapsible bg-card rounded-xl p-6 border border-slate-700 flex flex-col" style="flex:1;min-width:0">
-                        <div class="flex justify-between items-center mb-4">
-                            <h4 class="panel-header-text text-white font-bold">Asset Allocation (%)</h4>
-                            <span class="panel-title-v" onclick="togglePanel('panel-alloc')">Allocation</span>
-                            <button class="panel-toggle flex-shrink-0" onclick="togglePanel('panel-alloc')" title="Collapse">▾</button>
-                        </div>
-                        <div class="panel-body flex flex-col justify-between">
+                    <div class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-1 flex flex-col h-full">
+                        <h4 class="text-white font-bold mb-4">Asset Allocation (%)</h4>
+                        <div class="flex-1 flex flex-col justify-between">
                             <div class="h-56 relative mb-4" style="cursor:pointer" title="Click a segment to drill down">
                                 <canvas id="allocChart"></canvas>
                             </div>
@@ -640,38 +538,40 @@
                         </div>
                     </div>
 
-                    <div id="panel-hb" class="panel-h-collapsible bg-card rounded-xl p-6 border border-slate-700 flex flex-col" style="flex:1;min-width:0">
+                    <!-- Holdings Breakdown Panel -->
+                    <div class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-1 flex flex-col">
                         <div class="flex items-center justify-between mb-4">
-                            <h4 class="panel-header-text text-white font-bold">Holdings Breakdown</h4>
-                            <span class="panel-title-v" onclick="togglePanel('panel-hb')">Holdings</span>
-                            <button class="panel-toggle" onclick="togglePanel('panel-hb')" title="Collapse">▾</button>
-                        </div>
-                        <div class="panel-body flex flex-col flex-1">
-                            <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">
-                                <select id="hb-asset" onchange="renderHoldingsBreakdown()" style="background:#0F172A;border:1px solid #334155;color:#F8FAFC;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer;flex:1">
-                                    <option value="stocks">Stocks</option><option value="bonds">Bonds</option><option value="crypto">Crypto</option><option value="gold">Gold</option>
+                            <h4 class="text-white font-bold">Holdings Breakdown</h4>
+                            <div style="display:flex;gap:6px;align-items:center">
+                                <select id="hb-asset" onchange="renderHoldingsBreakdown()" style="background:#0F172A;border:1px solid #334155;color:#F8FAFC;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">
+                                    <option value="stocks">Stocks</option>
+                                    <option value="bonds">Bonds</option>
+                                    <option value="crypto">Crypto</option>
+                                    <option value="gold">Gold</option>
                                 </select>
                                 <select id="hb-quarter" onchange="renderHoldingsBreakdown()" style="background:#0F172A;border:1px solid #334155;color:#F8FAFC;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">
-                                    <option value="Beg">Beg</option><option value="Q1">Q1</option><option value="Q2">Q2</option><option value="Q3">Q3</option><option value="Q4">Q4</option>
+                                    <option value="Beg">Beg</option>
+                                    <option value="Q1">Q1</option>
+                                    <option value="Q2">Q2</option>
+                                    <option value="Q3">Q3</option>
+                                    <option value="Q4">Q4</option>
                                 </select>
                             </div>
-                            <div style="height:160px;position:relative;margin-bottom:12px"><canvas id="hbChart"></canvas></div>
-                            <div id="hb-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;max-height:200px"></div>
-                            <div style="margin-top:10px;padding-top:8px;border-top:1px solid #1E293B;display:flex;justify-content:space-between;font-size:10px;color:#64748b">
-                                <span>Click row to edit</span>
-                                <span id="hb-total" style="color:#F8FAFC;font-weight:600"></span>
-                            </div>
+                        </div>
+                        <!-- Mini donut -->
+                        <div style="height:160px;position:relative;margin-bottom:12px"><canvas id="hbChart"></canvas></div>
+                        <!-- Holdings list -->
+                        <div id="hb-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;max-height:200px"></div>
+                        <div style="margin-top:10px;padding-top:8px;border-top:1px solid #1E293B;display:flex;justify-content:space-between;font-size:10px;color:#64748b">
+                            <span>Click row to edit</span>
+                            <span id="hb-total" style="color:#F8FAFC;font-weight:600"></span>
                         </div>
                     </div>
                 </div>
 
-                <div id="panel-quarterly" class="bg-card rounded-xl p-6 border border-slate-700">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="panel-header-text text-white font-bold">Quarterly Performance</h4>
-                        <span class="panel-title-v" onclick="togglePanel('panel-quarterly')">Quarterly Perf</span>
-                        <button class="panel-toggle" onclick="togglePanel('panel-quarterly')" title="Collapse">▾</button>
-                    </div>
-                    <div class="panel-body overflow-x-auto">
+                <div class="bg-card rounded-xl p-6 border border-slate-700">
+                    <h4 class="text-white font-bold mb-4">Quarterly Performance</h4>
+                    <div class="overflow-x-auto">
                         <table class="w-full text-left">
                             <thead class="text-[10px] uppercase text-slate-500 border-b border-slate-800"><tr><th class="pb-3 w-10"></th><th class="pb-3">Quarter / Category</th><th class="pb-3">Balance</th><th class="pb-3">Net Flow</th><th class="pb-3">EBalance</th><th class="pb-3">Profit/Loss</th><th class="pb-3 text-right">Growth %</th></tr></thead>
                             <tbody id="quarterly-tbody" class="text-xs"></tbody>
@@ -730,15 +630,10 @@
 
                 <!-- Wheel Dashboard sub-page -->
                 <div class="wheel-page active space-y-4" id="w-dashboard">
-                    <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:nowrap">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4" style="align-items:stretch">
                         <!-- Balance Card -->
-                        <div id="panel-optbal" class="panel-h-collapsible wheel-card" style="display:flex;flex-direction:column;flex:1;min-width:0">
-                            <div class="wheel-card-title">
-                                <span class="panel-header-text ctl">Options Balance</span>
-                                <span class="panel-title-v" onclick="togglePanel('panel-optbal')">Options Bal</span>
-                                <button class="panel-toggle" onclick="togglePanel('panel-optbal')" title="Collapse">▾</button>
-                            </div>
-                            <div class="panel-body" style="display:flex;flex-direction:column;flex:1">
+                        <div class="wheel-card" style="display:flex;flex-direction:column">
+                            <div class="wheel-card-title"><span class="ctl">Options Balance</span></div>
                             <div class="mb-3">
                                 <div class="wheel-input-group">
                                     <span class="wheel-label">Total Options Balance ($)</span>
@@ -751,6 +646,7 @@
                                 <div class="wheel-stat-box"><div class="wheel-stat-label">Open Premium</div><div class="wheel-stat-val w-blue" id="sumPutPrem">—</div></div>
                                 <div class="wheel-stat-box"><div class="wheel-stat-label">Avg Exercise Price</div><div class="wheel-stat-val" id="sumAvgEx">—</div></div>
                             </div>
+                            <!-- Exercise Exposure — ITM + within 2% only -->
                             <div id="exercisePanel" style="margin-top:10px;padding:10px 12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;display:none">
                                 <div style="font-size:9px;color:#92400E;letter-spacing:.06em;text-transform:uppercase;font-weight:700;margin-bottom:6px">⚠ Exercise Exposure (ITM / Near)</div>
                                 <div id="exerciseRows" style="display:flex;flex-direction:column;gap:4px"></div>
@@ -759,6 +655,7 @@
                                     <span id="totalExercise" style="font-size:13px;font-weight:700;color:#F59E0B">—</span>
                                 </div>
                             </div>
+                            <!-- Strike Alert Banner -->
                             <div id="strikeAlertBanner" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.4);border-radius:8px;animation:pulse-red 1.5s infinite">
                                 <div style="font-size:9px;color:#FCA5A5;letter-spacing:.06em;text-transform:uppercase;font-weight:700;margin-bottom:4px">⚠️ Strike Price Alert</div>
                                 <div id="strikeAlertText" style="font-size:11px;color:#FCA5A5;line-height:1.6"></div>
@@ -769,15 +666,14 @@
                                 <div class="bar-txt"><span id="coverPct">0%</span><span id="coverStatus">—</span></div>
                             </div>
                             <div class="can-open-info" id="canOpen">Calculating…</div>
-                            </div><!-- end panel-body -->
                         </div>
 
                         <!-- Options Calculator -->
-                        <div id="panel-calc" class="panel-h-collapsible wheel-card" style="display:flex;flex-direction:column;flex:2;min-width:0">
+                        <div class="wheel-card lg:col-span-2" style="display:flex;flex-direction:column">
                             <div class="wheel-card-title">
                                 <div style="display:flex;align-items:center;gap:10px">
-                                    <span class="panel-header-text ctl">Options Calculator</span>
-                                    <span class="panel-title-v" onclick="togglePanel('panel-calc')">Calculator</span>
+                                    <span class="ctl">Options Calculator</span>
+                                    <!-- Put / Call toggle -->
                                     <div id="calcToggle" style="display:flex;background:#0F172A;border:1px solid #334155;border-radius:6px;padding:2px;gap:2px">
                                         <button id="calcTogglePut" onclick="wSetCalcMode('put')" style="padding:3px 12px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer;background:#F4884A;color:#fff;transition:all .15s">PUT</button>
                                         <button id="calcToggleCall" onclick="wSetCalcMode('call')" style="padding:3px 12px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer;background:transparent;color:#64748b;transition:all .15s">CALL</button>
@@ -786,10 +682,11 @@
                                 <div style="display:flex;align-items:center;gap:8px">
                                     <span style="font-size:10px;color:#475569;font-weight:500">BTC/USD</span>
                                     <span style="font-size:13px;font-weight:600;color:#93C5FD" id="calcBtcShow">—</span>
-                                    <button class="panel-toggle" onclick="togglePanel('panel-calc')" title="Collapse">▾</button>
                                 </div>
                             </div>
-                            <div class="panel-body wheel-calc-scroll">
+
+                            <div class="wheel-calc-scroll">
+                                <!-- Header -->
                                 <div class="wheel-calc-header-row" style="display:grid;grid-template-columns:75px 110px 115px 1fr 72px 36px 30px;gap:6px;font-size:9px;color:#475569;letter-spacing:.05em;text-transform:uppercase;padding:0 10px;margin-bottom:5px;font-weight:600">
                                     <span>Gap %</span><span>Strike</span><span>Expire Date</span><span>Prem/Contract</span><span>APY %</span><span></span><span></span>
                                 </div>
@@ -799,16 +696,12 @@
                     </div>
 
                     <!-- Lots -->
-                    <div id="panel-lots" class="wheel-card">
+                    <div class="wheel-card">
                         <div class="wheel-card-title">
-                            <span class="panel-header-text ctl">BTC Lots — CSP Exercised Positions</span>
-                        <span class="panel-title-v" onclick="togglePanel('panel-lots')">BTC Lots</span>
-                            <div style="display:flex;align-items:center;gap:8px">
-                                <button class="w-btn w-btn-primary w-btn-sm" onclick="openWheelLotModal(null)">+ Add Lot</button>
-                                <button class="panel-toggle" onclick="togglePanel('panel-lots')" title="Collapse">▾</button>
-                            </div>
+                            <span class="ctl">BTC Lots — CSP Exercised Positions</span>
+                            <button class="w-btn w-btn-primary w-btn-sm" onclick="openWheelLotModal(null)">+ Add Lot</button>
                         </div>
-                        <div class="panel-body orders-wrap">
+                        <div class="orders-wrap">
                             <table class="lots-table">
                                 <thead><tr><th>Lot</th><th>Buy Price</th><th>Amount</th><th>Cost</th><th>Target (Strike)</th><th>P/L vs Now</th><th>Acc. Realized P/L</th><th>Net P/L</th><th>Coverage</th><th>Actions</th></tr></thead>
                                 <tbody id="lotsBody"></tbody>
@@ -818,16 +711,11 @@
                     </div>
 
                     <!-- Open Orders -->
-                    <div id="panel-orders" class="wheel-card">
+                    <div class="wheel-card">
                         <div class="wheel-card-title">
-                            <span class="panel-header-text ctl">Open Orders</span>
-                            <span class="panel-title-v" onclick="togglePanel('panel-orders')">Open Orders</span>
-                            <div style="display:flex;align-items:center;gap:8px">
-                                <button class="w-btn w-btn-primary w-btn-sm" onclick="openWheelOrderModal(null)">+ New Order</button>
-                                <button class="panel-toggle" onclick="togglePanel('panel-orders')" title="Collapse">▾</button>
-                            </div>
+                            <span class="ctl">Open Orders</span>
+                            <button class="w-btn w-btn-primary w-btn-sm" onclick="openWheelOrderModal(null)">+ New Order</button>
                         </div>
-                        <div class="panel-body">
                         <div class="wheel-filters" id="wFilters">
                             <button class="filter-btn active" onclick="wFilterOrders('all',this)">All</button>
                             <button class="filter-btn" onclick="wFilterOrders('Short Put',this)">Short Put</button>
@@ -839,7 +727,6 @@
                                 <tbody id="ordersBody"></tbody>
                             </table>
                         </div>
-                        </div><!-- end panel-body -->
                     </div>
                 </div>
 
@@ -862,35 +749,19 @@
 
             <!-- ══════════ SETTINGS TAB ══════════ -->
             <div id="tab-settings" class="tab-content space-y-6">
-                <div id="panel-s-beg" class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-stock">
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="panel-header-text text-white font-bold">Beginning Balances</h4>
-                        <span class="panel-title-v" onclick="togglePanel('panel-s-beg')">Beg Balances</span>
-                        <button class="panel-toggle" onclick="togglePanel('panel-s-beg')" title="Collapse">▾</button>
-                    </div>
-                    <div class="panel-body">
-                        <p class="text-xs text-slate-400 mb-6">Enter starting wealth for the beginning of the year.</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="beg-balances-container"></div>
-                    </div>
+                <div class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-stock">
+                    <h4 class="text-white font-bold mb-2">Beginning Balances</h4>
+                    <p class="text-xs text-slate-400 mb-6">Enter starting wealth for the beginning of the year.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="beg-balances-container"></div>
                 </div>
-                <div id="panel-s-end" class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-blue-500">
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="panel-header-text text-white font-bold">Quarterly Ending Balances</h4>
-                        <span class="panel-title-v" onclick="togglePanel('panel-s-end')">End Balances</span>
-                        <button class="panel-toggle" onclick="togglePanel('panel-s-end')" title="Collapse">▾</button>
-                    </div>
-                    <div class="panel-body">
-                        <p class="text-xs text-slate-400 mb-6">Enter Mark-to-Market (MTM) values.</p>
-                        <div class="grid grid-cols-1 md:grid-cols-10 lg:grid-cols-10 gap-6" id="end-balances-container"></div>
-                    </div>
+                <div class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-blue-500">
+                    <h4 class="text-white font-bold mb-2">Quarterly Ending Balances</h4>
+                    <p class="text-xs text-slate-400 mb-6">Enter Mark-to-Market (MTM) values.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-10 lg:grid-cols-10 gap-6" id="end-balances-container"></div>
                 </div>
-                <div id="panel-s-fx" class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-amber-500">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="panel-header-text text-white font-bold">Exchange Rates (USD/THB)</h4>
-                        <span class="panel-title-v" onclick="togglePanel('panel-s-fx')">FX Rates</span>
-                        <button class="panel-toggle" onclick="togglePanel('panel-s-fx')" title="Collapse">▾</button>
-                    </div>
-                    <div class="panel-body grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-amber-500">
+                    <h4 class="text-white font-bold mb-4">Exchange Rates (USD/THB)</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                         <div class="bg-slate-800/40 p-3 rounded-lg border border-slate-700"><label class="text-[10px] text-slate-500 uppercase block mb-1">Beginning Rate</label><input type="text" id="rate-beginning" oninput="formatNumberInput(this)" class="w-full bg-transparent text-white font-bold border-none p-0 focus:outline-none" placeholder="0.00"></div>
                         <div class="bg-slate-800/40 p-3 rounded-lg border border-slate-700"><label class="text-[10px] text-slate-500 uppercase block mb-1">Q1 Rate</label><input type="text" id="rate-q1" oninput="formatNumberInput(this)" class="w-full bg-transparent text-white font-bold border-none p-0 focus:outline-none" placeholder="0.00"></div>
                         <div class="bg-slate-800/40 p-3 rounded-lg border border-slate-700"><label class="text-[10px] text-slate-500 uppercase block mb-1">Q2 Rate</label><input type="text" id="rate-q2" oninput="formatNumberInput(this)" class="w-full bg-transparent text-white font-bold border-none p-0 focus:outline-none" placeholder="0.00"></div>
@@ -898,54 +769,39 @@
                         <div class="bg-slate-800/40 p-3 rounded-lg border border-slate-700"><label class="text-[10px] text-slate-500 uppercase block mb-1">Q4 Rate</label><input type="text" id="rate-q4" oninput="formatNumberInput(this)" class="w-full bg-transparent text-white font-bold border-none p-0 focus:outline-none" placeholder="0.00"></div>
                     </div>
                 </div>
-                <div id="panel-s-bench" class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-purple-500">
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="panel-header-text text-white font-bold">Benchmarks (YTD %)</h4>
-                        <span class="panel-title-v" onclick="togglePanel('panel-s-bench')">Benchmarks</span>
-                        <button class="panel-toggle" onclick="togglePanel('panel-s-bench')" title="Collapse">▾</button>
-                    </div>
-                    <div class="panel-body space-y-6" id="benchmarks-container"></div>
+                <div class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-purple-500">
+                    <h4 class="text-white font-bold mb-2">Benchmarks (YTD %)</h4>
+                    <div id="benchmarks-container" class="space-y-6"></div>
                 </div>
-                <div id="panel-s-plat" class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-cyan-500">
-                    <div class="flex justify-between items-center mb-1">
-                        <h4 class="panel-header-text text-white font-bold">Platform List</h4>
-                        <span class="panel-title-v" onclick="togglePanel('panel-s-plat')">Platforms</span>
-                        <button class="panel-toggle" onclick="togglePanel('panel-s-plat')" title="Collapse">▾</button>
+                <!-- Platform Settings -->
+                <div class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-cyan-500">
+                    <h4 class="text-white font-bold mb-1">Platform List</h4>
+                    <p class="text-xs text-slate-400 mb-5">Define platforms for each asset class. These appear as dropdown options in Holdings Detail.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div id="platform-stocks-wrap"></div>
+                        <div id="platform-bonds-wrap"></div>
+                        <div id="platform-crypto-wrap"></div>
+                        <div id="platform-gold-wrap"></div>
                     </div>
-                    <div class="panel-body">
-                        <p class="text-xs text-slate-400 mb-5">Define platforms for each asset class. These appear as dropdown options in Holdings Detail.</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <div id="platform-stocks-wrap"></div>
-                            <div id="platform-bonds-wrap"></div>
-                            <div id="platform-crypto-wrap"></div>
-                            <div id="platform-gold-wrap"></div>
-                        </div>
-                        <div class="mt-4">
-                            <button onclick="savePlatforms()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded-lg text-xs font-bold transition-colors">Save Platforms</button>
-                        </div>
+                    <div class="mt-4">
+                        <button onclick="savePlatforms()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded-lg text-xs font-bold transition-colors">Save Platforms</button>
                     </div>
                 </div>
-                <div id="panel-s-gs" class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-emerald-500">
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="panel-header-text text-white font-bold">Google Sheets Integration</h4>
-                        <span class="panel-title-v" onclick="togglePanel('panel-s-gs')">Google Sheets</span>
-                        <button class="panel-toggle" onclick="togglePanel('panel-s-gs')" title="Collapse">▾</button>
-                    </div>
-                    <div class="panel-body">
-                        <p class="text-xs text-slate-400 mb-4">Both Investment Dashboard and Wheel Strategy can share the same Apps Script URL — set it here once.</p>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-[10px] text-slate-500 uppercase block mb-1">Apps Script Web App URL (Single URL for both)</label>
-                                <input type="text" id="unified-gs-url" class="w-full bg-slate-800 border border-slate-700 text-white rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" placeholder="https://script.google.com/macros/s/.../exec">
-                                <p class="text-[10px] text-slate-500 mt-1">Investment Dashboard uses GET (no param), Wheel uses GET ?action=wheel_read / POST action=wheel_write</p>
-                            </div>
-                            <div class="flex gap-3 flex-wrap">
-                                <button onclick="saveUnifiedUrl()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Save & Connect Both</button>
-                                <button onclick="testInvConnection()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Test Investment Sync</button>
-                                <button onclick="testWheelConnection()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Test Wheel Sync</button>
-                            </div>
-                            <div id="gs-status-msg" class="text-xs text-slate-500 hidden"></div>
+                <div class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-emerald-500">
+                    <h4 class="text-white font-bold mb-2">Google Sheets Integration</h4>
+                    <p class="text-xs text-slate-400 mb-4">Both Investment Dashboard and Wheel Strategy can share the same Apps Script URL — set it here once.</p>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] text-slate-500 uppercase block mb-1">Apps Script Web App URL (Single URL for both)</label>
+                            <input type="text" id="unified-gs-url" class="w-full bg-slate-800 border border-slate-700 text-white rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" placeholder="https://script.google.com/macros/s/.../exec">
+                            <p class="text-[10px] text-slate-500 mt-1">Investment Dashboard uses GET (no param), Wheel uses GET ?action=wheel_read / POST action=wheel_write</p>
                         </div>
+                        <div class="flex gap-3 flex-wrap">
+                            <button onclick="saveUnifiedUrl()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Save & Connect Both</button>
+                            <button onclick="testInvConnection()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Test Investment Sync</button>
+                            <button onclick="testWheelConnection()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Test Wheel Sync</button>
+                        </div>
+                        <div id="gs-status-msg" class="text-xs text-slate-500 hidden"></div>
                     </div>
                 </div>
                 <div class="mt-6 flex justify-end gap-3 pb-8">
@@ -1104,14 +960,13 @@
 
     const savedRates = JSON.parse(localStorage.getItem('exchangeRateDefaults')) || { beginning: 31.07, q1: 32.66, q2: null, q3: null, q4: null };
     const getEmptyEndBalances = () => ({ stocks: { q1:852238.97, q2: null, q3: null, q4: null }, bonds: { q1: 1021204.85, q2: null, q3: null, q4: null }, crypto: { q1: {thb: 1566503.51, usds: 43456.43, usdo: 4507.55}, q2: {thb: null, usds: null, usdo: null}, q3: {thb: null, usds: null, usdo: null}, q4: {thb: null, usds: null, usdo: null} }, gold: { q1: 94565.34, q2: null, q3: null, q4: null } });
-    const getEmptyEndBalancesZero = () => ({ stocks: { q1: null, q2: null, q3: null, q4: null }, bonds: { q1: null, q2: null, q3: null, q4: null }, crypto: { q1: {thb: null, usds: null, usdo: null}, q2: {thb: null, usds: null, usdo: null}, q3: {thb: null, usds: null, usdo: null}, q4: {thb: null, usds: null, usdo: null} }, gold: { q1: null, q2: null, q3: null, q4: null } });
     const getEmptyBenchmarks = () => ({ stocks: { name: 'S&P 500', q1: -5.08, q2: null, q3: null, q4: null }, bonds: { name: 'Bond', q1: 1, q2: null, q3: null, q4: null }, crypto: { name: 'Bitcoin', q1: -22.13, q2: null, q3: null, q4: null }, gold: { name: 'Gold', q1: 7.89, q2: null, q3: null, q4: null } });
 
     const state = {
         currentPort: 'port1', rates: savedRates,
         portfolios: {
             port1: { goal: { amount: 10000000, year: 2031, monthly: 20000, return: 12, monthlyTiers: [{year: 2026, amount: 20000},{year: 2028, amount: 36000}] }, begBalances: { stocks: 628474.25, bonds: 1016754.58, crypto: 1679416.42, gold: 85468.76 }, endBalances: getEmptyEndBalances(), benchmarks: getEmptyBenchmarks(), flows: [{"id": 1000, "date": "2026-01-02", "asset": "stocks", "type": "deposit", "amount": 100000, "memo": "", "currency": "THB"}, {"id": 1001, "date": "2026-01-02", "asset": "crypto", "type": "deposit", "amount": 3000, "memo": "", "currency": "THB"}, {"id": 1002, "date": "2026-01-14", "asset": "stocks", "type": "deposit", "amount": 13551, "memo": "", "currency": "THB"}, {"id": 1003, "date": "2026-01-15", "asset": "gold", "type": "deposit", "amount": 2000, "memo": "", "currency": "THB"}, {"id": 1004, "date": "2026-01-28", "asset": "stocks", "type": "deposit", "amount": 42881.61, "memo": "SCBFP(SSFE) to SCBEUROPE(SSPE)", "currency": "THB"}, {"id": 1005, "date": "2026-01-28", "asset": "bonds", "type": "withdraw", "amount": 42881.61, "memo": "SCBFP(SSFE) to SCBEUROPE(SSPE)", "currency": "THB"}, {"id": 1006, "date": "2026-02-03", "asset": "stocks", "type": "deposit", "amount": 4000, "memo": "", "currency": "THB"}, {"id": 1007, "date": "2026-02-03", "asset": "crypto", "type": "deposit", "amount": 3000, "memo": "", "currency": "THB"}, {"id": 1008, "date": "2026-02-03", "asset": "gold", "type": "deposit", "amount": 2000, "memo": "", "currency": "THB"}, {"id": 1009, "date": "2026-02-03", "asset": "bonds", "type": "deposit", "amount": 13616, "memo": "", "currency": "THB"}, {"id": 1010, "date": "2026-02-28", "asset": "crypto", "type": "deposit", "amount": 3000, "memo": "", "currency": "THB"}, {"id": 1011, "date": "2026-02-28", "asset": "gold", "type": "deposit", "amount": 2000, "memo": "", "currency": "THB"}, {"id": 1012, "date": "2026-03-02", "asset": "stocks", "type": "deposit", "amount": 9456.47, "memo": "", "currency": "THB"}, {"id": 1013, "date": "2026-03-20", "asset": "crypto", "type": "withdraw", "amount": 159.98, "memo": "", "currency": "USD"}, {"id": 1014, "date": "2026-03-20", "asset": "crypto", "type": "withdraw", "amount": 49.98, "memo": "", "currency": "USD"}, {"id": 1015, "date": "2026-04-01", "asset": "stocks", "type": "deposit", "amount": 4000, "memo": "", "currency": "THB"}, {"id": 1016, "date": "2026-04-01", "asset": "crypto", "type": "deposit", "amount": 3000, "memo": "", "currency": "THB"}, {"id": 1017, "date": "2026-04-01", "asset": "gold", "type": "deposit", "amount": 2000, "memo": "", "currency": "THB"}, {"id": 1018, "date": "2026-04-02", "asset": "stocks", "type": "deposit", "amount": 9827, "memo": "", "currency": "THB"}, {"id": 1019, "date": "2026-04-02", "asset": "stocks", "type": "deposit", "amount": 6000, "memo": "", "currency": "THB"}] },
-            port2: { goal: { amount: 10000000, year: 2031, monthly: 20000, return: 12, monthlyTiers: [{year: 2026, amount: 20000},{year: 2028, amount: 36000}] }, begBalances: { stocks: 0, bonds: 0, crypto: 0, gold: 0 }, endBalances: getEmptyEndBalancesZero(), benchmarks: getEmptyBenchmarks(), flows: [] }
+            port2: { goal: { amount: 10000000, year: 2031, monthly: 20000, return: 12, monthlyTiers: [{year: 2026, amount: 20000},{year: 2028, amount: 36000}] }, begBalances: { stocks: 0, bonds: 0, crypto: 0, gold: 0 }, endBalances: getEmptyEndBalances(), benchmarks: getEmptyBenchmarks(), flows: [] }
         },
         computed: { stocks: {}, bonds: {}, crypto: {}, gold: {}, portfolio: {} },
         ui: { expandedQuarters: { q1: false, q2: false, q3: false, q4: false } }
@@ -1137,31 +992,6 @@
         if(!str) return 0; if(typeof str === 'number') return str;
         let val = str.toString().trim(); let isNeg = (val.startsWith('(') && val.endsWith(')')) || val.startsWith('-');
         val = val.replace(/[^0-9.]/g, ''); let num = parseFloat(val) || 0; return isNeg ? -num : num;
-    }
-
-    function togglePanel(id) {
-        const panel = document.getElementById(id);
-        if (!panel) return;
-        const isH = panel.classList.contains('panel-h-collapsible');
-        const colClass = isH ? 'panel-h-collapsed' : 'panel-collapsed';
-        panel.classList.toggle(colClass);
-        try {
-            const states = JSON.parse(localStorage.getItem('panel_states') || '{}');
-            states[id] = panel.classList.contains(colClass);
-            localStorage.setItem('panel_states', JSON.stringify(states));
-        } catch(e) {}
-    }
-    function restorePanelStates() {
-        try {
-            const states = JSON.parse(localStorage.getItem('panel_states') || '{}');
-            Object.entries(states).forEach(([id, collapsed]) => {
-                if (!collapsed) return;
-                const panel = document.getElementById(id);
-                if (!panel) return;
-                const colClass = panel.classList.contains('panel-h-collapsible') ? 'panel-h-collapsed' : 'panel-collapsed';
-                panel.classList.add(colClass);
-            });
-        } catch(e) {}
     }
 
     function switchPortfolio(id) {
@@ -1239,7 +1069,7 @@
             else { datasets = [{ label: 'Portfolio', data: quarters.map(q => getPortGrowth(assetKey, q, false)), backgroundColor: '#3B82F6', borderRadius: 4 }, { label: 'Benchmark', data: quarters.map(q => getBenchGrowth(assetKey, q, false)), backgroundColor: '#475569', borderRadius: 4 }]; }
         }
         if(charts.perf) charts.perf.destroy();
-        charts.perf = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: '#94A3B8', callback: v => parseFloat(v.toFixed(2)) + '%' }, grid: { color: 'rgba(51, 65, 85, 0.5)' } }, x: { ticks: { color: '#94A3B8' }, grid: { display: false } } }, plugins: { legend: { labels: { color: '#F8FAFC', boxWidth: 10, font: { size: 9 }, padding: 24 } }, datalabels: { color: '#fff', anchor: 'end', align: 'top', offset: 2, formatter: (v) => (v !== null && v !== undefined && v !== 0) ? v.toFixed(1) + '%' : null, font: { size: assetKey === 'all-sep' ? 8 : 10 }, padding: 2, clip: false } } } });
+        charts.perf = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: '#94A3B8', callback: v => parseFloat(v.toFixed(2)) + '%' }, grid: { color: 'rgba(51, 65, 85, 0.5)' } }, x: { ticks: { color: '#94A3B8' }, grid: { display: false } } }, plugins: { legend: { labels: { color: '#F8FAFC', boxWidth: 10, font: { size: 9 } } }, datalabels: { color: '#fff', anchor: 'end', align: 'top', offset: 2, formatter: (v) => (v !== null && v !== undefined) ? v.toFixed(1) + '%' : null, font: { size: assetKey === 'all-sep' ? 8 : 10 }, padding: 2, clip: false } } } });
     }
 
     function renderAllocationChart(data) {
@@ -1435,19 +1265,8 @@
     }
 
     function initSettings() {
-        // Force-expand platform panel so wraps are visible, then render
-        const platPanel = document.getElementById('panel-s-plat');
-        if (platPanel) {
-            platPanel.classList.remove('panel-collapsed');
-            platPanel.classList.remove('panel-h-collapsed');
-        }
+        // Platform lists
         renderPlatformSettings();
-        // Re-render platforms whenever panel class changes (expand/collapse)
-        if (platPanel && !platPanel._obsAttached) {
-            platPanel._obsAttached = true;
-            new MutationObserver(() => renderPlatformSettings())
-                .observe(platPanel, { attributes: true, attributeFilter: ['class'] });
-        }
         const begC = document.getElementById('beg-balances-container'); begC.innerHTML = '';
         ['stocks', 'bonds', 'crypto', 'gold'].forEach(a => { begC.innerHTML += `<div class="bg-slate-800/40 p-3 rounded-lg border border-slate-700"><label class="text-[10px] text-slate-500 uppercase block mb-1">${a}</label><input type="text" oninput="formatNumberInput(this)" value="${pState().begBalances[a].toLocaleString()}" id="input-beg-${a}" class="bg-transparent text-white font-bold border-none p-0 w-full focus:outline-none"></div>`; });
         const endC = document.getElementById('end-balances-container'); endC.innerHTML = '';
@@ -1911,7 +1730,7 @@
     function wRenderLots() {
         const body = document.getElementById('lotsBody'); const foot = document.getElementById('lotsFoot'); body.innerHTML='';
         let tC=0,tPL=0,tA=0,tN=0;
-        wLots.forEach(lot=>{ const cost = lot.price*lot.amount; const pl = lot.price>0 ? ((lot.price-lot.target)*lot.amount) + (btcPrice*lot.amount) - cost : 0; const net = pl+lot.accRealPL; tC+=cost; tPL+=pl; tA+=lot.accRealPL; tN+=net; const covOK = btcPrice>=lot.target; const tr = document.createElement('tr'); if(lot.problem) tr.style.background='rgba(239,68,68,.025)';
+        wLots.forEach(lot=>{ const cost = lot.price*lot.amount; const pl = lot.price>0 ? btcPrice*lot.amount-cost : 0; const net = pl+lot.accRealPL; tC+=cost; tPL+=pl; tA+=lot.accRealPL; tN+=net; const covOK = btcPrice>=lot.target; const tr = document.createElement('tr'); if(lot.problem) tr.style.background='rgba(239,68,68,.025)';
             tr.innerHTML=`<td><div class="lot-name"><div class="lot-dot" style="background:${lot.problem?'#EF4444':'#9B5CF6'}"></div>${lot.name}${lot.problem?'<span class="tag-r">NO BTC</span>':''}</div></td><td>${lot.price>0?wusd(lot.price,2):'—'}</td><td>${lot.amount} BTC</td><td>${lot.price>0?wusd(cost):'—'}</td><td>${wusd(lot.target)}</td><td class="${pl>=0?'p-pos':'p-neg'}">${lot.price>0?(pl>=0?'+':'')+wusd(pl):'—'}</td><td class="p-pos">${wusd(lot.accRealPL,2)}</td><td class="${net>=0?'p-pos':'p-neg'}">${lot.price>0?(net>=0?'+':'')+wusd(net):'—'}</td><td>${covOK?'<span class="fcov">Fully Cover</span>':`<span style="font-size:11px;color:#FCA5A5;font-family:'Inter',sans-serif">${wusd((lot.target-btcPrice)*lot.amount)} short</span>`}</td><td style="text-align:left;white-space:nowrap"><button class="w-btn-icon" onclick="openWheelLotModal(${lot.id})" title="Edit">✎</button><button class="w-btn-icon w-btn-danger" onclick="wDelLot(${lot.id})" title="Delete" style="margin-left:4px">✕</button></td>`;
             body.appendChild(tr); });
         foot.innerHTML=`<tr class="tr-tot"><td>TOTAL</td><td></td><td>${wLots.reduce((s,l)=>s+l.amount,0).toFixed(4)} BTC</td><td>${wusd(tC)}</td><td></td><td class="${tPL>=0?'p-pos':'p-neg'}">${(tPL>=0?'+':'')+wusd(tPL)}</td><td class="p-pos">${wusd(tA,2)}</td><td class="${tN>=0?'p-pos':'p-neg'}">${(tN>=0?'+':'')+wusd(tN)}</td><td></td><td></td></tr>`;
@@ -2323,9 +2142,7 @@
 
         // BTC price polling
         fetchBtc(); setInterval(fetchBtc, 15000);
-        restorePanelStates();
         if (window.Notification && Notification.permission === 'default') Notification.requestPermission();
-        if (typeof renderHoldingsBreakdown === 'function') setTimeout(renderHoldingsBreakdown, 200);
 
         const gsUrl = getGsUrl();
         if (gsUrl) {
@@ -2374,11 +2191,11 @@
                     <span style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.08em;font-weight:600">Holdings Detail</span>
                     <button onclick="ddAddRow()" style="background:#3B82F6;border:none;border-radius:6px;color:#fff;font-size:11px;padding:5px 14px;cursor:pointer;font-weight:600" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">+ Add</button>
                 </div>
-                <div style="display:grid;grid-template-columns:1.8fr 1fr 120px 70px 90px 40px;gap:6px;font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.06em;font-weight:600;padding:0 8px;margin-bottom:6px">
-                    <span>Name / Ticker</span><span>Platform</span><span style="text-align:right">Amount (THB)</span><span style="text-align:right">%</span><span style="text-align:right">Movement</span><span></span>
+                <div style="display:grid;grid-template-columns:2fr 1fr 90px 90px 90px 52px;gap:6px;font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.06em;font-weight:600;padding:0 8px;margin-bottom:6px">
+                    <span>Name / Ticker</span><span>Platform</span><span style="text-align:right">Amount (THB)</span><span style="text-align:right">% of Asset</span><span style="text-align:right">Movement</span><span></span>
                 </div>
                 <div id="dd-holdings-list" style="display:flex;flex-direction:column;gap:4px"></div>
-                <div id="dd-total-row" style="margin-top:10px;padding-top:10px;border-top:1px solid #334155;display:grid;grid-template-columns:1.8fr 1fr 120px 70px 90px 40px;gap:6px;font-size:12px;font-weight:700;color:#F8FAFC;padding-left:8px;padding-right:8px"></div>
+                <div id="dd-total-row" style="margin-top:10px;padding-top:10px;border-top:1px solid #334155;display:grid;grid-template-columns:2fr 1fr 90px 90px 90px 52px;gap:6px;font-size:12px;font-weight:700;color:#F8FAFC;padding-left:8px;padding-right:8px"></div>
             </div>
         </div>
     </div>
@@ -2390,16 +2207,18 @@
 
     <script>
     // ══════════════════════════════════════════════════════
-    //  MAIN SCRIPT CONTINUES: DRILL-DOWN + PLATFORM SETTINGS
+    //  DRILL-DOWN — Holdings per Quarter
     // ══════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════
+    //  PLATFORM SETTINGS
     // ══════════════════════════════════════════════════════
     const PLATFORM_ASSETS = ['stocks','bonds','crypto','gold'];
     const PLATFORM_COLORS = { stocks:'#10B981', bonds:'#F59E0B', crypto:'#3B82F6', gold:'#FACC15' };
     const PLATFORM_DEFAULTS = {
-        stocks: ['Streaming', 'Webull', 'Dime', 'Finnomena', 'SCB Fundclick'],
-        bonds:  ['Webull', 'Dime', 'Finnomena', 'SCB Fundclick'],
-        crypto: ['Binance', 'Binance TH', 'Bybit', 'Ledger', 'Wallets'],
-        gold:   ['MTS Gold', 'SCB Fundclick', 'Webull', 'Dime']
+        stocks: ['Finnomena', 'Jitta', 'Interactive Brokers', 'Krungsri'],
+        bonds:  ['Krungsri', 'KBank', 'SCB', 'Direct'],
+        crypto: ['Binance', 'Coinbase', 'Bitkub', 'Ledger (Cold)'],
+        gold:   ['MTS Gold', 'YLG', 'Physical', 'Hua Seng Heng']
     };
 
     function loadPlatforms(asset) {
@@ -2436,10 +2255,8 @@
     let hbChartInst = null;
 
     function renderHoldingsBreakdown() {
-        const assetEl   = document.getElementById('hb-asset');
-        const quarterEl = document.getElementById('hb-quarter');
-        const asset   = assetEl?.value   || 'stocks';
-        const quarter = quarterEl?.value || 'Q1';
+        const asset   = document.getElementById('hb-asset')?.value   || 'stocks';
+        const quarter = document.getElementById('hb-quarter')?.value || 'Q1';
         const color   = DD_COLORS[asset];
         const rows    = ddLoad(asset, quarter);
         const assetBal = ddGetAssetBalForPeriod(asset, quarter);
@@ -2505,7 +2322,6 @@
     const _origCloseDrillDown = window.closeDrillDown;
 
     
-    const DD_COLORS = { stocks:'#10B981', bonds:'#F59E0B', crypto:'#3B82F6', gold:'#FACC15' };
     const DD_LABELS = { stocks:'Stocks', bonds:'Bonds', crypto:'Crypto', gold:'Gold' };
 
     let ddAsset   = 'stocks';
@@ -2611,64 +2427,59 @@
         const color  = DD_COLORS[ddAsset];
         listEl.innerHTML = '';
 
+        // Build prev lookup by name
         const prevMap = {};
         prev.forEach(r => { if (r.name) prevMap[r.name] = r.amount || 0; });
 
+        // Calculate total assigned
         let totalAssigned = rows.reduce((s,r) => s + (r.amount||0), 0);
-        const untracked   = assetBal - totalAssigned;
 
-        const countEl = document.getElementById('dd-count');
-        if (countEl) countEl.textContent = rows.length || '0';
+        // Untracked = assetBal - totalAssigned
+        const untracked = assetBal - totalAssigned;
 
-        // Empty state — always allow adding even if no rows yet
-        if (rows.length === 0) {
-            listEl.innerHTML = `<div style="text-align:center;padding:20px;color:#475569;font-size:12px">No holdings for ${ddQuarter}.<br><span style="font-size:10px">Click <b style="color:#3B82F6">+ Add</b> to start tracking.</span></div>`;
-            if (assetBal > 0) {
-                const utEl = document.createElement('div');
-                utEl.style.cssText = 'background:rgba(71,85,105,.08);border:1px dashed #334155;border-radius:8px;padding:8px 12px;margin-top:4px;display:flex;justify-content:space-between;align-items:center';
-                utEl.innerHTML = `<span style="font-size:11px;color:#475569;font-style:italic">Untracked</span><span style="font-size:12px;font-weight:600;color:#475569">฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})} (100%)</span>`;
-                listEl.appendChild(utEl);
-            }
+        // Count for display (exclude auto untracked)
+        document.getElementById('dd-count').textContent = rows.length || '0';
+
+        if (rows.length === 0 && assetBal === 0) {
+            listEl.innerHTML = `<div style="text-align:center;padding:24px;color:#475569;font-size:12px">No holdings for ${ddQuarter}.<br><span style="font-size:10px">Click + Add to start tracking.</span></div>`;
             document.getElementById('dd-total-row').innerHTML = '';
             return;
         }
 
         // Render tracked rows
-        const platforms = loadPlatforms(ddAsset);
         rows.forEach((row, i) => {
             const pct      = assetBal > 0 ? (row.amount / assetBal * 100) : 0;
             const barW     = Math.min(100, pct);
-            const prevAmt  = (row.name && prevMap[row.name] !== undefined) ? prevMap[row.name] : null;
-            const movement = (prevAmt !== null && ddQuarter !== 'Beg') ? (row.amount||0) - prevAmt : null;
-            const movColor = movement === null ? '#475569' : movement >= 0 ? '#10B981' : '#EF4444';
-            const movStr   = movement === null ? '—' : (movement >= 0 ? '+' : '') + '฿' + Math.abs(movement).toLocaleString('en-US',{maximumFractionDigits:0});
-            const platformOpts = ['', ...platforms].map(p => `<option value="${p}" ${p===(row.platform||'')?'selected':''}>${p||'— Platform —'}</option>`).join('');
+            const prevAmt  = prevMap[row.name] ?? null;
+            const movement = (prevAmt !== null && row.name && ddQuarter !== 'Beg') ? (row.amount||0) - prevAmt : null;
+            const movColor = movement === null ? '' : movement >= 0 ? '#10B981' : '#EF4444';
+            const movStr   = movement === null ? '' : (movement >= 0 ? '+' : '') + '฿' + Math.abs(movement).toLocaleString('en-US',{maximumFractionDigits:0});
 
             const rowEl = document.createElement('div');
             rowEl.style.cssText = 'background:#0F172A;border:1px solid #334155;border-radius:8px;padding:10px 10px 8px;transition:border-color .15s';
             rowEl.onmouseenter = () => rowEl.style.borderColor = color+'66';
             rowEl.onmouseleave = () => rowEl.style.borderColor = '#334155';
+
+            const platforms = loadPlatforms(ddAsset);
+            const platformOpts = ['', ...platforms].map(p=>`<option value="${p}" ${p===(row.platform||'')?'selected':''}>${p||'— Platform —'}</option>`).join('');
+
             rowEl.innerHTML = `
-                <div style="display:grid;grid-template-columns:1.8fr 1fr 120px 70px 90px 40px;gap:6px;align-items:center;margin-bottom:6px">
-                    <input value="${(row.name||'').replace(/"/g,'&quot;')}" placeholder="Name / Ticker"
-                        data-idx="${i}" data-field="name"
-                        onblur="ddSaveField(this)"
-                        style="background:transparent;border:none;border-bottom:1px solid #334155;color:#F8FAFC;font-size:12px;font-weight:600;outline:none;padding:2px 0;width:100%" />
-                    <select data-idx="${i}" data-field="platform"
-                        onchange="ddSaveField(this)"
-                        style="background:#0F172A;border:1px solid #334155;color:#94A3B8;font-size:10px;padding:3px 4px;border-radius:4px;width:100%">
+                <div style="display:grid;grid-template-columns:2fr 1fr 130px 90px 90px 52px;gap:6px;align-items:center;margin-bottom:6px">
+                    <input value="${row.name||''}" placeholder="Name / Ticker"
+                        oninput="ddUpdateRow(${i},'name',this.value)"
+                        style="background:transparent;border:none;color:#F8FAFC;font-size:12px;font-weight:600;outline:none;padding:0;width:100%" />
+                    <select onchange="ddUpdateRow(${i},'platform',this.value)"
+                        style="background:#0F172A;border:1px solid #334155;color:#94A3B8;font-size:10px;padding:2px 4px;border-radius:4px;width:100%">
                         ${platformOpts}
                     </select>
                     <input value="${row.amount ? row.amount.toLocaleString('en-US',{maximumFractionDigits:0}) : ''}" placeholder="0"
-                        data-idx="${i}" data-field="amount"
+                        oninput="ddUpdateRow(${i},'amount',this.value)"
                         onfocus="this.value=this.value.replace(/,/g,'')"
-                        onblur="ddSaveField(this);this.value=parseFloat(this.value.replace(/,/g,''))||0;this.value=this.value==0?'':(+this.value).toLocaleString('en-US',{maximumFractionDigits:0})"
-                        style="background:transparent;border:none;border-bottom:1px solid #334155;color:#F8FAFC;font-size:12px;font-weight:500;outline:none;text-align:right;padding:2px 0;width:100%" />
+                        style="background:transparent;border:none;color:#F8FAFC;font-size:12px;font-weight:500;outline:none;text-align:right;width:100%" />
                     <div style="text-align:right;font-size:11px;font-weight:500;color:${color}">${pct.toFixed(1)}%</div>
-                    <div style="text-align:right;font-size:11px;font-weight:600;color:${movColor}">${movStr}</div>
+                    <div style="text-align:right;font-size:11px;font-weight:600;color:${movColor}">${movStr || '<span style="color:#334155">—</span>'}</div>
                     <div style="text-align:right">
-                        <button onclick="ddDeleteRow(${i})"
-                            style="background:transparent;border:1px solid #334155;border-radius:4px;color:#64748b;font-size:10px;padding:2px 6px;cursor:pointer"
+                        <button onclick="ddDeleteRow(${i})" style="background:transparent;border:1px solid #334155;border-radius:4px;color:#64748b;font-size:10px;padding:2px 6px;cursor:pointer"
                             onmouseover="this.style.borderColor='#EF4444';this.style.color='#F87171'"
                             onmouseout="this.style.borderColor='#334155';this.style.color='#64748b'">✕</button>
                     </div>
@@ -2679,25 +2490,26 @@
             listEl.appendChild(rowEl);
         });
 
-        // Untracked row
+        // Untracked row (auto, read-only) — only show if there's a gap
         if (assetBal > 0 && Math.abs(untracked) > 0.5) {
-            const utPct  = (untracked / assetBal * 100);
+            const utPct  = assetBal > 0 ? (untracked / assetBal * 100) : 0;
             const utBarW = Math.min(100, Math.max(0, utPct));
+            // Movement for untracked: compare to previous untracked
             const prevTotalAssigned = prev.reduce((s,r)=>s+(r.amount||0),0);
-            const prevBal  = ddGetAssetBalForPeriod(ddAsset, ddPrevPeriod(ddQuarter));
-            const prevUT   = prevBal > 0 ? prevBal - prevTotalAssigned : null;
-            const utMov    = (prevUT !== null && ddQuarter !== 'Beg') ? untracked - prevUT : null;
-            const utMovCol = utMov === null ? '#475569' : utMov >= 0 ? '#10B981' : '#EF4444';
-            const utMovStr = utMov === null ? '—' : (utMov>=0?'+':'')+'฿'+Math.abs(utMov).toLocaleString('en-US',{maximumFractionDigits:0});
+            const prevBal = ddGetAssetBalForPeriod(ddAsset, ddPrevPeriod(ddQuarter));
+            const prevUntracked = prevBal > 0 ? prevBal - prevTotalAssigned : null;
+            const utMov  = (prevUntracked !== null && ddQuarter !== 'Beg') ? untracked - prevUntracked : null;
+            const utMovColor = utMov === null ? '#475569' : utMov >= 0 ? '#10B981' : '#EF4444';
+            const utMovStr   = utMov === null ? '—' : (utMov>=0?'+':'')+'฿'+Math.abs(utMov).toLocaleString('en-US',{maximumFractionDigits:0});
+
             const utEl = document.createElement('div');
-            utEl.style.cssText = 'background:rgba(71,85,105,.08);border:1px dashed #334155;border-radius:8px;padding:8px 10px;opacity:.75';
+            utEl.style.cssText = 'background:rgba(71,85,105,.08);border:1px dashed #334155;border-radius:8px;padding:10px 10px 8px;opacity:.8';
             utEl.innerHTML = `
-                <div style="display:grid;grid-template-columns:1.8fr 1fr 120px 70px 90px 40px;gap:6px;align-items:center;margin-bottom:5px">
-                    <span style="font-size:11px;font-weight:600;color:#475569;font-style:italic">Untracked</span>
-                    <span></span>
-                    <span style="text-align:right;font-size:11px;color:#475569">฿${untracked.toLocaleString('en-US',{maximumFractionDigits:0})}</span>
+                <div style="display:grid;grid-template-columns:2fr 130px 90px 90px 52px;gap:6px;align-items:center;margin-bottom:6px">
+                    <span style="font-size:12px;font-weight:600;color:#475569;font-style:italic">Untracked</span>
+                    <span style="text-align:right;font-size:12px;color:#475569">฿${untracked.toLocaleString('en-US',{maximumFractionDigits:0})}</span>
                     <span style="text-align:right;font-size:11px;color:#475569">${utPct.toFixed(1)}%</span>
-                    <span style="text-align:right;font-size:11px;font-weight:600;color:${utMovCol}">${utMovStr}</span>
+                    <span style="text-align:right;font-size:11px;font-weight:600;color:${utMovColor}">${utMovStr}</span>
                     <span></span>
                 </div>
                 <div style="height:3px;background:#1E293B;border-radius:2px;overflow:hidden">
@@ -2705,6 +2517,9 @@
                 </div>`;
             listEl.appendChild(utEl);
         }
+
+        // Column headers for movement column
+        const headerEl = listEl.previousElementSibling;
 
         // Total row
         const totalPct = assetBal > 0 ? (totalAssigned / assetBal * 100) : 100;
@@ -2716,24 +2531,6 @@
             <span style="text-align:right;color:${Math.abs(diff)<1?'#10B981':'#F59E0B'}">${totalPct.toFixed(1)}%</span>
             <span></span>
             <span style="text-align:right;font-size:10px;color:${diff<-1?'#F87171':diff>1?'#F59E0B':'#10B981'}">${Math.abs(diff)<1?'✓':((diff>=0?'+':'-')+'฿'+Math.abs(diff).toLocaleString('en-US',{maximumFractionDigits:0}))}</span>`;
-    }
-
-    // Save on blur/change instead of oninput — prevents re-render on every keystroke
-    function ddSaveField(el) {
-        const i     = parseInt(el.dataset.idx);
-        const field = el.dataset.field;
-        const rows  = ddLoad(ddAsset, ddQuarter);
-        if (!rows[i]) return;
-        if (field === 'amount') {
-            const num = parseFloat(el.value.replace(/,/g,''));
-            rows[i].amount = isNaN(num) ? 0 : num;
-        } else {
-            rows[i][field] = el.value;
-        }
-        ddSave(ddAsset, ddQuarter, rows);
-        // Re-render only after blur so user isn't interrupted
-        ddRenderHoldings(ddGetAssetBal());
-    }
     }
 
     function ddPrevPeriod(quarter) {
@@ -2752,12 +2549,15 @@
     function ddUpdateRow(i, field, val) {
         const rows = ddLoad(ddAsset, ddQuarter);
         if (field === 'amount') {
-            const num = parseFloat(String(val).replace(/,/g,''));
+            const num = parseFloat(val.replace(/,/g,''));
             rows[i].amount = isNaN(num) ? 0 : num;
         } else {
             rows[i][field] = val;
         }
         ddSave(ddAsset, ddQuarter, rows);
+        // Lightweight update: re-render holdings without touching tabs/summary
+        ddRenderHoldings(ddGetAssetBal());
+        // But refocus to avoid jarring re-render (we re-render so refocus via timeout)
     }
 
     function ddAddRow() {
