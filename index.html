@@ -1216,7 +1216,6 @@
             const flows = state.portfolios.port1.flows || [];
             if (!flows.length) return;
 
-            // Send only the latest flow (the one just added)
             const f    = flows[flows.length - 1];
             const sign = f.type === 'withdraw' ? -1 : 1;
             const amt  = (f.amount || 0) * sign;
@@ -1234,7 +1233,10 @@
                 }]
             };
 
-            await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
+            const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const data = await r.json();
+            if (data.error) throw new Error(data.error);
             const now = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
             setSyncPill('ok', 'Synced ' + now);
         } catch(e) {
