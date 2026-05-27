@@ -1213,26 +1213,27 @@
     async function pushFlowsToSheet() {
         const url = getGsUrl(); if (!url) return;
         try {
-            // Convert flows to Activities sheet format (col B=date, C=stocks, D=bonds, E=crypto, F=gold, G=currency, H=note)
             const flows = state.portfolios.port1.flows || [];
-            const activities = flows.map(f => {
-                const sign = f.type === 'withdraw' ? -1 : 1;
-                const amt  = (f.amount || 0) * sign;
-                return {
-                    date:   f.date   || '',
-                    stocks: f.asset === 'stocks' ? amt : '',
-                    bonds:  f.asset === 'bonds'  ? amt : '',
-                    crypto: f.asset === 'crypto' ? amt : '',
-                    gold:   f.asset === 'gold'   ? amt : '',
-                    currency: f.currency || 'THB',
-                    note:   f.memo   || ''
-                };
-            });
+            if (!flows.length) return;
+
+            // Send only the latest flow (the one just added)
+            const f    = flows[flows.length - 1];
+            const sign = f.type === 'withdraw' ? -1 : 1;
+            const amt  = (f.amount || 0) * sign;
 
             const payload = {
                 action: 'activities_write',
-                activities
+                activities: [{
+                    date:     f.date     || '',
+                    stocks:   f.asset === 'stocks' ? amt : '',
+                    bonds:    f.asset === 'bonds'  ? amt : '',
+                    crypto:   f.asset === 'crypto' ? amt : '',
+                    gold:     f.asset === 'gold'   ? amt : '',
+                    currency: f.currency || 'THB',
+                    note:     f.memo     || ''
+                }]
             };
+
             await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
             const now = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
             setSyncPill('ok', 'Synced ' + now);
