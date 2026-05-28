@@ -1211,10 +1211,10 @@
     function handleManualTx(e) { e.preventDefault(); const asset = document.getElementById('tx-asset').value; const currencyEl = document.querySelector('input[name="txCurrency"]:checked'); const currency = currencyEl ? currencyEl.value : 'THB'; pState().flows.push({ id: Date.now(), date: document.getElementById('tx-date').value, asset, type: document.querySelector('input[name="txType"]:checked').value, amount: getRawValue(document.getElementById('tx-amount').value), memo: document.getElementById('tx-memo').value, currency }); saveFlows(); updateDashboard(); pushFlowsToSheet(); e.target.reset(); document.getElementById('tx-date').valueAsDate = new Date(); document.querySelector('input[name="txCurrency"][value="THB"]').checked = true; }
 
     async function pushFlowsToSheet() {
-        const url = getGsUrl(); if (!url) return;
+        const url = getGsUrl(); if (!url) { console.log('pushFlowsToSheet: no GS URL'); return; }
         try {
             const flows = state.portfolios.port1.flows || [];
-            if (!flows.length) return;
+            if (!flows.length) { console.log('pushFlowsToSheet: no flows'); return; }
 
             const f    = flows[flows.length - 1];
             const sign = f.type === 'withdraw' ? -1 : 1;
@@ -1233,15 +1233,21 @@
                 }]
             };
 
-            const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
+            const getUrl = url + '?payload=' + encodeURIComponent(JSON.stringify(payload));
+            console.log('pushFlowsToSheet: sending to', getUrl.substring(0, 80) + '...');
+
+            const r = await fetch(getUrl);
+            console.log('pushFlowsToSheet: HTTP status', r.status, r.type);
             if (!r.ok) throw new Error('HTTP ' + r.status);
-            const data = await r.json();
+            const text = await r.text();
+            console.log('pushFlowsToSheet: response', text.substring(0, 200));
+            const data = JSON.parse(text);
             if (data.error) throw new Error(data.error);
             const now = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
             setSyncPill('ok', 'Synced ' + now);
         } catch(e) {
-            console.error('Flow push error:', e);
-            setSyncPill('err', 'Sync failed');
+            console.error('pushFlowsToSheet ERROR:', e.message, e);
+            setSyncPill('err', 'Sync failed: ' + e.message.substring(0, 30));
         }
     }
 
