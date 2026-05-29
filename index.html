@@ -866,7 +866,7 @@
                 <div class="wheel-input-group"><span class="wheel-label">Buy Price ($)</span><input type="text" inputmode="numeric" class="wheel-input" id="ml_price" placeholder="75,000" oninput="wFmtNum(this)"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Amount (BTC)</span><input type="text" inputmode="numeric" class="wheel-input" id="ml_amt" placeholder="0.05"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Target Strike ($)</span><input type="text" inputmode="numeric" class="wheel-input" id="ml_target" placeholder="80,000" oninput="wFmtNum(this)"></div>
-                <div class="wheel-input-group"><span class="wheel-label">Acc. Realized P/L ($)</span><input type="text" inputmode="numeric" class="wheel-input" id="ml_acc" placeholder="0.00" oninput="wFmtNum(this)"></div>
+                <div class="wheel-input-group"><span class="wheel-label">Acc. Realized P/L ($)</span><input type="text" inputmode="numeric" class="wheel-input" id="ml_acc" placeholder="0.00" onblur="evalAndSetLotAccPL(this)"></div>
             </div>
             <div class="wheel-modal-actions">
                 <button class="w-btn w-btn-secondary" onclick="closeWheelModal('mWheelLot')">Cancel</button>
@@ -1684,16 +1684,30 @@
     const wpn = s => parseFloat((s+'').replace(/,/g,'')) || 0;
     const wusd = (n,d=0) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
 
-    let alertedStrikes = new Set();
-
-    function loadAlertedStrikes() {
-        try {
-            const today = new Date().toISOString().split('T')[0];
-            const saved = JSON.parse(localStorage.getItem('btc_alerts') || '[]');
-            // Only restore today's keys — yesterday's alerts should fire again if still breached
-            saved.filter(k => k.endsWith('-' + today)).forEach(k => alertedStrikes.add(k));
-        } catch(e) {}
+    function evalAndSetLotAccPL(input) {
+        let expr = input.value.trim();
+        if (!expr) return;
+        if (/^[0-9+\-*/()\s.]+$/.test(expr)) {
+            try {
+                const result = Function('"use strict";return (' + expr + ')')();
+                if (typeof result === 'number' && !isNaN(result) && isFinite(result)) {
+                    const formatted = result.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    input.value = formatted;
+                    input.dispatchEvent(new Event('change'));
+                    return;
+                }
+            } catch(e) {}
+        }
+        let num = parseFloat(expr);
+        if (!isNaN(num)) {
+            input.value = num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            input.dispatchEvent(new Event('change'));
+        } else {
+            alert('Invalid expression or number');
+        }
     }
+
+    let alertedStrikes = new Set();
 
     function wUpdateExerciseAndAlerts() {
         const openPuts = wOrders.filter(o => o.product === 'Short Put' && o.status === 'open');
@@ -2002,17 +2016,20 @@
                 ? `<span style="font-size:12px;font-weight:600;color:${gapColor}">${actualLabel}</span>`
                 : isStrikeMode
                     ? `<span style="font-size:11px;font-weight:500;color:${gapColor}">${actualLabel || '—'}</span>`
-                    : `<input value="${rs.customGap}" style="width:68px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:${gapColor};font-size:11px;font-weight:600;padding:3px 5px;text-align:center" oninput="wCalcRowState[${i}].customGap=this.value;wRenderCalc()" />`;
+                    : `<input value="${rs.customGap}" style="width:68px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:${gapColor};font-size:11px;font-weight:600;padding:3px 5px;text-align:center" onblur="wCalcRowState[${i}].customGap=this.value;wRenderCalc()"
+onkeypress="if(event.key==='Enter'){this.blur()}" />`;
 
             // Col 2: Strike Price
             const col2 = isStrikeMode
-                ? `<input value="${rs.customStrike}" style="width:100px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:#F8FAFC;font-size:12px;font-weight:500;padding:3px 5px" oninput="wCalcRowState[${i}].customStrike=this.value.replace(/,/g,'');wRenderCalc()" />`
+                ? `<input value="${rs.customStrike}" style="width:100px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:#F8FAFC;font-size:12px;font-weight:500;padding:3px 5px" onblur="wCalcRowState[${i}].customStrike=this.value.replace(/,/g,'');wRenderCalc()"
+onkeypress="if(event.key==='Enter'){this.blur()}" />`
                 : `<span style="font-size:13px;font-weight:500;color:#F8FAFC">${strikeDisplay ? '$' + strikeDisplay : '—'}</span>`;
 
             // Col 3: Expire date as YYYY-MM-DD
             const col3 = cfg.expIdx !== null
                 ? `<span style="font-size:11px;color:#94A3B8">${expLabel}</span>`
-                : `<input type="date" value="${expDate}" style="width:108px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:#94A3B8;font-size:11px;padding:3px 5px" oninput="wCalcRowState[${i}].customDate=this.value;wRenderCalc()" />`;
+                : `<input type="date" value="${expDate}" style="width:108px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:#94A3B8;font-size:11px;padding:3px 5px" onblur="wCalcRowState[${i}].customDate=this.value;wRenderCalc()"
+onkeypress="if(event.key==='Enter'){this.blur()}" />`;
 
             // Col 4: Premium input
             const col4 = `<input id="prem-input-${i}" value="${rs.premiumVal}" style="width:112px;background:#0F172A;border:1px solid #3B82F6;border-radius:4px;color:#10B981;font-size:12px;font-weight:500;padding:3px 6px" oninput="wCalcPremChange(${i},this.value)" />`;
