@@ -1684,7 +1684,16 @@
     const wpn = s => parseFloat((s+'').replace(/,/g,'')) || 0;
     const wusd = (n,d=0) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
 
-    let alertedStrikes = new Set(); // track which strikes already popped up
+    let alertedStrikes = new Set();
+
+    function loadAlertedStrikes() {
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            const saved = JSON.parse(localStorage.getItem('btc_alerts') || '[]');
+            // Only restore today's keys — yesterday's alerts should fire again if still breached
+            saved.filter(k => k.endsWith('-' + today)).forEach(k => alertedStrikes.add(k));
+        } catch(e) {}
+    }
 
     function wUpdateExerciseAndAlerts() {
         const openPuts = wOrders.filter(o => o.product === 'Short Put' && o.status === 'open');
@@ -1716,10 +1725,11 @@
             if (exTotal) exTotal.textContent = atRiskOrders.length ? '$' + total.toLocaleString('en-US',{maximumFractionDigits:0}) : '—';
         }
 
-        // ── Strike Price Alert ─────────────────────────────────────────
+        // ── Strike Price Alert — once per day per strike ───────────────
         const banner   = document.getElementById('strikeAlertBanner');
         const alertTxt = document.getElementById('strikeAlertText');
         const breached = openPuts.filter(o => btcPrice <= o.strike);
+        const today    = new Date().toISOString().split('T')[0];
 
         if (breached.length > 0 && banner && alertTxt) {
             banner.style.display = 'block';
@@ -1727,11 +1737,16 @@
                 `Strike $${o.strike.toLocaleString()} × ${o.contracts} BTC &nbsp;→&nbsp; $${(o.strike * o.contracts).toLocaleString('en-US',{maximumFractionDigits:0})}`
             ).join('<br>');
             breached.forEach(o => {
-                const key = `${o.id}-${o.strike}`;
+                const key = `${o.id}-${o.strike}-${today}`;
                 if (!alertedStrikes.has(key)) {
                     alertedStrikes.add(key);
+                    // Persist today's alerted keys so page refresh won't re-alert
+                    try {
+                        const todayKeys = [...alertedStrikes].filter(k => k.endsWith('-' + today));
+                        localStorage.setItem('btc_alerts', JSON.stringify(todayKeys));
+                    } catch(e) {}
                     setTimeout(() => {
-                        const msg = `⚠️ BTC Price Alert!\n\nBTC is now $${btcPrice.toLocaleString('en-US',{maximumFractionDigits:0})}\nBelow your Short Put strike of $${o.strike.toLocaleString()}\n\nExercise amount: $${(o.strike*o.contracts).toLocaleString('en-US',{maximumFractionDigits:0})} (${o.contracts} BTC @ $${o.strike.toLocaleString()})`;
+                        const msg = `⚠️ BTC Price Alert!\n\nBTC is now $${btcPrice.toLocaleString('en-US',{maximumFractionDigits:0})}\nBelow your Short Put strike of $${o.strike.toLocaleString()}\n\nExercise amount: $${(o.strike*o.contracts).toLocaleString('en-US',{maximumFractionDigits:0})} (${o.contracts} BTC @ $${o.strike.toLocaleString()})\n\nThis alert will not repeat until tomorrow.`;
                         if (window.Notification && Notification.permission === 'granted') {
                             new Notification('⚠️ BTC Below Strike', { body: `BTC $${btcPrice.toLocaleString('en-US',{maximumFractionDigits:0})} < Strike $${o.strike.toLocaleString()} — $${(o.strike*o.contracts).toLocaleString('en-US',{maximumFractionDigits:0})}` });
                         } else { alert(msg); }
@@ -1740,7 +1755,6 @@
             });
         } else if (banner) {
             banner.style.display = 'none';
-            if (breached.length === 0) alertedStrikes = new Set();
         }
     }
 
@@ -2349,6 +2363,7 @@
         // BTC price polling
         fetchBtc(); setInterval(fetchBtc, 15000);
         if (window.Notification && Notification.permission === 'default') Notification.requestPermission();
+        loadAlertedStrikes();
 
         const gsUrl = getGsUrl();
         if (gsUrl) {
