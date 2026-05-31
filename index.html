@@ -357,6 +357,115 @@
         .w-btn-icon:hover { color: #F8FAFC; border-color: #93C5FD; }
         .w-btn-danger { background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.25); color: #FCA5A5; }
         .w-btn-danger:hover { background: rgba(239,68,68,.22); }
+
+        /* App light theme */
+        .theme-toggle {
+            display: inline-flex; align-items: center; gap: 8px;
+            border: 1px solid #334155; border-radius: 999px;
+            background: #0F172A; color: #94A3B8;
+            padding: 5px 10px 5px 6px; font-size: 11px; font-weight: 700;
+            cursor: pointer; transition: all .2s ease; white-space: nowrap;
+        }
+        .theme-toggle:hover { border-color: #60A5FA; color: #F8FAFC; }
+        .theme-toggle-knob {
+            width: 24px; height: 24px; border-radius: 999px;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: #1E293B; color: #FACC15; transition: all .2s ease;
+        }
+        .theme-toggle-label { min-width: 34px; text-align: left; }
+
+        body.theme-light { background-color: #F6F8FB; color: #0F172A; }
+        body.theme-light.theme-port2 { background-color: #F3F4F6 !important; }
+        body.theme-light .bg-card,
+        body.theme-light.theme-port2 .bg-card,
+        body.theme-light .wheel-card,
+        body.theme-light .hist-month-card,
+        body.theme-light .wheel-modal { background: #FFFFFF !important; }
+        body.theme-light header,
+        body.theme-light.theme-port2 header { background: rgba(255,255,255,.92) !important; }
+        body.theme-light #sidebar,
+        body.theme-light header,
+        body.theme-light .bg-card,
+        body.theme-light .wheel-card,
+        body.theme-light .hist-month-card,
+        body.theme-light .wheel-modal,
+        body.theme-light .border-slate-700,
+        body.theme-light .border-slate-800,
+        body.theme-light .border-slate-800\/50,
+        body.theme-light .border-slate-700\/50 { border-color: #D6DEE8 !important; }
+        body.theme-light .bg-dark\/90 { background-color: rgba(255,255,255,.92) !important; }
+        body.theme-light .bg-slate-900,
+        body.theme-light .bg-slate-800,
+        body.theme-light .bg-slate-800\/80,
+        body.theme-light .bg-slate-800\/40 { background-color: #F1F5F9 !important; }
+        body.theme-light .hover\:bg-slate-700:hover,
+        body.theme-light .hover\:bg-slate-700\/50:hover { background-color: #E2E8F0 !important; }
+        body.theme-light .text-white,
+        body.theme-light .text-slate-100,
+        body.theme-light .text-slate-200 { color: #0F172A !important; }
+        body.theme-light .text-slate-300 { color: #334155 !important; }
+        body.theme-light .text-slate-400,
+        body.theme-light .text-slate-500 { color: #64748B !important; }
+        body.theme-light .text-slate-600 { color: #94A3B8 !important; }
+        body.theme-light .bg-blue-600.text-white,
+        body.theme-light .bg-slate-600.text-white,
+        body.theme-light .w-btn-primary,
+        body.theme-light .text-white.bg-blue-600 { color: #FFFFFF !important; }
+        body.theme-light .minimal-input,
+        body.theme-light .edit-input,
+        body.theme-light .wheel-input {
+            background: #FFFFFF; border-color: #CBD5E1; color: #0F172A;
+        }
+        body.theme-light .skeleton,
+        body.theme-light .skeleton-inline {
+            background: linear-gradient(90deg, #E2E8F0 25%, #F8FAFC 50%, #E2E8F0 75%);
+            background-size: 600px 100%;
+        }
+        body.theme-light .asset-row { background-color: rgba(226, 232, 240, 0.55); }
+        body.theme-light .wheel-stat-box,
+        body.theme-light .cover-bar-wrap,
+        body.theme-light .bar-track,
+        body.theme-light .strike-row,
+        body.theme-light .filter-btn,
+        body.theme-light .btc-live-chip,
+        body.theme-light .w-btn-secondary,
+        body.theme-light .w-btn-icon { background: #F8FAFC; border-color: #CBD5E1; }
+        body.theme-light .filter-btn.active,
+        body.theme-light .filter-btn:hover { background: #EAF2FF; color: #1D4ED8; }
+        body.theme-light .orders-table th { background: #F1F5F9; }
+        body.theme-light .pivot-table th,
+        body.theme-light .pivot-table td,
+        body.theme-light .lots-table th,
+        body.theme-light .lots-table td,
+        body.theme-light .orders-table th,
+        body.theme-light .orders-table td,
+        body.theme-light .hist-table th,
+        body.theme-light .hist-table td { border-color: #D6DEE8; }
+        body.theme-light .theme-toggle { background: #FFFFFF; border-color: #CBD5E1; color: #334155; }
+        body.theme-light .theme-toggle-knob { background: #EAF2FF; color: #2563EB; }
+        body.theme-light [style*="background:#0F172A"],
+        body.theme-light [style*="background: #0F172A"] { background: #F8FAFC !important; }
+        body.theme-light [style*="background:#1E293B"],
+        body.theme-light [style*="background: #1E293B"] { background: #FFFFFF !important; }
+        body.theme-light [style*="border:1px solid #334155"],
+        body.theme-light [style*="border: 1px solid #334155"] { border-color: #CBD5E1 !important; }
+        body.theme-light [style*="border-top:1px solid #334155"],
+        body.theme-light [style*="border-top: 1px solid #334155"],
+        body.theme-light [style*="border-bottom:1px solid #334155"],
+        body.theme-light [style*="border-bottom: 1px solid #334155"] { border-color: #CBD5E1 !important; }
+        body.theme-light [style*="color:#F8FAFC"],
+        body.theme-light [style*="color: #F8FAFC"],
+        body.theme-light [style*="color:#CBD5E1"],
+        body.theme-light [style*="color: #CBD5E1"] { color: #0F172A !important; }
+        body.theme-light [style*="color:#94A3B8"],
+        body.theme-light [style*="color: #94A3B8"],
+        body.theme-light [style*="color:#64748b"],
+        body.theme-light [style*="color: #64748b"] { color: #64748B !important; }
+
+        @media (max-width: 640px) {
+            .theme-toggle { width: 36px; height: 36px; padding: 5px; justify-content: center; }
+            .theme-toggle-label { display: none; }
+        }
     </style>
 </head>
 <body id="app-body" class="flex text-sm">
@@ -402,6 +511,10 @@
                 <div class="text-xs text-slate-400">
                     USD/THB: <span id="header-rate2" class="text-white font-bold">31.07</span>
                 </div>
+                <button id="theme-toggle" class="theme-toggle" onclick="toggleColorTheme()" title="Switch dark or light mode" aria-label="Switch dark or light mode" aria-pressed="false">
+                    <span class="theme-toggle-knob"><i id="theme-toggle-icon" class="fa-solid fa-moon text-[11px]"></i></span>
+                    <span id="theme-toggle-label" class="theme-toggle-label">Dark</span>
+                </button>
                 <!-- BTC price (wheel tab only) -->
                 <div id="wheel-header-btc" class="hidden">
                     <div class="btc-live-chip">
@@ -888,6 +1001,7 @@
                 <div class="wheel-input-group"><span class="wheel-label">Contracts</span><input type="text" inputmode="numeric" class="wheel-input" id="mh_contracts" value="0.04"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Premium / Contract ($)</span><input type="text" inputmode="numeric" class="wheel-input" id="mh_prem" oninput="wFmtNum(this)"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Status</span><select class="wheel-input" id="mh_status"><option value="closed">Closed (OTM / profit)</option><option value="exercised">Exercised</option></select></div>
+                <div class="wheel-input-group"><span class="wheel-label">Exercise P/L ($)</span><input type="text" inputmode="decimal" class="wheel-input" id="mh_exercise_pl" placeholder="0.00"></div>
                 <div class="wheel-input-group wheel-modal-full"><span class="wheel-label">Note</span><input type="text" class="wheel-input" id="mh_note"></div>
             </div>
             <div class="wheel-modal-actions">
@@ -996,9 +1110,35 @@
 
     const pState = () => state.portfolios[state.currentPort];
     const charts = { alloc: null, perf: null };
+    const THEME_KEY = 'investment_dashboard_theme';
+    const getThemeMode = () => document.body.classList.contains('theme-light') ? 'light' : 'dark';
+    const chartTheme = () => getThemeMode() === 'light'
+        ? { axis: '#475569', grid: 'rgba(148, 163, 184, 0.35)', label: '#0F172A', dataLabel: '#0F172A', pointBorder: '#FFFFFF' }
+        : { axis: '#94A3B8', grid: 'rgba(51, 65, 85, 0.5)', label: '#F8FAFC', dataLabel: '#FFFFFF', pointBorder: '#FFFFFF' };
     const fmt = (v) => '฿' + (v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const getActiveRate = () => { for (let q = 4; q >= 1; q--) { const r = parseFloat(state.rates[`q${q}`]); if (r && r > 0) return r; } return parseFloat(state.rates.beginning) || 31.07; };
     const getQuarterByDate = (dateStr) => Math.floor(new Date(dateStr).getMonth() / 3) + 1;
+
+    function applyColorTheme(mode) {
+        const isLight = mode === 'light';
+        document.body.classList.toggle('theme-light', isLight);
+        const btn = document.getElementById('theme-toggle');
+        const icon = document.getElementById('theme-toggle-icon');
+        const label = document.getElementById('theme-toggle-label');
+        if (btn) btn.setAttribute('aria-pressed', isLight ? 'true' : 'false');
+        if (icon) icon.className = `fa-solid ${isLight ? 'fa-sun' : 'fa-moon'} text-[11px]`;
+        if (label) label.textContent = isLight ? 'Light' : 'Dark';
+    }
+
+    function toggleColorTheme() {
+        const nextMode = getThemeMode() === 'light' ? 'dark' : 'light';
+        localStorage.setItem(THEME_KEY, nextMode);
+        applyColorTheme(nextMode);
+        renderPerformanceChart();
+        renderAllocationChart([state.computed.stocks.currentBal, state.computed.bonds.currentBal, state.computed.crypto.currentBal, state.computed.gold.currentBal]);
+        if (typeof updateGoalCalculation === 'function') updateGoalCalculation();
+        if (typeof renderHoldingsBreakdown === 'function') renderHoldingsBreakdown();
+    }
 
     function formatNumberInput(el) {
         let start = el.selectionStart; let originalLen = el.value.length;
@@ -1076,29 +1216,42 @@
         const type = document.getElementById('bench-type').value; const range = document.getElementById('bench-range').value; const assetKey = document.getElementById('bench-asset').value;
         const ctx = document.getElementById('perfChart').getContext('2d'); const isYTD = type === 'ytd';
         const getPortGrowth = (aKey, qNum, ytdFlag) => { if (!ytdFlag) { if (aKey === 'all') return state.computed.portfolio[`q${qNum}`].growth !== null ? state.computed.portfolio[`q${qNum}`].growth : 0; return state.computed[aKey][`q${qNum}`].growth !== null ? state.computed[aKey][`q${qNum}`].growth : 0; } else { let begBal = 0, totalProfit = 0; if (aKey === 'all') { begBal = Object.values(pState().begBalances).reduce((a,b)=>a+b,0); for (let i = 1; i <= qNum; i++) { if (state.computed.portfolio[`q${i}`].profit !== null) totalProfit += state.computed.portfolio[`q${i}`].profit; } } else { begBal = pState().begBalances[aKey]; for (let i = 1; i <= qNum; i++) { if (state.computed[aKey][`q${i}`].profit !== null) totalProfit += state.computed[aKey][`q${i}`].profit; } } return begBal > 0 ? (totalProfit / begBal) * 100 : 0; } };
-        const getSettingBM = (asset, q) => { const v = pState().benchmarks[asset][`q${q}`]; return (v !== null && v !== undefined && v !== '') ? parseFloat(v) : null; };
+        const defaultBenchmarks = getEmptyBenchmarks();
+        const getSettingBM = (asset, q) => {
+            const key = `q${q}`;
+            const v = pState().benchmarks[asset][key];
+            const parsed = (v !== null && v !== undefined && v !== '') ? parseFloat(v) : NaN;
+            if (Number.isFinite(parsed)) return parsed;
+            const fallback = defaultBenchmarks[asset]?.[key];
+            const fallbackParsed = (fallback !== null && fallback !== undefined && fallback !== '') ? parseFloat(fallback) : NaN;
+            return Number.isFinite(fallbackParsed) ? fallbackParsed : null;
+        };
         const calcQoQ_ = (asset, q) => { const currentYTD = getSettingBM(asset, q); if (currentYTD === null) return null; if (q === 1) return currentYTD; const prevYTD = getSettingBM(asset, q - 1); if (prevYTD === null) return null; return (((1 + currentYTD/100) / (1 + prevYTD/100)) - 1) * 100; };
         const getCryptoBM = (q, ytd) => { const rate = parseFloat(state.rates[`q${q}`] || state.rates.beginning) || 31.07; let usds = 0, usdo = 0; for (let qi = q; qi >= 1; qi--) { const eb = pState().endBalances.crypto[`q${qi}`]; if (eb && (eb.usds !== null || eb.usdo !== null)) { usds = (eb.usds || 0) * rate; usdo = (eb.usdo || 0) * rate; break; } } const totalUSD = usds + usdo; const bmS = ytd ? getSettingBM('bonds', q) : calcQoQ_('bonds', q); const bmO = ytd ? getSettingBM('crypto', q) : calcQoQ_('crypto', q); if (totalUSD === 0) return bmO; const wS = usds / totalUSD; const wO = usdo / totalUSD; if (bmS === null && bmO === null) return null; return (wS * (bmS ?? 0)) + (wO * (bmO ?? 0)); };
         const getBenchGrowth = (aKey, qNum, ytdFlag) => { const assets = ['stocks', 'bonds', 'crypto', 'gold']; if (ytdFlag) { if (aKey === 'crypto') return getCryptoBM(qNum, true); if (aKey === 'all' || aKey === 'all-sep') { let weightedSum = 0, totalWeight = 0, hasAny = false; assets.forEach(a => { const assetBal = state.computed[a][`q${qNum}`].start; const bmVal = a === 'crypto' ? getCryptoBM(qNum, true) : getSettingBM(a, qNum); if (bmVal !== null) { weightedSum += (bmVal * assetBal); totalWeight += assetBal; hasAny = true; } }); return (hasAny && totalWeight > 0) ? weightedSum / totalWeight : null; } return getSettingBM(aKey, qNum); } else { const calcQoQ = (asset, q) => { if (asset === 'crypto') return getCryptoBM(q, false); return calcQoQ_(asset, q); }; if (aKey === 'all' || aKey === 'all-sep') { let weightedSum = 0, totalWeight = 0, hasAny = false; assets.forEach(a => { const assetBal = state.computed[a][`q${qNum}`].start; const qoqVal = calcQoQ(a, qNum); if (qoqVal !== null) { weightedSum += (qoqVal * assetBal); totalWeight += assetBal; hasAny = true; } }); return (hasAny && totalWeight > 0) ? weightedSum / totalWeight : null; } return calcQoQ(aKey, qNum); } };
         let labels = []; let datasets = []; const qTarget = range === 'all' ? 4 : parseInt(range.charAt(1));
+        const benchColor = getThemeMode() === 'light' ? '#64748B' : '#94A3B8';
+        const benchDataset = (label, data) => ({ label, data, backgroundColor: benchColor, borderColor: benchColor, borderWidth: 1, borderRadius: 4, minBarLength: 5 });
         if (isYTD) {
             labels = [range === 'all' ? 'Full Year (YTD Q4)' : `YTD (Up to Q${qTarget})`];
-            if (assetKey === 'all-sep') { const assets = ['stocks', 'bonds', 'crypto', 'gold']; const colors = { stocks: '#10B981', bonds: '#F59E0B', crypto: '#3B82F6', gold: '#FACC15' }; assets.forEach(a => { datasets.push({ label: a.toUpperCase() + ' Port', data: [getPortGrowth(a, qTarget, true)], backgroundColor: colors[a], borderRadius: 4 }); datasets.push({ label: a.toUpperCase() + ' Bench', data: [getBenchGrowth(a, qTarget, true)], backgroundColor: 'rgba(71, 85, 105, 0.5)', borderRadius: 4 }); }); }
-            else { datasets = [{ label: 'Portfolio', data: [getPortGrowth(assetKey, qTarget, true)], backgroundColor: '#3B82F6', borderRadius: 4 }, { label: 'Benchmark', data: [getBenchGrowth(assetKey, qTarget, true)], backgroundColor: '#475569', borderRadius: 4 }]; }
+            if (assetKey === 'all-sep') { const assets = ['stocks', 'bonds', 'crypto', 'gold']; const colors = { stocks: '#10B981', bonds: '#F59E0B', crypto: '#3B82F6', gold: '#FACC15' }; assets.forEach(a => { datasets.push({ label: a.toUpperCase() + ' Port', data: [getPortGrowth(a, qTarget, true)], backgroundColor: colors[a], borderRadius: 4 }); datasets.push(benchDataset(a.toUpperCase() + ' Bench', [getBenchGrowth(a, qTarget, true)])); }); }
+            else { datasets = [{ label: 'Portfolio', data: [getPortGrowth(assetKey, qTarget, true)], backgroundColor: '#3B82F6', borderRadius: 4 }, benchDataset('Benchmark', [getBenchGrowth(assetKey, qTarget, true)])]; }
         } else {
             const quarters = range === 'all' ? [1, 2, 3, 4] : [qTarget]; labels = range === 'all' ? ['Q1', 'Q2', 'Q3', 'Q4'] : [`Q${qTarget}`];
-            if (assetKey === 'all-sep') { const assets = ['stocks', 'bonds', 'crypto', 'gold']; const colors = { stocks: '#10B981', bonds: '#F59E0B', crypto: '#3B82F6', gold: '#FACC15' }; assets.forEach(a => { datasets.push({ label: a.toUpperCase() + ' Port', data: quarters.map(q => getPortGrowth(a, q, false)), backgroundColor: colors[a], borderRadius: 4 }); datasets.push({ label: a.toUpperCase() + ' Bench', data: quarters.map(q => getBenchGrowth(a, q, false)), backgroundColor: 'rgba(71, 85, 105, 0.5)', borderRadius: 4 }); }); }
-            else { datasets = [{ label: 'Portfolio', data: quarters.map(q => getPortGrowth(assetKey, q, false)), backgroundColor: '#3B82F6', borderRadius: 4 }, { label: 'Benchmark', data: quarters.map(q => getBenchGrowth(assetKey, q, false)), backgroundColor: '#475569', borderRadius: 4 }]; }
+            if (assetKey === 'all-sep') { const assets = ['stocks', 'bonds', 'crypto', 'gold']; const colors = { stocks: '#10B981', bonds: '#F59E0B', crypto: '#3B82F6', gold: '#FACC15' }; assets.forEach(a => { datasets.push({ label: a.toUpperCase() + ' Port', data: quarters.map(q => getPortGrowth(a, q, false)), backgroundColor: colors[a], borderRadius: 4 }); datasets.push(benchDataset(a.toUpperCase() + ' Bench', quarters.map(q => getBenchGrowth(a, q, false)))); }); }
+            else { datasets = [{ label: 'Portfolio', data: quarters.map(q => getPortGrowth(assetKey, q, false)), backgroundColor: '#3B82F6', borderRadius: 4 }, benchDataset('Benchmark', quarters.map(q => getBenchGrowth(assetKey, q, false)))]; }
         }
         if(charts.perf) charts.perf.destroy();
-        charts.perf = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: '#94A3B8', callback: v => parseFloat(v.toFixed(2)) + '%' }, grid: { color: 'rgba(51, 65, 85, 0.5)' } }, x: { ticks: { color: '#94A3B8' }, grid: { display: false } } }, plugins: { legend: { labels: { color: '#F8FAFC', boxWidth: 10, font: { size: 9 } } }, datalabels: { color: '#fff', anchor: 'end', align: 'top', offset: 2, formatter: (v) => (v !== null && v !== undefined && v !== 0) ? v.toFixed(1) + '%' : null, font: { size: assetKey === 'all-sep' ? 8 : 10 }, padding: 2, clip: false } } } });
+        const theme = chartTheme();
+        charts.perf = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: theme.axis, callback: v => parseFloat(v.toFixed(2)) + '%' }, grid: { color: theme.grid } }, x: { ticks: { color: theme.axis }, grid: { display: false } } }, plugins: { legend: { labels: { color: theme.label, boxWidth: 10, font: { size: 9 } } }, datalabels: { color: theme.dataLabel, anchor: 'end', align: 'top', offset: 2, formatter: (v) => (v !== null && v !== undefined && v !== 0) ? v.toFixed(1) + '%' : null, font: { size: assetKey === 'all-sep' ? 8 : 10 }, padding: 2, clip: false } } } });
     }
 
     function renderAllocationChart(data) {
         const ctx = document.getElementById('allocChart').getContext('2d');
         if(charts.alloc) charts.alloc.destroy();
         const assetKeys = ['stocks','bonds','crypto','gold'];
-        charts.alloc = new Chart(ctx, { type: 'doughnut', data: { labels: ['Stocks', 'Bonds', 'Crypto', 'Gold'], datasets: [{ data, backgroundColor: ['#10B981', '#F59E0B', '#3B82F6', '#FACC15'], borderWidth: 0, hoverOffset: 8 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%', onClick: (e, elements) => { if (elements.length > 0) openDrillDown(assetKeys[elements[0].index]); }, plugins: { legend: { position: 'bottom', labels: { color: '#94A3B8', boxWidth: 8, font: { size: 9 } } }, datalabels: { color: '#fff', font: { weight: 'bold', size: 9 }, formatter: (v, c) => { const sum = c.chart.data.datasets[0].data.reduce((a, b) => a + b, 0); return sum > 0 ? (v * 100 / sum).toFixed(1) + '%' : ''; } } } } });
+        const theme = chartTheme();
+        charts.alloc = new Chart(ctx, { type: 'doughnut', data: { labels: ['Stocks', 'Bonds', 'Crypto', 'Gold'], datasets: [{ data, backgroundColor: ['#10B981', '#F59E0B', '#3B82F6', '#FACC15'], borderWidth: 0, hoverOffset: 8 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%', onClick: (e, elements) => { if (elements.length > 0) openDrillDown(assetKeys[elements[0].index]); }, plugins: { legend: { position: 'bottom', labels: { color: theme.axis, boxWidth: 8, font: { size: 9 } } }, datalabels: { color: '#fff', font: { weight: 'bold', size: 9 }, formatter: (v, c) => { const sum = c.chart.data.datasets[0].data.reduce((a, b) => a + b, 0); return sum > 0 ? (v * 100 / sum).toFixed(1) + '%' : ''; } } } } });
     }
 
     function renderAllocationHistory() {
@@ -1158,9 +1311,10 @@
         let projPoints = []; if (tiers && tiers.length > 0 && goalYear) { for (let rPct = 0; rPct <= 20; rPct += 1) { const proj = projectWithTiers(currentBal, tiers, goalYear, rPct); projPoints.push({x: rPct, y: proj}); } }
         const avgMonthly = tiers && tiers.length > 0 ? tiers.reduce((s,t)=>s+t.amount,0)/tiers.length : userMonthly;
         if (window.goalChartInstance) window.goalChartInstance.destroy();
-        const datasets = [ { label: 'Required Monthly', data: dataPoints, borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.4, pointRadius: 2, pointHitRadius: 10, hoverRadius: 5, yAxisID: 'y' }, { label: 'Your Plan', data: [{x: userReturn, y: avgMonthly}], backgroundColor: '#F59E0B', borderColor: '#fff', pointRadius: 6, hoverRadius: 8, type: 'scatter', yAxisID: 'y' } ];
+        const theme = chartTheme();
+        const datasets = [ { label: 'Required Monthly', data: dataPoints, borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.4, pointRadius: 2, pointHitRadius: 10, hoverRadius: 5, yAxisID: 'y' }, { label: 'Your Plan', data: [{x: userReturn, y: avgMonthly}], backgroundColor: '#F59E0B', borderColor: theme.pointBorder, pointRadius: 6, hoverRadius: 8, type: 'scatter', yAxisID: 'y' } ];
         if (projPoints.length > 0) { datasets.push({ label: 'Projected Value', data: projPoints, borderColor: '#10B981', backgroundColor: 'rgba(16,185,129,0.05)', fill: false, tension: 0.4, pointRadius: 1, pointHitRadius: 8, hoverRadius: 4, yAxisID: 'y2', borderDash: [4,3] }); }
-        window.goalChartInstance = new Chart(ctx.getContext('2d'), { type: 'line', data: { datasets }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { x: { type: 'linear', title: { display: true, text: 'Expected Return (%)', font: {size: 9} }, ticks: { font: {size: 9}, stepSize: 1 } }, y: { position: 'left', ticks: { font: {size: 9}, callback: v => (v/1000).toFixed(0) + 'k' } }, y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { font: {size: 9}, callback: v => v >= 1000000 ? (v/1000000).toFixed(1)+'M' : (v/1000).toFixed(0)+'k' } } }, plugins: { legend: { display: false }, datalabels: { display: false }, tooltip: { enabled: true, position: 'nearest', callbacks: { title: (items) => `Expected Return: ${items[0].parsed.x}%`, label: (item) => `${item.dataset.label}: ฿${item.parsed.y.toLocaleString(undefined,{maximumFractionDigits:0})}` } } } } });
+        window.goalChartInstance = new Chart(ctx.getContext('2d'), { type: 'line', data: { datasets }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { x: { type: 'linear', title: { display: true, text: 'Expected Return (%)', color: theme.axis, font: {size: 9} }, ticks: { color: theme.axis, font: {size: 9}, stepSize: 1 }, grid: { color: theme.grid } }, y: { position: 'left', ticks: { color: theme.axis, font: {size: 9}, callback: v => (v/1000).toFixed(0) + 'k' }, grid: { color: theme.grid } }, y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: theme.axis, font: {size: 9}, callback: v => v >= 1000000 ? (v/1000000).toFixed(1)+'M' : (v/1000).toFixed(0)+'k' } } }, plugins: { legend: { display: false }, datalabels: { display: false }, tooltip: { enabled: true, position: 'nearest', callbacks: { title: (items) => `Expected Return: ${items[0].parsed.x}%`, label: (item) => `${item.dataset.label}: ฿${item.parsed.y.toLocaleString(undefined,{maximumFractionDigits:0})}` } } } } });
     }
 
     function getGoalTiers() { const tiers = []; document.querySelectorAll('.goal-tier-row').forEach(row => { const yr = parseInt(row.querySelector('.tier-year').value); const amt = getRawValue(row.querySelector('.tier-amount').value); if (!isNaN(yr) && amt > 0) tiers.push({ year: yr, amount: amt }); }); tiers.sort((a, b) => a.year - b.year); return tiers.length > 0 ? tiers : [{ year: new Date().getFullYear(), amount: 0 }]; }
@@ -1683,6 +1837,8 @@
     function wFmtNum(el) { const v = el.value.replace(/,/g,'').replace(/[^\d.]/g,''); const p = v.split('.'); p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g,','); el.value = p.length>1 ? p[0]+'.'+p[1] : p[0]; }
     const wpn = s => parseFloat((s+'').replace(/,/g,'')) || 0;
     const wusd = (n,d=0) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+    const wSignedUsd = (n,d=2) => (n >= 0 ? '+' : '-') + wusd(Math.abs(n), d);
+    const wExercisePL = o => Number.isFinite(+o.exercisePL) ? +o.exercisePL : 0;
 
     function evalAndSetLotAccPL(input) {
         let expr = input.value.trim();
@@ -1708,6 +1864,16 @@
     }
 
     let alertedStrikes = new Set();
+
+    function loadAlertedStrikes() {
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            const keys = JSON.parse(localStorage.getItem('btc_alerts')) || [];
+            alertedStrikes = new Set(keys.filter(k => typeof k === 'string' && k.endsWith('-' + today)));
+        } catch(e) {
+            alertedStrikes = new Set();
+        }
+    }
 
     function wUpdateExerciseAndAlerts() {
         const openPuts = wOrders.filter(o => o.product === 'Short Put' && o.status === 'open');
@@ -1833,10 +1999,18 @@
     function wFilterOrders(f,btn){ wOrderFilter=f; document.querySelectorAll('#wFilters .filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); wRenderOrders(); }
     function wChangeStatus(id,val){
         const idx=wOrders.findIndex(o=>o.id===id); if(idx<0)return; const o=wOrders[idx];
-        if(val==='closed'||val==='exercised'){ wClosed.push({...o,status:val}); if(o.product==='Short Call'&&val==='closed'){ const profit=o.premium*o.contracts; const parts=o.note?o.note.split(/[-&,\s:]+/).map(s=>s.trim()).filter(Boolean):[]; if(parts.length){ wLots.forEach(l=>{ const matches=parts.filter(p=>l.name.toLowerCase().includes(p.toLowerCase())); if(matches.length) l.accRealPL+=profit/matches.length; }); } } wOrders.splice(idx,1); } else { o.status=val; }
+        if(val==='closed'||val==='exercised'){ wClosed.push({...o,status:val,exercisePL:val==='exercised'?wExercisePL(o):0}); if(o.product==='Short Call'&&val==='closed'){ const profit=o.premium*o.contracts; const parts=o.note?o.note.split(/[-&,\s:]+/).map(s=>s.trim()).filter(Boolean):[]; if(parts.length){ wLots.forEach(l=>{ const matches=parts.filter(p=>l.name.toLowerCase().includes(p.toLowerCase())); if(matches.length) l.accRealPL+=profit/matches.length; }); } } wOrders.splice(idx,1); } else { o.status=val; }
         wCalcAll(); wAutoPush();
     }
     function wDelOrder(id){if(!confirm('Delete?'))return;wOrders=wOrders.filter(o=>o.id!==id);wCalcAll();wAutoPush();}
+
+    function wUpdateHistPL(id, val) {
+        const item = wClosed.find(o => +o.id === +id);
+        if (!item) return;
+        item.exercisePL = wpn(val);
+        wCalcAll();
+        wAutoPush();
+    }
 
     function wRenderHistory() {
         const tot=wClosed.reduce((s,o)=>s+o.premium*o.contracts,0); const wins=wClosed.filter(o=>o.status==='closed').length; const wr=wClosed.length>0?(wins/wClosed.length*100).toFixed(1)+'%':'—';
@@ -1846,8 +2020,8 @@
         if(!wClosed.length){ cont.innerHTML='<div style="color:#475569;padding:40px;text-align:center;font-size:13px">No closed orders yet. Change an order status or add manually.</div>'; return; }
         cont.innerHTML='';
         const bal=wpn(document.getElementById('optBalance').value)||20000;
-        Object.keys(byM).sort().reverse().forEach(month=>{ const items=byM[month]; const mPrem=items.reduce((s,o)=>s+o.premium*o.contracts,0); const mPct=bal>0?(mPrem/bal*100).toFixed(2):'0'; const div=document.createElement('div'); div.className='hist-month-card';
-            div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><div style="font-size:14px;font-weight:700">${month}</div><div style="display:flex;gap:22px">${[['Premium',wusd(mPrem,2),'#10B981'],['% Capital',mPct+'%','#F59E0B'],['Orders',items.length,'#93C5FD']].map(([l,v,c])=>`<div><div style="font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.06em;font-weight:600">${l}</div><div style="font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:${c}">${v}</div></div>`).join('')}</div></div><div style="overflow-x:auto"><table class="hist-table"><thead><tr><th>Product</th><th>Strike</th><th>Open</th><th>Closed</th><th>Contracts</th><th>Prem/Ct</th><th>Total</th><th>Status</th><th>Note</th><th></th></tr></thead><tbody>${items.map((o,i)=>`<tr><td><span class="badge ${o.product==='Short Put'?'put':'call'}">${o.product}</span></td><td class="m">${wusd(o.strike)}</td><td class="m" style="color:#64748b">${o.openDate}</td><td class="m" style="color:#64748b">${o.expiryDate||'—'}</td><td class="m">${o.contracts}</td><td class="m" style="color:#10B981">${wusd(o.premium,0)}</td><td class="m" style="color:#10B981;font-weight:500">${wusd(o.premium*o.contracts,2)}</td><td><span class="badge ${o.status}">${o.status}</span></td><td style="color:#334155;font-size:11px">${o.note||'—'}</td><td style="white-space:nowrap"><button class="w-btn-icon" title="Re-open" onclick="wReOpen(${i},'${month}')">↩ Re-open</button><button class="w-btn-icon w-btn-danger" onclick="wDelHist(${i},'${month}')" style="margin-left:3px">✕</button></td></tr>`).join('')}</tbody></table></div>`;
+        Object.keys(byM).sort().reverse().forEach(month=>{ const items=byM[month]; const mPrem=items.reduce((s,o)=>s+o.premium*o.contracts,0); const mExercisePL=items.reduce((s,o)=>s+(o.status==='exercised'?wExercisePL(o):0),0); const mPct=bal>0?(mPrem/bal*100).toFixed(2):'0'; const div=document.createElement('div'); div.className='hist-month-card';
+            div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><div style="font-size:14px;font-weight:700">${month}</div><div style="display:flex;gap:22px">${[['Premium',wusd(mPrem,2),'#10B981'],['Exercise P/L',wSignedUsd(mExercisePL,2),mExercisePL>=0?'#10B981':'#EF4444'],['% Capital',mPct+'%','#F59E0B'],['Orders',items.length,'#93C5FD']].map(([l,v,c])=>`<div><div style="font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.06em;font-weight:600">${l}</div><div style="font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:${c}">${v}</div></div>`).join('')}</div></div><div style="overflow-x:auto"><table class="hist-table"><thead><tr><th>Product</th><th>Strike</th><th>Open</th><th>Closed</th><th>Contracts</th><th>Prem/Ct</th><th>Premium</th><th>Ex. P/L</th><th>Status</th><th>Note</th><th></th></tr></thead><tbody>${items.map((o,i)=>{ const exPL=wExercisePL(o); const exInput=o.status==='exercised'?`<input type="text" value="${exPL.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}" onfocus="this.value=this.value.replace(/,/g,'')" onblur="wUpdateHistPL(${o.id},this.value)" style="width:82px;background:transparent;border:1px solid #334155;border-radius:5px;color:${exPL>=0?'#10B981':'#EF4444'};font-size:11px;padding:3px 5px;text-align:right;outline:none">`:'<span style="color:#475569">—</span>'; return `<tr><td><span class="badge ${o.product==='Short Put'?'put':'call'}">${o.product}</span></td><td class="m">${wusd(o.strike)}</td><td class="m" style="color:#64748b">${o.openDate}</td><td class="m" style="color:#64748b">${o.expiryDate||'—'}</td><td class="m">${o.contracts}</td><td class="m" style="color:#10B981">${wusd(o.premium,0)}</td><td class="m" style="color:#10B981;font-weight:500">${wusd(o.premium*o.contracts,2)}</td><td class="m">${exInput}</td><td><span class="badge ${o.status}">${o.status}</span></td><td style="color:#334155;font-size:11px">${o.note||'—'}</td><td style="white-space:nowrap"><button class="w-btn-icon" title="Re-open" onclick="wReOpen(${i},'${month}')">↩ Re-open</button><button class="w-btn-icon w-btn-danger" onclick="wDelHist(${i},'${month}')" style="margin-left:3px">✕</button></td></tr>`; }).join('')}</tbody></table></div>`;
             cont.appendChild(div); });
     }
 
@@ -2094,23 +2268,24 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     function openWheelLotModal(id){ wEditLotId=id; const l=id?wLots.find(x=>x.id===id):null; document.getElementById('mWheelLotTitle').textContent=l?'Edit Lot':'Add BTC Lot'; document.getElementById('ml_name').value=l?l.name:''; document.getElementById('ml_price').value=l&&l.price?l.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):''; document.getElementById('ml_amt').value=l?l.amount:''; document.getElementById('ml_target').value=l?l.target.toLocaleString('en-US'):''; document.getElementById('ml_acc').value=l?l.accRealPL.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'0.00'; openWheelModal('mWheelLot'); }
     function wSubmitLot(){ const price=wpn(document.getElementById('ml_price').value); const l={id:wEditLotId||(wLots.length?Math.max(...wLots.map(x=>x.id))+1:1),name:document.getElementById('ml_name').value,price,amount:wpn(document.getElementById('ml_amt').value),target:wpn(document.getElementById('ml_target').value),accRealPL:wpn(document.getElementById('ml_acc').value),problem:price===0}; if(wEditLotId){const i=wLots.findIndex(x=>x.id===wEditLotId);if(i>=0)wLots[i]=l} else wLots.push(l); closeWheelModal('mWheelLot');wCalcAll();wAutoPush(); }
 
-    function openWheelHistModal(){ document.getElementById('mh_open').value=''; document.getElementById('mh_close').value=new Date().toISOString().split('T')[0]; document.getElementById('mh_strike').value=''; document.getElementById('mh_contracts').value='0.04'; document.getElementById('mh_prem').value=''; document.getElementById('mh_note').value=''; openWheelModal('mWheelHist'); }
-    function wSubmitHist(){ wClosed.push({id:wNextId++,cex:document.getElementById('mh_cex').value,product:document.getElementById('mh_product').value,openDate:document.getElementById('mh_open').value,expiryDate:document.getElementById('mh_close').value,strike:wpn(document.getElementById('mh_strike').value),contracts:wpn(document.getElementById('mh_contracts').value),premium:wpn(document.getElementById('mh_prem').value),currency:'Contracts',status:document.getElementById('mh_status').value,note:document.getElementById('mh_note').value}); closeWheelModal('mWheelHist');wCalcAll();wAutoPush(); }
+    function openWheelHistModal(){ document.getElementById('mh_open').value=''; document.getElementById('mh_close').value=new Date().toISOString().split('T')[0]; document.getElementById('mh_strike').value=''; document.getElementById('mh_contracts').value='0.04'; document.getElementById('mh_prem').value=''; document.getElementById('mh_exercise_pl').value=''; document.getElementById('mh_note').value=''; openWheelModal('mWheelHist'); }
+    function wSubmitHist(){ const status=document.getElementById('mh_status').value; wClosed.push({id:wNextId++,cex:document.getElementById('mh_cex').value,product:document.getElementById('mh_product').value,openDate:document.getElementById('mh_open').value,expiryDate:document.getElementById('mh_close').value,strike:wpn(document.getElementById('mh_strike').value),contracts:wpn(document.getElementById('mh_contracts').value),premium:wpn(document.getElementById('mh_prem').value),currency:'Contracts',status,note:document.getElementById('mh_note').value,exercisePL:status==='exercised'?wpn(document.getElementById('mh_exercise_pl').value):0}); closeWheelModal('mWheelHist');wCalcAll();wAutoPush(); }
 
     document.querySelectorAll('.wheel-modal-overlay').forEach(m=>{ m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}); });
 
     // ── XLSX Export / Import for History ──────────────────
     function wExportXlsx() {
-        const headers = ['CEX','Product','Open Date','Expiry Date','Strike','Contracts','Premium/Ct','Total P&L','Status','Note'];
+        const headers = ['CEX','Product','Open Date','Expiry Date','Strike','Contracts','Premium/Ct','Premium Total','Exercise P/L','Status','Note'];
         const rows = wClosed.map(o => [
             o.cex, o.product, o.openDate, o.expiryDate,
             o.strike, o.contracts, o.premium,
             +(o.premium * o.contracts).toFixed(2),
+            o.status === 'exercised' ? +wExercisePL(o).toFixed(2) : '',
             o.status, o.note || ''
         ]);
         const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
         // column widths
-        ws['!cols'] = [10,12,12,12,12,10,13,11,10,18].map(w=>({wch:w}));
+        ws['!cols'] = [10,12,12,12,12,10,13,13,13,10,18].map(w=>({wch:w}));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Wheel_History');
         XLSX.writeFile(wb, 'wheel-history-' + new Date().toISOString().slice(0,10) + '.xlsx');
@@ -2135,6 +2310,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                     const contracts= parseXlsxNum(get('Contracts','contracts')) || 0.04;
                     const premium  = parseXlsxNum(get('Premium/Ct','Premium','Returned','premium','Prem/Ct'));
                     const status   = String(get('Position/Curr.','Status','status') || 'closed').toLowerCase().includes('exercis') ? 'exercised' : 'closed';
+                    const exercisePL = parseXlsxNum(get('Exercise P/L','Ex. P/L','exercisePL','realizedPL','P/L','Profit/Loss'));
                     const note     = String(get('Note','note') || '');
                     const cex      = String(get('CEX','cex') || 'BINANCE');
                     if (!openDate || strike <= 0) return;
@@ -2144,7 +2320,8 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                         expiryDate: expDate || openDate,
                         
                         strike, contracts, premium,
-                        currency: 'Contracts', status, note
+                        currency: 'Contracts', status, note,
+                        exercisePL: status === 'exercised' ? exercisePL : 0
                     });
                     added++;
                 });
@@ -2195,7 +2372,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             const isValidHist = o => o && +o.id > 0 && o.product;
             if (Array.isArray(data.orders) && data.orders.length) { wOrders = data.orders.filter(isValidOrder).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'open'),note:String(o.note||'')})); wNextId = Math.max(...wOrders.map(o=>o.id), wNextId) + 1; }
             if (Array.isArray(data.lots) && data.lots.length) { wLots = data.lots.filter(isValidLot).map(l => ({id:+l.id,name:String(l.name||''),price:+l.price,amount:+l.amount,target:+l.target,accRealPL:+l.accRealPL,problem:l.problem==='true'||l.problem===true||l.problem==='TRUE'})); }
-            if (Array.isArray(data.history) && data.history.length) { wClosed = data.history.filter(isValidHist).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'closed'),note:String(o.note||'')})); }
+            if (Array.isArray(data.history) && data.history.length) { wClosed = data.history.filter(isValidHist).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'closed'),note:String(o.note||''),exercisePL:wpn(o.exercisePL ?? o.realizedPL ?? o.pnl ?? o.pl ?? 0)})); }
             wCalcAll(); return true;
         } catch(e) { console.error('Wheel pull error:', e); return false; }
     }
@@ -2366,6 +2543,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     })();
 
     window.onload = async () => {
+        applyColorTheme(localStorage.getItem(THEME_KEY) || 'dark');
         try {
             const s1 = localStorage.getItem('settings_port1'); if(s1) { const d=JSON.parse(s1); if(d.begBalances) state.portfolios.port1.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port1.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port1.benchmarks=d.benchmarks; }
             const s2 = localStorage.getItem('settings_port2'); if(s2) { const d=JSON.parse(s2); if(d.begBalances) state.portfolios.port2.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port2.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port2.benchmarks=d.benchmarks; }
