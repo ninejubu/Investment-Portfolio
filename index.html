@@ -1188,13 +1188,12 @@
     //   SHARED DATA — used by Dashboard, Transactions, Settings
     // ════════════════════════════════════════════════════
 
-    const savedRates = JSON.parse(localStorage.getItem('exchangeRateDefaults')) || { beginning: null, q1: null, q2: null, q3: null, q4: null };
     const getEmptyEndBalances = () => ({ stocks: { q1:null, q2: null, q3: null, q4: null }, bonds: { q1: null, q2: null, q3: null, q4: null }, crypto: { q1: {thb: null, usds: null, usdo: null}, q2: {thb: null, usds: null, usdo: null}, q3: {thb: null, usds: null, usdo: null}, q4: {thb: null, usds: null, usdo: null} }, gold: { q1: null, q2: null, q3: null, q4: null } });
-    const getEmptyBegBalances = () => ({ stocks: 0, bonds: 0, crypto: 0, gold: 0 });
+    const getEmptyBegBalances = () => ({ stocks: null, bonds: null, crypto: null, gold: null });
     const getEmptyBenchmarks = () => ({ stocks: { name: '', q1: null, q2: null, q3: null, q4: null }, bonds: { name: '', q1: null, q2: null, q3: null, q4: null }, crypto: { name: '', q1: null, q2: null, q3: null, q4: null }, gold: { name: '', q1: null, q2: null, q3: null, q4: null } });
 
     const state = {
-        currentPort: 'port1', rates: savedRates,
+        currentPort: 'port1', rates: { beginning: null, q1: null, q2: null, q3: null, q4: null },
         portfolios: {
             port1: { goal: { amount: 10000000, year: 2031, monthly: 0, return: 0, monthlyTiers: [{year: new Date().getFullYear(), amount: 0}] }, begBalances: getEmptyBegBalances(), endBalances: getEmptyEndBalances(), benchmarks: getEmptyBenchmarks(), flows: [] },
             port2: { goal: { amount: 10000000, year: 2031, monthly: 0, return: 0, monthlyTiers: [{year: new Date().getFullYear(), amount: 0}] }, begBalances: getEmptyBegBalances(), endBalances: getEmptyEndBalances(), benchmarks: getEmptyBenchmarks(), flows: [] }
@@ -1863,6 +1862,10 @@
         return Number.isFinite(n) ? n : null;
     }
 
+    function settingInputValue(value) {
+        return value === null || value === undefined || value === '' ? '' : getRawValue(value).toLocaleString();
+    }
+
     function normalizeSettingRows(payload) {
         const rawRows = Array.isArray(payload) ? payload : (payload?.rows || payload?.settingsRows || payload?.setting || payload?.settings || []);
         if (!Array.isArray(rawRows)) return [];
@@ -1928,10 +1931,10 @@
             if (!period) return;
 
             if (period.includes('beginning') && period.includes('balance')) {
-                settings.begBalances.stocks = toNullableSettingNumber(readSettingCell(row, ['stocks', 'stock'], 1)) || 0;
-                settings.begBalances.bonds = toNullableSettingNumber(readSettingCell(row, ['bonds', 'bond'], 2)) || 0;
-                settings.begBalances.crypto = toNullableSettingNumber(readSettingCell(row, ['crypto'], 3)) || 0;
-                settings.begBalances.gold = toNullableSettingNumber(readSettingCell(row, ['gold'], 4)) || 0;
+                settings.begBalances.stocks = toNullableSettingNumber(readSettingCell(row, ['stocks', 'stock'], 1));
+                settings.begBalances.bonds = toNullableSettingNumber(readSettingCell(row, ['bonds', 'bond'], 2));
+                settings.begBalances.crypto = toNullableSettingNumber(readSettingCell(row, ['crypto'], 3));
+                settings.begBalances.gold = toNullableSettingNumber(readSettingCell(row, ['gold'], 4));
                 return;
             }
 
@@ -2097,7 +2100,7 @@
         // Platform lists
         renderPlatformSettings();
         const begC = document.getElementById('beg-balances-container'); begC.innerHTML = '';
-        ['stocks', 'bonds', 'crypto', 'gold'].forEach(a => { begC.innerHTML += `<div class="bg-slate-800/40 p-3 rounded-lg border border-slate-700"><label class="text-[10px] text-slate-500 uppercase block mb-1">${a}</label><input type="text" oninput="formatNumberInput(this)" value="${pState().begBalances[a].toLocaleString()}" id="input-beg-${a}" class="bg-transparent text-white font-bold border-none p-0 w-full focus:outline-none"></div>`; });
+        ['stocks', 'bonds', 'crypto', 'gold'].forEach(a => { begC.innerHTML += `<div class="bg-slate-800/40 p-3 rounded-lg border border-slate-700"><label class="text-[10px] text-slate-500 uppercase block mb-1">${a}</label><input type="text" oninput="formatNumberInput(this)" value="${settingInputValue(pState().begBalances[a])}" id="input-beg-${a}" class="bg-transparent text-white font-bold border-none p-0 w-full focus:outline-none"></div>`; });
         const endC = document.getElementById('end-balances-container'); endC.innerHTML = '';
         ['stocks', 'bonds', 'crypto', 'gold'].forEach(a => {
             let h = `<div class="${a==='crypto'?'md:col-span-4':'md:col-span-2'} bg-slate-800/40 p-3 rounded-lg border border-slate-700 h-full"><h5 class="text-xs font-bold text-white mb-3 uppercase">${a}</h5><div class="space-y-2">`;
@@ -2148,11 +2151,8 @@
     }
 
     async function saveSettings() {
-        ['stocks','bonds','crypto','gold'].forEach(a => { pState().begBalances[a] = getRawValue(document.getElementById(`input-beg-${a}`).value); [1,2,3,4].forEach(q => { if (a === 'crypto') { const thbVal = document.getElementById(`input-eb-crypto-thb-q${q}`).value; const usdsVal = document.getElementById(`input-eb-crypto-usds-q${q}`).value; const usdoVal = document.getElementById(`input-eb-crypto-usdo-q${q}`).value; pState().endBalances.crypto[`q${q}`] = { thb: thbVal !== '' ? getRawValue(thbVal) : null, usds: usdsVal !== '' ? getRawValue(usdsVal) : null, usdo: usdoVal !== '' ? getRawValue(usdoVal) : null }; } else pState().endBalances[a][`q${q}`] = document.getElementById(`input-eb-${a}-q${q}`).value !== '' ? getRawValue(document.getElementById(`input-eb-${a}-q${q}`).value) : null; pState().benchmarks[a][`q${q}`] = document.getElementById(`input-bm-q${q}-${a}`).value !== '' ? getRawValue(document.getElementById(`input-bm-q${q}-${a}`).value) : null; pState().benchmarks[a].name = document.getElementById(`input-bm-name-${a}`).value; }); });
+        ['stocks','bonds','crypto','gold'].forEach(a => { const begVal = document.getElementById(`input-beg-${a}`).value; pState().begBalances[a] = begVal !== '' ? getRawValue(begVal) : null; [1,2,3,4].forEach(q => { if (a === 'crypto') { const thbVal = document.getElementById(`input-eb-crypto-thb-q${q}`).value; const usdsVal = document.getElementById(`input-eb-crypto-usds-q${q}`).value; const usdoVal = document.getElementById(`input-eb-crypto-usdo-q${q}`).value; pState().endBalances.crypto[`q${q}`] = { thb: thbVal !== '' ? getRawValue(thbVal) : null, usds: usdsVal !== '' ? getRawValue(usdsVal) : null, usdo: usdoVal !== '' ? getRawValue(usdoVal) : null }; } else pState().endBalances[a][`q${q}`] = document.getElementById(`input-eb-${a}-q${q}`).value !== '' ? getRawValue(document.getElementById(`input-eb-${a}-q${q}`).value) : null; pState().benchmarks[a][`q${q}`] = document.getElementById(`input-bm-q${q}-${a}`).value !== '' ? getRawValue(document.getElementById(`input-bm-q${q}-${a}`).value) : null; pState().benchmarks[a].name = document.getElementById(`input-bm-name-${a}`).value; }); });
         ['beginning','q1','q2','q3','q4'].forEach(r => state.rates[r] = document.getElementById('rate-'+r).value !== '' ? getRawValue(document.getElementById('rate-'+r).value) : null);
-        localStorage.setItem('exchangeRateDefaults', JSON.stringify(state.rates));
-        localStorage.setItem('settings_port1', JSON.stringify({ begBalances: state.portfolios.port1.begBalances, endBalances: state.portfolios.port1.endBalances, benchmarks: state.portfolios.port1.benchmarks }));
-        localStorage.setItem('settings_port2', JSON.stringify({ begBalances: state.portfolios.port2.begBalances, endBalances: state.portfolios.port2.endBalances, benchmarks: state.portfolios.port2.benchmarks }));
         localStorage.setItem('goal_port1', JSON.stringify(state.portfolios.port1.goal));
         localStorage.setItem('goal_port2', JSON.stringify(state.portfolios.port2.goal));
         updateDashboard();
@@ -2315,11 +2315,28 @@
     }
 
     function modalDisconnect() {
-        if (!confirm('Disconnect Google Sheets? Local data will be kept.')) return;
+        if (!confirm('Disconnect Google Sheets? Settings values from the sheet will be cleared from this dashboard view.')) return;
         localStorage.removeItem(GS_URL_KEY);
         localStorage.removeItem('wheel_gs_url');
+        clearCachedSettingsState();
+        resetSettingsState();
+        updateDashboard();
+        initSettings();
         setSyncPill('idle', 'Not connected');
         updateModalStatus();
+    }
+
+    function clearCachedSettingsState() {
+        ['exchangeRateDefaults', 'settings_port1', 'settings_port2'].forEach(key => localStorage.removeItem(key));
+    }
+
+    function resetSettingsState() {
+        state.rates = { beginning: null, q1: null, q2: null, q3: null, q4: null };
+        ['port1', 'port2'].forEach(portKey => {
+            state.portfolios[portKey].begBalances = getEmptyBegBalances();
+            state.portfolios[portKey].endBalances = getEmptyEndBalances();
+            state.portfolios[portKey].benchmarks = getEmptyBenchmarks();
+        });
     }
 
     // ── Investment read (GET no param) ──────────────────
@@ -2338,12 +2355,6 @@
             applySettingsSnapshot(settings, 'port1');
             applyHoldingsRows(data.holdings || data.holdingsRows || data.settings || data);
             applyPlatformRows(data.platforms || data.settings || data);
-            localStorage.setItem('exchangeRateDefaults', JSON.stringify(state.rates));
-            localStorage.setItem('settings_port1', JSON.stringify({
-                begBalances: state.portfolios.port1.begBalances,
-                endBalances: state.portfolios.port1.endBalances,
-                benchmarks: state.portfolios.port1.benchmarks
-            }));
             return true;
         } catch(err) {
             console.warn('GSheet setting sync failed:', err);
@@ -2388,12 +2399,6 @@
                     applySettingsSnapshot(settings, 'port1');
                     applyHoldingsRows(data.holdings || data.holdingsRows || data.settings || data);
                     applyPlatformRows(data.platforms || data.settings || data);
-                    localStorage.setItem('exchangeRateDefaults', JSON.stringify(state.rates));
-                    localStorage.setItem('settings_port1', JSON.stringify({
-                        begBalances: state.portfolios.port1.begBalances,
-                        endBalances: state.portfolios.port1.endBalances,
-                        benchmarks: state.portfolios.port1.benchmarks
-                    }));
                     ok = true;
                 }
             }
@@ -3205,9 +3210,8 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
 
     window.onload = async () => {
         applyColorTheme(localStorage.getItem(THEME_KEY) || 'dark');
+        clearCachedSettingsState();
         try {
-            const s1 = localStorage.getItem('settings_port1'); if(s1) { const d=JSON.parse(s1); if(d.begBalances) state.portfolios.port1.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port1.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port1.benchmarks=d.benchmarks; }
-            const s2 = localStorage.getItem('settings_port2'); if(s2) { const d=JSON.parse(s2); if(d.begBalances) state.portfolios.port2.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port2.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port2.benchmarks=d.benchmarks; }
             const g1 = localStorage.getItem('goal_port1'); if(g1){const d=JSON.parse(g1); if(d) state.portfolios.port1.goal=Object.assign(state.portfolios.port1.goal,d);}
             const g2 = localStorage.getItem('goal_port2'); if(g2){const d=JSON.parse(g2); if(d) state.portfolios.port2.goal=Object.assign(state.portfolios.port2.goal,d);}
             const f2 = localStorage.getItem('flows_port2'); if(f2) state.portfolios.port2.flows = JSON.parse(f2);
