@@ -1155,7 +1155,6 @@
             <div style="font-size:10px;color:#475569;line-height:2;border-top:1px solid #334155;padding-top:10px">
                 <strong style="color:#64748b">Required sheet tabs:</strong>
                 &nbsp;<span style="background:#1E293B;padding:2px 7px;border-radius:4px;color:#94A3B8">setting</span>
-                &nbsp;<span style="background:#1E293B;padding:2px 7px;border-radius:4px;color:#94A3B8">Holdings</span>
                 &nbsp;<span style="background:#1E293B;padding:2px 7px;border-radius:4px;color:#94A3B8">Activities</span>
                 &nbsp;<span style="background:#1E293B;padding:2px 7px;border-radius:4px;color:#94A3B8">Wheel_orders</span>
                 &nbsp;<span style="background:#1E293B;padding:2px 7px;border-radius:4px;color:#94A3B8">Wheel_lots</span>
@@ -1881,6 +1880,18 @@
         return rawRows;
     }
 
+    function isHoldingSettingRow(row) {
+        const rowType = normalizeSettingKey(readSettingCell(row, ['row_type', 'rowtype'], 12));
+        if (rowType === 'holding') return true;
+        const asset = String(readSettingCell(row, ['asset'], 14) || '').toLowerCase().trim();
+        const period = String(readSettingCell(row, ['holding_period', 'holdingperiod', 'quarter'], 15) || '').trim();
+        return SETTING_ASSETS.includes(asset) && ['Beg','Q1','Q2','Q3','Q4'].includes(period);
+    }
+
+    function isPlatformSettingRow(row) {
+        return normalizeSettingKey(readSettingCell(row, ['row_type', 'rowtype'], 12)) === 'platform';
+    }
+
     function applySettingsSnapshot(settings, portKey = 'port1') {
         if (!settings) return false;
         const port = state.portfolios[portKey] || state.portfolios.port1;
@@ -1911,6 +1922,7 @@
         };
 
         rows.forEach(row => {
+            if (isHoldingSettingRow(row) || isPlatformSettingRow(row)) return;
             const periodRaw = readSettingCell(row, ['period', 'panel', 'type'], 0);
             const period = normalizeSettingKey(periodRaw);
             if (!period) return;
@@ -1967,7 +1979,7 @@
 
     function buildSettingsPayload() {
         const rows = [
-            { period: 'Beginning Balance', ...pState().begBalances },
+            { period: 'Beginning Balance', ...pState().begBalances, row_type: 'setting' },
             ...SETTING_QUARTERS.map(q => ({
                 period: 'Quarterly Ending Balances ' + q.toUpperCase(),
                 stocks: pState().endBalances.stocks[q],
@@ -1975,17 +1987,21 @@
                 crypto: pState().endBalances.crypto[q]?.thb ?? null,
                 gold: pState().endBalances.gold[q],
                 crypto_usds: pState().endBalances.crypto[q]?.usds ?? null,
-                crypto_usdo: pState().endBalances.crypto[q]?.usdo ?? null
+                crypto_usdo: pState().endBalances.crypto[q]?.usdo ?? null,
+                row_type: 'setting'
             })),
-            { period: 'Exchange Rate', beginning: state.rates.beginning, q1: state.rates.q1, q2: state.rates.q2, q3: state.rates.q3, q4: state.rates.q4 },
-            { period: 'Benchmark Name', stocks: pState().benchmarks.stocks.name, bonds: pState().benchmarks.bonds.name, crypto: pState().benchmarks.crypto.name, gold: pState().benchmarks.gold.name },
+            { period: 'Exchange Rate', beginning: state.rates.beginning, q1: state.rates.q1, q2: state.rates.q2, q3: state.rates.q3, q4: state.rates.q4, row_type: 'setting' },
+            { period: 'Benchmark Name', stocks: pState().benchmarks.stocks.name, bonds: pState().benchmarks.bonds.name, crypto: pState().benchmarks.crypto.name, gold: pState().benchmarks.gold.name, row_type: 'setting' },
             ...SETTING_QUARTERS.map(q => ({
                 period: 'Benchmark ' + q.toUpperCase(),
                 stocks: pState().benchmarks.stocks[q],
                 bonds: pState().benchmarks.bonds[q],
                 crypto: pState().benchmarks.crypto[q],
-                gold: pState().benchmarks.gold[q]
-            }))
+                gold: pState().benchmarks.gold[q],
+                row_type: 'setting'
+            })),
+            ...buildHoldingsRows(),
+            ...buildPlatformRows()
         ];
         return {
             action: 'settings_write',
@@ -1995,8 +2011,7 @@
                 endBalances: pState().endBalances,
                 benchmarks: pState().benchmarks
             },
-            rows,
-            holdings: buildHoldingsRows()
+            rows
         };
     }
 
@@ -2008,19 +2023,19 @@
                     let items = [];
                     try { items = JSON.parse(localStorage.getItem(`holdings_${portKey}_${asset}_${period}`)) || []; }
                     catch(e) { items = []; }
-                    if (!items.length) {
-                        rows.push({ portfolio: portKey, asset, period, name: '', platform: '', amount: '' });
-                    } else {
-                        items.forEach(item => rows.push({
-                            portfolio: portKey,
-                            asset,
-                            period,
-                            name: item.name || '',
-                            platform: item.platform || '',
-                            amount: item.amount || 0
-                        }));
-                    }
+                    if (!items.length) rows.push({ row_type: 'holding', portfolio: portKey, asset, holding_period: period, name: '', platform: '', amount: '', currency: 'THB' });
+                    else items.forEach(item => rows.push({ row_type: 'holding', portfolio: portKey, asset, holding_period: period, name: item.name || '', platform: item.platform || '', amount: item.amount || 0, currency: item.currency || 'THB' }));
                 });
+            });
+        });
+        return rows;
+    }
+
+    function buildPlatformRows() {
+        const rows = [];
+        PLATFORM_ASSETS.forEach(asset => {
+            loadPlatforms(asset).forEach(platform => {
+                rows.push({ row_type: 'platform', platform_asset: asset, platform_name: platform });
             });
         });
         return rows;
@@ -2031,20 +2046,39 @@
         if (!Array.isArray(rows)) return false;
         const grouped = {};
         rows.forEach(row => {
-            const portfolio = String(readSettingCell(row, ['portfolio', 'port'], 0) || 'port1').trim() || 'port1';
-            const asset = String(readSettingCell(row, ['asset'], 1) || '').toLowerCase().trim();
-            const period = String(readSettingCell(row, ['period', 'quarter'], 2) || '').trim();
-            const name = String(readSettingCell(row, ['name', 'ticker', 'holding'], 3) || '').trim();
+            if (!isHoldingSettingRow(row)) return;
+            const portfolio = String(readSettingCell(row, ['portfolio', 'port'], 13) || 'port1').trim() || 'port1';
+            const asset = String(readSettingCell(row, ['asset'], 14) || '').toLowerCase().trim();
+            const period = String(readSettingCell(row, ['holding_period', 'holdingperiod', 'quarter'], 15) || '').trim();
+            const name = String(readSettingCell(row, ['name', 'ticker', 'holding'], 16) || '').trim();
             if (!SETTING_ASSETS.includes(asset) || !['Beg','Q1','Q2','Q3','Q4'].includes(period) || !name) return;
             const key = `holdings_${portfolio}_${asset}_${period}`;
             if (!grouped[key]) grouped[key] = [];
             grouped[key].push({
                 name,
-                platform: String(readSettingCell(row, ['platform'], 4) || ''),
-                amount: toNullableSettingNumber(readSettingCell(row, ['amount', 'value'], 5)) || 0
+                platform: String(readSettingCell(row, ['platform'], 17) || ''),
+                amount: toNullableSettingNumber(readSettingCell(row, ['amount', 'value'], 18)) || 0,
+                currency: String(readSettingCell(row, ['currency', 'ccy'], 19) || 'THB').toUpperCase()
             });
         });
         Object.keys(grouped).forEach(key => localStorage.setItem(key, JSON.stringify(grouped[key])));
+        return Object.keys(grouped).length > 0;
+    }
+
+    function applyPlatformRows(payload) {
+        const rows = normalizeSettingRows(payload);
+        if (!rows.length) return false;
+        const grouped = {};
+        rows.forEach(row => {
+            if (!isPlatformSettingRow(row)) return;
+            const asset = String(readSettingCell(row, ['platform_asset', 'platformasset'], 20) || readSettingCell(row, ['asset'], 14) || '').toLowerCase().trim();
+            const platform = String(readSettingCell(row, ['platform_name', 'platformname'], 21) || readSettingCell(row, ['platform'], 17) || '').trim();
+            if (!PLATFORM_ASSETS.includes(asset) || !platform) return;
+            if (!grouped[asset]) grouped[asset] = [];
+            if (!grouped[asset].includes(platform)) grouped[asset].push(platform);
+        });
+        Object.keys(grouped).forEach(asset => localStorage.setItem(`platforms_${asset}`, JSON.stringify(grouped[asset])));
+        if (Object.keys(grouped).length) renderPlatformSettings();
         return Object.keys(grouped).length > 0;
     }
 
@@ -2302,7 +2336,8 @@
             const settings = parseSettingsRows(data.settings || data);
             if (!settings) throw new Error('No setting rows found');
             applySettingsSnapshot(settings, 'port1');
-            applyHoldingsRows(data.holdings || data.holdingsRows || []);
+            applyHoldingsRows(data.holdings || data.holdingsRows || data.settings || data);
+            applyPlatformRows(data.platforms || data.settings || data);
             localStorage.setItem('exchangeRateDefaults', JSON.stringify(state.rates));
             localStorage.setItem('settings_port1', JSON.stringify({
                 begBalances: state.portfolios.port1.begBalances,
@@ -2351,7 +2386,8 @@
                 const settings = parseSettingsRows(data.settings);
                 if (settings) {
                     applySettingsSnapshot(settings, 'port1');
-                    applyHoldingsRows(data.holdings || data.holdingsRows || []);
+                    applyHoldingsRows(data.holdings || data.holdingsRows || data.settings || data);
+                    applyPlatformRows(data.platforms || data.settings || data);
                     localStorage.setItem('exchangeRateDefaults', JSON.stringify(state.rates));
                     localStorage.setItem('settings_port1', JSON.stringify({
                         begBalances: state.portfolios.port1.begBalances,
@@ -3231,11 +3267,11 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                     <span style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.08em;font-weight:600">Holdings Detail</span>
                     <button onclick="ddAddRow()" style="background:#3B82F6;border:none;border-radius:6px;color:#fff;font-size:11px;padding:5px 14px;cursor:pointer;font-weight:600" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">+ Add</button>
                 </div>
-                <div style="display:grid;grid-template-columns:2fr 1fr 90px 90px 90px 52px;gap:6px;font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.06em;font-weight:600;padding:0 8px;margin-bottom:6px">
-                    <span>Name / Ticker</span><span>Platform</span><span style="text-align:right">Amount (THB)</span><span style="text-align:right">% of Asset</span><span style="text-align:right">Movement</span><span></span>
+                <div style="display:grid;grid-template-columns:2fr 1fr 64px 110px 90px 90px 52px;gap:6px;font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.06em;font-weight:600;padding:0 8px;margin-bottom:6px">
+                    <span>Name / Ticker</span><span>Platform</span><span>CCY</span><span style="text-align:right">Amount</span><span style="text-align:right">% of Asset</span><span style="text-align:right">Movement</span><span></span>
                 </div>
                 <div id="dd-holdings-list" style="display:flex;flex-direction:column;gap:4px"></div>
-                <div id="dd-total-row" style="margin-top:10px;padding-top:10px;border-top:1px solid #334155;display:grid;grid-template-columns:2fr 1fr 90px 90px 90px 52px;gap:6px;font-size:12px;font-weight:700;color:#F8FAFC;padding-left:8px;padding-right:8px"></div>
+                <div id="dd-total-row" style="margin-top:10px;padding-top:10px;border-top:1px solid #334155;display:grid;grid-template-columns:2fr 1fr 64px 110px 90px 90px 52px;gap:6px;font-size:12px;font-weight:700;color:#F8FAFC;padding-left:8px;padding-right:8px"></div>
             </div>
         </div>
     </div>
@@ -3257,9 +3293,9 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     const DD_COLORS = { stocks:'#10B981', bonds:'#F59E0B', crypto:'#3B82F6', gold:'#FACC15' };
     const PLATFORM_DEFAULTS = {
         stocks: ['Streaming', 'Webull', 'Dime', 'Finnomena', 'SCB Fundclick'],
-        bonds:  ['Webull', 'Dime', 'Finnomena', 'SCB Fundclick'],
-        crypto: ['Binance', 'Binance TH', 'Bybit', 'Ledger', 'Wallets'],
-        gold:   ['MTS Gold', 'SCB Fundclick', 'Webull', 'Dime']
+        bonds:  ['BBL', 'Finnomena', 'Dime', 'SCB Fundclick'],
+        crypto: ['Binance', 'Binance TH', 'Ledger', 'Wallets'],
+        gold:   ['MTS Gold', 'SCB Fundclick']
     };
 
     function loadPlatforms(asset) {
@@ -3273,6 +3309,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             const list = textarea.value.split('\n').map(s=>s.trim()).filter(Boolean);
             localStorage.setItem(`platforms_${a}`, JSON.stringify(list));
         });
+        scheduleSettingsPush();
         alert('Platforms saved!');
     }
     function renderPlatformSettings() {
@@ -3302,12 +3339,12 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         const rows    = ddLoad(asset, quarter);
         const assetBal = ddGetAssetBalForPeriod(asset, quarter);
 
-        let totalAssigned = rows.reduce((s,r)=>s+(r.amount||0),0);
+        let totalAssigned = rows.reduce((s,r)=>s+ddAmountThb(r, quarter),0);
         const untracked   = Math.max(0, assetBal - totalAssigned);
 
         // Build chart data including Untracked
         const labels = [...rows.map(r=>r.name||'—'), ...(untracked > 1 ? ['Untracked'] : [])];
-        const amounts = [...rows.map(r=>r.amount||0), ...(untracked > 1 ? [untracked] : [])];
+        const amounts = [...rows.map(r=>ddAmountThb(r, quarter)), ...(untracked > 1 ? [untracked] : [])];
         const colors  = rows.map((_,i) => {
             const hue = (i * 47 + (asset==='stocks'?160:asset==='bonds'?38:asset==='crypto'?220:48)) % 360;
             return `hsl(${hue},65%,55%)`;
@@ -3338,8 +3375,8 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         if (rows.length === 0 && assetBal === 0) {
             listEl.innerHTML = `<div style="color:#475569;font-size:11px;text-align:center;padding:16px">No data for ${asset} ${quarter}.<br>Click the balance card to add holdings.</div>`;
         } else {
-            [...rows.map((r,i)=>({...r,_color:colors[i]})), ...(untracked>1?[{name:'Untracked',amount:untracked,_color:'#334155'}]:[])].forEach((r,i) => {
-                const pct  = assetBal>0 ? (r.amount/assetBal*100) : 0;
+            [...rows.map((r,i)=>({...r,amountThb:ddAmountThb(r, quarter),_color:colors[i]})), ...(untracked>1?[{name:'Untracked',amountThb:untracked,_color:'#334155'}]:[])].forEach((r,i) => {
+                const pct  = assetBal>0 ? (r.amountThb/assetBal*100) : 0;
                 const isUT = r.name === 'Untracked';
                 const el   = document.createElement('div');
                 el.style.cssText = `display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;background:#0F172A;cursor:${isUT?'default':'pointer'};transition:background .15s`;
@@ -3350,7 +3387,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                     <div style="width:8px;height:8px;border-radius:50%;background:${r._color};flex-shrink:0"></div>
                     <div style="flex:1;font-size:11px;color:${isUT?'#475569':'#F8FAFC'};font-style:${isUT?'italic':'normal'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name||'—'}</div>
                     <div style="font-size:11px;font-weight:600;color:${isUT?'#475569':color};white-space:nowrap">${pct.toFixed(1)}%</div>
-                    <div style="font-size:10px;color:#64748b;white-space:nowrap">฿${(r.amount||0).toLocaleString('en-US',{maximumFractionDigits:0})}</div>`;
+                    <div style="font-size:10px;color:#64748b;white-space:nowrap">฿${(r.amountThb||0).toLocaleString('en-US',{maximumFractionDigits:0})}</div>`;
                 listEl.appendChild(el);
             });
         }
@@ -3378,6 +3415,23 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     function ddSave(asset, quarter, rows) {
         localStorage.setItem(ddKey(asset, quarter), JSON.stringify(rows));
         scheduleSettingsPush();
+    }
+
+    function ddRateForPeriod(quarter) {
+        if (quarter === 'Beg') return getRawValue(state.rates.beginning) || 1;
+        const key = String(quarter || '').toLowerCase();
+        return getRawValue(state.rates[key]) || getRawValue(state.rates.beginning) || 1;
+    }
+
+    function ddAmountThb(row, quarter = ddQuarter) {
+        const amount = getRawValue(row?.amount);
+        const currency = String(row?.currency || 'THB').toUpperCase();
+        return currency === 'USD' ? amount * ddRateForPeriod(quarter) : amount;
+    }
+
+    function ddCurrencyOptions(currency) {
+        const current = String(currency || 'THB').toUpperCase();
+        return ['THB', 'USD'].map(c => `<option value="${c}" ${c===current?'selected':''}>${c}</option>`).join('');
     }
 
     function openDrillDown(asset) {
@@ -3411,7 +3465,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         // Carry forward names only, amount = 0 (user must fill)
         const carried = prev
             .filter(r => r.name && r.name !== 'Untracked')
-            .map(r => ({ name: r.name, amount: 0 }));
+            .map(r => ({ name: r.name, platform: r.platform || '', amount: 0, currency: r.currency || 'THB' }));
         if (carried.length > 0) ddSave(asset, quarter, carried);
     }
 
@@ -3471,10 +3525,10 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
 
         // Build prev lookup by name
         const prevMap = {};
-        prev.forEach(r => { if (r.name) prevMap[r.name] = r.amount || 0; });
+        prev.forEach(r => { if (r.name) prevMap[r.name] = ddAmountThb(r, ddPrevPeriod(ddQuarter)); });
 
         // Calculate total assigned
-        let totalAssigned = rows.reduce((s,r) => s + (r.amount||0), 0);
+        let totalAssigned = rows.reduce((s,r) => s + ddAmountThb(r, ddQuarter), 0);
 
         // Untracked = assetBal - totalAssigned
         const untracked = assetBal - totalAssigned;
@@ -3490,10 +3544,11 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
 
         // Render tracked rows
         rows.forEach((row, i) => {
-            const pct      = assetBal > 0 ? (row.amount / assetBal * 100) : 0;
+            const amountThb = ddAmountThb(row, ddQuarter);
+            const pct      = assetBal > 0 ? (amountThb / assetBal * 100) : 0;
             const barW     = Math.min(100, pct);
             const prevAmt  = prevMap[row.name] ?? null;
-            const movement = (prevAmt !== null && row.name && ddQuarter !== 'Beg') ? (row.amount||0) - prevAmt : null;
+            const movement = (prevAmt !== null && row.name && ddQuarter !== 'Beg') ? amountThb - prevAmt : null;
             const movColor = movement === null ? '' : movement >= 0 ? '#10B981' : '#EF4444';
             const movStr   = movement === null ? '' : (movement >= 0 ? '+' : '') + '฿' + Math.abs(movement).toLocaleString('en-US',{maximumFractionDigits:0});
 
@@ -3506,7 +3561,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             const platformOpts = ['', ...platforms].map(p=>`<option value="${p}" ${p===(row.platform||'')?'selected':''}>${p||'— Platform —'}</option>`).join('');
 
             rowEl.innerHTML = `
-                <div style="display:grid;grid-template-columns:2fr 1fr 130px 90px 90px 52px;gap:6px;align-items:center;margin-bottom:6px">
+                <div style="display:grid;grid-template-columns:2fr 1fr 64px 110px 90px 90px 52px;gap:6px;align-items:center;margin-bottom:6px">
                     <input value="${row.name||''}" placeholder="Name / Ticker"
                         oninput="ddUpdateRow(${i},'name',this.value)"
                         style="background:transparent;border:none;color:#F8FAFC;font-size:12px;font-weight:600;outline:none;padding:0;width:100%" />
@@ -3514,7 +3569,11 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                         style="background:#0F172A;border:1px solid #334155;color:#94A3B8;font-size:10px;padding:2px 4px;border-radius:4px;width:100%">
                         ${platformOpts}
                     </select>
-                    <input value="${row.amount ? row.amount.toLocaleString('en-US',{maximumFractionDigits:0}) : ''}" placeholder="0"
+                    <select onchange="ddUpdateRow(${i},'currency',this.value)"
+                        style="background:#0F172A;border:1px solid #334155;color:#94A3B8;font-size:10px;padding:2px 4px;border-radius:4px;width:100%">
+                        ${ddCurrencyOptions(row.currency)}
+                    </select>
+                    <input value="${getRawValue(row.amount) ? getRawValue(row.amount).toLocaleString('en-US',{maximumFractionDigits:0}) : ''}" placeholder="0"
                         oninput="ddUpdateRow(${i},'amount',this.value)"
                         onfocus="this.value=this.value.replace(/,/g,'')"
                         style="background:transparent;border:none;color:#F8FAFC;font-size:12px;font-weight:500;outline:none;text-align:right;width:100%" />
@@ -3537,7 +3596,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             const utPct  = assetBal > 0 ? (untracked / assetBal * 100) : 0;
             const utBarW = Math.min(100, Math.max(0, utPct));
             // Movement for untracked: compare to previous untracked
-            const prevTotalAssigned = prev.reduce((s,r)=>s+(r.amount||0),0);
+            const prevTotalAssigned = prev.reduce((s,r)=>s+ddAmountThb(r, ddPrevPeriod(ddQuarter)),0);
             const prevBal = ddGetAssetBalForPeriod(ddAsset, ddPrevPeriod(ddQuarter));
             const prevUntracked = prevBal > 0 ? prevBal - prevTotalAssigned : null;
             const utMov  = (prevUntracked !== null && ddQuarter !== 'Beg') ? untracked - prevUntracked : null;
@@ -3547,8 +3606,10 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             const utEl = document.createElement('div');
             utEl.style.cssText = 'background:rgba(71,85,105,.08);border:1px dashed #334155;border-radius:8px;padding:10px 10px 8px;opacity:.8';
             utEl.innerHTML = `
-                <div style="display:grid;grid-template-columns:2fr 130px 90px 90px 52px;gap:6px;align-items:center;margin-bottom:6px">
+                <div style="display:grid;grid-template-columns:2fr 1fr 64px 110px 90px 90px 52px;gap:6px;align-items:center;margin-bottom:6px">
                     <span style="font-size:12px;font-weight:600;color:#475569;font-style:italic">Untracked</span>
+                    <span></span>
+                    <span></span>
                     <span style="text-align:right;font-size:12px;color:#475569">฿${untracked.toLocaleString('en-US',{maximumFractionDigits:0})}</span>
                     <span style="text-align:right;font-size:11px;color:#475569">${utPct.toFixed(1)}%</span>
                     <span style="text-align:right;font-size:11px;font-weight:600;color:${utMovColor}">${utMovStr}</span>
@@ -3569,6 +3630,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         document.getElementById('dd-total-row').innerHTML = `
             <span style="color:#64748b;font-size:11px">Assigned total</span>
             <span></span>
+            <span>THB</span>
             <span style="text-align:right">฿${totalAssigned.toLocaleString('en-US',{maximumFractionDigits:0})}</span>
             <span style="text-align:right;color:${Math.abs(diff)<1?'#10B981':'#F59E0B'}">${totalPct.toFixed(1)}%</span>
             <span></span>
@@ -3593,6 +3655,8 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         if (field === 'amount') {
             const num = parseFloat(val.replace(/,/g,''));
             rows[i].amount = isNaN(num) ? 0 : num;
+        } else if (field === 'currency') {
+            rows[i].currency = String(val || 'THB').toUpperCase();
         } else {
             rows[i][field] = val;
         }
@@ -3604,7 +3668,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
 
     function ddAddRow() {
         const rows = ddLoad(ddAsset, ddQuarter);
-        rows.push({ name: '', amount: 0 });
+        rows.push({ name: '', platform: '', amount: 0, currency: 'THB' });
         ddSave(ddAsset, ddQuarter, rows);
         ddRenderHoldings(ddGetAssetBal());
         setTimeout(() => {
