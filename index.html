@@ -2225,20 +2225,15 @@
         if (!url) { openSyncModal(); return; }
         setSyncPill('loading', 'Syncing…');
         setRefreshSpin(true);
-        let invOk = false, wheelOk = false;
+        let syncOk = false;
         try {
-            invOk = await loadFromGSheet();
-            if (invOk) { updateDashboard(); renderMonthlyTiers(); }
-        } catch(e) {}
-        try {
-            wheelOk = await wPullFromSheets(true);
+            syncOk = await loadFromGSheet();
+            if (syncOk) { updateDashboard(); renderMonthlyTiers(); }
         } catch(e) {}
         fetchFearGreedIndexes();
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-        if (invOk && wheelOk) setSyncPill('ok', 'Synced ' + now);
-        else if (invOk || wheelOk) setSyncPill('ok', 'Partial sync ' + now);
-        else setSyncPill('err', 'Sync failed');
+        setSyncPill(syncOk ? 'ok' : 'err', syncOk ? 'Synced ' + now : 'Sync failed');
     }
 
     // ── Open unified modal ──────────────────────────────
@@ -2281,12 +2276,11 @@
         setSyncPill('loading', 'Connecting…');
         setRefreshSpin(true);
         // Try both
-        let invOk = false, wheelOk = false;
-        try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
-        try { wheelOk = await wPullFromSheets(true); } catch(e) {}
+        let syncOk = false;
+        try { syncOk  = await loadFromGSheet(); if (syncOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-        if (invOk || wheelOk) {
+        if (syncOk) {
             setSyncPill('ok', 'Synced ' + now);
             const last = document.getElementById('modal-last-sync');
             if (last) last.textContent = 'Last synced: ' + new Date().toLocaleString();
@@ -2303,14 +2297,13 @@
         if (!url) { alert('No URL saved. Please enter the Apps Script URL first.'); return; }
         setSyncPill('loading', 'Pulling…');
         setRefreshSpin(true);
-        let invOk = false, wheelOk = false;
-        try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
-        try { wheelOk = await wPullFromSheets(true); } catch(e) {}
+        let syncOk = false;
+        try { syncOk  = await loadFromGSheet(); if (syncOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-        setSyncPill(invOk || wheelOk ? 'ok' : 'err', invOk || wheelOk ? 'Synced ' + now : 'Pull failed');
+        setSyncPill(syncOk ? 'ok' : 'err', syncOk ? 'Synced ' + now : 'Pull failed');
         const last = document.getElementById('modal-last-sync');
-        if (last) last.textContent = (invOk || wheelOk) ? 'Last pulled: ' + new Date().toLocaleString() : '✗ Pull failed — check connection';
+        if (last) last.textContent = syncOk ? 'Last pulled: ' + new Date().toLocaleString() : '✗ Pull failed — check connection';
     }
 
     async function modalPushWheel() {
@@ -2366,17 +2359,29 @@
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
             if (data.error) throw new Error(data.error);
-            const settings = parseSettingsRows(data.settings || data);
-            if (!settings) throw new Error('No setting rows found');
-            applySettingsSnapshot(settings, 'port1');
-            applyHoldingsRows(data.holdings || data.holdingsRows || data.settings || data);
-            applyPlatformRows(data.platforms || data.settings || data);
-            if (typeof wCalcAll === 'function') wCalcAll();
-            return true;
+            return applySettingsBundle(data);
         } catch(err) {
             console.warn('GSheet setting sync failed:', err);
             return false;
         }
+    }
+
+    function applySettingsBundle(data) {
+        const settings = parseSettingsRows(data?.settings || data);
+        if (!settings) return false;
+        applySettingsSnapshot(settings, 'port1');
+        applyHoldingsRows(data?.holdings || data?.holdingsRows || data?.settings || data);
+        applyPlatformRows(data?.platforms || data?.settings || data);
+        if (typeof wCalcAll === 'function') wCalcAll();
+        return true;
+    }
+
+    function applyActivitiesBundle(data) {
+        const flows = Array.isArray(data) ? data : (Array.isArray(data?.activities) ? data.activities : (Array.isArray(data?.flows) ? data.flows : null));
+        if (!Array.isArray(flows)) return false;
+        state.portfolios.port1.flows = flows;
+        localStorage.setItem('flows_port1', JSON.stringify(flows));
+        return true;
     }
 
     async function pushSettingsToSheet() {
@@ -2399,32 +2404,37 @@
 
     async function loadFromGSheet() {
         const url = getInvUrl(); if (!url) return false;
-        let ok = false;
         try {
-            const res = await fetch(url);
+            const res = await fetch(url + '?action=all_read&t=' + Date.now());
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
-            const flows = Array.isArray(data) ? data : (Array.isArray(data.activities) ? data.activities : (Array.isArray(data.flows) ? data.flows : null));
-            if (Array.isArray(flows)) {
-                state.portfolios.port1.flows = flows;
-                localStorage.setItem('flows_port1', JSON.stringify(flows));
-                ok = true;
-            }
-            if (!Array.isArray(data) && data.settings) {
-                const settings = parseSettingsRows(data.settings);
-                if (settings) {
-                    applySettingsSnapshot(settings, 'port1');
-                    applyHoldingsRows(data.holdings || data.holdingsRows || data.settings || data);
-                    applyPlatformRows(data.platforms || data.settings || data);
-                    if (typeof wCalcAll === 'function') wCalcAll();
-                    ok = true;
-                }
-            }
+            if (data.error) throw new Error(data.error);
+            const settingsOk = applySettingsBundle(data);
+            const activitiesOk = applyActivitiesBundle(data);
+            const wheelOk = typeof wApplySheetBundle === 'function' ? wApplySheetBundle(data.wheel || data) : false;
+            return settingsOk || activitiesOk || wheelOk;
         } catch(err) {
-            console.warn('GSheet invest sync failed:', err);
+            console.warn('GSheet all_read sync failed, falling back:', err);
+        }
+        let activitiesOk = false;
+        try {
+            const res = await fetch(url + '?action=activities_read&t=' + Date.now());
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            activitiesOk = applyActivitiesBundle(data);
+        } catch(err) {
+            try {
+                const res = await fetch(url + '?t=' + Date.now());
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                activitiesOk = applyActivitiesBundle(data);
+            } catch(e) {
+                console.warn('GSheet activities sync failed:', e);
+            }
         }
         const settingOk = await loadSettingsFromGSheet();
-        return ok || settingOk;
+        const wheelOk = typeof wPullFromSheets === 'function' ? await wPullFromSheets(true) : false;
+        return activitiesOk || settingOk || wheelOk;
     }
 
     function saveUnifiedUrl() {
@@ -2974,15 +2984,32 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             if (!r.ok) throw new Error('HTTP ' + r.status);
             const data = await r.json();
             if (data.error) throw new Error(data.error);
-            const isValidOrder = o => o && +o.id > 0 && o.product;
-            const isValidLot = l => l && +l.id > 0 && l.name;
-            const isValidHist = o => o && +o.id > 0 && o.product;
-            if (Array.isArray(data.orders)) { wOrders = data.orders.filter(isValidOrder).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'open'),note:String(o.note||'')})); }
-            if (Array.isArray(data.lots)) { wLots = data.lots.filter(isValidLot).map(l => ({id:+l.id,name:String(l.name||''),price:+l.price,amount:+l.amount,target:+l.target,accRealPL:+l.accRealPL,problem:l.problem==='true'||l.problem===true||l.problem==='TRUE'})); }
-            if (Array.isArray(data.history)) { wClosed = data.history.filter(isValidHist).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'closed'),note:String(o.note||''),exercisePL:wpn(o.exercisePL ?? o.realizedPL ?? o.pnl ?? o.pl ?? 0)})); }
-            wNextId = Math.max(0, ...wOrders.map(o=>o.id), ...wClosed.map(o=>o.id)) + 1;
-            wCalcAll(); return true;
+            return wApplySheetBundle(data);
         } catch(e) { console.error('Wheel pull error:', e); return false; }
+    }
+
+    function wApplySheetBundle(data) {
+        if (!data) return false;
+        const isValidOrder = o => o && +o.id > 0 && o.product;
+        const isValidLot = l => l && +l.id > 0 && l.name;
+        const isValidHist = o => o && +o.id > 0 && o.product;
+        let touched = false;
+        if (Array.isArray(data.orders)) {
+            wOrders = data.orders.filter(isValidOrder).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'open'),note:String(o.note||'')}));
+            touched = true;
+        }
+        if (Array.isArray(data.lots)) {
+            wLots = data.lots.filter(isValidLot).map(l => ({id:+l.id,name:String(l.name||''),price:+l.price,amount:+l.amount,target:+l.target,accRealPL:+l.accRealPL,problem:l.problem==='true'||l.problem===true||l.problem==='TRUE'}));
+            touched = true;
+        }
+        if (Array.isArray(data.history)) {
+            wClosed = data.history.filter(isValidHist).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'closed'),note:String(o.note||''),exercisePL:wpn(o.exercisePL ?? o.realizedPL ?? o.pnl ?? o.pl ?? 0)}));
+            touched = true;
+        }
+        if (!touched) return false;
+        wNextId = Math.max(0, ...wOrders.map(o=>o.id), ...wClosed.map(o=>o.id)) + 1;
+        wCalcAll();
+        return true;
     }
 
     async function wPushToSheets(silent=false) {
@@ -3175,14 +3202,13 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             showSkeleton();
             setSyncPill('loading', 'Connecting…');
             setRefreshSpin(true);
-            let invOk = false, wheelOk = false;
-            try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
-            try { wheelOk = await wPullFromSheets(true); } catch(e) {}
+            let syncOk = false;
+            try { syncOk  = await loadFromGSheet(); if (syncOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
             // updateDashboard() above already replaced skeleton content with real values
-            if (!invOk) { updateDashboard(); } // ensure skeleton is cleared even on failure
+            if (!syncOk) { updateDashboard(); } // ensure skeleton is cleared even on failure
             setRefreshSpin(false);
             const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-            if (invOk || wheelOk) setSyncPill('ok', 'Synced ' + now);
+            if (syncOk) setSyncPill('ok', 'Synced ' + now);
             else setSyncPill('err', 'Sync failed');
         } else {
             setSyncPill('idle', 'Not connected');
