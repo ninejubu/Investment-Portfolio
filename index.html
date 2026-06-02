@@ -856,7 +856,7 @@
                             <div class="mb-3">
                                 <div class="wheel-input-group">
                                     <span class="wheel-label">Total Options Balance ($)</span>
-                                    <input type="text" inputmode="numeric" class="wheel-input" id="optBalance" value="20,000" oninput="wFmtNum(this);wCalcAll()">
+                                    <input type="text" inputmode="numeric" class="wheel-input" id="optBalance" oninput="wFmtNum(this);wSaveOptionsBalance();wCalcAll()">
                                 </div>
                             </div>
                             <div class="wheel-stat-grid">
@@ -1039,7 +1039,7 @@
                 <div class="wheel-input-group"><span class="wheel-label">Open Date</span><input type="date" class="wheel-input" id="mo_open"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Expiry Date</span><input type="date" class="wheel-input" id="mo_expiry"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Strike Price ($)</span><input type="text" inputmode="numeric" class="wheel-input" id="mo_strike" placeholder="70,000" oninput="wFmtNum(this)"></div>
-                <div class="wheel-input-group"><span class="wheel-label">Contracts</span><input type="text" inputmode="numeric" class="wheel-input" id="mo_contracts" value="0.04"></div>
+                <div class="wheel-input-group"><span class="wheel-label">Contracts</span><input type="text" inputmode="numeric" class="wheel-input" id="mo_contracts"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Premium / Contract ($)</span><input type="text" inputmode="numeric" class="wheel-input" id="mo_prem" placeholder="145" oninput="wFmtNum(this)"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Currency</span><select class="wheel-input" id="mo_curr"><option>Contracts</option><option>USD</option></select></div>
                 <div class="wheel-input-group wheel-modal-full"><span class="wheel-label">Note</span><input type="text" class="wheel-input" id="mo_note" placeholder="e.g. L5-L6"></div>
@@ -1056,7 +1056,7 @@
         <div class="wheel-modal">
             <div class="wheel-modal-title" id="mWheelLotTitle">Add BTC Lot</div>
             <div class="wheel-modal-grid">
-                <div class="wheel-input-group wheel-modal-full"><span class="wheel-label">Lot Name</span><input type="text" class="wheel-input" id="ml_name" placeholder="Short call L9"></div>
+                <div class="wheel-input-group wheel-modal-full"><span class="wheel-label">Lot Name</span><input type="text" class="wheel-input" id="ml_name" placeholder="Lot name"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Buy Price ($)</span><input type="text" inputmode="numeric" class="wheel-input" id="ml_price" placeholder="75,000" oninput="wFmtNum(this)"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Amount (BTC)</span><input type="text" inputmode="numeric" class="wheel-input" id="ml_amt" placeholder="0.05"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Target Strike ($)</span><input type="text" inputmode="numeric" class="wheel-input" id="ml_target" placeholder="80,000" oninput="wFmtNum(this)"></div>
@@ -1079,7 +1079,7 @@
                 <div class="wheel-input-group"><span class="wheel-label">Open Date</span><input type="date" class="wheel-input" id="mh_open"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Close Date</span><input type="date" class="wheel-input" id="mh_close"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Strike Price ($)</span><input type="text" inputmode="numeric" class="wheel-input" id="mh_strike" oninput="wFmtNum(this)"></div>
-                <div class="wheel-input-group"><span class="wheel-label">Contracts</span><input type="text" inputmode="numeric" class="wheel-input" id="mh_contracts" value="0.04"></div>
+                <div class="wheel-input-group"><span class="wheel-label">Contracts</span><input type="text" inputmode="numeric" class="wheel-input" id="mh_contracts"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Premium / Contract ($)</span><input type="text" inputmode="numeric" class="wheel-input" id="mh_prem" oninput="wFmtNum(this)"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Status</span><select class="wheel-input" id="mh_status"><option value="closed">Closed (OTM / profit)</option><option value="exercised">Exercised</option></select></div>
                 <div class="wheel-input-group"><span class="wheel-label">Exercise P/L ($)</span><input type="text" inputmode="decimal" class="wheel-input" id="mh_exercise_pl" placeholder="0.00"></div>
@@ -1198,6 +1198,7 @@
             port1: { goal: { amount: 10000000, year: 2031, monthly: 0, return: 0, monthlyTiers: [{year: new Date().getFullYear(), amount: 0}] }, begBalances: getEmptyBegBalances(), endBalances: getEmptyEndBalances(), benchmarks: getEmptyBenchmarks(), flows: [] },
             port2: { goal: { amount: 10000000, year: 2031, monthly: 0, return: 0, monthlyTiers: [{year: new Date().getFullYear(), amount: 0}] }, begBalances: getEmptyBegBalances(), endBalances: getEmptyEndBalances(), benchmarks: getEmptyBenchmarks(), flows: [] }
         },
+        wheel: { optionsBalance: null },
         computed: { stocks: {}, bonds: {}, crypto: {}, gold: {}, portfolio: {} },
         ui: { expandedQuarters: { q1: false, q2: false, q3: false, q4: false } }
     };
@@ -1902,6 +1903,10 @@
         if (settings.begBalances) port.begBalances = Object.assign(getEmptyBegBalances(), settings.begBalances);
         if (settings.endBalances) port.endBalances = Object.assign(getEmptyEndBalances(), settings.endBalances);
         if (settings.benchmarks) port.benchmarks = Object.assign(getEmptyBenchmarks(), settings.benchmarks);
+        if (settings.wheelOptionsBalance !== undefined) {
+            state.wheel.optionsBalance = settings.wheelOptionsBalance;
+            syncWheelOptionsBalanceInput();
+        }
         return true;
     }
 
@@ -1911,7 +1916,8 @@
                 rates: payload.rates || null,
                 begBalances: payload.begBalances || null,
                 endBalances: payload.endBalances || null,
-                benchmarks: payload.benchmarks || null
+                benchmarks: payload.benchmarks || null,
+                wheelOptionsBalance: payload.wheelOptionsBalance ?? null
             };
         }
 
@@ -1921,7 +1927,8 @@
             rates: { beginning: null, q1: null, q2: null, q3: null, q4: null },
             begBalances: getEmptyBegBalances(),
             endBalances: getEmptyEndBalances(),
-            benchmarks: getEmptyBenchmarks()
+            benchmarks: getEmptyBenchmarks(),
+            wheelOptionsBalance: null
         };
 
         rows.forEach(row => {
@@ -1961,6 +1968,11 @@
                 return;
             }
 
+            if (period.includes('wheel') && period.includes('options') && period.includes('balance')) {
+                settings.wheelOptionsBalance = toNullableSettingNumber(readSettingCell(row, ['amount', 'value', 'balance', 'beginning'], 18));
+                return;
+            }
+
             if (period.includes('benchmark') && period.includes('name')) {
                 SETTING_ASSETS.forEach((asset, idx) => {
                     const value = readSettingCell(row, [asset, asset.replace(/s$/, '')], idx + 1);
@@ -1994,6 +2006,7 @@
                 row_type: 'setting'
             })),
             { period: 'Exchange Rate', beginning: state.rates.beginning, q1: state.rates.q1, q2: state.rates.q2, q3: state.rates.q3, q4: state.rates.q4, row_type: 'setting' },
+            { period: 'Wheel Options Balance', amount: state.wheel.optionsBalance, row_type: 'setting' },
             { period: 'Benchmark Name', stocks: pState().benchmarks.stocks.name, bonds: pState().benchmarks.bonds.name, crypto: pState().benchmarks.crypto.name, gold: pState().benchmarks.gold.name, row_type: 'setting' },
             ...SETTING_QUARTERS.map(q => ({
                 period: 'Benchmark ' + q.toUpperCase(),
@@ -2012,7 +2025,8 @@
                 rates: state.rates,
                 begBalances: pState().begBalances,
                 endBalances: pState().endBalances,
-                benchmarks: pState().benchmarks
+                benchmarks: pState().benchmarks,
+                wheelOptionsBalance: state.wheel.optionsBalance
             },
             rows
         };
@@ -2332,11 +2346,13 @@
 
     function resetSettingsState() {
         state.rates = { beginning: null, q1: null, q2: null, q3: null, q4: null };
+        state.wheel.optionsBalance = null;
         ['port1', 'port2'].forEach(portKey => {
             state.portfolios[portKey].begBalances = getEmptyBegBalances();
             state.portfolios[portKey].endBalances = getEmptyEndBalances();
             state.portfolios[portKey].benchmarks = getEmptyBenchmarks();
         });
+        syncWheelOptionsBalanceInput();
     }
 
     // ── Investment read (GET no param) ──────────────────
@@ -2355,6 +2371,7 @@
             applySettingsSnapshot(settings, 'port1');
             applyHoldingsRows(data.holdings || data.holdingsRows || data.settings || data);
             applyPlatformRows(data.platforms || data.settings || data);
+            if (typeof wCalcAll === 'function') wCalcAll();
             return true;
         } catch(err) {
             console.warn('GSheet setting sync failed:', err);
@@ -2399,6 +2416,7 @@
                     applySettingsSnapshot(settings, 'port1');
                     applyHoldingsRows(data.holdings || data.holdingsRows || data.settings || data);
                     applyPlatformRows(data.platforms || data.settings || data);
+                    if (typeof wCalcAll === 'function') wCalcAll();
                     ok = true;
                 }
             }
@@ -2443,101 +2461,12 @@
     //   Wheel page owns wOrders/wLots/wClosed and BTC price polling.
     // ════════════════════════════════════════════════════
 
-    let btcPrice = 77864.86;
-    let wOrders = [
-        {id:1, cex:'BINANCE',product:'Short Put', openDate:'2026-04-24',expiryDate:'2026-05-01',strike:70000, contracts:0.04,premium:145, currency:'Contracts',status:'open',note:''},
-        {id:2, cex:'BINANCE',product:'Short Put', openDate:'2026-04-24',expiryDate:'2026-05-01',strike:71000, contracts:0.04,premium:205, currency:'Contracts',status:'open',note:''},
-        {id:3, cex:'BINANCE',product:'Short Put', openDate:'2026-04-24',expiryDate:'2026-05-01',strike:72000, contracts:0.04,premium:280, currency:'Contracts',status:'open',note:''},
-        {id:4, cex:'BINANCE',product:'Short Put', openDate:'2026-04-24',expiryDate:'2026-05-01',strike:74000, contracts:0.02,premium:535, currency:'Contracts',status:'open',note:''},
-        {id:5, cex:'BINANCE',product:'Short Call',openDate:'2026-04-24',expiryDate:'2026-05-15',strike:84000, contracts:0.02,premium:790, currency:'Contracts',status:'open',note:'L5-L6'},
-        {id:6, cex:'BINANCE',product:'Short Call',openDate:'2026-03-19',expiryDate:'2026-05-29',strike:88000, contracts:0.03,premium:1310,currency:'Contracts',status:'open',note:'L4&L7: 92000'},
-        {id:7, cex:'BINANCE',product:'Short Call',openDate:'2026-03-19',expiryDate:'2026-05-29',strike:94000, contracts:0.06,premium:740, currency:'Contracts',status:'open',note:'L4&L7: 92000'},
-        {id:8, cex:'BINANCE',product:'Short Call',openDate:'2026-01-29',expiryDate:'2026-06-26',strike:105000,contracts:0.12,premium:3335,currency:'Contracts',status:'open',note:'L1-L3'},
-        {id:9, cex:'BINANCE',product:'Short Call',openDate:'2026-03-27',expiryDate:'2026-06-26',strike:95000, contracts:0.09,premium:1480,currency:'Contracts',status:'open',note:'L4&L7'},
-    ];
-    let wLots = [
-        {id:1,name:'Short call L1',price:110050,  amount:0.05080,target:114000,accRealPL:370.26},
-        {id:2,name:'Short call L2',price:97151.98,amount:0.05043,target:98000, accRealPL:153.59},
-        {id:3,name:'Short call L3',price:84010.14,amount:0.02000,target:94000, accRealPL:82.08},
-        {id:4,name:'Short call L5',price:82700,   amount:0.06000,target:85000, accRealPL:211.41},
-        {id:5,name:'Short call L6',price:81480,   amount:0.05000,target:84000, accRealPL:176.18},
-        {id:6,name:'Short call L4',price:92650,   amount:0.04317,target:92650, accRealPL:92.70},
-        {id:7,name:'Short call L7',price:66200,   amount:0.05000,target:78000, accRealPL:52.88},
-        {id:8,name:'Short call L8',price:0,       amount:0.05000,target:75000, accRealPL:0,problem:true},
-    ];
-    let wClosed = [
-      {id:2001,cex:'BINANCE',product:'Short Put',openDate:'2025-12-22',expiryDate:'2026-01-02',strike:75000,contracts:0.05,premium:115,currency:'Contracts',status:'closed',note:''},
-      {id:2002,cex:'BINANCE',product:'Short Put',openDate:'2025-12-22',expiryDate:'2026-01-02',strike:80000,contracts:0.03,premium:340,currency:'Contracts',status:'closed',note:''},
-      {id:2003,cex:'BINANCE',product:'Short Put',openDate:'2025-12-26',expiryDate:'2026-01-02',strike:82000,contracts:0.05,premium:200,currency:'Contracts',status:'closed',note:''},
-      {id:2004,cex:'BINANCE',product:'Short Put',openDate:'2025-12-26',expiryDate:'2026-01-02',strike:80000,contracts:0.02,premium:110,currency:'Contracts',status:'closed',note:''},
-      {id:2005,cex:'BINANCE',product:'Short Put',openDate:'2025-12-26',expiryDate:'2026-01-02',strike:83000,contracts:0.03,premium:270,currency:'Contracts',status:'closed',note:''},
-      {id:2006,cex:'BINANCE',product:'Short Put',openDate:'2025-12-27',expiryDate:'2026-01-09',strike:80000,contracts:0.03,premium:420,currency:'Contracts',status:'closed',note:''},
-      {id:2007,cex:'BINANCE',product:'Short Put',openDate:'2026-01-02',expiryDate:'2026-01-09',strike:80000,contracts:0.03,premium:130,currency:'Contracts',status:'closed',note:''},
-      {id:2008,cex:'BINANCE',product:'Short Put',openDate:'2026-01-02',expiryDate:'2026-01-09',strike:82000,contracts:0.04,premium:210,currency:'Contracts',status:'closed',note:''},
-      {id:2009,cex:'BINANCE',product:'Short Put',openDate:'2026-01-02',expiryDate:'2026-01-09',strike:83000,contracts:0.03,premium:275,currency:'Contracts',status:'closed',note:''},
-      {id:2010,cex:'BINANCE',product:'Short Put',openDate:'2026-01-06',expiryDate:'2026-01-09',strike:89000,contracts:0.03,premium:230,currency:'Contracts',status:'closed',note:''},
-      {id:2011,cex:'BINANCE',product:'Short Put',openDate:'2026-01-06',expiryDate:'2026-01-09',strike:87000,contracts:0.05,premium:100,currency:'Contracts',status:'closed',note:''},
-      {id:2012,cex:'BINANCE',product:'Short Put',openDate:'2026-01-07',expiryDate:'2026-01-10',strike:86000,contracts:0.03,premium:120,currency:'Contracts',status:'closed',note:''},
-      {id:2013,cex:'BINANCE',product:'Short Put',openDate:'2026-01-11',expiryDate:'2026-01-14',strike:86000,contracts:0.03,premium:115,currency:'Contracts',status:'closed',note:''},
-      {id:2014,cex:'BINANCE',product:'Short Put',openDate:'2026-01-11',expiryDate:'2026-01-16',strike:84000,contracts:0.03,premium:170,currency:'Contracts',status:'closed',note:''},
-      {id:2015,cex:'BINANCE',product:'Short Put',openDate:'2026-01-02',expiryDate:'2026-01-16',strike:80000,contracts:0.03,premium:390,currency:'Contracts',status:'closed',note:''},
-      {id:2016,cex:'BINANCE',product:'Short Put',openDate:'2026-01-09',expiryDate:'2026-01-16',strike:82000,contracts:0.05,premium:170,currency:'Contracts',status:'closed',note:''},
-      {id:2017,cex:'BINANCE',product:'Short Put',openDate:'2026-01-09',expiryDate:'2026-01-16',strike:80000,contracts:0.02,premium:95,currency:'Contracts',status:'closed',note:''},
-      {id:2018,cex:'BINANCE',product:'Short Put',openDate:'2026-01-09',expiryDate:'2026-01-16',strike:84000,contracts:0.03,premium:285,currency:'Contracts',status:'closed',note:''},
-      {id:2019,cex:'BINANCE',product:'Short Put',openDate:'2026-01-09',expiryDate:'2026-01-16',strike:85000,contracts:0.03,premium:375,currency:'Contracts',status:'closed',note:''},
-      {id:2020,cex:'BINANCE',product:'Short Put',openDate:'2026-01-14',expiryDate:'2026-01-16',strike:92000,contracts:0.04,premium:50,currency:'Contracts',status:'closed',note:''},
-      {id:2021,cex:'BINANCE',product:'Short Call',openDate:'2026-01-09',expiryDate:'2026-01-16',strike:95000,contracts:0.04,premium:-52.5,currency:'Contracts',status:'exercised',note:''},
-      {id:2022,cex:'BINANCE',product:'Short Put',openDate:'2026-01-19',expiryDate:'2026-01-21',strike:88000,contracts:0.04,premium:65,currency:'Contracts',status:'closed',note:''},
-      {id:2023,cex:'BINANCE',product:'Short Call',openDate:'2026-01-20',expiryDate:'2026-01-21',strike:95000,contracts:0.04,premium:50,currency:'Contracts',status:'closed',note:''},
-      {id:2024,cex:'BINANCE',product:'Short Put',openDate:'2026-01-16',expiryDate:'2026-01-23',strike:90000,contracts:0.04,premium:365,currency:'Contracts',status:'exercised',note:'$89,635'},
-      {id:2025,cex:'BINANCE',product:'Short Put',openDate:'2026-01-16',expiryDate:'2026-01-23',strike:89000,contracts:0.05,premium:265,currency:'Contracts',status:'closed',note:''},
-      {id:2026,cex:'BINANCE',product:'Short Put',openDate:'2026-01-16',expiryDate:'2026-01-23',strike:88000,contracts:0.05,premium:210,currency:'Contracts',status:'closed',note:''},
-      {id:2027,cex:'BINANCE',product:'Short Put',openDate:'2026-01-16',expiryDate:'2026-01-23',strike:86000,contracts:0.04,premium:105,currency:'Contracts',status:'closed',note:''},
-      {id:2028,cex:'BINANCE',product:'Short Call',openDate:'2025-12-26',expiryDate:'2026-01-30',strike:104000,contracts:0.12,premium:560,currency:'Contracts',status:'closed',note:'L1-L3'},
-      {id:2029,cex:'BINANCE',product:'Short Call',openDate:'2026-01-23',expiryDate:'2026-01-30',strike:95000,contracts:0.04,premium:225,currency:'Contracts',status:'closed',note:''},
-      {id:2030,cex:'BINANCE',product:'Short Put',openDate:'2026-01-24',expiryDate:'2026-01-30',strike:84000,contracts:0.06,premium:280,currency:'Contracts',status:'exercised',note:''},
-      {id:2031,cex:'BINANCE',product:'Short Put',openDate:'2026-01-24',expiryDate:'2026-01-30',strike:85000,contracts:0.05,premium:380,currency:'Contracts',status:'exercised',note:''},
-      {id:2032,cex:'BINANCE',product:'Short Put',openDate:'2026-01-24',expiryDate:'2026-01-30',strike:82000,contracts:0.05,premium:155,currency:'Contracts',status:'closed',note:''},
-      {id:2033,cex:'BINANCE',product:'Short Put',openDate:'2026-01-24',expiryDate:'2026-01-30',strike:80000,contracts:0.05,premium:95,currency:'Contracts',status:'closed',note:''},
-      {id:2034,cex:'BINANCE',product:'Short Put',openDate:'2026-01-30',expiryDate:'2026-02-06',strike:75000,contracts:0.05,premium:350,currency:'Contracts',status:'exercised',note:''},
-      {id:2035,cex:'BINANCE',product:'Short Put',openDate:'2026-01-30',expiryDate:'2026-02-06',strike:78000,contracts:0.05,premium:710,currency:'Contracts',status:'exercised',note:'L7'},
-      {id:2036,cex:'BINANCE',product:'Short Put',openDate:'2026-03-11',expiryDate:'2026-03-13',strike:64000,contracts:0.04,premium:125,currency:'Contracts',status:'closed',note:''},
-      {id:2037,cex:'BINANCE',product:'Short Put',openDate:'2026-03-11',expiryDate:'2026-03-20',strike:60000,contracts:0.03,premium:245,currency:'Contracts',status:'closed',note:''},
-      {id:2038,cex:'BINANCE',product:'Short Put',openDate:'2026-03-11',expiryDate:'2026-03-20',strike:58000,contracts:0.03,premium:155,currency:'Contracts',status:'closed',note:''},
-      {id:2039,cex:'BINANCE',product:'Short Put',openDate:'2026-03-12',expiryDate:'2026-03-20',strike:63000,contracts:0.03,premium:510,currency:'Contracts',status:'closed',note:''},
-      {id:2040,cex:'BINANCE',product:'Short Put',openDate:'2026-03-13',expiryDate:'2026-03-20',strike:66000,contracts:0.03,premium:365,currency:'Contracts',status:'closed',note:''},
-      {id:2041,cex:'BINANCE',product:'Short Put',openDate:'2026-03-13',expiryDate:'2026-03-27',strike:65000,contracts:0.03,premium:725,currency:'Contracts',status:'closed',note:''},
-      {id:2042,cex:'BINANCE',product:'Short Put',openDate:'2026-03-14',expiryDate:'2026-03-27',strike:62000,contracts:0.03,premium:575,currency:'Contracts',status:'closed',note:''},
-      {id:2043,cex:'BINANCE',product:'Short Put',openDate:'2026-03-20',expiryDate:'2026-03-27',strike:64000,contracts:0.04,premium:345,currency:'Contracts',status:'closed',note:''},
-      {id:2044,cex:'BINANCE',product:'Short Put',openDate:'2026-03-20',expiryDate:'2026-03-27',strike:65000,contracts:0.03,premium:395,currency:'Contracts',status:'closed',note:''},
-      {id:2045,cex:'BINANCE',product:'Short Call',openDate:'2026-02-12',expiryDate:'2026-03-27',strike:78000,contracts:0.05,premium:1175,currency:'Contracts',status:'closed',note:'L7'},
-      {id:2046,cex:'BINANCE',product:'Short Call',openDate:'2026-02-04',expiryDate:'2026-03-27',strike:94000,contracts:0.04,premium:855,currency:'Contracts',status:'closed',note:'L4'},
-      {id:2047,cex:'BINANCE',product:'Short Put',openDate:'2026-03-26',expiryDate:'2026-04-03',strike:60000,contracts:0.05,premium:150,currency:'Contracts',status:'closed',note:''},
-      {id:2048,cex:'BINANCE',product:'Short Put',openDate:'2026-03-26',expiryDate:'2026-04-03',strike:65000,contracts:0.04,premium:565,currency:'Contracts',status:'closed',note:''},
-      {id:2049,cex:'BINANCE',product:'Short Put',openDate:'2026-03-26',expiryDate:'2026-04-03',strike:64000,contracts:0.03,premium:425,currency:'Contracts',status:'closed',note:''},
-      {id:2050,cex:'BINANCE',product:'Short Put',openDate:'2026-04-03',expiryDate:'2026-04-10',strike:60000,contracts:0.04,premium:225,currency:'Contracts',status:'closed',note:''},
-      {id:2051,cex:'BINANCE',product:'Short Put',openDate:'2026-04-03',expiryDate:'2026-04-10',strike:62000,contracts:0.04,premium:415,currency:'Contracts',status:'closed',note:''},
-      {id:2052,cex:'BINANCE',product:'Short Put',openDate:'2026-04-07',expiryDate:'2026-04-10',strike:63000,contracts:0.04,premium:160,currency:'Contracts',status:'closed',note:''},
-      {id:2053,cex:'BINANCE',product:'Short Put',openDate:'2026-04-10',expiryDate:'2026-04-17',strike:66000,contracts:0.05,premium:240,currency:'Contracts',status:'closed',note:''},
-      {id:2054,cex:'BINANCE',product:'Short Put',openDate:'2026-04-10',expiryDate:'2026-04-17',strike:65000,contracts:0.04,premium:170,currency:'Contracts',status:'closed',note:''},
-      {id:2055,cex:'BINANCE',product:'Short Put',openDate:'2026-04-10',expiryDate:'2026-04-17',strike:63000,contracts:0.05,premium:80,currency:'Contracts',status:'closed',note:''},
-      {id:2056,cex:'BINANCE',product:'Short Put',openDate:'2026-04-11',expiryDate:'2026-04-17',strike:67000,contracts:0.02,premium:205,currency:'Contracts',status:'closed',note:''},
-      {id:2057,cex:'BINANCE',product:'Short Call',openDate:'2026-02-01',expiryDate:'2026-04-24',strike:86000,contracts:0.11,premium:3915,currency:'Contracts',status:'closed',note:'L5-L6'},
-      {id:2058,cex:'BINANCE',product:'Short Put',openDate:'2026-04-17',expiryDate:'2026-04-24',strike:64000,contracts:0.04,premium:80,currency:'Contracts',status:'closed',note:''},
-      {id:2059,cex:'BINANCE',product:'Short Put',openDate:'2026-04-17',expiryDate:'2026-04-24',strike:66000,contracts:0.04,premium:105,currency:'Contracts',status:'closed',note:''},
-      {id:2060,cex:'BINANCE',product:'Short Put',openDate:'2026-04-18',expiryDate:'2026-04-24',strike:70000,contracts:0.04,premium:145,currency:'Contracts',status:'closed',note:''},
-      {id:2061,cex:'BINANCE',product:'Short Put',openDate:'2026-04-18',expiryDate:'2026-04-24',strike:68000,contracts:0.04,premium:90,currency:'Contracts',status:'closed',note:''},
-      {id:2062,cex:'BINANCE',product:'Short Put',openDate:'2026-04-28',expiryDate:'2026-04-30',strike:72000,contracts:0.03,premium:60,currency:'Contracts',status:'closed',note:''},
-      {id:2063,cex:'BINANCE',product:'Short Call',openDate:'2026-04-28',expiryDate:'2026-04-30',strike:80000,contracts:0.03,premium:70,currency:'Contracts',status:'closed',note:''},
-      {id:2064,cex:'BINANCE',product:'Short Put',openDate:'2026-04-24',expiryDate:'2026-05-01',strike:70000,contracts:0.04,premium:145,currency:'Contracts',status:'closed',note:''},
-      {id:2065,cex:'BINANCE',product:'Short Put',openDate:'2026-04-24',expiryDate:'2026-05-01',strike:71000,contracts:0.04,premium:205,currency:'Contracts',status:'closed',note:''},
-      {id:2066,cex:'BINANCE',product:'Short Put',openDate:'2026-04-24',expiryDate:'2026-05-01',strike:72000,contracts:0.04,premium:280,currency:'Contracts',status:'closed',note:''},
-      {id:2067,cex:'BINANCE',product:'Short Put',openDate:'2026-04-24',expiryDate:'2026-05-01',strike:74000,contracts:0.02,premium:535,currency:'Contracts',status:'closed',note:''},
-      {id:2068,cex:'BINANCE',product:'Short Put',openDate:'2026-05-01',expiryDate:'2026-05-03',strike:75000,contracts:0.03,premium:60,currency:'Contracts',status:'closed',note:''},
-      {id:2069,cex:'BINANCE',product:'Short Call',openDate:'2026-05-01',expiryDate:'2026-05-03',strike:79500,contracts:0.03,premium:60,currency:'Contracts',status:'closed',note:''},
-    ];
+    let btcPrice = 0;
+    let wOrders = [];
+    let wLots = [];
+    let wClosed = [];
     let wOrderFilter = 'all';
-    let wNextId = 2100;
+    let wNextId = 1;
     let wEditOrderId = null;
     let wEditLotId = null;
 
@@ -2546,6 +2475,21 @@
     const wusd = (n,d=0) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
     const wSignedUsd = (n,d=2) => (n >= 0 ? '+' : '-') + wusd(Math.abs(n), d);
     const wExercisePL = o => Number.isFinite(+o.exercisePL) ? +o.exercisePL : 0;
+
+    function syncWheelOptionsBalanceInput() {
+        const input = document.getElementById('optBalance');
+        if (!input) return;
+        input.value = state.wheel.optionsBalance === null || state.wheel.optionsBalance === undefined
+            ? ''
+            : Number(state.wheel.optionsBalance).toLocaleString('en-US', { maximumFractionDigits: 2 });
+    }
+
+    function wSaveOptionsBalance() {
+        const input = document.getElementById('optBalance');
+        if (!input) return;
+        state.wheel.optionsBalance = input.value !== '' ? wpn(input.value) : null;
+        scheduleSettingsPush();
+    }
 
     function evalAndSetLotAccPL(input) {
         let expr = input.value.trim();
@@ -2608,7 +2552,7 @@
     function wCalcAll() { wRenderSummary(); wRenderLots(); wRenderOrders(); wRenderCalc(); wRenderHistory(); wUpdateExerciseAndAlerts(); }
 
     function wRenderSummary() {
-        const bal = wpn(document.getElementById('optBalance').value);
+        const bal = state.wheel.optionsBalance || 0;
         const puts = wOrders.filter(o=>o.product==='Short Put'&&o.status==='open');
         const putVal = puts.reduce((s,o)=>s+o.strike*o.contracts,0);
         const free = bal - putVal; const pct = bal>0 ? Math.min(150,(putVal/bal)*100) : 0;
@@ -2682,7 +2626,7 @@
         const cont=document.getElementById('histMonths');
         if(!wClosed.length){ cont.innerHTML='<div style="color:#475569;padding:40px;text-align:center;font-size:13px">No closed orders yet. Change an order status or add manually.</div>'; return; }
         cont.innerHTML='';
-        const bal=wpn(document.getElementById('optBalance').value)||20000;
+        const bal = state.wheel.optionsBalance || 0;
         Object.keys(byM).sort().reverse().forEach(month=>{ const items=byM[month]; const mPrem=items.reduce((s,o)=>s+o.premium*o.contracts,0); const mExercisePL=items.reduce((s,o)=>s+(o.status==='exercised'?wExercisePL(o):0),0); const mPct=bal>0?(mPrem/bal*100).toFixed(2):'0'; const div=document.createElement('div'); div.className='hist-month-card';
             div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><div style="font-size:14px;font-weight:700">${month}</div><div style="display:flex;gap:22px">${[['Premium',wusd(mPrem,2),'#10B981'],['Exercise P/L',wSignedUsd(mExercisePL,2),mExercisePL>=0?'#10B981':'#EF4444'],['% Capital',mPct+'%','#F59E0B'],['Orders',items.length,'#93C5FD']].map(([l,v,c])=>`<div><div style="font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.06em;font-weight:600">${l}</div><div style="font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:${c}">${v}</div></div>`).join('')}</div></div><div style="overflow-x:auto"><table class="hist-table"><thead><tr><th>Product</th><th>Strike</th><th>Open</th><th>Closed</th><th>Contracts</th><th>Prem/Ct</th><th>Premium</th><th>Ex. P/L</th><th>Status</th><th>Note</th><th></th></tr></thead><tbody>${items.map((o,i)=>{ const exPL=wExercisePL(o); const exInput=o.status==='exercised'?`<input type="text" value="${exPL.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}" onfocus="this.value=this.value.replace(/,/g,'')" onblur="wUpdateHistPL(${o.id},this.value)" style="width:82px;background:transparent;border:1px solid #334155;border-radius:5px;color:${exPL>=0?'#10B981':'#EF4444'};font-size:11px;padding:3px 5px;text-align:right;outline:none">`:'<span style="color:#475569">—</span>'; return `<tr><td><span class="badge ${o.product==='Short Put'?'put':'call'}">${o.product}</span></td><td class="m">${wusd(o.strike)}</td><td class="m" style="color:#64748b">${o.openDate}</td><td class="m" style="color:#64748b">${o.expiryDate||'—'}</td><td class="m">${o.contracts}</td><td class="m" style="color:#10B981">${wusd(o.premium,0)}</td><td class="m" style="color:#10B981;font-weight:500">${wusd(o.premium*o.contracts,2)}</td><td class="m">${exInput}</td><td><span class="badge ${o.status}">${o.status}</span></td><td style="color:#334155;font-size:11px">${o.note||'—'}</td><td style="white-space:nowrap"><button class="w-btn-icon" title="Re-open" onclick="wReOpen(${i},'${month}')">↩ Re-open</button><button class="w-btn-icon w-btn-danger" onclick="wDelHist(${i},'${month}')" style="margin-left:3px">✕</button></td></tr>`; }).join('')}</tbody></table></div>`;
             cont.appendChild(div); });
@@ -2696,7 +2640,7 @@
     function wCalcPremChange(i, val) {
         window.wCalcRowState[i].premiumVal = val;
         // Recalculate APY for this row only and update span in-place
-        const bal = wpn(document.getElementById('optBalance')?.value) || 0;
+        const bal = state.wheel.optionsBalance || 0;
         const cfg = W_CALC_ROWS[i];
         const rs  = window.wCalcRowState[i];
         const today = new Date();
@@ -2782,7 +2726,7 @@
     }
 
     function wRenderCalc() {
-        const bal  = wpn(document.getElementById('optBalance')?.value) || 0;
+        const bal  = state.wheel.optionsBalance || 0;
         const cs   = document.getElementById('calcBtcShow'); if (cs) cs.textContent = wusd(btcPrice, 2);
         const rows = document.getElementById('strikeRows'); if (!rows) return;
 
@@ -2925,13 +2869,13 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     function openWheelModal(id){document.getElementById(id).classList.add('open')}
     function closeWheelModal(id){document.getElementById(id).classList.remove('open')}
 
-    function openWheelOrderModal(id){ wEditOrderId=id; const o=id?wOrders.find(x=>x.id===id):null; document.getElementById('mWheelOrderTitle').textContent=o?'Edit Order':'New Order'; document.getElementById('mo_cex').value=o?o.cex:'BINANCE'; document.getElementById('mo_product').value=o?o.product:'Short Put'; document.getElementById('mo_open').value=o?o.openDate:new Date().toISOString().split('T')[0]; document.getElementById('mo_expiry').value=o?o.expiryDate:''; document.getElementById('mo_strike').value=o?o.strike.toLocaleString('en-US'):''; document.getElementById('mo_contracts').value=o?o.contracts:'0.04'; document.getElementById('mo_prem').value=o?o.premium.toLocaleString('en-US'):''; document.getElementById('mo_curr').value=o?o.currency:'Contracts'; document.getElementById('mo_note').value=o?o.note:''; openWheelModal('mWheelOrder'); }
+    function openWheelOrderModal(id){ wEditOrderId=id; const o=id?wOrders.find(x=>x.id===id):null; document.getElementById('mWheelOrderTitle').textContent=o?'Edit Order':'New Order'; document.getElementById('mo_cex').value=o?o.cex:'BINANCE'; document.getElementById('mo_product').value=o?o.product:'Short Put'; document.getElementById('mo_open').value=o?o.openDate:new Date().toISOString().split('T')[0]; document.getElementById('mo_expiry').value=o?o.expiryDate:''; document.getElementById('mo_strike').value=o?o.strike.toLocaleString('en-US'):''; document.getElementById('mo_contracts').value=o?o.contracts:''; document.getElementById('mo_prem').value=o?o.premium.toLocaleString('en-US'):''; document.getElementById('mo_curr').value=o?o.currency:'Contracts'; document.getElementById('mo_note').value=o?o.note:''; openWheelModal('mWheelOrder'); }
     function wSubmitOrder(){ const o={id:wEditOrderId||wNextId++,cex:document.getElementById('mo_cex').value,product:document.getElementById('mo_product').value,openDate:document.getElementById('mo_open').value,expiryDate:document.getElementById('mo_expiry').value,strike:wpn(document.getElementById('mo_strike').value),contracts:wpn(document.getElementById('mo_contracts').value),premium:wpn(document.getElementById('mo_prem').value),currency:document.getElementById('mo_curr').value,status:'open',note:document.getElementById('mo_note').value}; if(wEditOrderId){const i=wOrders.findIndex(x=>x.id===wEditOrderId);if(i>=0)wOrders[i]=o} else wOrders.push(o); closeWheelModal('mWheelOrder');wCalcAll();wAutoPush(); }
 
-    function openWheelLotModal(id){ wEditLotId=id; const l=id?wLots.find(x=>x.id===id):null; document.getElementById('mWheelLotTitle').textContent=l?'Edit Lot':'Add BTC Lot'; document.getElementById('ml_name').value=l?l.name:''; document.getElementById('ml_price').value=l&&l.price?l.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):''; document.getElementById('ml_amt').value=l?l.amount:''; document.getElementById('ml_target').value=l?l.target.toLocaleString('en-US'):''; document.getElementById('ml_acc').value=l?l.accRealPL.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'0.00'; openWheelModal('mWheelLot'); }
+    function openWheelLotModal(id){ wEditLotId=id; const l=id?wLots.find(x=>x.id===id):null; document.getElementById('mWheelLotTitle').textContent=l?'Edit Lot':'Add BTC Lot'; document.getElementById('ml_name').value=l?l.name:''; document.getElementById('ml_price').value=l&&l.price?l.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):''; document.getElementById('ml_amt').value=l?l.amount:''; document.getElementById('ml_target').value=l?l.target.toLocaleString('en-US'):''; document.getElementById('ml_acc').value=l?l.accRealPL.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):''; openWheelModal('mWheelLot'); }
     function wSubmitLot(){ const price=wpn(document.getElementById('ml_price').value); const l={id:wEditLotId||(wLots.length?Math.max(...wLots.map(x=>x.id))+1:1),name:document.getElementById('ml_name').value,price,amount:wpn(document.getElementById('ml_amt').value),target:wpn(document.getElementById('ml_target').value),accRealPL:wpn(document.getElementById('ml_acc').value),problem:price===0}; if(wEditLotId){const i=wLots.findIndex(x=>x.id===wEditLotId);if(i>=0)wLots[i]=l} else wLots.push(l); closeWheelModal('mWheelLot');wCalcAll();wAutoPush(); }
 
-    function openWheelHistModal(){ document.getElementById('mh_open').value=''; document.getElementById('mh_close').value=new Date().toISOString().split('T')[0]; document.getElementById('mh_strike').value=''; document.getElementById('mh_contracts').value='0.04'; document.getElementById('mh_prem').value=''; document.getElementById('mh_exercise_pl').value=''; document.getElementById('mh_note').value=''; openWheelModal('mWheelHist'); }
+    function openWheelHistModal(){ document.getElementById('mh_open').value=''; document.getElementById('mh_close').value=new Date().toISOString().split('T')[0]; document.getElementById('mh_strike').value=''; document.getElementById('mh_contracts').value=''; document.getElementById('mh_prem').value=''; document.getElementById('mh_exercise_pl').value=''; document.getElementById('mh_note').value=''; openWheelModal('mWheelHist'); }
     function wSubmitHist(){ const status=document.getElementById('mh_status').value; wClosed.push({id:wNextId++,cex:document.getElementById('mh_cex').value,product:document.getElementById('mh_product').value,openDate:document.getElementById('mh_open').value,expiryDate:document.getElementById('mh_close').value,strike:wpn(document.getElementById('mh_strike').value),contracts:wpn(document.getElementById('mh_contracts').value),premium:wpn(document.getElementById('mh_prem').value),currency:'Contracts',status,note:document.getElementById('mh_note').value,exercisePL:status==='exercised'?wpn(document.getElementById('mh_exercise_pl').value):0}); closeWheelModal('mWheelHist');wCalcAll();wAutoPush(); }
 
     document.querySelectorAll('.wheel-modal-overlay').forEach(m=>{ m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}); });
@@ -3033,9 +2977,10 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             const isValidOrder = o => o && +o.id > 0 && o.product;
             const isValidLot = l => l && +l.id > 0 && l.name;
             const isValidHist = o => o && +o.id > 0 && o.product;
-            if (Array.isArray(data.orders) && data.orders.length) { wOrders = data.orders.filter(isValidOrder).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'open'),note:String(o.note||'')})); wNextId = Math.max(...wOrders.map(o=>o.id), wNextId) + 1; }
-            if (Array.isArray(data.lots) && data.lots.length) { wLots = data.lots.filter(isValidLot).map(l => ({id:+l.id,name:String(l.name||''),price:+l.price,amount:+l.amount,target:+l.target,accRealPL:+l.accRealPL,problem:l.problem==='true'||l.problem===true||l.problem==='TRUE'})); }
-            if (Array.isArray(data.history) && data.history.length) { wClosed = data.history.filter(isValidHist).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'closed'),note:String(o.note||''),exercisePL:wpn(o.exercisePL ?? o.realizedPL ?? o.pnl ?? o.pl ?? 0)})); }
+            if (Array.isArray(data.orders)) { wOrders = data.orders.filter(isValidOrder).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'open'),note:String(o.note||'')})); }
+            if (Array.isArray(data.lots)) { wLots = data.lots.filter(isValidLot).map(l => ({id:+l.id,name:String(l.name||''),price:+l.price,amount:+l.amount,target:+l.target,accRealPL:+l.accRealPL,problem:l.problem==='true'||l.problem===true||l.problem==='TRUE'})); }
+            if (Array.isArray(data.history)) { wClosed = data.history.filter(isValidHist).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'closed'),note:String(o.note||''),exercisePL:wpn(o.exercisePL ?? o.realizedPL ?? o.pnl ?? o.pl ?? 0)})); }
+            wNextId = Math.max(0, ...wOrders.map(o=>o.id), ...wClosed.map(o=>o.id)) + 1;
             wCalcAll(); return true;
         } catch(e) { console.error('Wheel pull error:', e); return false; }
     }
