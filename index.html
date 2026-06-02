@@ -564,7 +564,7 @@
             <div class="flex items-center gap-3 flex-wrap">
                 <!-- USD/THB rate display -->
                 <div class="text-xs text-slate-400">
-                    USD/THB: <span id="header-rate2" class="text-white font-bold">31.07</span>
+                    USD/THB: <span id="header-rate2" class="text-white font-bold">-</span>
                 </div>
                 <button id="theme-toggle" class="theme-toggle" onclick="toggleColorTheme()" title="Switch dark or light mode" aria-label="Switch dark or light mode" aria-pressed="false">
                     <span class="theme-toggle-knob"><i id="theme-toggle-icon" class="fa-solid fa-moon text-[11px]"></i></span>
@@ -590,6 +590,12 @@
                     class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 border border-slate-700 hover:border-blue-500 hover:text-blue-400 transition-colors"
                     title="Refresh data from Google Sheets">
                     <i class="fa-solid fa-arrows-rotate text-[10px]" id="refresh-icon"></i> Refresh
+                </button>
+                <!-- Crew export button -->
+                <button id="crew-export-btn" onclick="exportForCrew()"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 border border-slate-700 hover:border-cyan-500 hover:text-cyan-300 transition-colors"
+                    title="Export portfolio snapshot for the Investment Crew">
+                    <i class="fa-solid fa-ship text-[10px]"></i> Export for Crew
                 </button>
                 <!-- Unified Sync / Settings button -->
                 <button id="sync-btn" onclick="openSyncModal()"
@@ -868,11 +874,6 @@
                                     <span id="totalExercise" style="font-size:13px;font-weight:700;color:#F59E0B">—</span>
                                 </div>
                             </div>
-                            <!-- Strike Alert Banner -->
-                            <div id="strikeAlertBanner" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.4);border-radius:8px;animation:pulse-red 1.5s infinite">
-                                <div style="font-size:9px;color:#FCA5A5;letter-spacing:.06em;text-transform:uppercase;font-weight:700;margin-bottom:4px">⚠️ Strike Price Alert</div>
-                                <div id="strikeAlertText" style="font-size:11px;color:#FCA5A5;line-height:1.6"></div>
-                            </div>
                             <div class="cover-bar-wrap" style="margin-top:auto;padding-top:10px">
                                 <div class="cover-bar-label">Collateral Coverage</div>
                                 <div class="bar-track"><div class="bar-fill" id="coverBar" style="width:0%"></div></div>
@@ -1002,16 +1003,17 @@
                 </div>
                 <div class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-emerald-500">
                     <h4 class="text-white font-bold mb-2">Google Sheets Integration</h4>
-                    <p class="text-xs text-slate-400 mb-4">Both Investment Dashboard and Wheel Strategy can share the same Apps Script URL — set it here once.</p>
+                    <p class="text-xs text-slate-400 mb-4">Private dashboard settings load from the Google Sheet tab named <span class="font-bold text-slate-300">setting</span>. Platform lists stay local in this page.</p>
                     <div class="space-y-4">
                         <div>
                             <label class="text-[10px] text-slate-500 uppercase block mb-1">Apps Script Web App URL (Single URL for both)</label>
                             <input type="text" id="unified-gs-url" class="w-full bg-slate-800 border border-slate-700 text-white rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" placeholder="https://script.google.com/macros/s/.../exec">
-                            <p class="text-[10px] text-slate-500 mt-1">Investment Dashboard uses GET (no param), Wheel uses GET ?action=wheel_read / POST action=wheel_write</p>
+                            <p class="text-[10px] text-slate-500 mt-1">Investment uses GET plus ?action=settings_read. Wheel uses ?action=wheel_read / action=wheel_write.</p>
                         </div>
                         <div class="flex gap-3 flex-wrap">
                             <button onclick="saveUnifiedUrl()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Save & Connect Both</button>
                             <button onclick="testInvConnection()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Test Investment Sync</button>
+                            <button onclick="testSettingsConnection()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Test Setting Sync</button>
                             <button onclick="testWheelConnection()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Test Wheel Sync</button>
                         </div>
                         <div id="gs-status-msg" class="text-xs text-slate-500 hidden"></div>
@@ -1152,6 +1154,8 @@
             <!-- Sheet tabs info -->
             <div style="font-size:10px;color:#475569;line-height:2;border-top:1px solid #334155;padding-top:10px">
                 <strong style="color:#64748b">Required sheet tabs:</strong>
+                &nbsp;<span style="background:#1E293B;padding:2px 7px;border-radius:4px;color:#94A3B8">setting</span>
+                &nbsp;<span style="background:#1E293B;padding:2px 7px;border-radius:4px;color:#94A3B8">Holdings</span>
                 &nbsp;<span style="background:#1E293B;padding:2px 7px;border-radius:4px;color:#94A3B8">Activities</span>
                 &nbsp;<span style="background:#1E293B;padding:2px 7px;border-radius:4px;color:#94A3B8">Wheel_orders</span>
                 &nbsp;<span style="background:#1E293B;padding:2px 7px;border-radius:4px;color:#94A3B8">Wheel_lots</span>
@@ -1185,16 +1189,16 @@
     //   SHARED DATA — used by Dashboard, Transactions, Settings
     // ════════════════════════════════════════════════════
 
-    const savedRates = JSON.parse(localStorage.getItem('exchangeRateDefaults')) || { beginning: 31.07, q1: 32.66, q2: null, q3: null, q4: null };
+    const savedRates = JSON.parse(localStorage.getItem('exchangeRateDefaults')) || { beginning: null, q1: null, q2: null, q3: null, q4: null };
     const getEmptyEndBalances = () => ({ stocks: { q1:null, q2: null, q3: null, q4: null }, bonds: { q1: null, q2: null, q3: null, q4: null }, crypto: { q1: {thb: null, usds: null, usdo: null}, q2: {thb: null, usds: null, usdo: null}, q3: {thb: null, usds: null, usdo: null}, q4: {thb: null, usds: null, usdo: null} }, gold: { q1: null, q2: null, q3: null, q4: null } });
-    const getPort1EndBalances = () => ({ stocks: { q1:852238.97, q2: null, q3: null, q4: null }, bonds: { q1: 1021204.85, q2: null, q3: null, q4: null }, crypto: { q1: {thb: 1566503.51, usds: 43456.43, usdo: 4507.55}, q2: {thb: null, usds: null, usdo: null}, q3: {thb: null, usds: null, usdo: null}, q4: {thb: null, usds: null, usdo: null} }, gold: { q1: 94565.34, q2: null, q3: null, q4: null } });
-    const getEmptyBenchmarks = () => ({ stocks: { name: 'S&P 500', q1: -5.08, q2: null, q3: null, q4: null }, bonds: { name: 'Bond', q1: 1, q2: null, q3: null, q4: null }, crypto: { name: 'Bitcoin', q1: -22.13, q2: null, q3: null, q4: null }, gold: { name: 'Gold', q1: 7.89, q2: null, q3: null, q4: null } });
+    const getEmptyBegBalances = () => ({ stocks: 0, bonds: 0, crypto: 0, gold: 0 });
+    const getEmptyBenchmarks = () => ({ stocks: { name: '', q1: null, q2: null, q3: null, q4: null }, bonds: { name: '', q1: null, q2: null, q3: null, q4: null }, crypto: { name: '', q1: null, q2: null, q3: null, q4: null }, gold: { name: '', q1: null, q2: null, q3: null, q4: null } });
 
     const state = {
         currentPort: 'port1', rates: savedRates,
         portfolios: {
-            port1: { goal: { amount: 10000000, year: 2031, monthly: 20000, return: 12, monthlyTiers: [{year: 2026, amount: 20000},{year: 2028, amount: 36000}] }, begBalances: { stocks: 628474.25, bonds: 1016754.58, crypto: 1679416.42, gold: 85468.76 }, endBalances: getPort1EndBalances(), benchmarks: getEmptyBenchmarks(), flows: [{"id": 1000, "date": "2026-01-02", "asset": "stocks", "type": "deposit", "amount": 100000, "memo": "", "currency": "THB"}, {"id": 1001, "date": "2026-01-02", "asset": "crypto", "type": "deposit", "amount": 3000, "memo": "", "currency": "THB"}, {"id": 1002, "date": "2026-01-14", "asset": "stocks", "type": "deposit", "amount": 13551, "memo": "", "currency": "THB"}, {"id": 1003, "date": "2026-01-15", "asset": "gold", "type": "deposit", "amount": 2000, "memo": "", "currency": "THB"}, {"id": 1004, "date": "2026-01-28", "asset": "stocks", "type": "deposit", "amount": 42881.61, "memo": "SCBFP(SSFE) to SCBEUROPE(SSPE)", "currency": "THB"}, {"id": 1005, "date": "2026-01-28", "asset": "bonds", "type": "withdraw", "amount": 42881.61, "memo": "SCBFP(SSFE) to SCBEUROPE(SSPE)", "currency": "THB"}, {"id": 1006, "date": "2026-02-03", "asset": "stocks", "type": "deposit", "amount": 4000, "memo": "", "currency": "THB"}, {"id": 1007, "date": "2026-02-03", "asset": "crypto", "type": "deposit", "amount": 3000, "memo": "", "currency": "THB"}, {"id": 1008, "date": "2026-02-03", "asset": "gold", "type": "deposit", "amount": 2000, "memo": "", "currency": "THB"}, {"id": 1009, "date": "2026-02-03", "asset": "bonds", "type": "deposit", "amount": 13616, "memo": "", "currency": "THB"}, {"id": 1010, "date": "2026-02-28", "asset": "crypto", "type": "deposit", "amount": 3000, "memo": "", "currency": "THB"}, {"id": 1011, "date": "2026-02-28", "asset": "gold", "type": "deposit", "amount": 2000, "memo": "", "currency": "THB"}, {"id": 1012, "date": "2026-03-02", "asset": "stocks", "type": "deposit", "amount": 9456.47, "memo": "", "currency": "THB"}, {"id": 1013, "date": "2026-03-20", "asset": "crypto", "type": "withdraw", "amount": 159.98, "memo": "", "currency": "USD"}, {"id": 1014, "date": "2026-03-20", "asset": "crypto", "type": "withdraw", "amount": 49.98, "memo": "", "currency": "USD"}, {"id": 1015, "date": "2026-04-01", "asset": "stocks", "type": "deposit", "amount": 4000, "memo": "", "currency": "THB"}, {"id": 1016, "date": "2026-04-01", "asset": "crypto", "type": "deposit", "amount": 3000, "memo": "", "currency": "THB"}, {"id": 1017, "date": "2026-04-01", "asset": "gold", "type": "deposit", "amount": 2000, "memo": "", "currency": "THB"}, {"id": 1018, "date": "2026-04-02", "asset": "stocks", "type": "deposit", "amount": 9827, "memo": "", "currency": "THB"}, {"id": 1019, "date": "2026-04-02", "asset": "stocks", "type": "deposit", "amount": 6000, "memo": "", "currency": "THB"}] },
-            port2: { goal: { amount: 10000000, year: 2031, monthly: 20000, return: 12, monthlyTiers: [{year: 2026, amount: 20000},{year: 2028, amount: 36000}] }, begBalances: { stocks: 0, bonds: 0, crypto: 0, gold: 0 }, endBalances: getEmptyEndBalances(), benchmarks: getEmptyBenchmarks(), flows: [] }
+            port1: { goal: { amount: 10000000, year: 2031, monthly: 0, return: 0, monthlyTiers: [{year: new Date().getFullYear(), amount: 0}] }, begBalances: getEmptyBegBalances(), endBalances: getEmptyEndBalances(), benchmarks: getEmptyBenchmarks(), flows: [] },
+            port2: { goal: { amount: 10000000, year: 2031, monthly: 0, return: 0, monthlyTiers: [{year: new Date().getFullYear(), amount: 0}] }, begBalances: getEmptyBegBalances(), endBalances: getEmptyEndBalances(), benchmarks: getEmptyBenchmarks(), flows: [] }
         },
         computed: { stocks: {}, bonds: {}, crypto: {}, gold: {}, portfolio: {} },
         ui: { expandedQuarters: { q1: false, q2: false, q3: false, q4: false } }
@@ -1208,7 +1212,7 @@
         ? { axis: '#475569', grid: 'rgba(148, 163, 184, 0.35)', label: '#0F172A', dataLabel: '#0F172A', pointBorder: '#FFFFFF' }
         : { axis: '#94A3B8', grid: 'rgba(51, 65, 85, 0.5)', label: '#F8FAFC', dataLabel: '#FFFFFF', pointBorder: '#FFFFFF' };
     const fmt = (v) => '฿' + (v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const getActiveRate = () => { for (let q = 4; q >= 1; q--) { const r = parseFloat(state.rates[`q${q}`]); if (r && r > 0) return r; } return parseFloat(state.rates.beginning) || 31.07; };
+    const getActiveRate = () => { for (let q = 4; q >= 1; q--) { const r = parseFloat(state.rates[`q${q}`]); if (r && r > 0) return r; } return parseFloat(state.rates.beginning) || 0; };
     const getQuarterByDate = (dateStr) => Math.floor(new Date(dateStr).getMonth() / 3) + 1;
 
     // ════════════════════════════════════════════════════
@@ -1404,7 +1408,7 @@
                 let netFlow = 0;
                 pState().flows.filter(tx => tx.asset === asset && getQuarterByDate(tx.date) === q).forEach(tx => {
                     let amt = tx.amount;
-                    if (tx.currency === 'USD') { const rate = state.rates['q' + q] || state.rates.beginning || 31.07; amt = tx.amount * parseFloat(rate); }
+                    if (tx.currency === 'USD') { const rate = parseFloat(state.rates['q' + q] || state.rates.beginning || getActiveRate() || 0); amt = tx.amount * rate; }
                     netFlow += (tx.type === 'deposit' ? amt : -amt);
                 });
                 const qStart = currentBal; let qEndInput = pState().endBalances[asset][`q${q}`]; let qEnd = null;
@@ -1446,7 +1450,7 @@
             return Number.isFinite(fallbackParsed) ? fallbackParsed : null;
         };
         const calcQoQ_ = (asset, q) => { const currentYTD = getSettingBM(asset, q); if (currentYTD === null) return null; if (q === 1) return currentYTD; const prevYTD = getSettingBM(asset, q - 1); if (prevYTD === null) return null; return (((1 + currentYTD/100) / (1 + prevYTD/100)) - 1) * 100; };
-        const getCryptoBM = (q, ytd) => { const rate = parseFloat(state.rates[`q${q}`] || state.rates.beginning) || 31.07; let usds = 0, usdo = 0; for (let qi = q; qi >= 1; qi--) { const eb = pState().endBalances.crypto[`q${qi}`]; if (eb && (eb.usds !== null || eb.usdo !== null)) { usds = (eb.usds || 0) * rate; usdo = (eb.usdo || 0) * rate; break; } } const totalUSD = usds + usdo; const bmS = ytd ? getSettingBM('bonds', q) : calcQoQ_('bonds', q); const bmO = ytd ? getSettingBM('crypto', q) : calcQoQ_('crypto', q); if (totalUSD === 0) return bmO; const wS = usds / totalUSD; const wO = usdo / totalUSD; if (bmS === null && bmO === null) return null; return (wS * (bmS ?? 0)) + (wO * (bmO ?? 0)); };
+        const getCryptoBM = (q, ytd) => { const rate = parseFloat(state.rates[`q${q}`] || state.rates.beginning || getActiveRate() || 0); let usds = 0, usdo = 0; for (let qi = q; qi >= 1; qi--) { const eb = pState().endBalances.crypto[`q${qi}`]; if (eb && (eb.usds !== null || eb.usdo !== null)) { usds = (eb.usds || 0) * rate; usdo = (eb.usdo || 0) * rate; break; } } const totalUSD = usds + usdo; const bmS = ytd ? getSettingBM('bonds', q) : calcQoQ_('bonds', q); const bmO = ytd ? getSettingBM('crypto', q) : calcQoQ_('crypto', q); if (totalUSD === 0) return bmO; const wS = usds / totalUSD; const wO = usdo / totalUSD; if (bmS === null && bmO === null) return null; return (wS * (bmS ?? 0)) + (wO * (bmO ?? 0)); };
         const getBenchGrowth = (aKey, qNum, ytdFlag) => { const assets = ['stocks', 'bonds', 'crypto', 'gold']; if (ytdFlag) { if (aKey === 'crypto') return getCryptoBM(qNum, true); if (aKey === 'all' || aKey === 'all-sep') { let weightedSum = 0, totalWeight = 0, hasAny = false; assets.forEach(a => { const assetBal = state.computed[a][`q${qNum}`].start; const bmVal = a === 'crypto' ? getCryptoBM(qNum, true) : getSettingBM(a, qNum); if (bmVal !== null) { weightedSum += (bmVal * assetBal); totalWeight += assetBal; hasAny = true; } }); return (hasAny && totalWeight > 0) ? weightedSum / totalWeight : null; } return getSettingBM(aKey, qNum); } else { const calcQoQ = (asset, q) => { if (asset === 'crypto') return getCryptoBM(q, false); return calcQoQ_(asset, q); }; if (aKey === 'all' || aKey === 'all-sep') { let weightedSum = 0, totalWeight = 0, hasAny = false; assets.forEach(a => { const assetBal = state.computed[a][`q${qNum}`].start; const qoqVal = calcQoQ(a, qNum); if (qoqVal !== null) { weightedSum += (qoqVal * assetBal); totalWeight += assetBal; hasAny = true; } }); return (hasAny && totalWeight > 0) ? weightedSum / totalWeight : null; } return calcQoQ(aKey, qNum); } };
         let labels = []; let datasets = []; const qTarget = range === 'all' ? 4 : parseInt(range.charAt(1));
         const benchColor = getThemeMode() === 'light' ? '#64748B' : '#94A3B8';
@@ -1548,7 +1552,7 @@
         if(document.getElementById('goal-return-input')) document.getElementById('goal-return-input').value = pState().goal.return;
         computeData();
         const rate = getActiveRate();
-        document.getElementById('header-rate2').innerText = rate.toFixed(2);
+        document.getElementById('header-rate2').innerText = rate > 0 ? rate.toFixed(2) : '-';
         document.getElementById('total-net-worth').innerText = fmt(state.computed.portfolio.currentBal);
         const ytd = state.computed.portfolio.ytdGrowth; const badge = document.getElementById('total-return-badge');
         badge.innerText = (ytd >= 0 ? '+' : '') + ytd.toFixed(2) + '%';
@@ -1641,6 +1645,142 @@
     function handleExport() { if (!pState().flows.length) return; let csv = "Date,Amount,Asset,Currency,Note\n"; pState().flows.forEach(tx => csv += `${tx.date},${tx.type==='withdraw'?'-':''}${tx.amount},${tx.asset},${tx.currency||'THB'},${tx.memo||''}\n`); const blob = new Blob([csv], { type: 'text/csv' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "export.csv"; link.click(); }
     function clearLedger() { if(confirm("Clear all?")) { pState().flows = []; saveFlows(); updateDashboard(); } }
 
+    function safeJsonParse(raw, fallback) {
+        try { return raw ? JSON.parse(raw) : fallback; }
+        catch { return fallback; }
+    }
+
+    function cloneForCrew(value) {
+        return JSON.parse(JSON.stringify(value ?? null));
+    }
+
+    function getCrewHoldings(portKey) {
+        const assets = ['stocks', 'bonds', 'crypto', 'gold'];
+        const periods = ['Beg', 'Q1', 'Q2', 'Q3', 'Q4'];
+        const holdings = {};
+        assets.forEach(asset => {
+            holdings[asset] = {};
+            periods.forEach(period => {
+                const key = `holdings_${portKey}_${asset}_${period}`;
+                holdings[asset][period] = safeJsonParse(localStorage.getItem(key), []);
+            });
+        });
+        return holdings;
+    }
+
+    function getCrewPlatforms() {
+        const assets = ['stocks', 'bonds', 'crypto', 'gold'];
+        const platforms = {};
+        assets.forEach(asset => {
+            platforms[asset] = safeJsonParse(localStorage.getItem(`platforms_${asset}`), PLATFORM_DEFAULTS?.[asset] || []);
+        });
+        return platforms;
+    }
+
+    function summarizeCrewPortfolio(portKey) {
+        const previousPort = state.currentPort;
+        state.currentPort = portKey;
+        computeData();
+
+        const assets = ['stocks', 'bonds', 'crypto', 'gold'];
+        const currentBal = state.computed.portfolio.currentBal || 0;
+        const allocation = {};
+        const assetSummary = {};
+
+        assets.forEach(asset => {
+            const assetBal = state.computed[asset]?.currentBal || 0;
+            allocation[asset] = currentBal > 0 ? assetBal / currentBal : 0;
+            assetSummary[asset] = {
+                currentBal: assetBal,
+                allocationPct: currentBal > 0 ? allocation[asset] * 100 : 0,
+                ytdProfit: state.computed[asset]?.ytdProfit || 0,
+                ytdGrowth: state.computed[asset]?.ytdGrowth || 0
+            };
+        });
+
+        const summary = {
+            currentBal,
+            ytdGrowth: state.computed.portfolio.ytdGrowth || 0,
+            allocation,
+            assets: assetSummary,
+            quarterly: cloneForCrew(state.computed.portfolio)
+        };
+
+        state.currentPort = previousPort;
+        computeData();
+        return summary;
+    }
+
+    function buildCrewPortfolioSnapshot() {
+        computeData();
+        const portfolioLabels = { port1: 'Core Port', port2: 'Satellite Port' };
+        const portfolios = {};
+
+        ['port1', 'port2'].forEach(portKey => {
+            const port = state.portfolios[portKey];
+            portfolios[portKey] = {
+                label: portfolioLabels[portKey],
+                goal: cloneForCrew(port.goal),
+                begBalances: cloneForCrew(port.begBalances),
+                endBalances: cloneForCrew(port.endBalances),
+                benchmarks: cloneForCrew(port.benchmarks),
+                flows: cloneForCrew(port.flows || []),
+                holdings: getCrewHoldings(portKey),
+                summary: summarizeCrewPortfolio(portKey)
+            };
+        });
+
+        return {
+            schemaVersion: 'portfolio-snapshot/v1',
+            exportedAt: new Date().toISOString(),
+            source: {
+                app: 'Investment Dashboard',
+                repo: 'ninejubu/Investment-Portfolio',
+                localPath: '/Users/nine/Documents/Investment Dashboard'
+            },
+            currentPortfolio: state.currentPort,
+            rates: cloneForCrew(state.rates),
+            platforms: getCrewPlatforms(),
+            portfolios,
+            summary: {
+                activePortfolio: portfolios[state.currentPort]?.summary || null,
+                notes: [
+                    'Generated by Investment Dashboard Export for Crew.',
+                    'Treat this as private local portfolio data. Do not commit real snapshots to public GitHub.'
+                ]
+            }
+        };
+    }
+
+    async function exportForCrew() {
+        const snapshot = buildCrewPortfolioSnapshot();
+        const json = JSON.stringify(snapshot, null, 2);
+        const fileName = 'current-portfolio.json';
+
+        if ('showSaveFilePicker' in window) {
+            try {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: fileName,
+                    types: [{ description: 'JSON portfolio snapshot', accept: { 'application/json': ['.json'] } }]
+                });
+                const writable = await handle.createWritable();
+                await writable.write(json);
+                await writable.close();
+                alert('Crew snapshot exported.');
+                return;
+            } catch (error) {
+                if (error && error.name === 'AbortError') return;
+            }
+        }
+
+        const blob = new Blob([json], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
     // ════════════════════════════════════════════════════
     //   SHARED NAV — page switching
     //   Keeps header and page-specific setup in one place.
@@ -1701,6 +1841,224 @@
     //   Mutates shared state, then refreshes Dashboard totals.
     // ════════════════════════════════════════════════════
 
+    const SETTING_ASSETS = ['stocks', 'bonds', 'crypto', 'gold'];
+    const SETTING_QUARTERS = ['q1', 'q2', 'q3', 'q4'];
+
+    function normalizeSettingKey(value) {
+        return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+    }
+
+    function readSettingCell(row, keys, fallbackIndex = null) {
+        if (!row) return '';
+        if (Array.isArray(row)) return fallbackIndex !== null ? row[fallbackIndex] : '';
+        const wanted = keys.map(normalizeSettingKey);
+        for (const key of Object.keys(row)) {
+            if (wanted.includes(normalizeSettingKey(key))) return row[key];
+        }
+        return '';
+    }
+
+    function toNullableSettingNumber(value) {
+        if (value === null || value === undefined || value === '') return null;
+        const n = getRawValue(value);
+        return Number.isFinite(n) ? n : null;
+    }
+
+    function normalizeSettingRows(payload) {
+        const rawRows = Array.isArray(payload) ? payload : (payload?.rows || payload?.settingsRows || payload?.setting || payload?.settings || []);
+        if (!Array.isArray(rawRows)) return [];
+        if (!rawRows.length) return [];
+        if (Array.isArray(rawRows[0])) {
+            const headers = rawRows[0].map(h => String(h || '').trim());
+            const looksLikeHeader = headers.some(h => normalizeSettingKey(h) === 'period');
+            if (!looksLikeHeader) return rawRows;
+            return rawRows.slice(1).filter(r => r && r.some(c => c !== '')).map(r => {
+                const obj = {};
+                headers.forEach((h, i) => { obj[h || `col${i}`] = r[i]; });
+                return obj;
+            });
+        }
+        return rawRows;
+    }
+
+    function applySettingsSnapshot(settings, portKey = 'port1') {
+        if (!settings) return false;
+        const port = state.portfolios[portKey] || state.portfolios.port1;
+        if (settings.rates) state.rates = Object.assign({ beginning: null, q1: null, q2: null, q3: null, q4: null }, settings.rates);
+        if (settings.begBalances) port.begBalances = Object.assign(getEmptyBegBalances(), settings.begBalances);
+        if (settings.endBalances) port.endBalances = Object.assign(getEmptyEndBalances(), settings.endBalances);
+        if (settings.benchmarks) port.benchmarks = Object.assign(getEmptyBenchmarks(), settings.benchmarks);
+        return true;
+    }
+
+    function parseSettingsRows(payload) {
+        if (payload && !Array.isArray(payload) && (payload.rates || payload.begBalances || payload.endBalances || payload.benchmarks)) {
+            return {
+                rates: payload.rates || null,
+                begBalances: payload.begBalances || null,
+                endBalances: payload.endBalances || null,
+                benchmarks: payload.benchmarks || null
+            };
+        }
+
+        const rows = normalizeSettingRows(payload);
+        if (!rows.length) return null;
+        const settings = {
+            rates: { beginning: null, q1: null, q2: null, q3: null, q4: null },
+            begBalances: getEmptyBegBalances(),
+            endBalances: getEmptyEndBalances(),
+            benchmarks: getEmptyBenchmarks()
+        };
+
+        rows.forEach(row => {
+            const periodRaw = readSettingCell(row, ['period', 'panel', 'type'], 0);
+            const period = normalizeSettingKey(periodRaw);
+            if (!period) return;
+
+            if (period.includes('beginning') && period.includes('balance')) {
+                settings.begBalances.stocks = toNullableSettingNumber(readSettingCell(row, ['stocks', 'stock'], 1)) || 0;
+                settings.begBalances.bonds = toNullableSettingNumber(readSettingCell(row, ['bonds', 'bond'], 2)) || 0;
+                settings.begBalances.crypto = toNullableSettingNumber(readSettingCell(row, ['crypto'], 3)) || 0;
+                settings.begBalances.gold = toNullableSettingNumber(readSettingCell(row, ['gold'], 4)) || 0;
+                return;
+            }
+
+            const qMatch = period.match(/q([1-4])/);
+            if (qMatch && (period.includes('ending') || period.includes('quarterly') || period.includes('balance'))) {
+                const q = 'q' + qMatch[1];
+                settings.endBalances.stocks[q] = toNullableSettingNumber(readSettingCell(row, ['stocks', 'stock'], 1));
+                settings.endBalances.bonds[q] = toNullableSettingNumber(readSettingCell(row, ['bonds', 'bond'], 2));
+                settings.endBalances.crypto[q] = {
+                    thb: toNullableSettingNumber(readSettingCell(row, ['crypto', 'crypto_thb', 'cryptothb'], 3)),
+                    usds: toNullableSettingNumber(readSettingCell(row, ['crypto_usds', 'cryptousds', 'usds'], 5)),
+                    usdo: toNullableSettingNumber(readSettingCell(row, ['crypto_usdo', 'cryptousdo', 'usdo'], 6))
+                };
+                settings.endBalances.gold[q] = toNullableSettingNumber(readSettingCell(row, ['gold'], 4));
+                return;
+            }
+
+            if (period.includes('exchangerate') || period === 'rates' || period === 'rate') {
+                settings.rates.beginning = toNullableSettingNumber(readSettingCell(row, ['beginning', 'beginning_rate', 'beginningrate', 'stocks'], 1));
+                settings.rates.q1 = toNullableSettingNumber(readSettingCell(row, ['q1', 'bonds'], 2));
+                settings.rates.q2 = toNullableSettingNumber(readSettingCell(row, ['q2', 'crypto'], 3));
+                settings.rates.q3 = toNullableSettingNumber(readSettingCell(row, ['q3', 'gold'], 4));
+                settings.rates.q4 = toNullableSettingNumber(readSettingCell(row, ['q4', 'crypto_usds', 'cryptousds'], 5));
+                return;
+            }
+
+            if (period.includes('benchmark') && period.includes('name')) {
+                SETTING_ASSETS.forEach((asset, idx) => {
+                    const value = readSettingCell(row, [asset, asset.replace(/s$/, '')], idx + 1);
+                    settings.benchmarks[asset].name = value ? String(value) : '';
+                });
+                return;
+            }
+
+            if (period.includes('benchmark') && qMatch) {
+                const q = 'q' + qMatch[1];
+                SETTING_ASSETS.forEach((asset, idx) => {
+                    settings.benchmarks[asset][q] = toNullableSettingNumber(readSettingCell(row, [asset, asset.replace(/s$/, '')], idx + 1));
+                });
+            }
+        });
+
+        return settings;
+    }
+
+    function buildSettingsPayload() {
+        const rows = [
+            { period: 'Beginning Balance', ...pState().begBalances },
+            ...SETTING_QUARTERS.map(q => ({
+                period: 'Quarterly Ending Balances ' + q.toUpperCase(),
+                stocks: pState().endBalances.stocks[q],
+                bonds: pState().endBalances.bonds[q],
+                crypto: pState().endBalances.crypto[q]?.thb ?? null,
+                gold: pState().endBalances.gold[q],
+                crypto_usds: pState().endBalances.crypto[q]?.usds ?? null,
+                crypto_usdo: pState().endBalances.crypto[q]?.usdo ?? null
+            })),
+            { period: 'Exchange Rate', beginning: state.rates.beginning, q1: state.rates.q1, q2: state.rates.q2, q3: state.rates.q3, q4: state.rates.q4 },
+            { period: 'Benchmark Name', stocks: pState().benchmarks.stocks.name, bonds: pState().benchmarks.bonds.name, crypto: pState().benchmarks.crypto.name, gold: pState().benchmarks.gold.name },
+            ...SETTING_QUARTERS.map(q => ({
+                period: 'Benchmark ' + q.toUpperCase(),
+                stocks: pState().benchmarks.stocks[q],
+                bonds: pState().benchmarks.bonds[q],
+                crypto: pState().benchmarks.crypto[q],
+                gold: pState().benchmarks.gold[q]
+            }))
+        ];
+        return {
+            action: 'settings_write',
+            settings: {
+                rates: state.rates,
+                begBalances: pState().begBalances,
+                endBalances: pState().endBalances,
+                benchmarks: pState().benchmarks
+            },
+            rows,
+            holdings: buildHoldingsRows()
+        };
+    }
+
+    function buildHoldingsRows() {
+        const rows = [];
+        ['port1', 'port2'].forEach(portKey => {
+            SETTING_ASSETS.forEach(asset => {
+                ['Beg', 'Q1', 'Q2', 'Q3', 'Q4'].forEach(period => {
+                    let items = [];
+                    try { items = JSON.parse(localStorage.getItem(`holdings_${portKey}_${asset}_${period}`)) || []; }
+                    catch(e) { items = []; }
+                    if (!items.length) {
+                        rows.push({ portfolio: portKey, asset, period, name: '', platform: '', amount: '' });
+                    } else {
+                        items.forEach(item => rows.push({
+                            portfolio: portKey,
+                            asset,
+                            period,
+                            name: item.name || '',
+                            platform: item.platform || '',
+                            amount: item.amount || 0
+                        }));
+                    }
+                });
+            });
+        });
+        return rows;
+    }
+
+    function applyHoldingsRows(payload) {
+        const rows = Array.isArray(payload) ? payload : (payload?.holdings || payload?.rows || []);
+        if (!Array.isArray(rows)) return false;
+        const grouped = {};
+        rows.forEach(row => {
+            const portfolio = String(readSettingCell(row, ['portfolio', 'port'], 0) || 'port1').trim() || 'port1';
+            const asset = String(readSettingCell(row, ['asset'], 1) || '').toLowerCase().trim();
+            const period = String(readSettingCell(row, ['period', 'quarter'], 2) || '').trim();
+            const name = String(readSettingCell(row, ['name', 'ticker', 'holding'], 3) || '').trim();
+            if (!SETTING_ASSETS.includes(asset) || !['Beg','Q1','Q2','Q3','Q4'].includes(period) || !name) return;
+            const key = `holdings_${portfolio}_${asset}_${period}`;
+            if (!grouped[key]) grouped[key] = [];
+            grouped[key].push({
+                name,
+                platform: String(readSettingCell(row, ['platform'], 4) || ''),
+                amount: toNullableSettingNumber(readSettingCell(row, ['amount', 'value'], 5)) || 0
+            });
+        });
+        Object.keys(grouped).forEach(key => localStorage.setItem(key, JSON.stringify(grouped[key])));
+        return Object.keys(grouped).length > 0;
+    }
+
+    let settingsPushTimer = null;
+    function scheduleSettingsPush() {
+        if (!getGsUrl()) return;
+        clearTimeout(settingsPushTimer);
+        settingsPushTimer = setTimeout(() => {
+            pushSettingsToSheet().then(ok => {
+                if (ok) setSyncPill('ok', 'Settings synced');
+            }).catch(()=>{});
+        }, 1500);
+    }
+
     function initSettings() {
         // Platform lists
         renderPlatformSettings();
@@ -1755,15 +2113,19 @@
         location.reload();
     }
 
-    function saveSettings() {
+    async function saveSettings() {
         ['stocks','bonds','crypto','gold'].forEach(a => { pState().begBalances[a] = getRawValue(document.getElementById(`input-beg-${a}`).value); [1,2,3,4].forEach(q => { if (a === 'crypto') { const thbVal = document.getElementById(`input-eb-crypto-thb-q${q}`).value; const usdsVal = document.getElementById(`input-eb-crypto-usds-q${q}`).value; const usdoVal = document.getElementById(`input-eb-crypto-usdo-q${q}`).value; pState().endBalances.crypto[`q${q}`] = { thb: thbVal !== '' ? getRawValue(thbVal) : null, usds: usdsVal !== '' ? getRawValue(usdsVal) : null, usdo: usdoVal !== '' ? getRawValue(usdoVal) : null }; } else pState().endBalances[a][`q${q}`] = document.getElementById(`input-eb-${a}-q${q}`).value !== '' ? getRawValue(document.getElementById(`input-eb-${a}-q${q}`).value) : null; pState().benchmarks[a][`q${q}`] = document.getElementById(`input-bm-q${q}-${a}`).value !== '' ? getRawValue(document.getElementById(`input-bm-q${q}-${a}`).value) : null; pState().benchmarks[a].name = document.getElementById(`input-bm-name-${a}`).value; }); });
-        ['beginning','q1','q2','q3','q4'].forEach(r => state.rates[r] = getRawValue(document.getElementById('rate-'+r).value) || (r==='beginning'?31.07:null));
+        ['beginning','q1','q2','q3','q4'].forEach(r => state.rates[r] = document.getElementById('rate-'+r).value !== '' ? getRawValue(document.getElementById('rate-'+r).value) : null);
         localStorage.setItem('exchangeRateDefaults', JSON.stringify(state.rates));
         localStorage.setItem('settings_port1', JSON.stringify({ begBalances: state.portfolios.port1.begBalances, endBalances: state.portfolios.port1.endBalances, benchmarks: state.portfolios.port1.benchmarks }));
         localStorage.setItem('settings_port2', JSON.stringify({ begBalances: state.portfolios.port2.begBalances, endBalances: state.portfolios.port2.endBalances, benchmarks: state.portfolios.port2.benchmarks }));
         localStorage.setItem('goal_port1', JSON.stringify(state.portfolios.port1.goal));
         localStorage.setItem('goal_port2', JSON.stringify(state.portfolios.port2.goal));
-        updateDashboard(); alert(`Applied successfully!`);
+        updateDashboard();
+        const pushed = await pushSettingsToSheet();
+        if (pushed === true) setSyncPill('ok', 'Settings synced');
+        else if (pushed === false) setSyncPill('err', 'Settings sync failed');
+        alert(pushed === true ? 'Applied and synced to setting sheet!' : 'Applied locally. Google Sheet setting sync not available yet.');
     }
 
     // ════════════════════════════════════════════════════
@@ -1930,20 +2292,80 @@
     const INV_GSHEET_URL_KEY = GS_URL_KEY;
     function getInvUrl() { return getGsUrl(); }
 
+    async function loadSettingsFromGSheet() {
+        const url = getInvUrl(); if (!url) return false;
+        try {
+            const res = await fetch(url + '?action=settings_read&t=' + Date.now());
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            const settings = parseSettingsRows(data.settings || data);
+            if (!settings) throw new Error('No setting rows found');
+            applySettingsSnapshot(settings, 'port1');
+            applyHoldingsRows(data.holdings || data.holdingsRows || []);
+            localStorage.setItem('exchangeRateDefaults', JSON.stringify(state.rates));
+            localStorage.setItem('settings_port1', JSON.stringify({
+                begBalances: state.portfolios.port1.begBalances,
+                endBalances: state.portfolios.port1.endBalances,
+                benchmarks: state.portfolios.port1.benchmarks
+            }));
+            return true;
+        } catch(err) {
+            console.warn('GSheet setting sync failed:', err);
+            return false;
+        }
+    }
+
+    async function pushSettingsToSheet() {
+        const url = getInvUrl(); if (!url) return null;
+        try {
+            const r = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(buildSettingsPayload())
+            });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const data = await r.json();
+            if (data.error) throw new Error(data.error);
+            return true;
+        } catch(e) {
+            console.warn('GSheet setting push failed:', e);
+            return false;
+        }
+    }
+
     async function loadFromGSheet() {
         const url = getInvUrl(); if (!url) return false;
+        let ok = false;
         try {
             const res = await fetch(url);
             if (!res.ok) throw new Error('HTTP ' + res.status);
-            const flows = await res.json();
-            if (!Array.isArray(flows)) throw new Error('Invalid data');
-            state.portfolios.port1.flows = flows;
-            localStorage.setItem('flows_port1', JSON.stringify(flows));
-            return true;
+            const data = await res.json();
+            const flows = Array.isArray(data) ? data : (Array.isArray(data.activities) ? data.activities : (Array.isArray(data.flows) ? data.flows : null));
+            if (Array.isArray(flows)) {
+                state.portfolios.port1.flows = flows;
+                localStorage.setItem('flows_port1', JSON.stringify(flows));
+                ok = true;
+            }
+            if (!Array.isArray(data) && data.settings) {
+                const settings = parseSettingsRows(data.settings);
+                if (settings) {
+                    applySettingsSnapshot(settings, 'port1');
+                    applyHoldingsRows(data.holdings || data.holdingsRows || []);
+                    localStorage.setItem('exchangeRateDefaults', JSON.stringify(state.rates));
+                    localStorage.setItem('settings_port1', JSON.stringify({
+                        begBalances: state.portfolios.port1.begBalances,
+                        endBalances: state.portfolios.port1.endBalances,
+                        benchmarks: state.portfolios.port1.benchmarks
+                    }));
+                    ok = true;
+                }
+            }
         } catch(err) {
             console.warn('GSheet invest sync failed:', err);
-            return false;
         }
+        const settingOk = await loadSettingsFromGSheet();
+        return ok || settingOk;
     }
 
     function saveUnifiedUrl() {
@@ -1960,6 +2382,13 @@
         const ok = await loadFromGSheet();
         if(ok) { updateDashboard(); renderMonthlyTiers(); if(msg) { msg.textContent = '✓ Investment sync OK'; msg.style.color = '#34D399'; } }
         else { if(msg) { msg.textContent = '✗ Failed — check URL or sheet permissions'; msg.style.color = '#FCA5A5'; } }
+    }
+
+    async function testSettingsConnection() {
+        const msg = document.getElementById('gs-status-msg'); if(msg) { msg.classList.remove('hidden'); msg.textContent = 'Testing setting tab...'; msg.style.color = '#F59E0B'; }
+        const ok = await loadSettingsFromGSheet();
+        if(ok) { updateDashboard(); initSettings(); if(msg) { msg.textContent = '✓ Setting sync OK'; msg.style.color = '#34D399'; } }
+        else { if(msg) { msg.textContent = '✗ Setting sync failed — check Apps Script action=settings_read and tab name setting'; msg.style.color = '#FCA5A5'; } }
     }
 
     async function testWheelConnection() {
@@ -2100,18 +2529,6 @@
         }
     }
 
-    let alertedStrikes = new Set();
-
-    function loadAlertedStrikes() {
-        try {
-            const today = new Date().toISOString().split('T')[0];
-            const keys = JSON.parse(localStorage.getItem('btc_alerts')) || [];
-            alertedStrikes = new Set(keys.filter(k => typeof k === 'string' && k.endsWith('-' + today)));
-        } catch(e) {
-            alertedStrikes = new Set();
-        }
-    }
-
     function wUpdateExerciseAndAlerts() {
         const openPuts = wOrders.filter(o => o.product === 'Short Put' && o.status === 'open');
 
@@ -2140,38 +2557,6 @@
                 exRows.appendChild(row);
             });
             if (exTotal) exTotal.textContent = atRiskOrders.length ? '$' + total.toLocaleString('en-US',{maximumFractionDigits:0}) : '—';
-        }
-
-        // ── Strike Price Alert — once per day per strike ───────────────
-        const banner   = document.getElementById('strikeAlertBanner');
-        const alertTxt = document.getElementById('strikeAlertText');
-        const breached = openPuts.filter(o => btcPrice <= o.strike);
-        const today    = new Date().toISOString().split('T')[0];
-
-        if (breached.length > 0 && banner && alertTxt) {
-            banner.style.display = 'block';
-            alertTxt.innerHTML = breached.map(o =>
-                `Strike $${o.strike.toLocaleString()} × ${o.contracts} BTC &nbsp;→&nbsp; $${(o.strike * o.contracts).toLocaleString('en-US',{maximumFractionDigits:0})}`
-            ).join('<br>');
-            breached.forEach(o => {
-                const key = `${o.id}-${o.strike}-${today}`;
-                if (!alertedStrikes.has(key)) {
-                    alertedStrikes.add(key);
-                    // Persist today's alerted keys so page refresh won't re-alert
-                    try {
-                        const todayKeys = [...alertedStrikes].filter(k => k.endsWith('-' + today));
-                        localStorage.setItem('btc_alerts', JSON.stringify(todayKeys));
-                    } catch(e) {}
-                    setTimeout(() => {
-                        const msg = `⚠️ BTC Price Alert!\n\nBTC is now $${btcPrice.toLocaleString('en-US',{maximumFractionDigits:0})}\nBelow your Short Put strike of $${o.strike.toLocaleString()}\n\nExercise amount: $${(o.strike*o.contracts).toLocaleString('en-US',{maximumFractionDigits:0})} (${o.contracts} BTC @ $${o.strike.toLocaleString()})\n\nThis alert will not repeat until tomorrow.`;
-                        if (window.Notification && Notification.permission === 'granted') {
-                            new Notification('⚠️ BTC Below Strike', { body: `BTC $${btcPrice.toLocaleString('en-US',{maximumFractionDigits:0})} < Strike $${o.strike.toLocaleString()} — $${(o.strike*o.contracts).toLocaleString('en-US',{maximumFractionDigits:0})}` });
-                        } else { alert(msg); }
-                    }, 200);
-                }
-            });
-        } else if (banner) {
-            banner.style.display = 'none';
         }
     }
 
@@ -2798,8 +3183,6 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
 
         // BTC price polling
         fetchBtc(); setInterval(fetchBtc, 15000);
-        if (window.Notification && Notification.permission === 'default') Notification.requestPermission();
-        loadAlertedStrikes();
 
         const gsUrl = getGsUrl();
         if (gsUrl) {
@@ -2994,6 +3377,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     }
     function ddSave(asset, quarter, rows) {
         localStorage.setItem(ddKey(asset, quarter), JSON.stringify(rows));
+        scheduleSettingsPush();
     }
 
     function openDrillDown(asset) {
