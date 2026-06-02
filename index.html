@@ -1930,6 +1930,7 @@
             benchmarks: getEmptyBenchmarks(),
             wheelOptionsBalance: null
         };
+        let matchedSettingRow = false;
 
         rows.forEach(row => {
             if (isHoldingSettingRow(row) || isPlatformSettingRow(row)) return;
@@ -1938,6 +1939,7 @@
             if (!period) return;
 
             if (period.includes('beginning') && period.includes('balance')) {
+                matchedSettingRow = true;
                 settings.begBalances.stocks = toNullableSettingNumber(readSettingCell(row, ['stocks', 'stock'], 1));
                 settings.begBalances.bonds = toNullableSettingNumber(readSettingCell(row, ['bonds', 'bond'], 2));
                 settings.begBalances.crypto = toNullableSettingNumber(readSettingCell(row, ['crypto'], 3));
@@ -1947,6 +1949,7 @@
 
             const qMatch = period.match(/q([1-4])/);
             if (qMatch && (period.includes('ending') || period.includes('quarterly') || period.includes('balance'))) {
+                matchedSettingRow = true;
                 const q = 'q' + qMatch[1];
                 settings.endBalances.stocks[q] = toNullableSettingNumber(readSettingCell(row, ['stocks', 'stock'], 1));
                 settings.endBalances.bonds[q] = toNullableSettingNumber(readSettingCell(row, ['bonds', 'bond'], 2));
@@ -1960,6 +1963,7 @@
             }
 
             if (period.includes('exchangerate') || period === 'rates' || period === 'rate') {
+                matchedSettingRow = true;
                 settings.rates.beginning = toNullableSettingNumber(readSettingCell(row, ['beginning', 'beginning_rate', 'beginningrate', 'stocks'], 1));
                 settings.rates.q1 = toNullableSettingNumber(readSettingCell(row, ['q1', 'bonds'], 2));
                 settings.rates.q2 = toNullableSettingNumber(readSettingCell(row, ['q2', 'crypto'], 3));
@@ -1969,11 +1973,13 @@
             }
 
             if (period.includes('wheel') && period.includes('options') && period.includes('balance')) {
+                matchedSettingRow = true;
                 settings.wheelOptionsBalance = toNullableSettingNumber(readSettingCell(row, ['amount', 'value', 'balance', 'beginning'], 18));
                 return;
             }
 
             if (period.includes('benchmark') && period.includes('name')) {
+                matchedSettingRow = true;
                 SETTING_ASSETS.forEach((asset, idx) => {
                     const value = readSettingCell(row, [asset, asset.replace(/s$/, '')], idx + 1);
                     settings.benchmarks[asset].name = value ? String(value) : '';
@@ -1982,6 +1988,7 @@
             }
 
             if (period.includes('benchmark') && qMatch) {
+                matchedSettingRow = true;
                 const q = 'q' + qMatch[1];
                 SETTING_ASSETS.forEach((asset, idx) => {
                     settings.benchmarks[asset][q] = toNullableSettingNumber(readSettingCell(row, [asset, asset.replace(/s$/, '')], idx + 1));
@@ -1989,7 +1996,7 @@
             }
         });
 
-        return settings;
+        return matchedSettingRow ? settings : null;
     }
 
     function buildSettingsPayload() {
@@ -2165,15 +2172,56 @@
     }
 
     async function saveSettings() {
-        ['stocks','bonds','crypto','gold'].forEach(a => { const begVal = document.getElementById(`input-beg-${a}`).value; pState().begBalances[a] = begVal !== '' ? getRawValue(begVal) : null; [1,2,3,4].forEach(q => { if (a === 'crypto') { const thbVal = document.getElementById(`input-eb-crypto-thb-q${q}`).value; const usdsVal = document.getElementById(`input-eb-crypto-usds-q${q}`).value; const usdoVal = document.getElementById(`input-eb-crypto-usdo-q${q}`).value; pState().endBalances.crypto[`q${q}`] = { thb: thbVal !== '' ? getRawValue(thbVal) : null, usds: usdsVal !== '' ? getRawValue(usdsVal) : null, usdo: usdoVal !== '' ? getRawValue(usdoVal) : null }; } else pState().endBalances[a][`q${q}`] = document.getElementById(`input-eb-${a}-q${q}`).value !== '' ? getRawValue(document.getElementById(`input-eb-${a}-q${q}`).value) : null; pState().benchmarks[a][`q${q}`] = document.getElementById(`input-bm-q${q}-${a}`).value !== '' ? getRawValue(document.getElementById(`input-bm-q${q}-${a}`).value) : null; pState().benchmarks[a].name = document.getElementById(`input-bm-name-${a}`).value; }); });
-        ['beginning','q1','q2','q3','q4'].forEach(r => state.rates[r] = document.getElementById('rate-'+r).value !== '' ? getRawValue(document.getElementById('rate-'+r).value) : null);
-        localStorage.setItem('goal_port1', JSON.stringify(state.portfolios.port1.goal));
-        localStorage.setItem('goal_port2', JSON.stringify(state.portfolios.port2.goal));
-        updateDashboard();
-        const pushed = await pushSettingsToSheet();
-        if (pushed === true) setSyncPill('ok', 'Settings synced');
-        else if (pushed === false) setSyncPill('err', 'Settings sync failed');
-        alert(pushed === true ? 'Applied and synced to setting sheet!' : 'Applied locally. Google Sheet setting sync not available yet.');
+        try {
+            ['stocks','bonds','crypto','gold'].forEach(asset => {
+                const begEl = document.getElementById(`input-beg-${asset}`);
+                pState().begBalances[asset] = begEl && begEl.value !== '' ? getRawValue(begEl.value) : null;
+
+                [1,2,3,4].forEach(q => {
+                    if (asset === 'crypto') {
+                        const thbEl = document.getElementById(`input-eb-crypto-thb-q${q}`);
+                        const usdsEl = document.getElementById(`input-eb-crypto-usds-q${q}`);
+                        const usdoEl = document.getElementById(`input-eb-crypto-usdo-q${q}`);
+                        pState().endBalances.crypto[`q${q}`] = {
+                            thb: thbEl && thbEl.value !== '' ? getRawValue(thbEl.value) : null,
+                            usds: usdsEl && usdsEl.value !== '' ? getRawValue(usdsEl.value) : null,
+                            usdo: usdoEl && usdoEl.value !== '' ? getRawValue(usdoEl.value) : null
+                        };
+                    } else {
+                        const endEl = document.getElementById(`input-eb-${asset}-q${q}`);
+                        pState().endBalances[asset][`q${q}`] = endEl && endEl.value !== '' ? getRawValue(endEl.value) : null;
+                    }
+
+                    const bmEl = document.getElementById(`input-bm-q${q}-${asset}`);
+                    pState().benchmarks[asset][`q${q}`] = bmEl && bmEl.value !== '' ? getRawValue(bmEl.value) : null;
+                });
+
+                const bmNameEl = document.getElementById(`input-bm-name-${asset}`);
+                pState().benchmarks[asset].name = bmNameEl ? bmNameEl.value : '';
+            });
+
+            ['beginning','q1','q2','q3','q4'].forEach(rateKey => {
+                const rateEl = document.getElementById('rate-' + rateKey);
+                state.rates[rateKey] = rateEl && rateEl.value !== '' ? getRawValue(rateEl.value) : null;
+            });
+
+            localStorage.setItem('goal_port1', JSON.stringify(state.portfolios.port1.goal));
+            localStorage.setItem('goal_port2', JSON.stringify(state.portfolios.port2.goal));
+            updateDashboard();
+            setSyncPill('loading', 'Pushing settings…');
+            const pushed = await pushSettingsToSheet();
+            if (pushed === true) {
+                setSyncPill('ok', 'Settings synced');
+                alert('Applied and pushed to Google Sheet.');
+            } else {
+                setSyncPill('err', 'Settings sync failed');
+                alert('Applied locally, but push to Google Sheet failed. Check Web App deployment and permissions.');
+            }
+        } catch (err) {
+            console.error('Save settings failed:', err);
+            setSyncPill('err', 'Settings save failed');
+            alert('Save settings failed: ' + (err?.message || err));
+        }
     }
 
     // ════════════════════════════════════════════════════
@@ -2183,6 +2231,15 @@
 
     const GS_URL_KEY = 'unified_gs_url';
     function getGsUrl() { return localStorage.getItem(GS_URL_KEY) || ''; }
+    let lastPullStatus = { settings: false, activities: false, wheel: false };
+
+    function syncStatusMessage(now) {
+        const ok = Object.entries(lastPullStatus).filter(([, value]) => value).map(([key]) => key);
+        const missing = Object.entries(lastPullStatus).filter(([, value]) => !value).map(([key]) => key);
+        if (ok.length === 3) return { state: 'ok', message: 'Synced ' + now };
+        if (ok.length > 0) return { state: 'ok', message: 'Partial sync: ' + ok.join(', ') + ' · missing ' + missing.join(', ') };
+        return { state: 'err', message: 'Sync failed' };
+    }
 
     // ── Header status pill ──────────────────────────────
     function setSyncPill(state, msg) {
@@ -2233,7 +2290,8 @@
         fetchFearGreedIndexes();
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-        setSyncPill(syncOk ? 'ok' : 'err', syncOk ? 'Synced ' + now : 'Sync failed');
+        const status = syncStatusMessage(now);
+        setSyncPill(status.state, status.message);
     }
 
     // ── Open unified modal ──────────────────────────────
@@ -2281,9 +2339,10 @@
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
         if (syncOk) {
-            setSyncPill('ok', 'Synced ' + now);
+            const status = syncStatusMessage(now);
+            setSyncPill(status.state, status.message);
             const last = document.getElementById('modal-last-sync');
-            if (last) last.textContent = 'Last synced: ' + new Date().toLocaleString();
+            if (last) last.textContent = status.message + ' at ' + new Date().toLocaleString();
         } else {
             setSyncPill('err', 'Connection failed');
             const last = document.getElementById('modal-last-sync');
@@ -2301,9 +2360,10 @@
         try { syncOk  = await loadFromGSheet(); if (syncOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-        setSyncPill(syncOk ? 'ok' : 'err', syncOk ? 'Synced ' + now : 'Pull failed');
+        const status = syncStatusMessage(now);
+        setSyncPill(syncOk ? status.state : 'err', syncOk ? status.message : 'Pull failed');
         const last = document.getElementById('modal-last-sync');
-        if (last) last.textContent = syncOk ? 'Last pulled: ' + new Date().toLocaleString() : '✗ Pull failed — check connection';
+        if (last) last.textContent = syncOk ? status.message + ' at ' + new Date().toLocaleString() : '✗ Pull failed — check connection';
     }
 
     async function modalPushWheel() {
@@ -2372,6 +2432,7 @@
         applySettingsSnapshot(settings, 'port1');
         applyHoldingsRows(data?.holdings || data?.holdingsRows || data?.settings || data);
         applyPlatformRows(data?.platforms || data?.settings || data);
+        if (document.getElementById('tab-settings')?.classList.contains('active')) initSettings();
         if (typeof wCalcAll === 'function') wCalcAll();
         return true;
     }
@@ -2404,37 +2465,41 @@
 
     async function loadFromGSheet() {
         const url = getInvUrl(); if (!url) return false;
+        let settingsOk = false, activitiesOk = false, wheelOk = false;
         try {
             const res = await fetch(url + '?action=all_read&t=' + Date.now());
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
             if (data.error) throw new Error(data.error);
-            const settingsOk = applySettingsBundle(data);
-            const activitiesOk = applyActivitiesBundle(data);
-            const wheelOk = typeof wApplySheetBundle === 'function' ? wApplySheetBundle(data.wheel || data) : false;
-            return settingsOk || activitiesOk || wheelOk;
+            if (!Array.isArray(data) && data.settings) settingsOk = applySettingsBundle(data);
+            activitiesOk = applyActivitiesBundle(data);
+            if (!Array.isArray(data) && (data.wheel || data.orders || data.lots || data.history)) {
+                wheelOk = typeof wApplySheetBundle === 'function' ? wApplySheetBundle(data.wheel || data) : false;
+            }
         } catch(err) {
             console.warn('GSheet all_read sync failed, falling back:', err);
         }
-        let activitiesOk = false;
-        try {
-            const res = await fetch(url + '?action=activities_read&t=' + Date.now());
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            const data = await res.json();
-            activitiesOk = applyActivitiesBundle(data);
-        } catch(err) {
+        if (!activitiesOk) {
             try {
-                const res = await fetch(url + '?t=' + Date.now());
+                const res = await fetch(url + '?action=activities_read&t=' + Date.now());
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
                 activitiesOk = applyActivitiesBundle(data);
-            } catch(e) {
-                console.warn('GSheet activities sync failed:', e);
+            } catch(err) {
+                try {
+                    const res = await fetch(url + '?t=' + Date.now());
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const data = await res.json();
+                    activitiesOk = applyActivitiesBundle(data);
+                } catch(e) {
+                    console.warn('GSheet activities sync failed:', e);
+                }
             }
         }
-        const settingOk = await loadSettingsFromGSheet();
-        const wheelOk = typeof wPullFromSheets === 'function' ? await wPullFromSheets(true) : false;
-        return activitiesOk || settingOk || wheelOk;
+        if (!settingsOk) settingsOk = await loadSettingsFromGSheet();
+        if (!wheelOk) wheelOk = typeof wPullFromSheets === 'function' ? await wPullFromSheets(true) : false;
+        lastPullStatus = { settings: settingsOk, activities: activitiesOk, wheel: wheelOk };
+        return activitiesOk || settingsOk || wheelOk;
     }
 
     function saveUnifiedUrl() {
@@ -3208,7 +3273,10 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             if (!syncOk) { updateDashboard(); } // ensure skeleton is cleared even on failure
             setRefreshSpin(false);
             const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-            if (syncOk) setSyncPill('ok', 'Synced ' + now);
+            if (syncOk) {
+                const status = syncStatusMessage(now);
+                setSyncPill(status.state, status.message);
+            }
             else setSyncPill('err', 'Sync failed');
         } else {
             setSyncPill('idle', 'Not connected');
