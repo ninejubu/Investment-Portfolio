@@ -1697,12 +1697,20 @@
     async function loadFromGSheet() {
         const url = getInvUrl(); if (!url) return false;
         try {
-            const res = await fetch(url);
+            const res = await fetch(url, { redirect: 'follow' });
             if (!res.ok) throw new Error('HTTP ' + res.status);
-            const flows = await res.json();
-            if (!Array.isArray(flows)) throw new Error('Invalid data');
-            state.portfolios.port1.flows = flows;
-            localStorage.setItem('flows_port1', JSON.stringify(flows));
+            const text = await res.text();
+            let flows;
+            try { flows = JSON.parse(text); } catch(e) { throw new Error('Non-JSON response — check Apps Script URL & permissions'); }
+            if (!Array.isArray(flows)) {
+                if (flows && flows.error) throw new Error('Sheet error: ' + flows.error);
+                throw new Error('Invalid data format');
+            }
+            // Only overwrite if sheet returned actual data; keep cached flows on empty response
+            if (flows.length > 0) {
+                state.portfolios.port1.flows = flows;
+                localStorage.setItem('flows_port1', JSON.stringify(flows));
+            }
             return true;
         } catch(err) {
             console.warn('GSheet invest sync failed:', err);
@@ -2542,7 +2550,15 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         setTimeout(checkMobileStack, 0);
     })();
 
+    const RESTORE_SETTINGS_MARKER = 'restored_c2e98ef_defaults_applied';
+    function restoreEmbeddedSettingsOnce() {
+        if (localStorage.getItem(RESTORE_SETTINGS_MARKER) === '1') return;
+        ['settings_port1', 'settings_port2', 'exchangeRateDefaults'].forEach(key => localStorage.removeItem(key));
+        localStorage.setItem(RESTORE_SETTINGS_MARKER, '1');
+    }
+
     window.onload = async () => {
+        restoreEmbeddedSettingsOnce();
         applyColorTheme(localStorage.getItem(THEME_KEY) || 'dark');
         try {
             const s1 = localStorage.getItem('settings_port1'); if(s1) { const d=JSON.parse(s1); if(d.begBalances) state.portfolios.port1.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port1.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port1.benchmarks=d.benchmarks; }
@@ -2560,12 +2576,17 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         if (window.Notification && Notification.permission === 'default') Notification.requestPermission();
         loadAlertedStrikes();
 
+        // Always load cached flows first so the ledger is never blank on startup
+        const f1cached = localStorage.getItem('flows_port1');
+        if (f1cached) { try { state.portfolios.port1.flows = JSON.parse(f1cached); } catch(e){} }
+
         const gsUrl = getGsUrl();
         if (gsUrl) {
             // Show skeleton while waiting for Google Sheets sync
             showSkeleton();
             setSyncPill('loading', 'Connecting…');
             setRefreshSpin(true);
+            updateDashboard(); renderMonthlyTiers(); // render cached data immediately
             let invOk = false, wheelOk = false;
             try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
             try { wheelOk = await wPullFromSheets(true); } catch(e) {}
@@ -2577,8 +2598,6 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             else setSyncPill('err', 'Sync failed');
         } else {
             setSyncPill('idle', 'Not connected');
-            const f1 = localStorage.getItem('flows_port1');
-            if(f1) { try { state.portfolios.port1.flows = JSON.parse(f1); updateDashboard(); } catch(e){} }
             wCalcAll();
         }
     };
