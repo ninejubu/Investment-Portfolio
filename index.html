@@ -1718,75 +1718,61 @@
         }
     }
 
-    // ── Diagnose: shows raw response from Apps Script ───────
+    // ── Diagnose: alerts raw response from Apps Script ───────
     async function diagSheetFetch() {
         const url = getGsUrl();
-        if (!url) { alert('No Apps Script URL saved.\nGo to Settings → Google Sheets Integration and paste your URL.'); return; }
+        if (!url) {
+            alert('❌ No Apps Script URL saved.\nGo to Settings → Google Sheets Integration and paste your URL.');
+            return;
+        }
 
-        const diagEl = document.getElementById('tx-empty-state');
-        const tbody  = document.getElementById('tx-tbody');
+        // Check localStorage first
+        const cached = localStorage.getItem('flows_port1');
+        let cacheInfo = 'flows_port1 in localStorage: NOT SET';
+        if (cached) {
+            try {
+                const arr = JSON.parse(cached);
+                cacheInfo = 'flows_port1 in localStorage: ' + (Array.isArray(arr) ? arr.length + ' items' : 'not an array');
+            } catch(e) { cacheInfo = 'flows_port1 in localStorage: PARSE ERROR'; }
+        }
 
-        const showDiag = (html) => {
-            tbody.innerHTML = '';
-            diagEl.classList.remove('hidden');
-            diagEl.innerHTML = html;
-        };
-
-        showDiag(`<div style="color:#F59E0B;font-size:12px;padding:12px"><i class="fa-solid fa-spinner fa-spin"></i> Fetching from Apps Script…<br><small style="color:#64748b;word-break:break-all">${url.substring(0,80)}…</small></div>`);
+        alert('🔄 Fetching from Apps Script...\n\n' + cacheInfo + '\n\nURL: ' + url.substring(0, 80) + '...\n\nClick OK then wait for result.');
 
         try {
             const res = await fetch(url, { redirect: 'follow' });
             const rawText = await res.text();
-            const statusLine = `HTTP ${res.status} ${res.statusText}`;
             const contentType = res.headers.get('content-type') || '(none)';
-            const preview = rawText.substring(0, 500);
 
-            let parsed = null, parseErr = '';
-            try { parsed = JSON.parse(rawText); } catch(e) { parseErr = e.message; }
+            let summary = '--- FETCH RESULT ---\n';
+            summary += 'HTTP Status: ' + res.status + '\n';
+            summary += 'Content-Type: ' + contentType + '\n';
+            summary += 'Response length: ' + rawText.length + ' chars\n\n';
 
-            let detail = '';
-            if (parsed !== null) {
+            let parsed = null;
+            try {
+                parsed = JSON.parse(rawText);
                 if (Array.isArray(parsed)) {
-                    detail = `<span style="color:#10B981">✓ Valid JSON array — ${parsed.length} transaction(s) returned.</span>`;
+                    summary += '✅ Valid JSON array: ' + parsed.length + ' transaction(s)\n';
                     if (parsed.length === 0) {
-                        detail += `<br><span style="color:#F59E0B">⚠ Array is EMPTY — the Activities sheet has no rows with valid dates & amounts.</span>`;
+                        summary += '⚠️ EMPTY ARRAY — sheet has no valid rows\n';
                     } else {
-                        detail += `<br>First item: <code style="color:#93C5FD">${JSON.stringify(parsed[0]).substring(0,120)}</code>`;
+                        summary += 'First item: ' + JSON.stringify(parsed[0]).substring(0, 150) + '\n';
                     }
-                } else if (parsed.error) {
-                    detail = `<span style="color:#F87171">✗ Script returned error: <strong>${parsed.error}</strong></span>`;
+                } else if (parsed && parsed.error) {
+                    summary += '❌ Script returned error: ' + parsed.error + '\n';
                 } else {
-                    detail = `<span style="color:#F59E0B">⚠ JSON object (not array): ${JSON.stringify(parsed).substring(0,200)}</span>`;
+                    summary += '⚠️ JSON but not an array: ' + JSON.stringify(parsed).substring(0, 150) + '\n';
                 }
-            } else {
-                detail = `<span style="color:#F87171">✗ NOT valid JSON (${parseErr})<br>Content-Type: ${contentType}<br>Likely cause: URL is wrong, or Apps Script is returning an HTML error page.</span>`;
+            } catch(e) {
+                summary += '❌ NOT valid JSON: ' + e.message + '\n';
+                summary += 'Raw preview: ' + rawText.substring(0, 300) + '\n';
             }
 
-            showDiag(`
-                <div style="text-align:left;padding:16px;font-size:11px;line-height:2;max-width:500px;margin:0 auto">
-                    <div style="font-size:13px;font-weight:700;color:#F8FAFC;margin-bottom:8px">🔬 Sheet Diagnostic Result</div>
-                    <div><span style="color:#64748b">Status:</span> ${statusLine}</div>
-                    <div><span style="color:#64748b">Content-Type:</span> ${contentType}</div>
-                    <div style="margin-top:8px">${detail}</div>
-                    <div style="margin-top:10px;padding:8px;background:#0F172A;border-radius:6px;border:1px solid #334155">
-                        <div style="color:#64748b;font-size:10px;margin-bottom:4px">Raw response (first 500 chars):</div>
-                        <pre style="color:#94A3B8;font-size:9px;white-space:pre-wrap;word-break:break-all;margin:0">${preview.replace(/</g,'&lt;')}</pre>
-                    </div>
-                    <div style="margin-top:10px">
-                        <div style="color:#64748b;font-size:10px;margin-bottom:4px">localStorage flows_port1:</div>
-                        <div style="color:#93C5FD;font-size:10px">${(()=>{ const f=localStorage.getItem('flows_port1'); if(!f) return 'Not set'; try{ const a=JSON.parse(f); return Array.isArray(a)?a.length+' cached transactions':'Invalid'; }catch(e){ return 'Parse error'; } })()}</div>
-                    </div>
-                    <button onclick="renderLedger();document.getElementById('tx-empty-state').classList.add('hidden')" style="margin-top:14px;background:#3B82F6;border:none;border-radius:6px;color:white;padding:6px 16px;font-size:11px;cursor:pointer">← Back to Ledger</button>
-                </div>`);
+            summary += '\n--- CACHE ---\n' + cacheInfo;
+            alert(summary);
 
         } catch(e) {
-            showDiag(`<div style="color:#F87171;font-size:11px;padding:16px">
-                <strong>Fetch failed: ${e.message}</strong><br><br>
-                Possible causes:<br>
-                • CORS blocked (most likely) — make sure the Apps Script is deployed as "Execute as: Me" and "Who has access: Anyone"<br>
-                • Network error<br>
-                • Invalid URL
-            </div>`);
+            alert('❌ FETCH FAILED: ' + e.message + '\n\nMost likely cause:\nApps Script not deployed as "Anyone" access.\n\nGo to Apps Script → Deploy → Manage Deployments → Edit → Who has access: Anyone');
         }
     }
 
