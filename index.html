@@ -103,19 +103,42 @@
 
         /* ── Desktop sidebar ── */
         #app-body { height: 100vh; overflow: hidden; }
-        #sidebar { width: 256px; flex-shrink: 0; border-right: 1px solid #334155; }
+        #sidebar { width: 256px; flex-shrink: 0; border-right: 1px solid #334155; transition: width .2s ease; }
         #sidebar .sidebar-header { display: block; }
         #sidebar-nav { display: flex; flex-direction: column; padding: 1rem; gap: 0.5rem; }
         #app-main { flex: 1; overflow-y: auto; }
+        .sidebar-collapse-btn {
+            width: 32px; height: 32px; border-radius: 8px;
+            display: inline-flex; align-items: center; justify-content: center;
+            border: 1px solid #334155; color: #94A3B8; background: #0F172A;
+            transition: color .15s ease, border-color .15s ease, background .15s ease;
+        }
+        .sidebar-collapse-btn:hover { color: #F8FAFC; border-color: #3B82F6; background: #1E293B; }
+        body.sidebar-collapsed #sidebar { width: 72px; }
+        body.sidebar-collapsed #sidebar .sidebar-header { padding: 1rem 0.75rem; }
+        body.sidebar-collapsed #sidebar-brand,
+        body.sidebar-collapsed #sidebar-edition,
+        body.sidebar-collapsed #sidebar-port-toggle,
+        body.sidebar-collapsed #sidebar-nav .nav-label,
+        body.sidebar-collapsed #sidebar-nav .port-toggle { display: none !important; }
+        body.sidebar-collapsed #sidebar-header-row { justify-content: center; }
+        body.sidebar-collapsed #sidebar-nav { padding: 0.75rem; align-items: center; }
+        body.sidebar-collapsed #sidebar-nav .nav-btn {
+            width: 44px; height: 44px; padding: 0; justify-content: center; gap: 0;
+        }
+        body.sidebar-collapsed #sidebar-nav .nav-btn i { width: 1rem; text-align: center; }
 
         /* ── Mobile / tablet (≤1023px) ── */
         @media (max-width: 1023px) {
             #app-body { flex-direction: column; height: 100dvh; }
             #sidebar { width: 100%; flex-direction: row; align-items: center; border-right: none; border-bottom: 1px solid #334155; flex-shrink: 0; overflow: hidden; }
             #sidebar .sidebar-header { display: none; }
+            body.sidebar-collapsed #sidebar { width: 100%; }
             #sidebar-nav { flex-direction: row; flex: 1; padding: 0.35rem 0.5rem; gap: 0.15rem; align-items: center; }
             #sidebar-nav .nav-btn { flex: 1; flex-direction: column; gap: 2px; padding: 0.4rem 0.25rem; font-size: 10px; align-items: center; justify-content: center; border-radius: 8px; }
             #sidebar-nav .nav-label { font-size: 9px; }
+            body.sidebar-collapsed #sidebar-nav .nav-label { display: inline !important; }
+            body.sidebar-collapsed #sidebar-nav .nav-btn { width: auto; height: auto; flex: 1; gap: 2px; }
             #app-main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
             #app-main header { padding: 8px 12px; gap: 6px; flex-wrap: wrap; }
             #app-main header h2 { font-size: 13px; }
@@ -374,6 +397,47 @@
         }
         .theme-toggle-label { min-width: 34px; text-align: left; }
 
+        .sentiment-strip {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .sentiment-card {
+            background: rgba(30, 41, 59, 0.72);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 12px;
+            min-height: 74px;
+        }
+        .sentiment-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            background: #0F172A; border: 1px solid #334155;
+            color: #94A3B8; flex-shrink: 0;
+        }
+        .sentiment-label { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+        .sentiment-value { font-size: 13px; color: #F8FAFC; font-weight: 800; margin-top: 2px; }
+        .sentiment-updated { font-size: 10px; color: #64748b; margin-top: 2px; }
+        .sentiment-score { font-size: 28px; line-height: 1; font-weight: 800; min-width: 46px; text-align: right; }
+        .sentiment-meter {
+            grid-column: 2 / 4;
+            height: 5px;
+            background: #0F172A;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .sentiment-fill {
+            width: 0%;
+            height: 100%;
+            border-radius: inherit;
+            background: #64748b;
+            transition: width .6s ease, background-color .2s ease;
+        }
+
         body.theme-light { background-color: #F6F8FB; color: #0F172A; }
         body.theme-light.theme-port2 { background-color: #F3F4F6 !important; }
         body.theme-light .bg-card,
@@ -443,6 +507,10 @@
         body.theme-light .hist-table td { border-color: #D6DEE8; }
         body.theme-light .theme-toggle { background: #FFFFFF; border-color: #CBD5E1; color: #334155; }
         body.theme-light .theme-toggle-knob { background: #EAF2FF; color: #2563EB; }
+        body.theme-light .sentiment-card { background: #FFFFFF; border-color: #D6DEE8; }
+        body.theme-light .sentiment-icon,
+        body.theme-light .sentiment-meter { background: #F8FAFC; border-color: #CBD5E1; }
+        body.theme-light .sentiment-value { color: #0F172A; }
         body.theme-light [style*="background:#0F172A"],
         body.theme-light [style*="background: #0F172A"] { background: #F8FAFC !important; }
         body.theme-light [style*="background:#1E293B"],
@@ -465,6 +533,9 @@
         @media (max-width: 640px) {
             .theme-toggle { width: 36px; height: 36px; padding: 5px; justify-content: center; }
             .theme-toggle-label { display: none; }
+            .sentiment-strip { grid-template-columns: 1fr; gap: 8px; }
+            .sentiment-card { padding: 10px 12px; min-height: 68px; }
+            .sentiment-score { font-size: 24px; }
         }
     </style>
 </head>
@@ -473,10 +544,17 @@
     <!-- ══════════════════════════════ SIDEBAR ══════════════════════════════ -->
     <aside id="sidebar" class="bg-card flex flex-col">
         <div class="sidebar-header p-6 pb-5 border-b border-slate-700">
-            <h1 class="font-bold text-xl text-white tracking-tight">NINE's<span class="text-blue-500"> PORTFOLIO</span></h1>
-            <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-widest mb-4">FY 2026 Edition</p>
+            <div id="sidebar-header-row" class="flex items-start justify-between gap-3">
+                <div>
+                    <h1 id="sidebar-brand" class="font-bold text-xl text-white tracking-tight">NINE's<span class="text-blue-500"> PORTFOLIO</span></h1>
+                    <p id="sidebar-edition" class="text-[10px] text-slate-500 mt-1 uppercase tracking-widest mb-4">FY 2026 Edition</p>
+                </div>
+                <button id="sidebar-collapse-btn" class="sidebar-collapse-btn" onclick="toggleSidebar()" title="Collapse sidebar" aria-label="Collapse sidebar" aria-pressed="false">
+                    <i id="sidebar-collapse-icon" class="fa-solid fa-angles-left text-[11px]"></i>
+                </button>
+            </div>
             
-            <div class="bg-slate-800/80 p-1 rounded-lg flex space-x-1 border border-slate-700">
+            <div id="sidebar-port-toggle" class="bg-slate-800/80 p-1 rounded-lg flex space-x-1 border border-slate-700">
                 <button id="btn-port1" onclick="switchPortfolio('port1')" class="flex-1 py-1.5 text-xs font-bold rounded-md bg-blue-600 text-white shadow transition-all">Core Port</button>
                 <button id="btn-port2" onclick="switchPortfolio('port2')" class="flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">Satellite Port</button>
             </div>
@@ -509,7 +587,7 @@
             <div class="flex items-center gap-3 flex-wrap">
                 <!-- USD/THB rate display -->
                 <div class="text-xs text-slate-400">
-                    USD/THB: <span id="header-rate2" class="text-white font-bold">31.07</span>
+                    USD/THB: <span id="header-rate2" class="text-white font-bold">—</span>
                 </div>
                 <button id="theme-toggle" class="theme-toggle" onclick="toggleColorTheme()" title="Switch dark or light mode" aria-label="Switch dark or light mode" aria-pressed="false">
                     <span class="theme-toggle-knob"><i id="theme-toggle-icon" class="fa-solid fa-moon text-[11px]"></i></span>
@@ -605,6 +683,29 @@
                     </div>
                 </div>
 
+                <div class="sentiment-strip">
+                    <div class="sentiment-card" id="crypto-fng-card">
+                        <div class="sentiment-icon"><i class="fa-brands fa-bitcoin"></i></div>
+                        <div>
+                            <div class="sentiment-label">Crypto Fear & Greed</div>
+                            <div class="sentiment-value" id="crypto-fng-label">Loading...</div>
+                            <div class="sentiment-updated" id="crypto-fng-updated">Alternative.me</div>
+                        </div>
+                        <div class="sentiment-score" id="crypto-fng-score">--</div>
+                        <div class="sentiment-meter"><div class="sentiment-fill" id="crypto-fng-fill"></div></div>
+                    </div>
+                    <div class="sentiment-card" id="stock-fng-card">
+                        <div class="sentiment-icon"><i class="fa-solid fa-chart-line"></i></div>
+                        <div>
+                            <div class="sentiment-label">Stock Fear & Greed</div>
+                            <div class="sentiment-value" id="stock-fng-label">Loading...</div>
+                            <div class="sentiment-updated" id="stock-fng-updated">CNN Markets</div>
+                        </div>
+                        <div class="sentiment-score" id="stock-fng-score">--</div>
+                        <div class="sentiment-meter"><div class="sentiment-fill" id="stock-fng-fill"></div></div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="bg-card rounded-xl p-5 border border-slate-700 border-t-4 border-t-stock">
                         <div class="flex justify-between items-center mb-3"><span class="text-slate-300 font-semibold">Stocks</span><span id="stock-ytd" class="text-xs text-stock font-bold">-</span></div>
@@ -636,6 +737,7 @@
                         <div class="flex justify-between items-center mb-4">
                             <h4 class="text-white font-bold">Performance vs Benchmarks</h4>
                             <div class="flex gap-2">
+                                <button id="toggle-holdings-panel" onclick="toggleHoldingsPanel()" title="Hide holdings breakdown" class="bg-slate-800 border-none text-[10px] text-slate-300 rounded px-2 py-1 hover:text-white hover:bg-slate-700 transition-colors"><i class="fa-solid fa-table-columns"></i></button>
                                 <select id="bench-type" onchange="renderPerformanceChart()" class="bg-slate-800 border-none text-[10px] text-white rounded px-2 py-1"><option value="ytd">YTD</option><option value="qoq" selected>QoQ</option></select>
                                 <select id="bench-range" onchange="renderPerformanceChart()" class="bg-slate-800 border-none text-[10px] text-white rounded px-2 py-1"><option value="all" selected>Full Year</option><option value="q1">Quarter 1</option><option value="q2">Quarter 2</option><option value="q3">Quarter 3</option><option value="q4">Quarter 4</option></select>
                                 <select id="bench-asset" onchange="renderPerformanceChart()" class="bg-slate-800 border-none text-[10px] text-white rounded px-2 py-1"><option value="all">Total Assets</option><option value="all-sep">All Assets</option><option value="stocks">Stocks</option><option value="bonds">Bonds</option><option value="crypto">Crypto</option><option value="gold">Gold</option></select>
@@ -740,7 +842,7 @@
                     <div class="lg:col-span-2 bg-card rounded-xl border border-slate-700 flex flex-col" style="max-height: 720px;">
                         <div class="px-6 py-4 border-b border-slate-700/60 flex justify-between items-center flex-shrink-0">
                             <div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-blue-600/15 flex items-center justify-center"><i class="fa-solid fa-list-ul text-blue-400 text-xs"></i></div><div><h4 class="text-white font-bold text-sm">Transaction Ledger</h4><p class="text-[10px] text-slate-500" id="tx-count-label">0 transactions</p></div></div>
-                            <div class="flex items-center gap-3"><span class="text-[10px] text-slate-600 italic hidden sm:block">Click cells to edit</span><button onclick="diagSheetFetch()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] text-amber-400 border border-amber-500/20 hover:bg-amber-500/10 transition-colors" title="Diagnose Google Sheet connection"><i class="fa-solid fa-stethoscope text-[10px]"></i> Diagnose</button><button onclick="clearLedger()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] text-red-400 border border-red-500/20 hover:bg-red-500/10 transition-colors"><i class="fa-solid fa-trash-can text-[10px]"></i> Clear All</button></div>
+                            <div class="flex items-center gap-3"><span class="text-[10px] text-slate-600 italic hidden sm:block">Click cells to edit</span><button onclick="clearLedger()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] text-red-400 border border-red-500/20 hover:bg-red-500/10 transition-colors"><i class="fa-solid fa-trash-can text-[10px]"></i> Clear All</button></div>
                         </div>
                         <div class="overflow-y-auto hide-scrollbar flex-1">
                             <table class="w-full text-left border-collapse" style="table-layout:fixed;">
@@ -748,7 +850,7 @@
                                 <thead class="text-[10px] uppercase text-slate-500 sticky top-0 z-10" style="background:#1E293B;"><tr><th class="px-4 py-3 font-semibold tracking-wide">Date</th><th class="px-2 py-3 font-semibold tracking-wide">Asset</th><th class="px-2 py-3 font-semibold tracking-wide">Type</th><th class="px-2 py-3 font-semibold tracking-wide">Cur</th><th class="px-2 py-3 font-semibold tracking-wide text-right">Amount</th><th class="px-4 py-3 font-semibold tracking-wide text-right">Del</th></tr></thead>
                                 <tbody id="tx-tbody" class="text-xs"></tbody>
                             </table>
-                            <div id="tx-empty-state" class="hidden items-center justify-center py-16 text-center" style="display:none"><div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mb-3 mx-auto"><i class="fa-solid fa-inbox text-slate-600 text-lg"></i></div><p class="text-slate-500 text-sm font-medium">No transactions yet</p><p class="text-slate-600 text-xs mt-1">Add a transaction or import a CSV file</p></div>
+                            <div id="tx-empty-state" class="hidden flex-col items-center justify-center py-16 text-center"><div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mb-3 mx-auto"><i class="fa-solid fa-inbox text-slate-600 text-lg"></i></div><p class="text-slate-500 text-sm font-medium">No transactions yet</p><p class="text-slate-600 text-xs mt-1">Add a transaction or import a CSV file</p></div>
                         </div>
                     </div>
                 </div>
@@ -771,7 +873,7 @@
                             <div class="mb-3">
                                 <div class="wheel-input-group">
                                     <span class="wheel-label">Total Options Balance ($)</span>
-                                    <input type="text" inputmode="numeric" class="wheel-input" id="optBalance" value="20,000" oninput="wFmtNum(this);wCalcAll()">
+                                    <input type="text" inputmode="numeric" class="wheel-input" id="optBalance" value="" oninput="wFmtNum(this);wCalcAll()">
                                 </div>
                             </div>
                             <div class="wheel-stat-grid">
@@ -928,7 +1030,7 @@
                         <div>
                             <label class="text-[10px] text-slate-500 uppercase block mb-1">Apps Script Web App URL (Single URL for both)</label>
                             <input type="text" id="unified-gs-url" class="w-full bg-slate-800 border border-slate-700 text-white rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" placeholder="https://script.google.com/macros/s/.../exec">
-                            <p class="text-[10px] text-slate-500 mt-1">Investment Dashboard uses GET (no param), Wheel uses GET ?action=wheel_read / POST action=wheel_write</p>
+                            <p class="text-[10px] text-slate-500 mt-1">Investment Dashboard uses GET (no param) + GET ?action=settings_read, Wheel uses GET ?action=wheel_read / POST action=wheel_write</p>
                         </div>
                         <div class="flex gap-3 flex-wrap">
                             <button onclick="saveUnifiedUrl()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Save & Connect Both</button>
@@ -1093,16 +1195,17 @@
     //   INVESTMENT DASHBOARD — State & Logic
     // ════════════════════════════════════════════════════
 
-    const savedRates = JSON.parse(localStorage.getItem('exchangeRateDefaults')) || { beginning: 31.07, q1: 32.66, q2: null, q3: null, q4: null };
+    const savedRates = { beginning: null, q1: null, q2: null, q3: null, q4: null };
     const getEmptyEndBalances = () => ({ stocks: { q1:null, q2: null, q3: null, q4: null }, bonds: { q1: null, q2: null, q3: null, q4: null }, crypto: { q1: {thb: null, usds: null, usdo: null}, q2: {thb: null, usds: null, usdo: null}, q3: {thb: null, usds: null, usdo: null}, q4: {thb: null, usds: null, usdo: null} }, gold: { q1: null, q2: null, q3: null, q4: null } });
-    const getPort1EndBalances = () => ({ stocks: { q1:852238.97, q2: null, q3: null, q4: null }, bonds: { q1: 1021204.85, q2: null, q3: null, q4: null }, crypto: { q1: {thb: 1566503.51, usds: 43456.43, usdo: 4507.55}, q2: {thb: null, usds: null, usdo: null}, q3: {thb: null, usds: null, usdo: null}, q4: {thb: null, usds: null, usdo: null} }, gold: { q1: 94565.34, q2: null, q3: null, q4: null } });
-    const getEmptyBenchmarks = () => ({ stocks: { name: 'S&P 500', q1: -5.08, q2: null, q3: null, q4: null }, bonds: { name: 'Bond', q1: 1, q2: null, q3: null, q4: null }, crypto: { name: 'Bitcoin', q1: -22.13, q2: null, q3: null, q4: null }, gold: { name: 'Gold', q1: 7.89, q2: null, q3: null, q4: null } });
+    const getEmptyBegBalances = () => ({ stocks: 0, bonds: 0, crypto: 0, gold: 0 });
+    const getEmptyBenchmarks = () => ({ stocks: { name: '', q1: null, q2: null, q3: null, q4: null }, bonds: { name: '', q1: null, q2: null, q3: null, q4: null }, crypto: { name: '', q1: null, q2: null, q3: null, q4: null }, gold: { name: '', q1: null, q2: null, q3: null, q4: null } });
+    const createDefaultGoal = () => ({ amount: 10000000, year: 2031, monthly: 20000, return: 12, monthlyTiers: [{year: 2026, amount: 20000}, {year: 2028, amount: 36000}] });
 
     const state = {
         currentPort: 'port1', rates: savedRates,
         portfolios: {
-            port1: { goal: { amount: 10000000, year: 2031, monthly: 20000, return: 12, monthlyTiers: [{year: 2026, amount: 20000},{year: 2028, amount: 36000}] }, begBalances: { stocks: 628474.25, bonds: 1016754.58, crypto: 1679416.42, gold: 85468.76 }, endBalances: getPort1EndBalances(), benchmarks: getEmptyBenchmarks(), flows: [{"id": 1000, "date": "2026-01-02", "asset": "stocks", "type": "deposit", "amount": 100000, "memo": "", "currency": "THB"}, {"id": 1001, "date": "2026-01-02", "asset": "crypto", "type": "deposit", "amount": 3000, "memo": "", "currency": "THB"}, {"id": 1002, "date": "2026-01-14", "asset": "stocks", "type": "deposit", "amount": 13551, "memo": "", "currency": "THB"}, {"id": 1003, "date": "2026-01-15", "asset": "gold", "type": "deposit", "amount": 2000, "memo": "", "currency": "THB"}, {"id": 1004, "date": "2026-01-28", "asset": "stocks", "type": "deposit", "amount": 42881.61, "memo": "SCBFP(SSFE) to SCBEUROPE(SSPE)", "currency": "THB"}, {"id": 1005, "date": "2026-01-28", "asset": "bonds", "type": "withdraw", "amount": 42881.61, "memo": "SCBFP(SSFE) to SCBEUROPE(SSPE)", "currency": "THB"}, {"id": 1006, "date": "2026-02-03", "asset": "stocks", "type": "deposit", "amount": 4000, "memo": "", "currency": "THB"}, {"id": 1007, "date": "2026-02-03", "asset": "crypto", "type": "deposit", "amount": 3000, "memo": "", "currency": "THB"}, {"id": 1008, "date": "2026-02-03", "asset": "gold", "type": "deposit", "amount": 2000, "memo": "", "currency": "THB"}, {"id": 1009, "date": "2026-02-03", "asset": "bonds", "type": "deposit", "amount": 13616, "memo": "", "currency": "THB"}, {"id": 1010, "date": "2026-02-28", "asset": "crypto", "type": "deposit", "amount": 3000, "memo": "", "currency": "THB"}, {"id": 1011, "date": "2026-02-28", "asset": "gold", "type": "deposit", "amount": 2000, "memo": "", "currency": "THB"}, {"id": 1012, "date": "2026-03-02", "asset": "stocks", "type": "deposit", "amount": 9456.47, "memo": "", "currency": "THB"}, {"id": 1013, "date": "2026-03-20", "asset": "crypto", "type": "withdraw", "amount": 159.98, "memo": "", "currency": "USD"}, {"id": 1014, "date": "2026-03-20", "asset": "crypto", "type": "withdraw", "amount": 49.98, "memo": "", "currency": "USD"}, {"id": 1015, "date": "2026-04-01", "asset": "stocks", "type": "deposit", "amount": 4000, "memo": "", "currency": "THB"}, {"id": 1016, "date": "2026-04-01", "asset": "crypto", "type": "deposit", "amount": 3000, "memo": "", "currency": "THB"}, {"id": 1017, "date": "2026-04-01", "asset": "gold", "type": "deposit", "amount": 2000, "memo": "", "currency": "THB"}, {"id": 1018, "date": "2026-04-02", "asset": "stocks", "type": "deposit", "amount": 9827, "memo": "", "currency": "THB"}, {"id": 1019, "date": "2026-04-02", "asset": "stocks", "type": "deposit", "amount": 6000, "memo": "", "currency": "THB"}] },
-            port2: { goal: { amount: 10000000, year: 2031, monthly: 20000, return: 12, monthlyTiers: [{year: 2026, amount: 20000},{year: 2028, amount: 36000}] }, begBalances: { stocks: 0, bonds: 0, crypto: 0, gold: 0 }, endBalances: getEmptyEndBalances(), benchmarks: getEmptyBenchmarks(), flows: [] }
+            port1: { goal: createDefaultGoal(), begBalances: getEmptyBegBalances(), endBalances: getEmptyEndBalances(), benchmarks: getEmptyBenchmarks(), flows: [] },
+            port2: { goal: createDefaultGoal(), begBalances: getEmptyBegBalances(), endBalances: getEmptyEndBalances(), benchmarks: getEmptyBenchmarks(), flows: [] }
         },
         computed: { stocks: {}, bonds: {}, crypto: {}, gold: {}, portfolio: {} },
         ui: { expandedQuarters: { q1: false, q2: false, q3: false, q4: false } }
@@ -1111,13 +1214,165 @@
     const pState = () => state.portfolios[state.currentPort];
     const charts = { alloc: null, perf: null };
     const THEME_KEY = 'investment_dashboard_theme';
+    const SIDEBAR_COLLAPSED_KEY = 'investment_dashboard_sidebar_collapsed';
+    const HOLDINGS_PANEL_COLLAPSED_KEY = 'investment_dashboard_holdings_panel_collapsed';
     const getThemeMode = () => document.body.classList.contains('theme-light') ? 'light' : 'dark';
     const chartTheme = () => getThemeMode() === 'light'
         ? { axis: '#475569', grid: 'rgba(148, 163, 184, 0.35)', label: '#0F172A', dataLabel: '#0F172A', pointBorder: '#FFFFFF' }
         : { axis: '#94A3B8', grid: 'rgba(51, 65, 85, 0.5)', label: '#F8FAFC', dataLabel: '#FFFFFF', pointBorder: '#FFFFFF' };
     const fmt = (v) => '฿' + (v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const getActiveRate = () => { for (let q = 4; q >= 1; q--) { const r = parseFloat(state.rates[`q${q}`]); if (r && r > 0) return r; } return parseFloat(state.rates.beginning) || 31.07; };
-    const getQuarterByDate = (dateStr) => Math.floor(new Date(dateStr).getMonth() / 3) + 1;
+    function fmtCompactTHB(v) {
+        const sign = v >= 0 ? '+' : '-';
+        const abs = Math.abs(v || 0);
+        if (abs >= 1000000) return `${sign}฿${(abs / 1000000).toFixed(abs >= 10000000 ? 0 : 1)}M`;
+        if (abs >= 1000) return `${sign}฿${(abs / 1000).toFixed(abs >= 100000 ? 0 : 1)}K`;
+        return `${sign}฿${abs.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+    }
+    const getActiveRate = () => { for (let q = 4; q >= 1; q--) { const r = parseFloat(state.rates[`q${q}`]); if (r && r > 0) return r; } return parseFloat(state.rates.beginning) || 0; };
+
+    function parseDashboardDate(value) {
+        if (!value) return null;
+        if (value instanceof Date && !isNaN(value.getTime())) return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+        if (typeof value === 'number' && Number.isFinite(value)) return new Date(Math.round((value - 25569) * 86400 * 1000));
+        const s = String(value).trim();
+        let m = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+        if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+        m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
+        if (m) {
+            let a = Number(m[1]), b = Number(m[2]), y = Number(m[3]);
+            if (y < 100) y += 2000;
+            let day = a, month = b;
+            if (a <= 12 && b > 12) { month = a; day = b; }
+            return new Date(y, month - 1, day);
+        }
+        const d = new Date(s);
+        return isNaN(d.getTime()) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+    function toIsoDashboardDate(value) {
+        const d = parseDashboardDate(value);
+        if (!d) return '';
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+    const getQuarterByDate = (dateStr) => {
+        const d = parseDashboardDate(dateStr);
+        return d ? Math.floor(d.getMonth() / 3) + 1 : 0;
+    };
+    const getLatestClosedPeriod = () => {
+        const currentQuarter = Math.floor(new Date().getMonth() / 3) + 1;
+        return currentQuarter > 1 ? `Q${currentQuarter - 1}` : 'Beg';
+    };
+    const getLatestClosedQuarterNumber = () => {
+        const period = getLatestClosedPeriod();
+        return period === 'Beg' ? 0 : Number(period[1]);
+    };
+
+    function getFearGreedTone(score) {
+        if (!Number.isFinite(score)) return { label: 'Unavailable', color: '#64748b' };
+        if (score <= 24) return { label: 'Extreme Fear', color: '#EF4444' };
+        if (score <= 44) return { label: 'Fear', color: '#F97316' };
+        if (score <= 55) return { label: 'Neutral', color: '#F59E0B' };
+        if (score <= 74) return { label: 'Greed', color: '#10B981' };
+        return { label: 'Extreme Greed', color: '#22C55E' };
+    }
+
+    function formatFearGreedTime(timestamp) {
+        if (!timestamp) return 'Updated just now';
+        const raw = Number(timestamp);
+        const ms = Number.isFinite(raw)
+            ? (raw < 1000000000000 ? raw * 1000 : raw)
+            : Date.parse(timestamp);
+        const date = new Date(ms);
+        if (Number.isNaN(date.getTime())) return 'Updated just now';
+        return 'Updated ' + date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    }
+
+    function normalizeFearGreedLabel(label, fallback) {
+        const clean = (label || fallback || '').toString().replace(/_/g, ' ').trim();
+        if (!clean) return 'Unavailable';
+        return clean.toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase());
+    }
+
+    async function fetchJsonWithTimeout(url, timeoutMs = 9000) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        const requestUrl = url + (url.includes('?') ? '&' : '?') + '_=' + Date.now();
+        try {
+            const res = await fetch(requestUrl, { signal: controller.signal });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return await res.json();
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
+    function setFearGreedCard(prefix, score, label, timestamp, source) {
+        const numericScore = Math.max(0, Math.min(100, Math.round(Number(score))));
+        const tone = getFearGreedTone(numericScore);
+        const finalLabel = normalizeFearGreedLabel(label, tone.label);
+        const scoreEl = document.getElementById(prefix + '-fng-score');
+        const labelEl = document.getElementById(prefix + '-fng-label');
+        const updatedEl = document.getElementById(prefix + '-fng-updated');
+        const fillEl = document.getElementById(prefix + '-fng-fill');
+        if (scoreEl) { scoreEl.textContent = String(numericScore); scoreEl.style.color = tone.color; }
+        if (labelEl) labelEl.textContent = finalLabel;
+        if (updatedEl) updatedEl.textContent = formatFearGreedTime(timestamp) + (source ? ' · ' + source : '');
+        if (fillEl) { fillEl.style.width = numericScore + '%'; fillEl.style.background = tone.color; }
+    }
+
+    function setFearGreedUnavailable(prefix, source) {
+        const scoreEl = document.getElementById(prefix + '-fng-score');
+        const labelEl = document.getElementById(prefix + '-fng-label');
+        const updatedEl = document.getElementById(prefix + '-fng-updated');
+        const fillEl = document.getElementById(prefix + '-fng-fill');
+        if (scoreEl) { scoreEl.textContent = '--'; scoreEl.style.color = '#64748b'; }
+        if (labelEl) labelEl.textContent = 'Unavailable';
+        if (updatedEl) updatedEl.textContent = source ? source + ' not reachable' : 'Data not reachable';
+        if (fillEl) { fillEl.style.width = '0%'; fillEl.style.background = '#64748b'; }
+    }
+
+    async function updateCryptoFearGreed() {
+        try {
+            const json = await fetchJsonWithTimeout('https://api.alternative.me/fng/?limit=1');
+            const latest = json && json.data && json.data[0];
+            if (!latest) throw new Error('Missing crypto FNG data');
+            setFearGreedCard('crypto', latest.value, latest.value_classification, latest.timestamp, 'Alternative.me');
+        } catch(e) {
+            setFearGreedUnavailable('crypto', 'Alternative.me');
+        }
+    }
+
+    function parseStockFearGreed(json) {
+        const direct = json && (json.fear_and_greed || json.fearAndGreed || json.now);
+        if (direct && (direct.score !== undefined || direct.value !== undefined || direct.y !== undefined)) {
+            return {
+                score: direct.score ?? direct.value ?? direct.y,
+                label: direct.rating ?? direct.value_classification,
+                timestamp: direct.timestamp ?? direct.lastUpdated ?? direct.x
+            };
+        }
+        const historical = json && json.fear_and_greed_historical;
+        const points = historical && (historical.data || historical);
+        if (Array.isArray(points) && points.length) {
+            const latest = points[points.length - 1];
+            return { score: latest.y ?? latest.score ?? latest.value, label: latest.rating, timestamp: latest.x ?? latest.timestamp };
+        }
+        return null;
+    }
+
+    async function updateStockFearGreed() {
+        try {
+            const json = await fetchJsonWithTimeout('https://production.dataviz.cnn.io/index/fearandgreed/graphdata');
+            const latest = parseStockFearGreed(json);
+            if (!latest || latest.score === undefined || latest.score === null) throw new Error('Missing stock FNG data');
+            setFearGreedCard('stock', latest.score, latest.label, latest.timestamp, 'CNN Markets');
+        } catch(e) {
+            setFearGreedUnavailable('stock', 'CNN Markets');
+        }
+    }
+
+    async function fetchFearGreedIndexes() {
+        await Promise.allSettled([updateCryptoFearGreed(), updateStockFearGreed()]);
+    }
 
     function applyColorTheme(mode) {
         const isLight = mode === 'light';
@@ -1138,6 +1393,31 @@
         renderAllocationChart([state.computed.stocks.currentBal, state.computed.bonds.currentBal, state.computed.crypto.currentBal, state.computed.gold.currentBal]);
         if (typeof updateGoalCalculation === 'function') updateGoalCalculation();
         if (typeof renderHoldingsBreakdown === 'function') renderHoldingsBreakdown();
+    }
+
+    function applySidebarState() {
+        const collapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        const btn = document.getElementById('sidebar-collapse-btn');
+        const icon = document.getElementById('sidebar-collapse-icon');
+        if (btn) {
+            btn.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+            btn.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+            btn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+        }
+        if (icon) icon.className = `fa-solid ${collapsed ? 'fa-angles-right' : 'fa-angles-left'} text-[11px]`;
+        setTimeout(() => {
+            if (charts.alloc) charts.alloc.resize();
+            if (charts.perf) charts.perf.resize();
+            if (window.goalChartInstance) window.goalChartInstance.resize();
+            if (typeof hbChartInst !== 'undefined' && hbChartInst) hbChartInst.resize();
+        }, 220);
+    }
+
+    function toggleSidebar() {
+        const next = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) !== 'true';
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, next ? 'true' : 'false');
+        applySidebarState();
     }
 
     function formatNumberInput(el) {
@@ -1185,17 +1465,17 @@
                 let netFlow = 0;
                 pState().flows.filter(tx => tx.asset === asset && getQuarterByDate(tx.date) === q).forEach(tx => {
                     let amt = tx.amount;
-                    if (tx.currency === 'USD') { const rate = state.rates['q' + q] || state.rates.beginning || 31.07; amt = tx.amount * parseFloat(rate); }
+                    if (tx.currency === 'USD') { const rate = parseFloat(state.rates['q' + q] || state.rates.beginning) || 0; amt = tx.amount * rate; }
                     netFlow += (tx.type === 'deposit' ? amt : -amt);
                 });
                 const qStart = currentBal; let qEndInput = pState().endBalances[asset][`q${q}`]; let qEnd = null;
                 if (asset === 'crypto') {
                     const hasData = qEndInput.thb !== null || qEndInput.usds !== null || qEndInput.usdo !== null;
-                    if (hasData) { const rate = state.rates[`q${q}`] || state.rates.beginning; qEnd = qEndInput.thb !== null ? qEndInput.thb : (((qEndInput.usds || 0) + (qEndInput.usdo || 0)) * parseFloat(rate)); }
+                    if (hasData) { const rate = parseFloat(state.rates[`q${q}`] || state.rates.beginning) || 0; qEnd = qEndInput.thb !== null ? qEndInput.thb : (((qEndInput.usds || 0) + (qEndInput.usdo || 0)) * rate); }
                 } else if (qEndInput !== null && qEndInput !== '' && !isNaN(qEndInput)) { qEnd = parseFloat(qEndInput); }
                 let profit = null, growth = null;
                 if (qEnd !== null) { profit = qEnd - qStart - netFlow; growth = qStart > 0 ? (profit / qStart) * 100 : 0; currentBal = qEnd; ytdProfit += profit; } else { currentBal = qStart + netFlow; }
-                state.computed[asset][`q${q}`] = { start: qStart, flow: netFlow, end: qEnd, profit, growth, running: currentBal };
+                state.computed[asset][`q${q}`] = { start: qStart, flow: netFlow, end: qEnd, profit, growth, running: currentBal, hasFlow: netFlow !== 0, hasEnd: qEnd !== null };
             });
             state.computed[asset].currentBal = currentBal; state.computed[asset].ytdProfit = ytdProfit;
             state.computed[asset].ytdGrowth = pState().begBalances[asset] > 0 ? (ytdProfit / pState().begBalances[asset]) * 100 : 0;
@@ -1204,7 +1484,7 @@
         quarters.forEach(q => {
             let pStart = 0, pFlow = 0, pRunning = 0, hasEnd = true, hasFlow = false;
             assets.forEach(asset => { const c = state.computed[asset][`q${q}`]; pStart += c.start; pFlow += c.flow; pRunning += c.running; if (c.end === null) hasEnd = false; if (c.flow !== 0) hasFlow = true; });
-            state.computed.portfolio[`q${q}`] = { start: pStart, flow: pFlow, end: hasEnd ? pRunning : null, running: pRunning, profit: hasEnd ? pRunning - pStart - pFlow : null, growth: (hasEnd && pStart > 0) ? ((pRunning - pStart - pFlow) / pStart) * 100 : null, hasData: hasFlow || hasEnd };
+            state.computed.portfolio[`q${q}`] = { start: pStart, flow: pFlow, end: hasEnd ? pRunning : null, running: pRunning, profit: hasEnd ? pRunning - pStart - pFlow : null, growth: (hasEnd && pStart > 0) ? ((pRunning - pStart - pFlow) / pStart) * 100 : null, hasData: hasFlow || hasEnd, hasFlow, hasEnd };
         });
         assets.forEach(a => { totalCurrentBal += state.computed[a].currentBal; });
         const totalBeg = Object.values(pState().begBalances).reduce((a,b)=>a+b,0);
@@ -1215,7 +1495,26 @@
     function renderPerformanceChart() {
         const type = document.getElementById('bench-type').value; const range = document.getElementById('bench-range').value; const assetKey = document.getElementById('bench-asset').value;
         const ctx = document.getElementById('perfChart').getContext('2d'); const isYTD = type === 'ytd';
-        const getPortGrowth = (aKey, qNum, ytdFlag) => { if (!ytdFlag) { if (aKey === 'all') return state.computed.portfolio[`q${qNum}`].growth !== null ? state.computed.portfolio[`q${qNum}`].growth : 0; return state.computed[aKey][`q${qNum}`].growth !== null ? state.computed[aKey][`q${qNum}`].growth : 0; } else { let begBal = 0, totalProfit = 0; if (aKey === 'all') { begBal = Object.values(pState().begBalances).reduce((a,b)=>a+b,0); for (let i = 1; i <= qNum; i++) { if (state.computed.portfolio[`q${i}`].profit !== null) totalProfit += state.computed.portfolio[`q${i}`].profit; } } else { begBal = pState().begBalances[aKey]; for (let i = 1; i <= qNum; i++) { if (state.computed[aKey][`q${i}`].profit !== null) totalProfit += state.computed[aKey][`q${i}`].profit; } } return begBal > 0 ? (totalProfit / begBal) * 100 : 0; } };
+        const getPortGrowth = (aKey, qNum, ytdFlag) => {
+            if (!qNum) return null;
+            if (!ytdFlag) {
+                const qData = aKey === 'all' ? state.computed.portfolio[`q${qNum}`] : state.computed[aKey][`q${qNum}`];
+                return qData?.growth !== null && qData?.growth !== undefined ? qData.growth : null;
+            }
+            let begBal = 0, totalProfit = 0, hasClosedQuarter = false;
+            if (aKey === 'all') {
+                begBal = Object.values(pState().begBalances).reduce((a,b)=>a+b,0);
+                for (let i = 1; i <= qNum; i++) {
+                    if (state.computed.portfolio[`q${i}`].profit !== null) { totalProfit += state.computed.portfolio[`q${i}`].profit; hasClosedQuarter = true; }
+                }
+            } else {
+                begBal = pState().begBalances[aKey];
+                for (let i = 1; i <= qNum; i++) {
+                    if (state.computed[aKey][`q${i}`].profit !== null) { totalProfit += state.computed[aKey][`q${i}`].profit; hasClosedQuarter = true; }
+                }
+            }
+            return hasClosedQuarter && begBal > 0 ? (totalProfit / begBal) * 100 : null;
+        };
         const defaultBenchmarks = getEmptyBenchmarks();
         const getSettingBM = (asset, q) => {
             const key = `q${q}`;
@@ -1227,13 +1526,13 @@
             return Number.isFinite(fallbackParsed) ? fallbackParsed : null;
         };
         const calcQoQ_ = (asset, q) => { const currentYTD = getSettingBM(asset, q); if (currentYTD === null) return null; if (q === 1) return currentYTD; const prevYTD = getSettingBM(asset, q - 1); if (prevYTD === null) return null; return (((1 + currentYTD/100) / (1 + prevYTD/100)) - 1) * 100; };
-        const getCryptoBM = (q, ytd) => { const rate = parseFloat(state.rates[`q${q}`] || state.rates.beginning) || 31.07; let usds = 0, usdo = 0; for (let qi = q; qi >= 1; qi--) { const eb = pState().endBalances.crypto[`q${qi}`]; if (eb && (eb.usds !== null || eb.usdo !== null)) { usds = (eb.usds || 0) * rate; usdo = (eb.usdo || 0) * rate; break; } } const totalUSD = usds + usdo; const bmS = ytd ? getSettingBM('bonds', q) : calcQoQ_('bonds', q); const bmO = ytd ? getSettingBM('crypto', q) : calcQoQ_('crypto', q); if (totalUSD === 0) return bmO; const wS = usds / totalUSD; const wO = usdo / totalUSD; if (bmS === null && bmO === null) return null; return (wS * (bmS ?? 0)) + (wO * (bmO ?? 0)); };
-        const getBenchGrowth = (aKey, qNum, ytdFlag) => { const assets = ['stocks', 'bonds', 'crypto', 'gold']; if (ytdFlag) { if (aKey === 'crypto') return getCryptoBM(qNum, true); if (aKey === 'all' || aKey === 'all-sep') { let weightedSum = 0, totalWeight = 0, hasAny = false; assets.forEach(a => { const assetBal = state.computed[a][`q${qNum}`].start; const bmVal = a === 'crypto' ? getCryptoBM(qNum, true) : getSettingBM(a, qNum); if (bmVal !== null) { weightedSum += (bmVal * assetBal); totalWeight += assetBal; hasAny = true; } }); return (hasAny && totalWeight > 0) ? weightedSum / totalWeight : null; } return getSettingBM(aKey, qNum); } else { const calcQoQ = (asset, q) => { if (asset === 'crypto') return getCryptoBM(q, false); return calcQoQ_(asset, q); }; if (aKey === 'all' || aKey === 'all-sep') { let weightedSum = 0, totalWeight = 0, hasAny = false; assets.forEach(a => { const assetBal = state.computed[a][`q${qNum}`].start; const qoqVal = calcQoQ(a, qNum); if (qoqVal !== null) { weightedSum += (qoqVal * assetBal); totalWeight += assetBal; hasAny = true; } }); return (hasAny && totalWeight > 0) ? weightedSum / totalWeight : null; } return calcQoQ(aKey, qNum); } };
-        let labels = []; let datasets = []; const qTarget = range === 'all' ? 4 : parseInt(range.charAt(1));
+        const getCryptoBM = (q, ytd) => { const rate = parseFloat(state.rates[`q${q}`] || state.rates.beginning) || 0; let usds = 0, usdo = 0; for (let qi = q; qi >= 1; qi--) { const eb = pState().endBalances.crypto[`q${qi}`]; if (eb && (eb.usds !== null || eb.usdo !== null)) { usds = (eb.usds || 0) * rate; usdo = (eb.usdo || 0) * rate; break; } } const totalUSD = usds + usdo; const bmS = ytd ? getSettingBM('bonds', q) : calcQoQ_('bonds', q); const bmO = ytd ? getSettingBM('crypto', q) : calcQoQ_('crypto', q); if (totalUSD === 0) return bmO; const wS = usds / totalUSD; const wO = usdo / totalUSD; if (bmS === null && bmO === null) return null; return (wS * (bmS ?? 0)) + (wO * (bmO ?? 0)); };
+        const getBenchGrowth = (aKey, qNum, ytdFlag) => { if (!qNum) return null; const assets = ['stocks', 'bonds', 'crypto', 'gold']; if (ytdFlag) { if (aKey === 'crypto') return getCryptoBM(qNum, true); if (aKey === 'all' || aKey === 'all-sep') { let weightedSum = 0, totalWeight = 0, hasAny = false; assets.forEach(a => { const assetBal = state.computed[a][`q${qNum}`].start; const bmVal = a === 'crypto' ? getCryptoBM(qNum, true) : getSettingBM(a, qNum); if (bmVal !== null) { weightedSum += (bmVal * assetBal); totalWeight += assetBal; hasAny = true; } }); return (hasAny && totalWeight > 0) ? weightedSum / totalWeight : null; } return getSettingBM(aKey, qNum); } else { const calcQoQ = (asset, q) => { if (asset === 'crypto') return getCryptoBM(q, false); return calcQoQ_(asset, q); }; if (aKey === 'all' || aKey === 'all-sep') { let weightedSum = 0, totalWeight = 0, hasAny = false; assets.forEach(a => { const assetBal = state.computed[a][`q${qNum}`].start; const qoqVal = calcQoQ(a, qNum); if (qoqVal !== null) { weightedSum += (qoqVal * assetBal); totalWeight += assetBal; hasAny = true; } }); return (hasAny && totalWeight > 0) ? weightedSum / totalWeight : null; } return calcQoQ(aKey, qNum); } };
+        let labels = []; let datasets = []; const qTarget = range === 'all' ? (isYTD ? getLatestClosedQuarterNumber() : 4) : parseInt(range.charAt(1));
         const benchColor = getThemeMode() === 'light' ? '#64748B' : '#94A3B8';
         const benchDataset = (label, data) => ({ label, data, backgroundColor: benchColor, borderColor: benchColor, borderWidth: 1, borderRadius: 4, minBarLength: 5 });
         if (isYTD) {
-            labels = [range === 'all' ? 'Full Year (YTD Q4)' : `YTD (Up to Q${qTarget})`];
+            labels = [range === 'all' ? (qTarget ? `YTD (Up to Q${qTarget})` : 'YTD') : `YTD (Up to Q${qTarget})`];
             if (assetKey === 'all-sep') { const assets = ['stocks', 'bonds', 'crypto', 'gold']; const colors = { stocks: '#10B981', bonds: '#F59E0B', crypto: '#3B82F6', gold: '#FACC15' }; assets.forEach(a => { datasets.push({ label: a.toUpperCase() + ' Port', data: [getPortGrowth(a, qTarget, true)], backgroundColor: colors[a], borderRadius: 4 }); datasets.push(benchDataset(a.toUpperCase() + ' Bench', [getBenchGrowth(a, qTarget, true)])); }); }
             else { datasets = [{ label: 'Portfolio', data: [getPortGrowth(assetKey, qTarget, true)], backgroundColor: '#3B82F6', borderRadius: 4 }, benchDataset('Benchmark', [getBenchGrowth(assetKey, qTarget, true)])]; }
         } else {
@@ -1251,7 +1550,7 @@
         if(charts.alloc) charts.alloc.destroy();
         const assetKeys = ['stocks','bonds','crypto','gold'];
         const theme = chartTheme();
-        charts.alloc = new Chart(ctx, { type: 'doughnut', data: { labels: ['Stocks', 'Bonds', 'Crypto', 'Gold'], datasets: [{ data, backgroundColor: ['#10B981', '#F59E0B', '#3B82F6', '#FACC15'], borderWidth: 0, hoverOffset: 8 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%', onClick: (e, elements) => { if (elements.length > 0) openDrillDown(assetKeys[elements[0].index]); }, plugins: { legend: { position: 'bottom', labels: { color: theme.axis, boxWidth: 8, font: { size: 9 } } }, datalabels: { color: '#fff', font: { weight: 'bold', size: 9 }, formatter: (v, c) => { const sum = c.chart.data.datasets[0].data.reduce((a, b) => a + b, 0); return sum > 0 ? (v * 100 / sum).toFixed(1) + '%' : ''; } } } } });
+        charts.alloc = new Chart(ctx, { type: 'doughnut', data: { labels: ['Stocks', 'Bonds', 'Crypto', 'Gold'], datasets: [{ data, backgroundColor: ['#10B981', '#F59E0B', '#3B82F6', '#FACC15'], borderWidth: 0, hoverOffset: 8 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%', onClick: (e, elements) => { if (elements.length > 0) openDrillDown(assetKeys[elements[0].index], document.getElementById('hb-quarter')?.value); }, plugins: { legend: { position: 'bottom', labels: { color: theme.axis, boxWidth: 8, font: { size: 9 } } }, datalabels: { color: '#fff', font: { weight: 'bold', size: 9 }, formatter: (v, c) => { const sum = c.chart.data.datasets[0].data.reduce((a, b) => a + b, 0); return sum > 0 ? (v * 100 / sum).toFixed(1) + '%' : ''; } } } } });
     }
 
     function renderAllocationHistory() {
@@ -1329,13 +1628,37 @@
         if(document.getElementById('goal-return-input')) document.getElementById('goal-return-input').value = pState().goal.return;
         computeData();
         const rate = getActiveRate();
-        document.getElementById('header-rate2').innerText = rate.toFixed(2);
+        document.getElementById('header-rate2').innerText = rate > 0 ? rate.toFixed(2) : '—';
         document.getElementById('total-net-worth').innerText = fmt(state.computed.portfolio.currentBal);
         const ytd = state.computed.portfolio.ytdGrowth; const badge = document.getElementById('total-return-badge');
         badge.innerText = (ytd >= 0 ? '+' : '') + ytd.toFixed(2) + '%';
         badge.className = `px-2 py-0.5 rounded text-xs font-bold ${ytd >= 0 ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`;
         updateGoalCalculation();
-        const updateAssetCard = (id, key) => { const c = state.computed[key]; document.getElementById(`${id}-bal`).innerText = fmt(c.currentBal); [1,2,3,4].forEach(q => { const el = document.getElementById(`${id[0]}-q${q}`); if(el) { const g = c[`q${q}`].growth; el.innerText = g !== null ? (g >= 0 ? '+' : '') + g.toFixed(1) + '%' : '-'; el.className = g !== null ? (g >= 0 ? 'text-green-400' : 'text-red-400') : 'text-slate-600'; } }); const gridYtdEl = document.getElementById(`${id[0]}-ytd`); if (gridYtdEl) { gridYtdEl.innerText = (c.ytdGrowth >= 0 ? '+' : '') + c.ytdGrowth.toFixed(1) + '%'; gridYtdEl.className = c.ytdGrowth >= 0 ? 'text-green-400' : 'text-red-400'; } };
+        const updateAssetCard = (id, key) => {
+            const c = state.computed[key];
+            document.getElementById(`${id}-bal`).innerText = fmt(c.currentBal);
+            [1,2,3,4].forEach(q => {
+                const el = document.getElementById(`${id[0]}-q${q}`);
+                if (!el) return;
+                const qData = c[`q${q}`];
+                const g = qData.growth;
+                if (g !== null) {
+                    el.innerText = (g >= 0 ? '+' : '') + g.toFixed(1) + '%';
+                    el.className = g >= 0 ? 'text-green-400' : 'text-red-400';
+                    el.title = `Q${q} return`;
+                } else if (qData.hasFlow) {
+                    el.innerText = fmtCompactTHB(qData.flow);
+                    el.className = qData.flow >= 0 ? 'text-blue-400' : 'text-red-400';
+                    el.title = `Q${q} movement; return pending until ending balance is set`;
+                } else {
+                    el.innerText = '-';
+                    el.className = 'text-slate-600';
+                    el.title = '';
+                }
+            });
+            const gridYtdEl = document.getElementById(`${id[0]}-ytd`);
+            if (gridYtdEl) { gridYtdEl.innerText = (c.ytdGrowth >= 0 ? '+' : '') + c.ytdGrowth.toFixed(1) + '%'; gridYtdEl.className = c.ytdGrowth >= 0 ? 'text-green-400' : 'text-red-400'; }
+        };
         ['stock','bond','crypto','gold'].forEach((id, i) => updateAssetCard(id, ['stocks','bonds','crypto','gold'][i]));
         renderAllocationChart([state.computed.stocks.currentBal, state.computed.bonds.currentBal, state.computed.crypto.currentBal, state.computed.gold.currentBal]);
         renderAllocationHistory(); renderPerformanceChart(); renderQuarterlyTable(); renderLedger();
@@ -1347,7 +1670,7 @@
 
     function renderLedger() {
         const tbody = document.getElementById('tx-tbody'); const emptyState = document.getElementById('tx-empty-state'); const countLabel = document.getElementById('tx-count-label');
-        tbody.innerHTML = ''; const flows = pState().flows.slice().sort((a,b) => new Date(b.date) - new Date(a.date));
+        tbody.innerHTML = ''; const flows = pState().flows.slice().sort((a,b) => (parseDashboardDate(b.date)?.getTime() || 0) - (parseDashboardDate(a.date)?.getTime() || 0));
         if (countLabel) countLabel.innerText = flows.length + ' transaction' + (flows.length !== 1 ? 's' : '');
         if (emptyState) emptyState.classList.toggle('hidden', flows.length > 0);
         const assetMeta = { stocks: { dot: '#10B981' }, bonds: { dot: '#F59E0B' }, crypto: { dot: '#3B82F6' }, gold: { dot: '#FACC15' } };
@@ -1359,7 +1682,7 @@
         });
     }
 
-    function saveFlows() { localStorage.setItem('flows_port1', JSON.stringify(state.portfolios.port1.flows)); localStorage.setItem('flows_port2', JSON.stringify(state.portfolios.port2.flows)); }
+    function saveFlows() { localStorage.setItem('flows_port2', JSON.stringify(state.portfolios.port2.flows)); }
     function saveGoals() { localStorage.setItem('goal_port1', JSON.stringify(state.portfolios.port1.goal)); localStorage.setItem('goal_port2', JSON.stringify(state.portfolios.port2.goal)); }
     function deleteTxById(id) { pState().flows = pState().flows.filter(f => f.id !== id); saveFlows(); updateDashboard(); }
     function handleManualTx(e) { e.preventDefault(); const asset = document.getElementById('tx-asset').value; const currencyEl = document.querySelector('input[name="txCurrency"]:checked'); const currency = currencyEl ? currencyEl.value : 'THB'; pState().flows.push({ id: Date.now(), date: document.getElementById('tx-date').value, asset, type: document.querySelector('input[name="txType"]:checked').value, amount: getRawValue(document.getElementById('tx-amount').value), memo: document.getElementById('tx-memo').value, currency }); saveFlows(); updateDashboard(); pushFlowsToSheet(); e.target.reset(); document.getElementById('tx-date').valueAsDate = new Date(); document.querySelector('input[name="txCurrency"][value="THB"]').checked = true; }
@@ -1408,7 +1731,7 @@
         reader.onload = (e) => {
             const parseCSVLine = (line) => { const result = []; let cur = ''; let inQuote = false; for (let i = 0; i < line.length; i++) { const ch = line[i]; if (ch === '"') { inQuote = !inQuote; } else if (ch === ',' && !inQuote) { result.push(cur.trim()); cur = ''; } else { cur += ch; } } result.push(cur.trim()); return result; };
             const rows = e.target.result.split(/\r?\n/); let currencyIdx = -1, noteIdx = 3; let imported = 0;
-            rows.forEach((line, idx) => { if (idx === 0) { const headers = parseCSVLine(line).map(h => h.toLowerCase().trim()); const ci = headers.indexOf('currency'); if (ci !== -1) { currencyIdx = ci; noteIdx = ci + 1; } return; } if (!line.trim()) return; const cols = parseCSVLine(line); if (cols.length < 3) return; const assetMap = {'stocks':'stocks','equity':'stocks','bond':'bonds','bonds':'bonds','crypto':'crypto','gold':'gold'}; let asset = ''; const typeRaw = cols[2].toLowerCase().trim(); for(let k in assetMap) { if(typeRaw === k || typeRaw.includes(k)) asset = assetMap[k]; } const amt = getRawValue(cols[1]); const parseDate = (s) => { const d = new Date(s); if (!isNaN(d)) { const y = d.getFullYear(); const m = String(d.getMonth()+1).padStart(2,'0'); const day = String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; } return s; }; let currency = 'THB'; if (currencyIdx !== -1 && cols[currencyIdx]) { const cur = cols[currencyIdx].toUpperCase().trim(); if (cur === 'USD' || cur === 'THB') currency = cur; } if(asset) { pState().flows.push({ id: Date.now() + Math.random(), date: parseDate(cols[0]), asset, type: amt >= 0 ? 'deposit' : 'withdraw', amount: Math.abs(amt), memo: (noteIdx < cols.length ? cols[noteIdx] : '') || '', currency }); imported++; } });
+            rows.forEach((line, idx) => { if (idx === 0) { const headers = parseCSVLine(line).map(h => h.toLowerCase().trim()); const ci = headers.indexOf('currency'); if (ci !== -1) { currencyIdx = ci; noteIdx = ci + 1; } return; } if (!line.trim()) return; const cols = parseCSVLine(line); if (cols.length < 3) return; const assetMap = {'stocks':'stocks','equity':'stocks','bond':'bonds','bonds':'bonds','crypto':'crypto','gold':'gold'}; let asset = ''; const typeRaw = cols[2].toLowerCase().trim(); for(let k in assetMap) { if(typeRaw === k || typeRaw.includes(k)) asset = assetMap[k]; } const amt = getRawValue(cols[1]); let currency = 'THB'; if (currencyIdx !== -1 && cols[currencyIdx]) { const cur = cols[currencyIdx].toUpperCase().trim(); if (cur === 'USD' || cur === 'THB') currency = cur; } if(asset) { pState().flows.push({ id: Date.now() + Math.random(), date: toIsoDashboardDate(cols[0]) || cols[0], asset, type: amt >= 0 ? 'deposit' : 'withdraw', amount: Math.abs(amt), memo: (noteIdx < cols.length ? cols[noteIdx] : '') || '', currency }); imported++; } });
             updateDashboard(); saveFlows(); alert('Import complete: ' + imported + ' transactions added'); input.value = '';
         };
         reader.readAsText(file);
@@ -1430,6 +1753,7 @@
         if (btcChip) btcChip.classList.toggle('hidden', id !== 'wheel');
         if(id === 'settings') initSettings();
         else if(id !== 'wheel') { updateDashboard(); applyBalanceMask(); }
+        if (id === 'dashboard') fetchFearGreedIndexes();
     }
 
     function switchWheelTab(el) {
@@ -1523,10 +1847,7 @@
 
     function saveSettings() {
         ['stocks','bonds','crypto','gold'].forEach(a => { pState().begBalances[a] = getRawValue(document.getElementById(`input-beg-${a}`).value); [1,2,3,4].forEach(q => { if (a === 'crypto') { const thbVal = document.getElementById(`input-eb-crypto-thb-q${q}`).value; const usdsVal = document.getElementById(`input-eb-crypto-usds-q${q}`).value; const usdoVal = document.getElementById(`input-eb-crypto-usdo-q${q}`).value; pState().endBalances.crypto[`q${q}`] = { thb: thbVal !== '' ? getRawValue(thbVal) : null, usds: usdsVal !== '' ? getRawValue(usdsVal) : null, usdo: usdoVal !== '' ? getRawValue(usdoVal) : null }; } else pState().endBalances[a][`q${q}`] = document.getElementById(`input-eb-${a}-q${q}`).value !== '' ? getRawValue(document.getElementById(`input-eb-${a}-q${q}`).value) : null; pState().benchmarks[a][`q${q}`] = document.getElementById(`input-bm-q${q}-${a}`).value !== '' ? getRawValue(document.getElementById(`input-bm-q${q}-${a}`).value) : null; pState().benchmarks[a].name = document.getElementById(`input-bm-name-${a}`).value; }); });
-        ['beginning','q1','q2','q3','q4'].forEach(r => state.rates[r] = getRawValue(document.getElementById('rate-'+r).value) || (r==='beginning'?31.07:null));
-        localStorage.setItem('exchangeRateDefaults', JSON.stringify(state.rates));
-        localStorage.setItem('settings_port1', JSON.stringify({ begBalances: state.portfolios.port1.begBalances, endBalances: state.portfolios.port1.endBalances, benchmarks: state.portfolios.port1.benchmarks }));
-        localStorage.setItem('settings_port2', JSON.stringify({ begBalances: state.portfolios.port2.begBalances, endBalances: state.portfolios.port2.endBalances, benchmarks: state.portfolios.port2.benchmarks }));
+        ['beginning','q1','q2','q3','q4'].forEach(r => state.rates[r] = document.getElementById('rate-'+r).value !== '' ? getRawValue(document.getElementById('rate-'+r).value) : null);
         localStorage.setItem('goal_port1', JSON.stringify(state.portfolios.port1.goal));
         localStorage.setItem('goal_port2', JSON.stringify(state.portfolios.port2.goal));
         updateDashboard(); alert(`Applied successfully!`);
@@ -1690,90 +2011,102 @@
         updateModalStatus();
     }
 
-    // ── Investment read (GET no param) ──────────────────
+    // ── Investment read ─────────────────────────────────
     const INV_GSHEET_URL_KEY = GS_URL_KEY;
     function getInvUrl() { return getGsUrl(); }
 
-    async function loadFromGSheet() {
-        const url = getInvUrl(); if (!url) return false;
-        try {
-            const res = await fetch(url, { redirect: 'follow' });
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            const text = await res.text();
-            let flows;
-            try { flows = JSON.parse(text); } catch(e) { throw new Error('Non-JSON response — check Apps Script URL & permissions'); }
-            if (!Array.isArray(flows)) {
-                if (flows && flows.error) throw new Error('Sheet error: ' + flows.error);
-                throw new Error('Invalid data format');
-            }
-            // Only overwrite if sheet returned actual data; keep cached flows on empty response
-            if (flows.length > 0) {
-                state.portfolios.port1.flows = flows;
-                localStorage.setItem('flows_port1', JSON.stringify(flows));
-            }
-            return true;
-        } catch(err) {
-            console.warn('GSheet invest sync failed:', err);
-            return false;
-        }
+    function gsActionUrl(url, action) {
+        const sep = url.includes('?') ? '&' : '?';
+        return url + sep + new URLSearchParams({ action, t: Date.now() }).toString();
     }
 
-    // ── Diagnose: alerts raw response from Apps Script ───────
-    async function diagSheetFetch() {
-        const url = getGsUrl();
-        if (!url) {
-            alert('❌ No Apps Script URL saved.\nGo to Settings → Google Sheets Integration and paste your URL.');
-            return;
-        }
+    async function fetchGsAction(action) {
+        const url = getInvUrl();
+        const res = await fetch(gsActionUrl(url, action));
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (data && data.error) throw new Error(data.error);
+        return data;
+    }
 
-        // Check localStorage first
-        const cached = localStorage.getItem('flows_port1');
-        let cacheInfo = 'flows_port1 in localStorage: NOT SET';
-        if (cached) {
-            try {
-                const arr = JSON.parse(cached);
-                cacheInfo = 'flows_port1 in localStorage: ' + (Array.isArray(arr) ? arr.length + ' items' : 'not an array');
-            } catch(e) { cacheInfo = 'flows_port1 in localStorage: PARSE ERROR'; }
-        }
+    function normalizeSheetAsset(value) {
+        const v = String(value || '').trim().toLowerCase();
+        if (v.startsWith('stock')) return 'stocks';
+        if (v.startsWith('bond')) return 'bonds';
+        if (v.startsWith('crypto')) return 'crypto';
+        if (v.startsWith('gold')) return 'gold';
+        return '';
+    }
 
-        alert('🔄 Fetching from Apps Script...\n\n' + cacheInfo + '\n\nURL: ' + url.substring(0, 80) + '...\n\nClick OK then wait for result.');
+    function normalizeSheetPeriod(value) {
+        const v = String(value || '').trim().toLowerCase();
+        if (v === 'beg' || v === 'beginning') return 'Beg';
+        const m = v.match(/^q([1-4])$/);
+        return m ? `Q${m[1]}` : '';
+    }
 
+    function applySheetHoldings(holdings) {
+        if (!Array.isArray(holdings)) return;
+        const periods = ['Beg', 'Q1', 'Q2', 'Q3', 'Q4'];
+        const grouped = {};
+        PLATFORM_ASSETS.forEach(asset => periods.forEach(period => grouped[ddKey(asset, period)] = []));
+
+        holdings.forEach(row => {
+            const asset = normalizeSheetAsset(row.asset || row.class);
+            const period = normalizeSheetPeriod(row.period);
+            const amount = Number(row.amount);
+            if (!asset || !period || !Number.isFinite(amount)) return;
+            grouped[ddKey(asset, period)].push({
+                name: String(row.ticker || row.name || '').trim(),
+                platform: String(row.name || '').trim(),
+                amount
+            });
+        });
+
+        Object.entries(grouped).forEach(([key, rows]) => localStorage.setItem(key, JSON.stringify(rows)));
+
+        PLATFORM_ASSETS.forEach(asset => {
+            const platforms = [...new Set(holdings
+                .filter(row => normalizeSheetAsset(row.asset || row.class) === asset)
+                .map(row => String(row.name || '').trim())
+                .filter(Boolean))];
+            if (platforms.length) localStorage.setItem(`platforms_${asset}`, JSON.stringify(platforms));
+        });
+    }
+
+    function applySheetSettings(data) {
+        const settings = data && (data.settings || data);
+        if (!settings || typeof settings !== 'object') return false;
+        const target = state.portfolios.port1;
+        if (settings.begBalances) target.begBalances = Object.assign(getEmptyBegBalances(), settings.begBalances);
+        if (settings.endBalances) target.endBalances = Object.assign(getEmptyEndBalances(), settings.endBalances);
+        if (settings.benchmarks) target.benchmarks = Object.assign(getEmptyBenchmarks(), settings.benchmarks);
+        if (settings.rates) state.rates = Object.assign({ beginning: null, q1: null, q2: null, q3: null, q4: null }, settings.rates);
+        applySheetHoldings(settings.holdings || []);
+        if (document.getElementById('tab-settings')?.classList.contains('active')) initSettings();
+        return true;
+    }
+
+    async function loadFromGSheet() {
+        const url = getInvUrl(); if (!url) return false;
+        let ok = false;
         try {
-            const res = await fetch(url, { redirect: 'follow' });
-            const rawText = await res.text();
-            const contentType = res.headers.get('content-type') || '(none)';
-
-            let summary = '--- FETCH RESULT ---\n';
-            summary += 'HTTP Status: ' + res.status + '\n';
-            summary += 'Content-Type: ' + contentType + '\n';
-            summary += 'Response length: ' + rawText.length + ' chars\n\n';
-
-            let parsed = null;
-            try {
-                parsed = JSON.parse(rawText);
-                if (Array.isArray(parsed)) {
-                    summary += '✅ Valid JSON array: ' + parsed.length + ' transaction(s)\n';
-                    if (parsed.length === 0) {
-                        summary += '⚠️ EMPTY ARRAY — sheet has no valid rows\n';
-                    } else {
-                        summary += 'First item: ' + JSON.stringify(parsed[0]).substring(0, 150) + '\n';
-                    }
-                } else if (parsed && parsed.error) {
-                    summary += '❌ Script returned error: ' + parsed.error + '\n';
-                } else {
-                    summary += '⚠️ JSON but not an array: ' + JSON.stringify(parsed).substring(0, 150) + '\n';
-                }
-            } catch(e) {
-                summary += '❌ NOT valid JSON: ' + e.message + '\n';
-                summary += 'Raw preview: ' + rawText.substring(0, 300) + '\n';
-            }
-
-            summary += '\n--- CACHE ---\n' + cacheInfo;
-            alert(summary);
-
-        } catch(e) {
-            alert('❌ FETCH FAILED: ' + e.message + '\n\nMost likely cause:\nApps Script not deployed as "Anyone" access.\n\nGo to Apps Script → Deploy → Manage Deployments → Edit → Who has access: Anyone');
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const flows = await res.json();
+            if (flows && flows.error) throw new Error(flows.error);
+            if (!Array.isArray(flows)) throw new Error('Invalid data');
+            state.portfolios.port1.flows = flows.map(flow => Object.assign({}, flow, { date: toIsoDashboardDate(flow.date) || flow.date }));
+            ok = true;
+        } catch(err) {
+            console.warn('GSheet invest sync failed:', err);
         }
+        try {
+            ok = applySheetSettings(await fetchGsAction('settings_read')) || ok;
+        } catch(err) {
+            console.warn('GSheet settings sync failed:', err);
+        }
+        return ok;
     }
 
     function saveUnifiedUrl() {
@@ -1802,101 +2135,12 @@
     //   WHEEL STRATEGY — State & Logic
     // ════════════════════════════════════════════════════
 
-    let btcPrice = 77864.86;
-    let wOrders = [
-        {id:1, cex:'BINANCE',product:'Short Put', openDate:'2026-04-24',expiryDate:'2026-05-01',strike:70000, contracts:0.04,premium:145, currency:'Contracts',status:'open',note:''},
-        {id:2, cex:'BINANCE',product:'Short Put', openDate:'2026-04-24',expiryDate:'2026-05-01',strike:71000, contracts:0.04,premium:205, currency:'Contracts',status:'open',note:''},
-        {id:3, cex:'BINANCE',product:'Short Put', openDate:'2026-04-24',expiryDate:'2026-05-01',strike:72000, contracts:0.04,premium:280, currency:'Contracts',status:'open',note:''},
-        {id:4, cex:'BINANCE',product:'Short Put', openDate:'2026-04-24',expiryDate:'2026-05-01',strike:74000, contracts:0.02,premium:535, currency:'Contracts',status:'open',note:''},
-        {id:5, cex:'BINANCE',product:'Short Call',openDate:'2026-04-24',expiryDate:'2026-05-15',strike:84000, contracts:0.02,premium:790, currency:'Contracts',status:'open',note:'L5-L6'},
-        {id:6, cex:'BINANCE',product:'Short Call',openDate:'2026-03-19',expiryDate:'2026-05-29',strike:88000, contracts:0.03,premium:1310,currency:'Contracts',status:'open',note:'L4&L7: 92000'},
-        {id:7, cex:'BINANCE',product:'Short Call',openDate:'2026-03-19',expiryDate:'2026-05-29',strike:94000, contracts:0.06,premium:740, currency:'Contracts',status:'open',note:'L4&L7: 92000'},
-        {id:8, cex:'BINANCE',product:'Short Call',openDate:'2026-01-29',expiryDate:'2026-06-26',strike:105000,contracts:0.12,premium:3335,currency:'Contracts',status:'open',note:'L1-L3'},
-        {id:9, cex:'BINANCE',product:'Short Call',openDate:'2026-03-27',expiryDate:'2026-06-26',strike:95000, contracts:0.09,premium:1480,currency:'Contracts',status:'open',note:'L4&L7'},
-    ];
-    let wLots = [
-        {id:1,name:'Short call L1',price:110050,  amount:0.05080,target:114000,accRealPL:370.26},
-        {id:2,name:'Short call L2',price:97151.98,amount:0.05043,target:98000, accRealPL:153.59},
-        {id:3,name:'Short call L3',price:84010.14,amount:0.02000,target:94000, accRealPL:82.08},
-        {id:4,name:'Short call L5',price:82700,   amount:0.06000,target:85000, accRealPL:211.41},
-        {id:5,name:'Short call L6',price:81480,   amount:0.05000,target:84000, accRealPL:176.18},
-        {id:6,name:'Short call L4',price:92650,   amount:0.04317,target:92650, accRealPL:92.70},
-        {id:7,name:'Short call L7',price:66200,   amount:0.05000,target:78000, accRealPL:52.88},
-        {id:8,name:'Short call L8',price:0,       amount:0.05000,target:75000, accRealPL:0,problem:true},
-    ];
-    let wClosed = [
-      {id:2001,cex:'BINANCE',product:'Short Put',openDate:'2025-12-22',expiryDate:'2026-01-02',strike:75000,contracts:0.05,premium:115,currency:'Contracts',status:'closed',note:''},
-      {id:2002,cex:'BINANCE',product:'Short Put',openDate:'2025-12-22',expiryDate:'2026-01-02',strike:80000,contracts:0.03,premium:340,currency:'Contracts',status:'closed',note:''},
-      {id:2003,cex:'BINANCE',product:'Short Put',openDate:'2025-12-26',expiryDate:'2026-01-02',strike:82000,contracts:0.05,premium:200,currency:'Contracts',status:'closed',note:''},
-      {id:2004,cex:'BINANCE',product:'Short Put',openDate:'2025-12-26',expiryDate:'2026-01-02',strike:80000,contracts:0.02,premium:110,currency:'Contracts',status:'closed',note:''},
-      {id:2005,cex:'BINANCE',product:'Short Put',openDate:'2025-12-26',expiryDate:'2026-01-02',strike:83000,contracts:0.03,premium:270,currency:'Contracts',status:'closed',note:''},
-      {id:2006,cex:'BINANCE',product:'Short Put',openDate:'2025-12-27',expiryDate:'2026-01-09',strike:80000,contracts:0.03,premium:420,currency:'Contracts',status:'closed',note:''},
-      {id:2007,cex:'BINANCE',product:'Short Put',openDate:'2026-01-02',expiryDate:'2026-01-09',strike:80000,contracts:0.03,premium:130,currency:'Contracts',status:'closed',note:''},
-      {id:2008,cex:'BINANCE',product:'Short Put',openDate:'2026-01-02',expiryDate:'2026-01-09',strike:82000,contracts:0.04,premium:210,currency:'Contracts',status:'closed',note:''},
-      {id:2009,cex:'BINANCE',product:'Short Put',openDate:'2026-01-02',expiryDate:'2026-01-09',strike:83000,contracts:0.03,premium:275,currency:'Contracts',status:'closed',note:''},
-      {id:2010,cex:'BINANCE',product:'Short Put',openDate:'2026-01-06',expiryDate:'2026-01-09',strike:89000,contracts:0.03,premium:230,currency:'Contracts',status:'closed',note:''},
-      {id:2011,cex:'BINANCE',product:'Short Put',openDate:'2026-01-06',expiryDate:'2026-01-09',strike:87000,contracts:0.05,premium:100,currency:'Contracts',status:'closed',note:''},
-      {id:2012,cex:'BINANCE',product:'Short Put',openDate:'2026-01-07',expiryDate:'2026-01-10',strike:86000,contracts:0.03,premium:120,currency:'Contracts',status:'closed',note:''},
-      {id:2013,cex:'BINANCE',product:'Short Put',openDate:'2026-01-11',expiryDate:'2026-01-14',strike:86000,contracts:0.03,premium:115,currency:'Contracts',status:'closed',note:''},
-      {id:2014,cex:'BINANCE',product:'Short Put',openDate:'2026-01-11',expiryDate:'2026-01-16',strike:84000,contracts:0.03,premium:170,currency:'Contracts',status:'closed',note:''},
-      {id:2015,cex:'BINANCE',product:'Short Put',openDate:'2026-01-02',expiryDate:'2026-01-16',strike:80000,contracts:0.03,premium:390,currency:'Contracts',status:'closed',note:''},
-      {id:2016,cex:'BINANCE',product:'Short Put',openDate:'2026-01-09',expiryDate:'2026-01-16',strike:82000,contracts:0.05,premium:170,currency:'Contracts',status:'closed',note:''},
-      {id:2017,cex:'BINANCE',product:'Short Put',openDate:'2026-01-09',expiryDate:'2026-01-16',strike:80000,contracts:0.02,premium:95,currency:'Contracts',status:'closed',note:''},
-      {id:2018,cex:'BINANCE',product:'Short Put',openDate:'2026-01-09',expiryDate:'2026-01-16',strike:84000,contracts:0.03,premium:285,currency:'Contracts',status:'closed',note:''},
-      {id:2019,cex:'BINANCE',product:'Short Put',openDate:'2026-01-09',expiryDate:'2026-01-16',strike:85000,contracts:0.03,premium:375,currency:'Contracts',status:'closed',note:''},
-      {id:2020,cex:'BINANCE',product:'Short Put',openDate:'2026-01-14',expiryDate:'2026-01-16',strike:92000,contracts:0.04,premium:50,currency:'Contracts',status:'closed',note:''},
-      {id:2021,cex:'BINANCE',product:'Short Call',openDate:'2026-01-09',expiryDate:'2026-01-16',strike:95000,contracts:0.04,premium:-52.5,currency:'Contracts',status:'exercised',note:''},
-      {id:2022,cex:'BINANCE',product:'Short Put',openDate:'2026-01-19',expiryDate:'2026-01-21',strike:88000,contracts:0.04,premium:65,currency:'Contracts',status:'closed',note:''},
-      {id:2023,cex:'BINANCE',product:'Short Call',openDate:'2026-01-20',expiryDate:'2026-01-21',strike:95000,contracts:0.04,premium:50,currency:'Contracts',status:'closed',note:''},
-      {id:2024,cex:'BINANCE',product:'Short Put',openDate:'2026-01-16',expiryDate:'2026-01-23',strike:90000,contracts:0.04,premium:365,currency:'Contracts',status:'exercised',note:'$89,635'},
-      {id:2025,cex:'BINANCE',product:'Short Put',openDate:'2026-01-16',expiryDate:'2026-01-23',strike:89000,contracts:0.05,premium:265,currency:'Contracts',status:'closed',note:''},
-      {id:2026,cex:'BINANCE',product:'Short Put',openDate:'2026-01-16',expiryDate:'2026-01-23',strike:88000,contracts:0.05,premium:210,currency:'Contracts',status:'closed',note:''},
-      {id:2027,cex:'BINANCE',product:'Short Put',openDate:'2026-01-16',expiryDate:'2026-01-23',strike:86000,contracts:0.04,premium:105,currency:'Contracts',status:'closed',note:''},
-      {id:2028,cex:'BINANCE',product:'Short Call',openDate:'2025-12-26',expiryDate:'2026-01-30',strike:104000,contracts:0.12,premium:560,currency:'Contracts',status:'closed',note:'L1-L3'},
-      {id:2029,cex:'BINANCE',product:'Short Call',openDate:'2026-01-23',expiryDate:'2026-01-30',strike:95000,contracts:0.04,premium:225,currency:'Contracts',status:'closed',note:''},
-      {id:2030,cex:'BINANCE',product:'Short Put',openDate:'2026-01-24',expiryDate:'2026-01-30',strike:84000,contracts:0.06,premium:280,currency:'Contracts',status:'exercised',note:''},
-      {id:2031,cex:'BINANCE',product:'Short Put',openDate:'2026-01-24',expiryDate:'2026-01-30',strike:85000,contracts:0.05,premium:380,currency:'Contracts',status:'exercised',note:''},
-      {id:2032,cex:'BINANCE',product:'Short Put',openDate:'2026-01-24',expiryDate:'2026-01-30',strike:82000,contracts:0.05,premium:155,currency:'Contracts',status:'closed',note:''},
-      {id:2033,cex:'BINANCE',product:'Short Put',openDate:'2026-01-24',expiryDate:'2026-01-30',strike:80000,contracts:0.05,premium:95,currency:'Contracts',status:'closed',note:''},
-      {id:2034,cex:'BINANCE',product:'Short Put',openDate:'2026-01-30',expiryDate:'2026-02-06',strike:75000,contracts:0.05,premium:350,currency:'Contracts',status:'exercised',note:''},
-      {id:2035,cex:'BINANCE',product:'Short Put',openDate:'2026-01-30',expiryDate:'2026-02-06',strike:78000,contracts:0.05,premium:710,currency:'Contracts',status:'exercised',note:'L7'},
-      {id:2036,cex:'BINANCE',product:'Short Put',openDate:'2026-03-11',expiryDate:'2026-03-13',strike:64000,contracts:0.04,premium:125,currency:'Contracts',status:'closed',note:''},
-      {id:2037,cex:'BINANCE',product:'Short Put',openDate:'2026-03-11',expiryDate:'2026-03-20',strike:60000,contracts:0.03,premium:245,currency:'Contracts',status:'closed',note:''},
-      {id:2038,cex:'BINANCE',product:'Short Put',openDate:'2026-03-11',expiryDate:'2026-03-20',strike:58000,contracts:0.03,premium:155,currency:'Contracts',status:'closed',note:''},
-      {id:2039,cex:'BINANCE',product:'Short Put',openDate:'2026-03-12',expiryDate:'2026-03-20',strike:63000,contracts:0.03,premium:510,currency:'Contracts',status:'closed',note:''},
-      {id:2040,cex:'BINANCE',product:'Short Put',openDate:'2026-03-13',expiryDate:'2026-03-20',strike:66000,contracts:0.03,premium:365,currency:'Contracts',status:'closed',note:''},
-      {id:2041,cex:'BINANCE',product:'Short Put',openDate:'2026-03-13',expiryDate:'2026-03-27',strike:65000,contracts:0.03,premium:725,currency:'Contracts',status:'closed',note:''},
-      {id:2042,cex:'BINANCE',product:'Short Put',openDate:'2026-03-14',expiryDate:'2026-03-27',strike:62000,contracts:0.03,premium:575,currency:'Contracts',status:'closed',note:''},
-      {id:2043,cex:'BINANCE',product:'Short Put',openDate:'2026-03-20',expiryDate:'2026-03-27',strike:64000,contracts:0.04,premium:345,currency:'Contracts',status:'closed',note:''},
-      {id:2044,cex:'BINANCE',product:'Short Put',openDate:'2026-03-20',expiryDate:'2026-03-27',strike:65000,contracts:0.03,premium:395,currency:'Contracts',status:'closed',note:''},
-      {id:2045,cex:'BINANCE',product:'Short Call',openDate:'2026-02-12',expiryDate:'2026-03-27',strike:78000,contracts:0.05,premium:1175,currency:'Contracts',status:'closed',note:'L7'},
-      {id:2046,cex:'BINANCE',product:'Short Call',openDate:'2026-02-04',expiryDate:'2026-03-27',strike:94000,contracts:0.04,premium:855,currency:'Contracts',status:'closed',note:'L4'},
-      {id:2047,cex:'BINANCE',product:'Short Put',openDate:'2026-03-26',expiryDate:'2026-04-03',strike:60000,contracts:0.05,premium:150,currency:'Contracts',status:'closed',note:''},
-      {id:2048,cex:'BINANCE',product:'Short Put',openDate:'2026-03-26',expiryDate:'2026-04-03',strike:65000,contracts:0.04,premium:565,currency:'Contracts',status:'closed',note:''},
-      {id:2049,cex:'BINANCE',product:'Short Put',openDate:'2026-03-26',expiryDate:'2026-04-03',strike:64000,contracts:0.03,premium:425,currency:'Contracts',status:'closed',note:''},
-      {id:2050,cex:'BINANCE',product:'Short Put',openDate:'2026-04-03',expiryDate:'2026-04-10',strike:60000,contracts:0.04,premium:225,currency:'Contracts',status:'closed',note:''},
-      {id:2051,cex:'BINANCE',product:'Short Put',openDate:'2026-04-03',expiryDate:'2026-04-10',strike:62000,contracts:0.04,premium:415,currency:'Contracts',status:'closed',note:''},
-      {id:2052,cex:'BINANCE',product:'Short Put',openDate:'2026-04-07',expiryDate:'2026-04-10',strike:63000,contracts:0.04,premium:160,currency:'Contracts',status:'closed',note:''},
-      {id:2053,cex:'BINANCE',product:'Short Put',openDate:'2026-04-10',expiryDate:'2026-04-17',strike:66000,contracts:0.05,premium:240,currency:'Contracts',status:'closed',note:''},
-      {id:2054,cex:'BINANCE',product:'Short Put',openDate:'2026-04-10',expiryDate:'2026-04-17',strike:65000,contracts:0.04,premium:170,currency:'Contracts',status:'closed',note:''},
-      {id:2055,cex:'BINANCE',product:'Short Put',openDate:'2026-04-10',expiryDate:'2026-04-17',strike:63000,contracts:0.05,premium:80,currency:'Contracts',status:'closed',note:''},
-      {id:2056,cex:'BINANCE',product:'Short Put',openDate:'2026-04-11',expiryDate:'2026-04-17',strike:67000,contracts:0.02,premium:205,currency:'Contracts',status:'closed',note:''},
-      {id:2057,cex:'BINANCE',product:'Short Call',openDate:'2026-02-01',expiryDate:'2026-04-24',strike:86000,contracts:0.11,premium:3915,currency:'Contracts',status:'closed',note:'L5-L6'},
-      {id:2058,cex:'BINANCE',product:'Short Put',openDate:'2026-04-17',expiryDate:'2026-04-24',strike:64000,contracts:0.04,premium:80,currency:'Contracts',status:'closed',note:''},
-      {id:2059,cex:'BINANCE',product:'Short Put',openDate:'2026-04-17',expiryDate:'2026-04-24',strike:66000,contracts:0.04,premium:105,currency:'Contracts',status:'closed',note:''},
-      {id:2060,cex:'BINANCE',product:'Short Put',openDate:'2026-04-18',expiryDate:'2026-04-24',strike:70000,contracts:0.04,premium:145,currency:'Contracts',status:'closed',note:''},
-      {id:2061,cex:'BINANCE',product:'Short Put',openDate:'2026-04-18',expiryDate:'2026-04-24',strike:68000,contracts:0.04,premium:90,currency:'Contracts',status:'closed',note:''},
-      {id:2062,cex:'BINANCE',product:'Short Put',openDate:'2026-04-28',expiryDate:'2026-04-30',strike:72000,contracts:0.03,premium:60,currency:'Contracts',status:'closed',note:''},
-      {id:2063,cex:'BINANCE',product:'Short Call',openDate:'2026-04-28',expiryDate:'2026-04-30',strike:80000,contracts:0.03,premium:70,currency:'Contracts',status:'closed',note:''},
-      {id:2064,cex:'BINANCE',product:'Short Put',openDate:'2026-04-24',expiryDate:'2026-05-01',strike:70000,contracts:0.04,premium:145,currency:'Contracts',status:'closed',note:''},
-      {id:2065,cex:'BINANCE',product:'Short Put',openDate:'2026-04-24',expiryDate:'2026-05-01',strike:71000,contracts:0.04,premium:205,currency:'Contracts',status:'closed',note:''},
-      {id:2066,cex:'BINANCE',product:'Short Put',openDate:'2026-04-24',expiryDate:'2026-05-01',strike:72000,contracts:0.04,premium:280,currency:'Contracts',status:'closed',note:''},
-      {id:2067,cex:'BINANCE',product:'Short Put',openDate:'2026-04-24',expiryDate:'2026-05-01',strike:74000,contracts:0.02,premium:535,currency:'Contracts',status:'closed',note:''},
-      {id:2068,cex:'BINANCE',product:'Short Put',openDate:'2026-05-01',expiryDate:'2026-05-03',strike:75000,contracts:0.03,premium:60,currency:'Contracts',status:'closed',note:''},
-      {id:2069,cex:'BINANCE',product:'Short Call',openDate:'2026-05-01',expiryDate:'2026-05-03',strike:79500,contracts:0.03,premium:60,currency:'Contracts',status:'closed',note:''},
-    ];
+    let btcPrice = 0;
+    let wOrders = [];
+    let wLots = [];
+    let wClosed = [];
     let wOrderFilter = 'all';
-    let wNextId = 2100;
+    let wNextId = 1;
     let wEditOrderId = null;
     let wEditLotId = null;
 
@@ -1926,18 +2170,6 @@
             input.dispatchEvent(new Event('change'));
         } else {
             alert('Invalid expression or number');
-        }
-    }
-
-    let alertedStrikes = new Set();
-
-    function loadAlertedStrikes() {
-        try {
-            const today = new Date().toISOString().split('T')[0];
-            const keys = JSON.parse(localStorage.getItem('btc_alerts')) || [];
-            alertedStrikes = new Set(keys.filter(k => typeof k === 'string' && k.endsWith('-' + today)));
-        } catch(e) {
-            alertedStrikes = new Set();
         }
     }
 
@@ -1971,34 +2203,16 @@
             if (exTotal) exTotal.textContent = atRiskOrders.length ? '$' + total.toLocaleString('en-US',{maximumFractionDigits:0}) : '—';
         }
 
-        // ── Strike Price Alert — once per day per strike ───────────────
+        // ── Strike Price Warning ───────────────
         const banner   = document.getElementById('strikeAlertBanner');
         const alertTxt = document.getElementById('strikeAlertText');
         const breached = openPuts.filter(o => btcPrice <= o.strike);
-        const today    = new Date().toISOString().split('T')[0];
 
         if (breached.length > 0 && banner && alertTxt) {
             banner.style.display = 'block';
             alertTxt.innerHTML = breached.map(o =>
                 `Strike $${o.strike.toLocaleString()} × ${o.contracts} BTC &nbsp;→&nbsp; $${(o.strike * o.contracts).toLocaleString('en-US',{maximumFractionDigits:0})}`
             ).join('<br>');
-            breached.forEach(o => {
-                const key = `${o.id}-${o.strike}-${today}`;
-                if (!alertedStrikes.has(key)) {
-                    alertedStrikes.add(key);
-                    // Persist today's alerted keys so page refresh won't re-alert
-                    try {
-                        const todayKeys = [...alertedStrikes].filter(k => k.endsWith('-' + today));
-                        localStorage.setItem('btc_alerts', JSON.stringify(todayKeys));
-                    } catch(e) {}
-                    setTimeout(() => {
-                        const msg = `⚠️ BTC Price Alert!\n\nBTC is now $${btcPrice.toLocaleString('en-US',{maximumFractionDigits:0})}\nBelow your Short Put strike of $${o.strike.toLocaleString()}\n\nExercise amount: $${(o.strike*o.contracts).toLocaleString('en-US',{maximumFractionDigits:0})} (${o.contracts} BTC @ $${o.strike.toLocaleString()})\n\nThis alert will not repeat until tomorrow.`;
-                        if (window.Notification && Notification.permission === 'granted') {
-                            new Notification('⚠️ BTC Below Strike', { body: `BTC $${btcPrice.toLocaleString('en-US',{maximumFractionDigits:0})} < Strike $${o.strike.toLocaleString()} — $${(o.strike*o.contracts).toLocaleString('en-US',{maximumFractionDigits:0})}` });
-                        } else { alert(msg); }
-                    }, 200);
-                }
-            });
         } else if (banner) {
             banner.style.display = 'none';
         }
@@ -2085,7 +2299,7 @@
         const cont=document.getElementById('histMonths');
         if(!wClosed.length){ cont.innerHTML='<div style="color:#475569;padding:40px;text-align:center;font-size:13px">No closed orders yet. Change an order status or add manually.</div>'; return; }
         cont.innerHTML='';
-        const bal=wpn(document.getElementById('optBalance').value)||20000;
+        const bal=wpn(document.getElementById('optBalance').value)||0;
         Object.keys(byM).sort().reverse().forEach(month=>{ const items=byM[month]; const mPrem=items.reduce((s,o)=>s+o.premium*o.contracts,0); const mExercisePL=items.reduce((s,o)=>s+(o.status==='exercised'?wExercisePL(o):0),0); const mPct=bal>0?(mPrem/bal*100).toFixed(2):'0'; const div=document.createElement('div'); div.className='hist-month-card';
             div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><div style="font-size:14px;font-weight:700">${month}</div><div style="display:flex;gap:22px">${[['Premium',wusd(mPrem,2),'#10B981'],['Exercise P/L',wSignedUsd(mExercisePL,2),mExercisePL>=0?'#10B981':'#EF4444'],['% Capital',mPct+'%','#F59E0B'],['Orders',items.length,'#93C5FD']].map(([l,v,c])=>`<div><div style="font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.06em;font-weight:600">${l}</div><div style="font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:${c}">${v}</div></div>`).join('')}</div></div><div style="overflow-x:auto"><table class="hist-table"><thead><tr><th>Product</th><th>Strike</th><th>Open</th><th>Closed</th><th>Contracts</th><th>Prem/Ct</th><th>Premium</th><th>Ex. P/L</th><th>Status</th><th>Note</th><th></th></tr></thead><tbody>${items.map((o,i)=>{ const exPL=wExercisePL(o); const exInput=o.status==='exercised'?`<input type="text" value="${exPL.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}" onfocus="this.value=this.value.replace(/,/g,'')" onblur="wUpdateHistPL(${o.id},this.value)" style="width:82px;background:transparent;border:1px solid #334155;border-radius:5px;color:${exPL>=0?'#10B981':'#EF4444'};font-size:11px;padding:3px 5px;text-align:right;outline:none">`:'<span style="color:#475569">—</span>'; return `<tr><td><span class="badge ${o.product==='Short Put'?'put':'call'}">${o.product}</span></td><td class="m">${wusd(o.strike)}</td><td class="m" style="color:#64748b">${o.openDate}</td><td class="m" style="color:#64748b">${o.expiryDate||'—'}</td><td class="m">${o.contracts}</td><td class="m" style="color:#10B981">${wusd(o.premium,0)}</td><td class="m" style="color:#10B981;font-weight:500">${wusd(o.premium*o.contracts,2)}</td><td class="m">${exInput}</td><td><span class="badge ${o.status}">${o.status}</span></td><td style="color:#334155;font-size:11px">${o.note||'—'}</td><td style="white-space:nowrap"><button class="w-btn-icon" title="Re-open" onclick="wReOpen(${i},'${month}')">↩ Re-open</button><button class="w-btn-icon w-btn-danger" onclick="wDelHist(${i},'${month}')" style="margin-left:3px">✕</button></td></tr>`; }).join('')}</tbody></table></div>`;
             cont.appendChild(div); });
@@ -2602,41 +2816,55 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                 row.style.flexDirection = 'row';
                 document.querySelectorAll('.panel-drag-handle').forEach(h => h.style.display = 'flex');
             }
+            if (typeof applyHoldingsPanelState === 'function') applyHoldingsPanelState();
         }
         window.addEventListener('resize', checkMobileStack);
         // Run after DOM is ready
         setTimeout(checkMobileStack, 0);
     })();
 
-    const RESTORE_SETTINGS_MARKER = 'restored_c2e98ef_defaults_applied';
-    function restoreEmbeddedSettingsOnce() {
-        if (localStorage.getItem(RESTORE_SETTINGS_MARKER) === '1') return;
-        ['settings_port1', 'settings_port2', 'exchangeRateDefaults'].forEach(key => localStorage.removeItem(key));
-        localStorage.setItem(RESTORE_SETTINGS_MARKER, '1');
+    function clearCachedFinancialSettings() {
+        ['settings_port1', 'settings_port2', 'exchangeRateDefaults', 'flows_port1'].forEach(key => localStorage.removeItem(key));
+        const prefixes = ['holdings_', 'platforms_'];
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            const key = localStorage.key(i);
+            if (prefixes.some(prefix => key && key.startsWith(prefix))) localStorage.removeItem(key);
+        }
+    }
+
+    function normalizeGoalSettings(savedGoal) {
+        const defaults = createDefaultGoal();
+        const goal = Object.assign(defaults, savedGoal || {});
+        const tiers = Array.isArray(goal.monthlyTiers)
+            ? goal.monthlyTiers.filter(tier => Number.isFinite(Number(tier.year)) && Number(tier.amount) > 0).map(tier => ({ year: Number(tier.year), amount: Number(tier.amount) }))
+            : [];
+        goal.monthlyTiers = tiers.length ? tiers : createDefaultGoal().monthlyTiers;
+        goal.monthly = Number(goal.monthly) > 0 ? Number(goal.monthly) : goal.monthlyTiers[0].amount;
+        goal.return = Number(goal.return) > 0 ? Number(goal.return) : createDefaultGoal().return;
+        goal.amount = Number(goal.amount) > 0 ? Number(goal.amount) : createDefaultGoal().amount;
+        goal.year = Number(goal.year) > 0 ? Number(goal.year) : createDefaultGoal().year;
+        return goal;
     }
 
     window.onload = async () => {
-        restoreEmbeddedSettingsOnce();
+        clearCachedFinancialSettings();
         applyColorTheme(localStorage.getItem(THEME_KEY) || 'dark');
+        applySidebarState();
+        initHoldingsBreakdownDefaultPeriod();
+        applyHoldingsPanelState();
         try {
-            const s1 = localStorage.getItem('settings_port1'); if(s1) { const d=JSON.parse(s1); if(d.begBalances) state.portfolios.port1.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port1.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port1.benchmarks=d.benchmarks; }
-            const s2 = localStorage.getItem('settings_port2'); if(s2) { const d=JSON.parse(s2); if(d.begBalances) state.portfolios.port2.begBalances=d.begBalances; if(d.endBalances) state.portfolios.port2.endBalances=d.endBalances; if(d.benchmarks) state.portfolios.port2.benchmarks=d.benchmarks; }
-            const g1 = localStorage.getItem('goal_port1'); if(g1){const d=JSON.parse(g1); if(d) state.portfolios.port1.goal=Object.assign(state.portfolios.port1.goal,d);}
-            const g2 = localStorage.getItem('goal_port2'); if(g2){const d=JSON.parse(g2); if(d) state.portfolios.port2.goal=Object.assign(state.portfolios.port2.goal,d);}
+            const g1 = localStorage.getItem('goal_port1'); if(g1){const d=JSON.parse(g1); if(d) state.portfolios.port1.goal=normalizeGoalSettings(d);}
+            const g2 = localStorage.getItem('goal_port2'); if(g2){const d=JSON.parse(g2); if(d) state.portfolios.port2.goal=normalizeGoalSettings(d);}
             const f2 = localStorage.getItem('flows_port2'); if(f2) state.portfolios.port2.flows = JSON.parse(f2);
         } catch(e) {}
+        saveGoals();
 
         updateDashboard(); renderMonthlyTiers();
+        fetchFearGreedIndexes();
         document.getElementById('tx-date').valueAsDate = new Date();
 
         // BTC price polling
         fetchBtc(); setInterval(fetchBtc, 15000);
-        if (window.Notification && Notification.permission === 'default') Notification.requestPermission();
-        loadAlertedStrikes();
-
-        // Always load cached flows first so the ledger is never blank on startup
-        const f1cached = localStorage.getItem('flows_port1');
-        if (f1cached) { try { state.portfolios.port1.flows = JSON.parse(f1cached); } catch(e){} }
 
         const gsUrl = getGsUrl();
         if (gsUrl) {
@@ -2644,7 +2872,6 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             showSkeleton();
             setSyncPill('loading', 'Connecting…');
             setRefreshSpin(true);
-            updateDashboard(); renderMonthlyTiers(); // render cached data immediately
             let invOk = false, wheelOk = false;
             try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
             try { wheelOk = await wPullFromSheets(true); } catch(e) {}
@@ -2710,13 +2937,16 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     const DD_COLORS = { stocks:'#10B981', bonds:'#F59E0B', crypto:'#3B82F6', gold:'#FACC15' };
     const PLATFORM_DEFAULTS = {
         stocks: ['Streaming', 'Webull', 'Dime', 'Finnomena', 'SCB Fundclick'],
-        bonds:  ['Webull', 'Dime', 'Finnomena', 'SCB Fundclick'],
-        crypto: ['Binance', 'Binance TH', 'Bybit', 'Ledger', 'Wallets'],
-        gold:   ['MTS Gold', 'SCB Fundclick', 'Webull', 'Dime']
+        bonds:  ['BBL', 'Finnomena', 'Dime', 'SCB Fundclick'],
+        crypto: ['Binance', 'Binance TH', 'Ledger', 'Wallets'],
+        gold:   ['MTS Gold', 'SCB Fundclick']
     };
 
     function loadPlatforms(asset) {
-        try { return JSON.parse(localStorage.getItem(`platforms_${asset}`)) || PLATFORM_DEFAULTS[asset]; }
+        try {
+            const saved = JSON.parse(localStorage.getItem(`platforms_${asset}`));
+            return Array.isArray(saved) && saved.length ? saved : PLATFORM_DEFAULTS[asset];
+        }
         catch { return PLATFORM_DEFAULTS[asset]; }
     }
     function savePlatforms() {
@@ -2748,9 +2978,44 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     // ══════════════════════════════════════════════════════
     let hbChartInst = null;
 
+    function initHoldingsBreakdownDefaultPeriod() {
+        const quarterEl = document.getElementById('hb-quarter');
+        if (quarterEl) quarterEl.value = getLatestClosedPeriod();
+    }
+
+    function applyHoldingsPanelState() {
+        const collapsed = localStorage.getItem(HOLDINGS_PANEL_COLLAPSED_KEY) === 'true';
+        const isMobile = window.innerWidth < 1024;
+        const panel = document.getElementById('panel-holdings');
+        const handle = document.getElementById('drag-handle-2');
+        const alloc = document.getElementById('panel-alloc');
+        const btn = document.getElementById('toggle-holdings-panel');
+        if (panel) { panel.hidden = collapsed; panel.style.display = collapsed ? 'none' : 'flex'; }
+        if (handle) { handle.hidden = collapsed; handle.style.display = (collapsed || isMobile) ? 'none' : 'flex'; }
+        if (alloc) {
+            alloc.style.flexBasis = isMobile ? 'auto' : (collapsed ? '50%' : '25%');
+            alloc.style.flexGrow = (collapsed || isMobile) ? '1' : '0';
+        }
+        if (btn) {
+            btn.title = collapsed ? 'Show holdings breakdown' : 'Hide holdings breakdown';
+            btn.innerHTML = collapsed ? '<i class="fa-solid fa-eye"></i>' : '<i class="fa-solid fa-table-columns"></i>';
+            btn.classList.toggle('text-blue-400', !collapsed);
+        }
+        if (charts.alloc) setTimeout(() => charts.alloc.resize(), 0);
+        if (hbChartInst && !collapsed) setTimeout(() => hbChartInst.resize(), 0);
+    }
+
+    function toggleHoldingsPanel() {
+        const next = localStorage.getItem(HOLDINGS_PANEL_COLLAPSED_KEY) !== 'true';
+        localStorage.setItem(HOLDINGS_PANEL_COLLAPSED_KEY, next ? 'true' : 'false');
+        applyHoldingsPanelState();
+    }
+
     function renderHoldingsBreakdown() {
         const asset   = document.getElementById('hb-asset')?.value   || 'stocks';
-        const quarter = document.getElementById('hb-quarter')?.value || 'Q1';
+        const quarterEl = document.getElementById('hb-quarter');
+        const quarter = quarterEl?.value || getLatestClosedPeriod();
+        if (quarterEl && !quarterEl.value) quarterEl.value = quarter;
         const color   = DD_COLORS[asset];
         const rows    = ddLoad(asset, quarter);
         const assetBal = ddGetAssetBalForPeriod(asset, quarter);
@@ -2776,7 +3041,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                     type: 'doughnut',
                     data: { labels, datasets: [{ data: amounts, backgroundColor: colors, borderWidth: 0, hoverOffset: 6 }] },
                     options: { responsive: true, maintainAspectRatio: false, cutout: '65%',
-                        onClick: (e, els) => { if (els.length && labels[els[0].index] !== 'Untracked') { openDrillDown(asset); } },
+                        onClick: (e, els) => { if (els.length && labels[els[0].index] !== 'Untracked') { openDrillDown(asset, quarter); } },
                         plugins: { legend: { display: false }, datalabels: { display: false },
                             tooltip: { callbacks: { label: (c) => ` ${c.label}: ฿${c.raw.toLocaleString('en-US',{maximumFractionDigits:0})} (${assetBal>0?(c.raw/assetBal*100).toFixed(1):0}%)` } } } }
                 });
@@ -2798,7 +3063,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                 el.style.cssText = `display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;background:#0F172A;cursor:${isUT?'default':'pointer'};transition:background .15s`;
                 el.onmouseenter = () => { if(!isUT) el.style.background = '#1E293B'; };
                 el.onmouseleave = () => { el.style.background = '#0F172A'; };
-                if (!isUT) el.onclick = () => openDrillDown(asset);
+                if (!isUT) el.onclick = () => openDrillDown(asset, quarter);
                 el.innerHTML = `
                     <div style="width:8px;height:8px;border-radius:50%;background:${r._color};flex-shrink:0"></div>
                     <div style="flex:1;font-size:11px;color:${isUT?'#475569':'#F8FAFC'};font-style:${isUT?'italic':'normal'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name||'—'}</div>
@@ -2832,9 +3097,15 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         localStorage.setItem(ddKey(asset, quarter), JSON.stringify(rows));
     }
 
-    function openDrillDown(asset) {
+    function getPreferredDrilldownQuarter(asset, requestedQuarter) {
+        const normalized = normalizeSheetPeriod(requestedQuarter);
+        if (normalized) return normalized;
+        return normalizeSheetPeriod(document.getElementById('hb-quarter')?.value) || getLatestClosedPeriod();
+    }
+
+    function openDrillDown(asset, quarter) {
         ddAsset   = asset;
-        ddQuarter = 'Beg';
+        ddQuarter = getPreferredDrilldownQuarter(asset, quarter);
         document.getElementById('drilldown-overlay').style.display = 'flex';
         document.body.style.overflow = 'hidden';
         ddRender();
@@ -2896,12 +3167,11 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         } else {
             const qNum = parseInt(ddQuarter[1]);
             const c = state.computed[ddAsset];
-            if (c?.[`q${qNum}`]) { qBal = c[`q${qNum}`].end ?? 0; qGrowth = c[`q${qNum}`].growth ?? null; }
+            if (c?.[`q${qNum}`]) { qBal = ddGetAssetBalForPeriod(ddAsset, ddQuarter); qGrowth = c[`q${qNum}`].growth ?? null; }
         }
         const totalPort = ['stocks','bonds','crypto','gold'].reduce((s,a) => {
             if (ddQuarter === 'Beg') return s + (pState().begBalances[a]||0);
-            const qNum = parseInt(ddQuarter[1]);
-            return s + (state.computed[a]?.[`q${qNum}`]?.end ?? 0);
+            return s + ddGetAssetBalForPeriod(a, ddQuarter);
         }, 0);
         const allocPct = totalPort > 0 ? (qBal / totalPort * 100) : 0;
 
@@ -3037,7 +3307,8 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         if (!quarter) return 0;
         if (quarter === 'Beg') return pState().begBalances[asset] || 0;
         const qNum = parseInt(quarter[1]);
-        return state.computed[asset]?.[`q${qNum}`]?.end ?? 0;
+        const qData = state.computed[asset]?.[`q${qNum}`];
+        return qData?.end ?? qData?.running ?? 0;
     }
 
     function ddUpdateRow(i, field, val) {
