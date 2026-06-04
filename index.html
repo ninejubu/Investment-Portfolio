@@ -730,7 +730,7 @@
                 </div>
 
                 <!-- Resizable 3-panel row -->
-                <div id="three-panel-row" style="display:flex;gap:0;align-items:stretch;min-height:420px">
+                <div id="three-panel-row" style="display:grid;grid-template-columns:minmax(200px,var(--perf-col,2fr)) 14px minmax(180px,var(--alloc-col,1fr)) 14px minmax(180px,var(--hold-col,1fr));gap:0;align-items:stretch;min-height:420px;width:100%">
 
                     <!-- Panel 1: Performance vs Benchmarks -->
                     <div id="panel-perf" class="bg-card rounded-xl border border-slate-700 flex flex-col" style="flex-basis:50%;min-width:200px;padding:24px;overflow:hidden;box-sizing:border-box">
@@ -2705,11 +2705,33 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     // ════════════════════════════════════════════════════
     (function initPanelResize() {
         const handles = [
-            { handleId: 'drag-handle-1', leftId: 'panel-perf',  rightId: 'panel-alloc' },
-            { handleId: 'drag-handle-2', leftId: 'panel-alloc', rightId: 'panel-holdings' }
+            { handleId: 'drag-handle-1', leftId: 'panel-perf',  rightId: 'panel-alloc', leftVar: '--perf-col', rightVar: '--alloc-col' },
+            { handleId: 'drag-handle-2', leftId: 'panel-alloc', rightId: 'panel-holdings', leftVar: '--alloc-col', rightVar: '--hold-col' }
         ];
 
-        handles.forEach(({ handleId, leftId, rightId }) => {
+        function syncPanelGridWeights() {
+            const row = document.getElementById('three-panel-row');
+            if (!row || window.innerWidth < 1024) return;
+            const panels = [
+                ['panel-perf', '--perf-col'],
+                ['panel-alloc', '--alloc-col'],
+                ['panel-holdings', '--hold-col']
+            ];
+            panels.forEach(([id, varName]) => {
+                const el = document.getElementById(id);
+                if (el && !el.hidden && el.style.display !== 'none') {
+                    row.style.setProperty(varName, Math.max(1, el.getBoundingClientRect().width).toFixed(2) + 'fr');
+                }
+            });
+        }
+
+        function resizePanelCharts() {
+            if (charts.perf) charts.perf.resize();
+            if (charts.alloc) charts.alloc.resize();
+            if (typeof hbChartInst !== 'undefined' && hbChartInst) hbChartInst.resize();
+        }
+
+        handles.forEach(({ handleId, leftId, rightId, leftVar, rightVar }) => {
             const handle = document.getElementById(handleId);
             const pip    = handle ? handle.querySelector('.drag-pip') : null;
             if (!handle) return;
@@ -2727,10 +2749,9 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                 const leftEl   = document.getElementById(leftId);
                 const rightEl  = document.getElementById(rightId);
                 const startX   = e.clientX;
-                const rowW     = row.getBoundingClientRect().width;
-                // Capture initial flex-basis as px
                 const leftW0   = leftEl.getBoundingClientRect().width;
                 const rightW0  = rightEl.getBoundingClientRect().width;
+                syncPanelGridWeights();
 
                 // Disable transitions & pointer events on panels during drag
                 document.body.style.cursor = 'col-resize';
@@ -2743,12 +2764,9 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                     let newRight = rightW0 - delta;
                     if (newLeft  < minPx) { newLeft  = minPx; newRight = leftW0 + rightW0 - minPx; }
                     if (newRight < minPx) { newRight = minPx; newLeft  = leftW0 + rightW0 - minPx; }
-                    leftEl.style.flexBasis  = newLeft  + 'px';
-                    rightEl.style.flexBasis = newRight + 'px';
-                    leftEl.style.flexGrow   = '0';
-                    rightEl.style.flexGrow  = '0';
-                    // Trigger chart resize
-                    window.dispatchEvent(new Event('resize'));
+                    row.style.setProperty(leftVar, newLeft.toFixed(2) + 'fr');
+                    row.style.setProperty(rightVar, newRight.toFixed(2) + 'fr');
+                    resizePanelCharts();
                 }
 
                 function onUp() {
@@ -2758,8 +2776,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                     document.body.style.userSelect = '';
                     document.removeEventListener('mousemove', onMove);
                     document.removeEventListener('mouseup',   onUp);
-                    // Final chart resize
-                    window.dispatchEvent(new Event('resize'));
+                    resizePanelCharts();
                 }
 
                 document.addEventListener('mousemove', onMove);
@@ -2775,6 +2792,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                 const startX   = touch.clientX;
                 const leftW0   = leftEl.getBoundingClientRect().width;
                 const rightW0  = rightEl.getBoundingClientRect().width;
+                syncPanelGridWeights();
                 if (pip) pip.style.background = '#60A5FA';
 
                 function onTMove(te) {
@@ -2784,17 +2802,15 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                     let newRight = rightW0 - delta;
                     if (newLeft  < minPx) { newLeft  = minPx; newRight = leftW0 + rightW0 - minPx; }
                     if (newRight < minPx) { newRight = minPx; newLeft  = leftW0 + rightW0 - minPx; }
-                    leftEl.style.flexBasis  = newLeft  + 'px';
-                    rightEl.style.flexBasis = newRight + 'px';
-                    leftEl.style.flexGrow   = '0';
-                    rightEl.style.flexGrow  = '0';
-                    window.dispatchEvent(new Event('resize'));
+                    row.style.setProperty(leftVar, newLeft.toFixed(2) + 'fr');
+                    row.style.setProperty(rightVar, newRight.toFixed(2) + 'fr');
+                    resizePanelCharts();
                 }
                 function onTEnd() {
                     if (pip) pip.style.background = '#334155';
                     handle.removeEventListener('touchmove', onTMove);
                     handle.removeEventListener('touchend',  onTEnd);
-                    window.dispatchEvent(new Event('resize'));
+                    resizePanelCharts();
                 }
                 handle.addEventListener('touchmove', onTMove, { passive: true });
                 handle.addEventListener('touchend',  onTEnd);
@@ -2806,6 +2822,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             const row = document.getElementById('three-panel-row');
             if (!row) return;
             if (window.innerWidth < 1024) {
+                row.style.display = 'flex';
                 row.style.flexDirection = 'column';
                 document.querySelectorAll('.panel-drag-handle').forEach(h => h.style.display = 'none');
                 ['panel-perf','panel-alloc','panel-holdings'].forEach(id => {
@@ -2813,10 +2830,17 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                     if (el) { el.style.flexBasis = 'auto'; el.style.flexGrow = '1'; }
                 });
             } else {
-                row.style.flexDirection = 'row';
+                row.style.display = 'grid';
+                row.style.flexDirection = '';
+                row.style.gridTemplateColumns = 'minmax(200px,var(--perf-col,2fr)) 14px minmax(180px,var(--alloc-col,1fr)) 14px minmax(180px,var(--hold-col,1fr))';
                 document.querySelectorAll('.panel-drag-handle').forEach(h => h.style.display = 'flex');
+                ['panel-perf','panel-alloc','panel-holdings'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) { el.style.flexBasis = ''; el.style.flexGrow = ''; }
+                });
             }
             if (typeof applyHoldingsPanelState === 'function') applyHoldingsPanelState();
+            resizePanelCharts();
         }
         window.addEventListener('resize', checkMobileStack);
         // Run after DOM is ready
@@ -2986,15 +3010,23 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     function applyHoldingsPanelState() {
         const collapsed = localStorage.getItem(HOLDINGS_PANEL_COLLAPSED_KEY) === 'true';
         const isMobile = window.innerWidth < 1024;
+        const row = document.getElementById('three-panel-row');
         const panel = document.getElementById('panel-holdings');
         const handle = document.getElementById('drag-handle-2');
         const alloc = document.getElementById('panel-alloc');
         const btn = document.getElementById('toggle-holdings-panel');
         if (panel) { panel.hidden = collapsed; panel.style.display = collapsed ? 'none' : 'flex'; }
         if (handle) { handle.hidden = collapsed; handle.style.display = (collapsed || isMobile) ? 'none' : 'flex'; }
+        if (row && !isMobile) {
+            row.style.display = 'grid';
+            row.style.width = '100%';
+            row.style.gridTemplateColumns = collapsed
+                ? 'minmax(200px,var(--perf-col,2fr)) 14px minmax(180px,var(--alloc-col,1fr))'
+                : 'minmax(200px,var(--perf-col,2fr)) 14px minmax(180px,var(--alloc-col,1fr)) 14px minmax(180px,var(--hold-col,1fr))';
+        }
         if (alloc) {
-            alloc.style.flexBasis = isMobile ? 'auto' : (collapsed ? '50%' : '25%');
-            alloc.style.flexGrow = (collapsed || isMobile) ? '1' : '0';
+            alloc.style.flexBasis = isMobile ? 'auto' : '';
+            alloc.style.flexGrow = isMobile ? '1' : '';
         }
         if (btn) {
             btn.title = collapsed ? 'Show holdings breakdown' : 'Hide holdings breakdown';
