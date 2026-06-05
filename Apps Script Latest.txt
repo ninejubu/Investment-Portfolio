@@ -1,0 +1,431 @@
+// ============================================================
+//  UNIFIED APPS SCRIPT — Investment Dashboard + Wheel Strategy
+//  GET  (no param)              → investRead
+//  GET  ?action=activities_write → activitiesWrite via params
+//  GET  ?action=settings_read   → settingsRead
+//  GET  ?action=wheel_read      → wheelRead
+//  POST action=wheel_write      → wheelWrite
+// ============================================================
+
+var SPREADSHEET_ID  = SpreadsheetApp.getActiveSpreadsheet().getId();
+var TAB_ACTIVITIES  = "Activities";
+var TAB_SETTING     = "Setting_data";
+var TAB_WHL_ORDERS  = "Wheel_orders";
+var TAB_WHL_LOTS    = "Wheel_lots";
+var TAB_WHL_HISTORY = "Wheel_history";
+
+function doGet(e) {
+  var p = (e && e.parameter) ? e.parameter : {};
+  if (p.action === 'activities_write') return activitiesWriteFromParams(p);
+  if (p.action === 'settings_read')    return settingsRead();
+  if (p.action === 'wheel_read')       return wheelRead();
+  return investRead();
+}
+
+function doPost(e) {
+  var data;
+  try { data = JSON.parse(e.postData.contents); }
+  catch (err) { return jsonOut({ error: 'Invalid JSON: ' + err.message }); }
+  if (data.action === 'wheel_write') return wheelWrite(data);
+  return jsonOut({ error: 'Unknown action: ' + data.action });
+}
+
+// ============================================================
+//  activitiesWriteFromParams
+//  Reads flat GET params: date, stocks, bonds, crypto, gold, currency, note
+// ============================================================
+function activitiesWriteFromParams(p) {
+  try {
+    var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+    var sheet = ss.getSheetByName(TAB_ACTIVITIES);
+    if (!sheet) return jsonOut({ error: "Sheet '" + TAB_ACTIVITIES + "' not found" });
+
+    var dateStr  = p.date     || '';
+    var stocks   = p.stocks   !== '' && p.stocks   !== undefined ? parseFloat(p.stocks)  : null;
+    var bonds    = p.bonds    !== '' && p.bonds    !== undefined ? parseFloat(p.bonds)   : null;
+    var crypto   = p.crypto   !== '' && p.crypto   !== undefined ? parseFloat(p.crypto)  : null;
+    var gold     = p.gold     !== '' && p.gold     !== undefined ? parseFloat(p.gold)    : null;
+    var currency = p.currency || 'THB';
+    var note     = p.note     || '';
+
+    if (!dateStr) return jsonOut({ error: 'Missing date' });
+
+    // Duplicate check
+    var existing     = sheet.getDataRange().getValues();
+    var existingKeys = {};
+    existing.forEach(function(row) {
+      var rawDate = row[1]; // col B
+      if (!rawDate) return;
+      var d = rawDate instanceof Date ? rawDate : new Date(rawDate);
+      if (isNaN(d.getTime())) return;
+      var ds  = Utilities.formatDate(d, 'Asia/Bangkok', 'yyyy-MM-dd');
+      var key = ds + '|' + [row[2], row[3], row[4], row[5]].join('|');
+      existingKeys[key] = true;
+    });
+
+    var key = dateStr + '|' +
+      [stocks !== null ? stocks : '', bonds !== null ? bonds : '',
+       crypto !== null ? crypto : '', gold  !== null ? gold  : ''].join('|');
+
+    if (existingKeys[key])
+      return jsonOut({ ok: true, written: 0, note: 'duplicate' });
+
+    // Find first empty row in col B, starting from row 4 (skip header rows 1-3)
+    var startSearchRow = 4;
+    var colB      = sheet.getRange(startSearchRow, 2, sheet.getMaxRows() - startSearchRow + 1, 1).getValues();
+    var insertRow = sheet.getLastRow() + 1;
+    for (var r = 0; r < colB.length; r++) {
+      if (colB[r][0] === '' || colB[r][0] === null || colB[r][0] === undefined) {
+        insertRow = startSearchRow + r; // 1-based row number
+        break;
+      }
+    }
+
+    // Quarter label
+    var dt      = new Date(dateStr);
+    var month   = dt.getMonth() + 1;
+    var quarter = month <= 3 ? 'Q1' : month <= 6 ? 'Q2' : month <= 9 ? 'Q3' : 'Q4';
+
+    var newRow = [
+      quarter,
+      dateStr,
+      stocks !== null ? stocks : '',
+      bonds  !== null ? bonds  : '',
+      crypto !== null ? crypto : '',
+      gold   !== null ? gold   : '',
+      currency,
+      note
+    ];
+
+    sheet.getRange(insertRow, 1, 1, 8).setValues([newRow]);
+    return jsonOut({ ok: true, written: 1, startRow: insertRow });
+
+  } catch (err) {
+    return jsonOut({ error: err.message });
+  }
+}
+
+// ============================================================
+//  investRead
+// ============================================================
+function investRead() {
+  try {
+    var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+    var sheet = ss.getSheetByName(TAB_ACTIVITIES);
+    if (!sheet) return jsonOut({ error: "Sheet '" + TAB_ACTIVITIES + "' not found" });
+
+    var data = sheet.getDataRange().getValues();
+    var COL  = { DATE:1, STOCKS:2, BONDS:3, CRYPTO:4, GOLD:5, CURRENCY:6, NOTE:7 };
+    var transactions = [];
+    // Use idCounter starting at 3000 to avoid collision with
+    // hardcoded wheel history IDs (2001-2099) in the dashboard
+    var idCounter = 3000;
+
+    for (var i = 0; i < data.length; i++) {
+      var row     = data[i];
+      var rawDate = row[COL.DATE];
+
+      // Skip empty or non-date cells (headers, blank rows)
+      if (!rawDate) continue;
+      var dateObj = rawDate instanceof Date ? rawDate : new Date(rawDate);
+      if (isNaN(dateObj.getTime())) continue;
+
+      // Format date using sheet timezone — keep original date, no clamping
+      var dateStr  = Utilities.formatDate(dateObj, 'Asia/Bangkok', 'yyyy-MM-dd');
+
+      var currency = String(row[COL.CURRENCY] || 'THB').trim().toUpperCase();
+      if (currency !== 'USD') currency = 'THB';
+      var note = row[COL.NOTE] ? String(row[COL.NOTE]).trim() : '';
+
+      [
+        { col: COL.STOCKS, asset: 'stocks' },
+        { col: COL.BONDS,  asset: 'bonds'  },
+        { col: COL.CRYPTO, asset: 'crypto' },
+        { col: COL.GOLD,   asset: 'gold'   }
+      ].forEach(function(m) {
+        var val = row[m.col];
+
+        // Skip truly empty cells
+        if (val === '' || val === null || val === undefined) return;
+
+        // Parse number — handle plain numbers, formatted strings,
+        // and parenthesis-style negatives e.g. (42,881.61)
+        var raw = String(val).trim();
+        var isNegative = (raw.charAt(0) === '-') || (raw.charAt(0) === '(' && raw.charAt(raw.length - 1) === ')');
+        var amount = parseFloat(raw.replace(/[^0-9.]/g, ''));
+        if (isNaN(amount) || amount === 0) return;
+        if (isNegative) amount = -amount;
+
+        var txCurrency = (m.asset === 'bonds' || m.asset === 'gold') ? 'THB' : currency;
+        transactions.push({
+          id:       idCounter++,
+          date:     dateStr,
+          asset:    m.asset,
+          type:     amount >= 0 ? 'deposit' : 'withdraw',
+          amount:   Math.abs(amount),
+          currency: txCurrency,
+          memo:     note
+        });
+      });
+    }
+    return jsonOut(transactions);
+  } catch (err) {
+    return jsonOut({ error: err.message });
+  }
+}
+
+// ============================================================
+//  settingsRead
+//  Reads Setting_data:
+//  green table: Period, Stocks, Bonds, Crypto-THB, Crypto-O, Crypto-S, Gold, Exchange rate
+//  blue table: Type, Class, Name, Ticker, Beg, Q1, Q2, Q3, Q4
+// ============================================================
+function settingsRead() {
+  try {
+    var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+    var sheet = ss.getSheetByName(TAB_SETTING);
+    var out   = emptySettings();
+    if (!sheet) return jsonOut(out);
+
+    var values = sheet.getDataRange().getValues();
+    readSettingBalances(values, out);
+    readSettingTypedRows(values, out);
+    return jsonOut(out);
+  } catch (err) {
+    return jsonOut({ error: err.message });
+  }
+}
+
+function emptySettings() {
+  return {
+    begBalances: { stocks: 0, bonds: 0, crypto: 0, gold: 0 },
+    endBalances: {
+      stocks: { q1: null, q2: null, q3: null, q4: null },
+      bonds:  { q1: null, q2: null, q3: null, q4: null },
+      crypto: {
+        q1: { thb: null, usdo: null, usds: null },
+        q2: { thb: null, usdo: null, usds: null },
+        q3: { thb: null, usdo: null, usds: null },
+        q4: { thb: null, usdo: null, usds: null }
+      },
+      gold: { q1: null, q2: null, q3: null, q4: null }
+    },
+    rates: { beginning: null, q1: null, q2: null, q3: null, q4: null },
+    benchmarks: {
+      stocks: { name: '', q1: null, q2: null, q3: null, q4: null },
+      bonds:  { name: '', q1: null, q2: null, q3: null, q4: null },
+      crypto: { name: '', q1: null, q2: null, q3: null, q4: null },
+      gold:   { name: '', q1: null, q2: null, q3: null, q4: null }
+    },
+    holdings: []
+  };
+}
+
+function readSettingBalances(values, out) {
+  var hRow = findSettingHeaderRow(values, 'period');
+  if (hRow < 0) return;
+
+  var h = values[hRow].map(normSettingText);
+  var cPeriod = h.indexOf('period');
+  var cStocks = findSettingCol(h, ['stocks']);
+  var cBonds  = findSettingCol(h, ['bonds']);
+  var cCThb   = findSettingCol(h, ['crypto thb', 'cryptothb', 'crypto']);
+  var cCO     = findSettingCol(h, ['crypto o', 'cryptoo']);
+  var cCS     = findSettingCol(h, ['crypto s', 'cryptos']);
+  var cGold   = findSettingCol(h, ['gold']);
+  var cRate   = findSettingCol(h, ['exchange rate', 'exchange rate usd thb', 'usd thb', 'rate']);
+
+  for (var r = hRow + 1; r < values.length; r++) {
+    var row = values[r];
+    var period = normSettingPeriod(row[cPeriod]);
+    if (!period) continue;
+
+    if (period === 'beg') {
+      out.begBalances.stocks = settingNumber(row[cStocks]) || 0;
+      out.begBalances.bonds  = settingNumber(row[cBonds]) || 0;
+      out.begBalances.crypto = settingNumber(row[cCThb]) || 0;
+      out.begBalances.gold   = settingNumber(row[cGold]) || 0;
+      out.rates.beginning    = settingNumber(row[cRate]);
+      continue;
+    }
+
+    var q = period.toLowerCase();
+    out.endBalances.stocks[q] = settingNumber(row[cStocks]);
+    out.endBalances.bonds[q]  = settingNumber(row[cBonds]);
+    out.endBalances.crypto[q] = {
+      thb:  settingNumber(row[cCThb]),
+      usdo: settingNumber(row[cCO]),
+      usds: settingNumber(row[cCS])
+    };
+    out.endBalances.gold[q] = settingNumber(row[cGold]);
+    out.rates[q] = settingNumber(row[cRate]);
+  }
+}
+
+function readSettingTypedRows(values, out) {
+  var hRow = findSettingHeaderRow(values, 'type');
+  if (hRow < 0) return;
+
+  var h = values[hRow].map(normSettingText);
+  var cType   = h.indexOf('type');
+  var cClass  = findSettingCol(h, ['class', 'asset class']);
+  var cName   = findSettingCol(h, ['name']);
+  var cTicker = findSettingCol(h, ['ticker']);
+  var periodCols = {
+    Beg: findSettingCol(h, ['beg', 'beginning']),
+    Q1:  findSettingCol(h, ['q1']),
+    Q2:  findSettingCol(h, ['q2']),
+    Q3:  findSettingCol(h, ['q3']),
+    Q4:  findSettingCol(h, ['q4'])
+  };
+
+  for (var r = hRow + 1; r < values.length; r++) {
+    var row = values[r];
+    var type = normSettingText(row[cType]);
+    if (!type) continue;
+
+    var asset = normSettingAsset(row[cClass]);
+    if (!asset) continue;
+
+    if (type === 'benchmark') {
+      out.benchmarks[asset].name = String(row[cName] || '').trim();
+      ['Q1', 'Q2', 'Q3', 'Q4'].forEach(function(period) {
+        out.benchmarks[asset][period.toLowerCase()] = settingPercent(row[periodCols[period]]);
+      });
+    }
+
+    if (type === 'holding') {
+      ['Beg', 'Q1', 'Q2', 'Q3', 'Q4'].forEach(function(period) {
+        var amount = settingNumber(row[periodCols[period]]);
+        if (amount === null) return;
+        out.holdings.push({
+          asset: asset,
+          period: period,
+          name: String(row[cName] || '').trim(),
+          ticker: String(row[cTicker] || '').trim(),
+          amount: amount
+        });
+      });
+    }
+  }
+}
+
+function normSettingText(v) {
+  return String(v || '').trim().toLowerCase()
+    .replace(/[_/()]+/g, ' ')
+    .replace(/[-]+/g, ' ')
+    .replace(/\s+/g, ' ');
+}
+
+function normSettingPeriod(v) {
+  var s = normSettingText(v);
+  if (s === 'beg' || s === 'beginning') return 'beg';
+  if (/^q[1-4]$/.test(s)) return s.toUpperCase();
+  return '';
+}
+
+function normSettingAsset(v) {
+  var s = normSettingText(v);
+  if (s.indexOf('stock') === 0) return 'stocks';
+  if (s.indexOf('bond') === 0) return 'bonds';
+  if (s.indexOf('crypto') === 0) return 'crypto';
+  if (s.indexOf('gold') === 0) return 'gold';
+  return '';
+}
+
+function findSettingHeaderRow(values, name) {
+  var target = normSettingText(name);
+  for (var r = 0; r < values.length; r++) {
+    if (values[r].map(normSettingText).indexOf(target) >= 0) return r;
+  }
+  return -1;
+}
+
+function findSettingCol(headers, names) {
+  for (var i = 0; i < names.length; i++) {
+    var idx = headers.indexOf(normSettingText(names[i]));
+    if (idx >= 0) return idx;
+  }
+  return -1;
+}
+
+function settingNumber(v) {
+  if (v === '' || v === null || v === undefined) return null;
+  if (typeof v === 'number') return v;
+  var s = String(v).trim();
+  if (!s || /^n\/?a$/i.test(s)) return null;
+  var neg = s.charAt(0) === '-' || (s.charAt(0) === '(' && s.charAt(s.length - 1) === ')');
+  var n = parseFloat(s.replace(/[^0-9.]/g, ''));
+  if (isNaN(n)) return null;
+  return neg ? -n : n;
+}
+
+function settingPercent(v) {
+  if (v === '' || v === null || v === undefined) return null;
+  if (typeof v === 'number') return Math.abs(v) > 0 && Math.abs(v) <= 1 ? v * 100 : v;
+  return settingNumber(v);
+}
+
+// ============================================================
+//  Wheel Strategy
+// ============================================================
+function wheelRead() {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    return jsonOut({
+      orders:  sheetToJson(ss.getSheetByName(TAB_WHL_ORDERS)),
+      lots:    sheetToJson(ss.getSheetByName(TAB_WHL_LOTS)),
+      history: sheetToJson(ss.getSheetByName(TAB_WHL_HISTORY))
+    });
+  } catch (err) { return jsonOut({ error: err.message }); }
+}
+
+function wheelWrite(data) {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    if (data.orders  !== undefined) writeSheet(ss, TAB_WHL_ORDERS,  data.orders);
+    if (data.lots    !== undefined) writeSheet(ss, TAB_WHL_LOTS,    data.lots);
+    if (data.history !== undefined) writeSheet(ss, TAB_WHL_HISTORY, data.history);
+    return jsonOut({ ok: true, timestamp: new Date().toISOString() });
+  } catch (err) { return jsonOut({ error: err.message }); }
+}
+
+function sheetToJson(sheet) {
+  if (!sheet) return [];
+  var values = sheet.getDataRange().getValues();
+  if (values.length < 4) return [];
+  var headers = values[2].map(function(h) { return String(h).trim(); });
+  while (headers.length && headers[headers.length - 1] === '') headers.pop();
+  var rows = [];
+  for (var i = 3; i < values.length; i++) {
+    var row = values[i];
+    if (!row[0] || isNaN(Number(row[0])) || Number(row[0]) <= 0) continue;
+    var obj = {};
+    for (var j = 0; j < headers.length; j++) {
+      if (!headers[j]) continue;
+      var v = row[j];
+      if (v instanceof Date) v = Utilities.formatDate(v, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+      obj[headers[j]] = v == null ? '' : v;
+    }
+    rows.push(obj);
+  }
+  return rows;
+}
+
+function writeSheet(ss, tabName, dataArray) {
+  var sheet = ss.getSheetByName(tabName);
+  if (!sheet || !dataArray || !dataArray.length) return;
+  var headers = Object.keys(dataArray[0]);
+  var lastRow  = sheet.getLastRow();
+  if (lastRow >= 4) sheet.getRange(4, 1, lastRow - 3, sheet.getLastColumn()).clearContent();
+  var rowData = dataArray.map(function(obj) {
+    return headers.map(function(h) { var v = obj[h]; return v == null ? '' : v; });
+  });
+  sheet.getRange(4, 1, rowData.length, headers.length).setValues(rowData);
+}
+
+function jsonOut(obj) {
+  var out = ContentService.createTextOutput(JSON.stringify(obj));
+  out.setMimeType(ContentService.MimeType.JSON);
+  return out;
+}

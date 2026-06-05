@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Investment Portfolio Pro 2026</title>
+    <title>Investment Portfolio Earth 2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
@@ -100,71 +100,9 @@
             vertical-align: middle;
         }
         .asset-row { background-color: rgba(30, 41, 59, 0.4); }
-        .dashboard-top-row {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-            gap: 24px;
-            align-items: stretch;
-        }
-        .dashboard-lower-row {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(320px, 0.42fr);
-            gap: 24px;
-            align-items: stretch;
-        }
-        .dashboard-lower-row.holdings-collapsed {
-            grid-template-columns: minmax(0, 1fr) 64px;
-        }
-        .quarterly-panel {
-            min-width: 0;
+        #three-panel-row {
+            max-width: 100%;
             overflow: hidden;
-        }
-        .quarterly-table {
-            min-width: 780px;
-            table-layout: fixed;
-        }
-        .quarterly-table th,
-        .quarterly-table td {
-            white-space: nowrap;
-        }
-        .quarterly-table th:nth-child(2),
-        .quarterly-table td:nth-child(2) {
-            white-space: normal;
-        }
-        #panel-holdings.is-collapsed {
-            min-height: 360px;
-            height: 100%;
-            padding: 12px !important;
-            align-items: center;
-            cursor: pointer;
-        }
-        #panel-holdings.is-collapsed #toggle-holdings-panel {
-            cursor: pointer;
-        }
-        #panel-holdings.is-collapsed .holdings-panel-header {
-            width: 100%;
-            height: 100%;
-            margin-bottom: 0;
-            flex-direction: column;
-            flex-wrap: nowrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
-        }
-        #panel-holdings.is-collapsed .holdings-panel-header h4 {
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
-            white-space: nowrap;
-            text-align: center;
-        }
-        #panel-holdings.is-collapsed .holdings-panel-controls {
-            display: flex !important;
-            width: auto;
-            justify-content: center;
-        }
-        #panel-holdings.is-collapsed .holdings-panel-controls select,
-        #panel-holdings.is-collapsed #holdings-panel-body {
-            display: none !important;
         }
         #panel-perf,
         #panel-alloc,
@@ -195,26 +133,6 @@
             .holdings-panel-controls {
                 width: 100%;
                 justify-content: flex-start;
-            }
-            .dashboard-lower-row {
-                grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
-            }
-        }
-
-        @media (max-width: 1023px) {
-            .dashboard-top-row,
-            .dashboard-lower-row,
-            .dashboard-lower-row.holdings-collapsed {
-                grid-template-columns: 1fr;
-            }
-            #panel-holdings.is-collapsed {
-                min-height: auto;
-            }
-            #panel-holdings.is-collapsed .holdings-panel-header {
-                margin-bottom: 0;
-            }
-            .quarterly-table {
-                min-width: 720px;
             }
         }
 
@@ -655,8 +573,298 @@
             .sentiment-score { font-size: 24px; }
         }
     </style>
+    <style>
+        body.earth-theme {
+            --earth-bg: #14120f;
+            --earth-bg-soft: #191613;
+            --earth-card: #201d1a;
+            --earth-card-2: #171411;
+            --earth-border: rgba(255, 238, 214, 0.08);
+            --earth-border-strong: rgba(255, 238, 214, 0.16);
+            --earth-text: #f1ebe2;
+            --earth-muted: #9d968d;
+            --earth-dim: #6f675f;
+            --earth-coral: #cf7458;
+            --earth-coral-soft: rgba(207, 116, 88, 0.18);
+            --earth-teal: #58b7a2;
+            --earth-green: #74b38a;
+            --earth-red: #c96262;
+            --earth-gold: #d7a642;
+            --earth-blue: #6f87b8;
+            background:
+                radial-gradient(circle at 18% -8%, rgba(207, 116, 88, 0.10), transparent 34rem),
+                radial-gradient(circle at 90% 4%, rgba(88, 183, 162, 0.08), transparent 30rem),
+                var(--earth-bg) !important;
+            color: var(--earth-text);
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0;
+        }
+        body.earth-theme.theme-light {
+            background: #14120f !important;
+            color: var(--earth-text) !important;
+        }
+        body.earth-theme .bg-card,
+        body.earth-theme.theme-light .bg-card,
+        body.earth-theme.theme-port2 .bg-card,
+        body.earth-theme.theme-light.theme-port2 .bg-card {
+            background: linear-gradient(180deg, rgba(36, 32, 28, 0.96), rgba(28, 25, 22, 0.96)) !important;
+            border-color: var(--earth-border) !important;
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 238, 214, 0.035);
+        }
+        body.earth-theme header,
+        body.earth-theme.theme-light header,
+        body.earth-theme.theme-port2 header,
+        body.earth-theme.theme-light.theme-port2 header {
+            background: rgba(20, 18, 15, 0.88) !important;
+            border-color: var(--earth-border) !important;
+            backdrop-filter: blur(18px);
+        }
+        body.earth-theme #sidebar,
+        body.earth-theme.theme-light #sidebar {
+            background: linear-gradient(180deg, #181512, #110f0d) !important;
+            border-color: var(--earth-border) !important;
+        }
+        body.earth-theme #sidebar-brand,
+        body.earth-theme header h2,
+        body.earth-theme h4,
+        body.earth-theme .font-bold.text-white {
+            color: var(--earth-text) !important;
+        }
+        body.earth-theme #sidebar-brand,
+        body.earth-theme header h2,
+        body.earth-theme #tab-dashboard > .grid:first-child h4,
+        body.earth-theme #panel-perf h4,
+        body.earth-theme #panel-alloc h4,
+        body.earth-theme #panel-holdings h4,
+        body.earth-theme #goal-card h4,
+        body.earth-theme .bg-card > h4 {
+            font-family: 'Newsreader', Georgia, serif;
+            font-weight: 600;
+            letter-spacing: 0;
+        }
+        body.earth-theme #sidebar-brand span,
+        body.earth-theme .text-blue-500,
+        body.earth-theme .text-blue-400,
+        body.earth-theme .hover\:text-blue-400:hover {
+            color: var(--earth-coral) !important;
+        }
+        body.earth-theme .text-stock,
+        body.earth-theme .text-green-400,
+        body.earth-theme .text-emerald-400 {
+            color: var(--earth-teal) !important;
+        }
+        body.earth-theme .text-bond,
+        body.earth-theme .text-amber-400,
+        body.earth-theme .text-yellow-400 {
+            color: var(--earth-gold) !important;
+        }
+        body.earth-theme .text-crypto {
+            color: var(--earth-blue) !important;
+        }
+        body.earth-theme .text-gold {
+            color: #e2c35d !important;
+        }
+        body.earth-theme .text-red-400 {
+            color: var(--earth-red) !important;
+        }
+        body.earth-theme .text-white {
+            color: var(--earth-text) !important;
+        }
+        body.earth-theme .text-slate-300,
+        body.earth-theme .text-slate-400,
+        body.earth-theme [style*="color:#94A3B8"],
+        body.earth-theme [style*="color: #94A3B8"] {
+            color: var(--earth-muted) !important;
+        }
+        body.earth-theme .text-slate-500,
+        body.earth-theme [style*="color:#64748b"],
+        body.earth-theme [style*="color: #64748b"],
+        body.earth-theme [style*="color:#475569"],
+        body.earth-theme [style*="color: #475569"] {
+            color: var(--earth-dim) !important;
+        }
+        body.earth-theme .border-slate-700,
+        body.earth-theme .border-slate-800,
+        body.earth-theme .border-slate-800\/50 {
+            border-color: var(--earth-border) !important;
+        }
+        body.earth-theme .rounded-xl {
+            border-radius: 8px !important;
+        }
+        body.earth-theme .rounded-lg,
+        body.earth-theme .rounded-md {
+            border-radius: 7px !important;
+        }
+        body.earth-theme .border-t-stock { border-top-color: var(--earth-teal) !important; }
+        body.earth-theme .border-t-bond { border-top-color: var(--earth-gold) !important; }
+        body.earth-theme .border-t-crypto { border-top-color: var(--earth-blue) !important; }
+        body.earth-theme .border-t-gold { border-top-color: #e2c35d !important; }
+        body.earth-theme .border-l-stock { border-left-color: var(--earth-teal) !important; }
+        body.earth-theme .border-l-blue-500 { border-left-color: var(--earth-coral) !important; }
+        body.earth-theme .border-l-amber-500 { border-left-color: var(--earth-gold) !important; }
+        body.earth-theme .border-l-purple-500 { border-left-color: #8a6fd0 !important; }
+        body.earth-theme .border-l-cyan-500 { border-left-color: var(--earth-teal) !important; }
+        body.earth-theme .border-l-emerald-500 { border-left-color: var(--earth-green) !important; }
+        body.earth-theme .bg-blue-600,
+        body.earth-theme .bg-blue-600\/20,
+        body.earth-theme .peer-checked\:bg-blue-600\/20:checked + div,
+        body.earth-theme .nav-btn.bg-blue-600\/20 {
+            background: var(--earth-coral-soft) !important;
+            color: #f0c0ad !important;
+        }
+        body.earth-theme button,
+        body.earth-theme select,
+        body.earth-theme input,
+        body.earth-theme textarea {
+            border-color: var(--earth-border-strong) !important;
+        }
+        body.earth-theme select,
+        body.earth-theme input,
+        body.earth-theme textarea,
+        body.earth-theme .minimal-input,
+        body.earth-theme .edit-input,
+        body.earth-theme [style*="background:#0F172A"],
+        body.earth-theme [style*="background: #0F172A"] {
+            background: #15120f !important;
+            color: var(--earth-text) !important;
+        }
+        body.earth-theme input:focus,
+        body.earth-theme textarea:focus,
+        body.earth-theme .minimal-input:focus {
+            border-color: var(--earth-coral) !important;
+            box-shadow: 0 0 0 1px rgba(207, 116, 88, 0.18);
+        }
+        body.earth-theme .nav-btn {
+            color: var(--earth-muted) !important;
+        }
+        body.earth-theme .nav-btn:hover {
+            background: rgba(255, 238, 214, 0.055) !important;
+            color: var(--earth-text) !important;
+        }
+        body.earth-theme .nav-btn.bg-blue-600\/20,
+        body.earth-theme #btn-dashboard.bg-blue-600\/20,
+        body.earth-theme #btn-transactions.bg-blue-600\/20,
+        body.earth-theme #btn-wheel.bg-blue-600\/20,
+        body.earth-theme #btn-setting.bg-blue-600\/20 {
+            background: rgba(207, 116, 88, 0.16) !important;
+            color: #efb29b !important;
+        }
+        body.earth-theme .sidebar-collapse-btn,
+        body.earth-theme .theme-toggle,
+        body.earth-theme #sync-status-pill,
+        body.earth-theme #refresh-btn,
+        body.earth-theme #sync-btn {
+            background: rgba(32, 29, 26, 0.92) !important;
+            border-color: var(--earth-border-strong) !important;
+            color: var(--earth-muted) !important;
+            box-shadow: none !important;
+        }
+        body.earth-theme .theme-toggle-knob,
+        body.earth-theme .sentiment-icon {
+            background: rgba(207, 116, 88, 0.15) !important;
+            color: #e7a083 !important;
+        }
+        body.earth-theme .sentiment-card {
+            background: linear-gradient(180deg, #211d1a, #191612) !important;
+            border-color: var(--earth-border) !important;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
+        }
+        body.earth-theme .sentiment-meter,
+        body.earth-theme .bar-track,
+        body.earth-theme .cover-bar-wrap {
+            background: #14120f !important;
+            border-color: var(--earth-border) !important;
+        }
+        body.earth-theme .sentiment-fill,
+        body.earth-theme .bar-fill {
+            background: linear-gradient(90deg, var(--earth-coral), var(--earth-teal)) !important;
+        }
+        body.earth-theme table th,
+        body.earth-theme .orders-table th,
+        body.earth-theme .hist-table th,
+        body.earth-theme .pivot-table th,
+        body.earth-theme .lots-table th {
+            background: rgba(20, 18, 15, 0.62) !important;
+            color: #837b72 !important;
+            letter-spacing: 0.14em;
+        }
+        body.earth-theme table td,
+        body.earth-theme .orders-table td,
+        body.earth-theme .hist-table td,
+        body.earth-theme .pivot-table td,
+        body.earth-theme .lots-table td {
+            border-color: rgba(255, 238, 214, 0.055) !important;
+        }
+        body.earth-theme tr:hover,
+        body.earth-theme .hover\:bg-slate-800\/40:hover,
+        body.earth-theme .asset-row:hover {
+            background: rgba(255, 238, 214, 0.035) !important;
+        }
+        body.earth-theme .asset-row,
+        body.earth-theme .strike-row,
+        body.earth-theme .filter-btn,
+        body.earth-theme .wheel-stat-box,
+        body.earth-theme .w-btn-secondary,
+        body.earth-theme .w-btn-icon,
+        body.earth-theme .btc-live-chip {
+            background: #171411 !important;
+            border-color: var(--earth-border) !important;
+        }
+        body.earth-theme .filter-btn.active,
+        body.earth-theme .filter-btn:hover,
+        body.earth-theme .wheel-subtab.active {
+            color: #efb29b !important;
+            border-color: var(--earth-coral) !important;
+            background: rgba(207, 116, 88, 0.13) !important;
+        }
+        body.earth-theme .bg-slate-800,
+        body.earth-theme .hover\:bg-slate-700:hover {
+            background: #171411 !important;
+        }
+        body.earth-theme .bg-green-600\/20,
+        body.earth-theme .peer-checked\:bg-green-600\/20:checked + div {
+            background: rgba(88, 183, 162, 0.13) !important;
+            border-color: rgba(88, 183, 162, 0.45) !important;
+        }
+        body.earth-theme .bg-red-600\/20,
+        body.earth-theme .peer-checked\:bg-red-600\/20:checked + div {
+            background: rgba(201, 98, 98, 0.13) !important;
+            border-color: rgba(201, 98, 98, 0.45) !important;
+        }
+        body.earth-theme .bg-red-500\/10 {
+            background: rgba(201, 98, 98, 0.13) !important;
+        }
+        body.earth-theme .bg-green-500\/10 {
+            background: rgba(88, 183, 162, 0.13) !important;
+        }
+        body.earth-theme .w-green,
+        body.earth-theme .p-pos {
+            color: var(--earth-teal) !important;
+        }
+        body.earth-theme .w-red,
+        body.earth-theme .p-neg {
+            color: var(--earth-red) !important;
+        }
+        body.earth-theme .w-yellow,
+        body.earth-theme .apy-chip {
+            color: var(--earth-gold) !important;
+        }
+        body.earth-theme .w-blue {
+            color: var(--earth-blue) !important;
+        }
+        body.earth-theme .drag-pip {
+            background: rgba(255, 238, 214, 0.18) !important;
+        }
+        body.earth-theme .skeleton,
+        body.earth-theme .skeleton-inline {
+            background: linear-gradient(90deg, #1c1815 25%, #29231f 50%, #1c1815 75%) !important;
+        }
+        body.earth-theme .theme-toggle-label::after {
+            content: ' Earth';
+        }
+    </style>
 </head>
-<body id="app-body" class="flex text-sm">
+<body id="app-body" class="flex text-sm earth-theme">
 
     <!-- ══════════════════════════════ SIDEBAR ══════════════════════════════ -->
     <aside id="sidebar" class="bg-card flex flex-col">
@@ -846,14 +1054,15 @@
                     </div>
                 </div>
 
-                <!-- Dashboard analytics row -->
-                <div id="dashboard-top-row" class="dashboard-top-row">
+                <!-- Resizable 3-panel row -->
+                <div id="three-panel-row" style="display:grid;grid-template-columns:minmax(0,var(--perf-col,2fr)) 14px minmax(0,var(--alloc-col,1fr)) 14px minmax(0,var(--hold-col,1fr));gap:0;align-items:stretch;min-height:420px;width:100%">
 
-                    <!-- Performance vs Benchmarks -->
-                    <div id="panel-perf" class="bg-card rounded-xl border border-slate-700 flex flex-col" style="min-width:0;padding:24px;overflow:hidden;box-sizing:border-box">
+                    <!-- Panel 1: Performance vs Benchmarks -->
+                    <div id="panel-perf" class="bg-card rounded-xl border border-slate-700 flex flex-col" style="flex-basis:50%;min-width:0;padding:24px;overflow:hidden;box-sizing:border-box">
                         <div class="flex justify-between items-center mb-4">
                             <h4 class="text-white font-bold">Performance vs Benchmarks</h4>
                             <div class="flex gap-2">
+                                <button id="toggle-holdings-panel" onclick="toggleHoldingsPanel()" title="Hide holdings breakdown" class="bg-slate-800 border-none text-[10px] text-slate-300 rounded px-2 py-1 hover:text-white hover:bg-slate-700 transition-colors"><i class="fa-solid fa-table-columns"></i></button>
                                 <select id="bench-type" onchange="renderPerformanceChart()" class="bg-slate-800 border-none text-[10px] text-white rounded px-2 py-1"><option value="ytd">YTD</option><option value="qoq" selected>QoQ</option></select>
                                 <select id="bench-range" onchange="renderPerformanceChart()" class="bg-slate-800 border-none text-[10px] text-white rounded px-2 py-1"><option value="all" selected>Full Year</option><option value="q1">Quarter 1</option><option value="q2">Quarter 2</option><option value="q3">Quarter 3</option><option value="q4">Quarter 4</option></select>
                                 <select id="bench-asset" onchange="renderPerformanceChart()" class="bg-slate-800 border-none text-[10px] text-white rounded px-2 py-1"><option value="all">Total Assets</option><option value="all-sep">All Assets</option><option value="stocks">Stocks</option><option value="bonds">Bonds</option><option value="crypto">Crypto</option><option value="gold">Gold</option></select>
@@ -862,11 +1071,17 @@
                         <div class="flex-1" style="min-height:300px"><canvas id="perfChart"></canvas></div>
                     </div>
 
-                    <!-- Asset Allocation -->
-                    <div id="panel-alloc" class="bg-card rounded-xl border border-slate-700 flex flex-col" style="min-width:0;padding:24px;overflow:hidden;box-sizing:border-box">
+                    <!-- Drag handle 1 (between perf & alloc) -->
+                    <div class="panel-drag-handle" id="drag-handle-1"
+                         style="width:14px;flex-shrink:0;cursor:col-resize;display:flex;align-items:center;justify-content:center;position:relative;user-select:none;z-index:5">
+                        <div class="drag-pip" style="width:4px;height:44px;border-radius:3px;background:#334155;transition:background .15s,transform .15s"></div>
+                    </div>
+
+                    <!-- Panel 2: Asset Allocation -->
+                    <div id="panel-alloc" class="bg-card rounded-xl border border-slate-700 flex flex-col" style="flex-basis:25%;min-width:0;padding:24px;overflow:hidden;box-sizing:border-box">
                         <h4 class="text-white font-bold mb-4">Asset Allocation (%)</h4>
                         <div class="flex-1 flex flex-col justify-between">
-                            <div style="height:300px;position:relative;margin-bottom:16px;cursor:pointer" title="Click a segment to drill down">
+                            <div style="height:224px;position:relative;margin-bottom:16px;cursor:pointer" title="Click a segment to drill down">
                                 <canvas id="allocChart"></canvas>
                             </div>
                             <div class="overflow-x-auto">
@@ -877,22 +1092,16 @@
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div id="dashboard-lower-row" class="dashboard-lower-row">
-                    <div class="bg-card rounded-xl p-6 border border-slate-700 quarterly-panel">
-                        <h4 class="text-white font-bold mb-4">Quarterly Performance</h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left quarterly-table">
-                                <thead class="text-[10px] uppercase text-slate-500 border-b border-slate-800"><tr><th class="pb-3 w-9"></th><th class="pb-3 w-36">Quarter / Category</th><th class="pb-3 w-32">Balance</th><th class="pb-3 w-32">Net Flow</th><th class="pb-3 w-32">EBalance</th><th class="pb-3 w-32">Profit/Loss</th><th class="pb-3 text-right w-24">Growth %</th></tr></thead>
-                                <tbody id="quarterly-tbody" class="text-[11px]"></tbody>
-                            </table>
-                        </div>
+                    <!-- Drag handle 2 (between alloc & holdings) -->
+                    <div class="panel-drag-handle" id="drag-handle-2"
+                         style="width:14px;flex-shrink:0;cursor:col-resize;display:flex;align-items:center;justify-content:center;position:relative;user-select:none;z-index:5">
+                        <div class="drag-pip" style="width:4px;height:44px;border-radius:3px;background:#334155;transition:background .15s,transform .15s"></div>
                     </div>
 
-                    <!-- Holdings Breakdown -->
-                    <div id="panel-holdings" class="bg-card rounded-xl border border-slate-700 flex flex-col" onclick="expandHoldingsPanel()" style="min-width:0;padding:20px;overflow:hidden;box-sizing:border-box">
-                        <div class="flex items-center justify-between mb-4 holdings-panel-header" onclick="expandHoldingsPanel()">
+                    <!-- Panel 3: Holdings Breakdown -->
+                    <div id="panel-holdings" class="bg-card rounded-xl border border-slate-700 flex flex-col" style="flex-basis:25%;min-width:0;padding:24px;overflow:hidden;box-sizing:border-box">
+                        <div class="flex items-center justify-between mb-4 holdings-panel-header">
                             <h4 class="text-white font-bold">Holdings Breakdown</h4>
                             <div class="holdings-panel-controls">
                                 <select id="hb-asset" onchange="renderHoldingsBreakdown()" style="background:#0F172A;border:1px solid #334155;color:#F8FAFC;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">
@@ -908,19 +1117,26 @@
                                     <option value="Q3">Q3</option>
                                     <option value="Q4">Q4</option>
                                 </select>
-                                <button id="toggle-holdings-panel" onclick="toggleHoldingsPanel(event)" title="Collapse holdings breakdown" class="bg-slate-800 border-none text-[10px] text-slate-300 rounded px-2 py-1 hover:text-white hover:bg-slate-700 transition-colors"><i class="fa-solid fa-chevron-up"></i></button>
                             </div>
                         </div>
-                        <div id="holdings-panel-body" class="flex flex-col flex-1">
-                            <!-- Mini donut -->
-                            <div style="height:150px;position:relative;margin-bottom:10px"><canvas id="hbChart"></canvas></div>
-                            <!-- Holdings list -->
-                            <div id="hb-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;max-height:180px"></div>
-                            <div style="margin-top:10px;padding-top:8px;border-top:1px solid #1E293B;display:flex;justify-content:space-between;font-size:10px;color:#64748b">
-                                <span>Click row to edit</span>
-                                <span id="hb-total" style="color:#F8FAFC;font-weight:600"></span>
-                            </div>
+                        <!-- Mini donut -->
+                        <div style="height:160px;position:relative;margin-bottom:12px"><canvas id="hbChart"></canvas></div>
+                        <!-- Holdings list -->
+                        <div id="hb-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;max-height:200px"></div>
+                        <div style="margin-top:10px;padding-top:8px;border-top:1px solid #1E293B;display:flex;justify-content:space-between;font-size:10px;color:#64748b">
+                            <span>Click row to edit</span>
+                            <span id="hb-total" style="color:#F8FAFC;font-weight:600"></span>
                         </div>
+                    </div>
+                </div>
+
+                <div class="bg-card rounded-xl p-6 border border-slate-700">
+                    <h4 class="text-white font-bold mb-4">Quarterly Performance</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="text-[10px] uppercase text-slate-500 border-b border-slate-800"><tr><th class="pb-3 w-10"></th><th class="pb-3">Quarter / Category</th><th class="pb-3">Balance</th><th class="pb-3">Net Flow</th><th class="pb-3">EBalance</th><th class="pb-3">Profit/Loss</th><th class="pb-3 text-right">Growth %</th></tr></thead>
+                            <tbody id="quarterly-tbody" class="text-xs"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -1326,9 +1542,12 @@
     const SIDEBAR_COLLAPSED_KEY = 'investment_dashboard_sidebar_collapsed';
     const HOLDINGS_PANEL_COLLAPSED_KEY = 'investment_dashboard_holdings_panel_collapsed';
     const getThemeMode = () => document.body.classList.contains('theme-light') ? 'light' : 'dark';
-    const chartTheme = () => getThemeMode() === 'light'
-        ? { axis: '#475569', grid: 'rgba(148, 163, 184, 0.35)', label: '#0F172A', dataLabel: '#0F172A', pointBorder: '#FFFFFF' }
-        : { axis: '#94A3B8', grid: 'rgba(51, 65, 85, 0.5)', label: '#F8FAFC', dataLabel: '#FFFFFF', pointBorder: '#FFFFFF' };
+    const EARTH_CHART_COLORS = { stocks: '#58B7A2', bonds: '#D7A642', crypto: '#6F87B8', gold: '#E2C35D', portfolio: '#CF7458', benchmark: '#8A8178' };
+    const chartTheme = () => document.body.classList.contains('earth-theme')
+        ? { axis: '#9D968D', grid: 'rgba(255, 238, 214, 0.08)', label: '#F1EBE2', dataLabel: '#F1EBE2', pointBorder: '#14120F' }
+        : getThemeMode() === 'light'
+            ? { axis: '#475569', grid: 'rgba(148, 163, 184, 0.35)', label: '#0F172A', dataLabel: '#0F172A', pointBorder: '#FFFFFF' }
+            : { axis: '#94A3B8', grid: 'rgba(51, 65, 85, 0.5)', label: '#F8FAFC', dataLabel: '#FFFFFF', pointBorder: '#FFFFFF' };
     const fmt = (v) => '฿' + (v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     function fmtCompactTHB(v) {
         const sign = v >= 0 ? '+' : '-';
@@ -1638,16 +1857,17 @@
         const getCryptoBM = (q, ytd) => { const rate = parseFloat(state.rates[`q${q}`] || state.rates.beginning) || 0; let usds = 0, usdo = 0; for (let qi = q; qi >= 1; qi--) { const eb = pState().endBalances.crypto[`q${qi}`]; if (eb && (eb.usds !== null || eb.usdo !== null)) { usds = (eb.usds || 0) * rate; usdo = (eb.usdo || 0) * rate; break; } } const totalUSD = usds + usdo; const bmS = ytd ? getSettingBM('bonds', q) : calcQoQ_('bonds', q); const bmO = ytd ? getSettingBM('crypto', q) : calcQoQ_('crypto', q); if (totalUSD === 0) return bmO; const wS = usds / totalUSD; const wO = usdo / totalUSD; if (bmS === null && bmO === null) return null; return (wS * (bmS ?? 0)) + (wO * (bmO ?? 0)); };
         const getBenchGrowth = (aKey, qNum, ytdFlag) => { if (!qNum) return null; const assets = ['stocks', 'bonds', 'crypto', 'gold']; if (ytdFlag) { if (aKey === 'crypto') return getCryptoBM(qNum, true); if (aKey === 'all' || aKey === 'all-sep') { let weightedSum = 0, totalWeight = 0, hasAny = false; assets.forEach(a => { const assetBal = state.computed[a][`q${qNum}`].start; const bmVal = a === 'crypto' ? getCryptoBM(qNum, true) : getSettingBM(a, qNum); if (bmVal !== null) { weightedSum += (bmVal * assetBal); totalWeight += assetBal; hasAny = true; } }); return (hasAny && totalWeight > 0) ? weightedSum / totalWeight : null; } return getSettingBM(aKey, qNum); } else { const calcQoQ = (asset, q) => { if (asset === 'crypto') return getCryptoBM(q, false); return calcQoQ_(asset, q); }; if (aKey === 'all' || aKey === 'all-sep') { let weightedSum = 0, totalWeight = 0, hasAny = false; assets.forEach(a => { const assetBal = state.computed[a][`q${qNum}`].start; const qoqVal = calcQoQ(a, qNum); if (qoqVal !== null) { weightedSum += (qoqVal * assetBal); totalWeight += assetBal; hasAny = true; } }); return (hasAny && totalWeight > 0) ? weightedSum / totalWeight : null; } return calcQoQ(aKey, qNum); } };
         let labels = []; let datasets = []; const qTarget = range === 'all' ? (isYTD ? getLatestClosedQuarterNumber() : 4) : parseInt(range.charAt(1));
-        const benchColor = getThemeMode() === 'light' ? '#64748B' : '#94A3B8';
+        const earthMode = document.body.classList.contains('earth-theme');
+        const benchColor = earthMode ? EARTH_CHART_COLORS.benchmark : (getThemeMode() === 'light' ? '#64748B' : '#94A3B8');
         const benchDataset = (label, data) => ({ label, data, backgroundColor: benchColor, borderColor: benchColor, borderWidth: 1, borderRadius: 4, minBarLength: 5 });
         if (isYTD) {
             labels = [range === 'all' ? (qTarget ? `YTD (Up to Q${qTarget})` : 'YTD') : `YTD (Up to Q${qTarget})`];
-            if (assetKey === 'all-sep') { const assets = ['stocks', 'bonds', 'crypto', 'gold']; const colors = { stocks: '#10B981', bonds: '#F59E0B', crypto: '#3B82F6', gold: '#FACC15' }; assets.forEach(a => { datasets.push({ label: a.toUpperCase() + ' Port', data: [getPortGrowth(a, qTarget, true)], backgroundColor: colors[a], borderRadius: 4 }); datasets.push(benchDataset(a.toUpperCase() + ' Bench', [getBenchGrowth(a, qTarget, true)])); }); }
-            else { datasets = [{ label: 'Portfolio', data: [getPortGrowth(assetKey, qTarget, true)], backgroundColor: '#3B82F6', borderRadius: 4 }, benchDataset('Benchmark', [getBenchGrowth(assetKey, qTarget, true)])]; }
+            if (assetKey === 'all-sep') { const assets = ['stocks', 'bonds', 'crypto', 'gold']; const colors = earthMode ? EARTH_CHART_COLORS : { stocks: '#10B981', bonds: '#F59E0B', crypto: '#3B82F6', gold: '#FACC15' }; assets.forEach(a => { datasets.push({ label: a.toUpperCase() + ' Port', data: [getPortGrowth(a, qTarget, true)], backgroundColor: colors[a], borderRadius: 4 }); datasets.push(benchDataset(a.toUpperCase() + ' Bench', [getBenchGrowth(a, qTarget, true)])); }); }
+            else { datasets = [{ label: 'Portfolio', data: [getPortGrowth(assetKey, qTarget, true)], backgroundColor: earthMode ? EARTH_CHART_COLORS.portfolio : '#3B82F6', borderRadius: 4 }, benchDataset('Benchmark', [getBenchGrowth(assetKey, qTarget, true)])]; }
         } else {
             const quarters = range === 'all' ? [1, 2, 3, 4] : [qTarget]; labels = range === 'all' ? ['Q1', 'Q2', 'Q3', 'Q4'] : [`Q${qTarget}`];
-            if (assetKey === 'all-sep') { const assets = ['stocks', 'bonds', 'crypto', 'gold']; const colors = { stocks: '#10B981', bonds: '#F59E0B', crypto: '#3B82F6', gold: '#FACC15' }; assets.forEach(a => { datasets.push({ label: a.toUpperCase() + ' Port', data: quarters.map(q => getPortGrowth(a, q, false)), backgroundColor: colors[a], borderRadius: 4 }); datasets.push(benchDataset(a.toUpperCase() + ' Bench', quarters.map(q => getBenchGrowth(a, q, false)))); }); }
-            else { datasets = [{ label: 'Portfolio', data: quarters.map(q => getPortGrowth(assetKey, q, false)), backgroundColor: '#3B82F6', borderRadius: 4 }, benchDataset('Benchmark', quarters.map(q => getBenchGrowth(assetKey, q, false)))]; }
+            if (assetKey === 'all-sep') { const assets = ['stocks', 'bonds', 'crypto', 'gold']; const colors = earthMode ? EARTH_CHART_COLORS : { stocks: '#10B981', bonds: '#F59E0B', crypto: '#3B82F6', gold: '#FACC15' }; assets.forEach(a => { datasets.push({ label: a.toUpperCase() + ' Port', data: quarters.map(q => getPortGrowth(a, q, false)), backgroundColor: colors[a], borderRadius: 4 }); datasets.push(benchDataset(a.toUpperCase() + ' Bench', quarters.map(q => getBenchGrowth(a, q, false)))); }); }
+            else { datasets = [{ label: 'Portfolio', data: quarters.map(q => getPortGrowth(assetKey, q, false)), backgroundColor: earthMode ? EARTH_CHART_COLORS.portfolio : '#3B82F6', borderRadius: 4 }, benchDataset('Benchmark', quarters.map(q => getBenchGrowth(assetKey, q, false)))]; }
         }
         if(charts.perf) charts.perf.destroy();
         const theme = chartTheme();
@@ -1659,7 +1879,8 @@
         if(charts.alloc) charts.alloc.destroy();
         const assetKeys = ['stocks','bonds','crypto','gold'];
         const theme = chartTheme();
-        charts.alloc = new Chart(ctx, { type: 'doughnut', data: { labels: ['Stocks', 'Bonds', 'Crypto', 'Gold'], datasets: [{ data, backgroundColor: ['#10B981', '#F59E0B', '#3B82F6', '#FACC15'], borderWidth: 0, hoverOffset: 8 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '52%', onClick: (e, elements) => { if (elements.length > 0) openDrillDown(assetKeys[elements[0].index], document.getElementById('hb-quarter')?.value); }, plugins: { legend: { display: false }, datalabels: { color: '#fff', clamp: true, textStrokeColor: 'rgba(15,23,42,.45)', textStrokeWidth: 2, font: { weight: 'bold', size: 10 }, formatter: (v, c) => { const sum = c.chart.data.datasets[0].data.reduce((a, b) => a + b, 0); if (sum <= 0 || v <= 0) return ''; const pct = (v * 100 / sum).toFixed(1); return `${c.chart.data.labels[c.dataIndex]} (${pct}%)`; } } } } });
+        const allocColors = document.body.classList.contains('earth-theme') ? [EARTH_CHART_COLORS.stocks, EARTH_CHART_COLORS.bonds, EARTH_CHART_COLORS.crypto, EARTH_CHART_COLORS.gold] : ['#10B981', '#F59E0B', '#3B82F6', '#FACC15'];
+        charts.alloc = new Chart(ctx, { type: 'doughnut', data: { labels: ['Stocks', 'Bonds', 'Crypto', 'Gold'], datasets: [{ data, backgroundColor: allocColors, borderWidth: 0, hoverOffset: 8 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%', onClick: (e, elements) => { if (elements.length > 0) openDrillDown(assetKeys[elements[0].index], document.getElementById('hb-quarter')?.value); }, plugins: { legend: { position: 'bottom', labels: { color: theme.axis, boxWidth: 8, font: { size: 9 } } }, datalabels: { color: theme.dataLabel, font: { weight: 'bold', size: 9 }, formatter: (v, c) => { const sum = c.chart.data.datasets[0].data.reduce((a, b) => a + b, 0); return sum > 0 ? (v * 100 / sum).toFixed(1) + '%' : ''; } } } } });
     }
 
     function renderAllocationHistory() {
@@ -1720,8 +1941,12 @@
         const avgMonthly = tiers && tiers.length > 0 ? tiers.reduce((s,t)=>s+t.amount,0)/tiers.length : userMonthly;
         if (window.goalChartInstance) window.goalChartInstance.destroy();
         const theme = chartTheme();
-        const datasets = [ { label: 'Required Monthly', data: dataPoints, borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.4, pointRadius: 2, pointHitRadius: 10, hoverRadius: 5, yAxisID: 'y' }, { label: 'Your Plan', data: [{x: userReturn, y: avgMonthly}], backgroundColor: '#F59E0B', borderColor: theme.pointBorder, pointRadius: 6, hoverRadius: 8, type: 'scatter', yAxisID: 'y' } ];
-        if (projPoints.length > 0) { datasets.push({ label: 'Projected Value', data: projPoints, borderColor: '#10B981', backgroundColor: 'rgba(16,185,129,0.05)', fill: false, tension: 0.4, pointRadius: 1, pointHitRadius: 8, hoverRadius: 4, yAxisID: 'y2', borderDash: [4,3] }); }
+        const isEarth = document.body.classList.contains('earth-theme');
+        const reqColor = isEarth ? EARTH_CHART_COLORS.portfolio : '#3B82F6';
+        const planColor = isEarth ? EARTH_CHART_COLORS.gold : '#F59E0B';
+        const projColor = isEarth ? EARTH_CHART_COLORS.stocks : '#10B981';
+        const datasets = [ { label: 'Required Monthly', data: dataPoints, borderColor: reqColor, backgroundColor: isEarth ? 'rgba(207,116,88,0.12)' : 'rgba(59,130,246,0.1)', fill: true, tension: 0.4, pointRadius: 2, pointHitRadius: 10, hoverRadius: 5, yAxisID: 'y' }, { label: 'Your Plan', data: [{x: userReturn, y: avgMonthly}], backgroundColor: planColor, borderColor: theme.pointBorder, pointRadius: 6, hoverRadius: 8, type: 'scatter', yAxisID: 'y' } ];
+        if (projPoints.length > 0) { datasets.push({ label: 'Projected Value', data: projPoints, borderColor: projColor, backgroundColor: isEarth ? 'rgba(88,183,162,0.06)' : 'rgba(16,185,129,0.05)', fill: false, tension: 0.4, pointRadius: 1, pointHitRadius: 8, hoverRadius: 4, yAxisID: 'y2', borderDash: [4,3] }); }
         window.goalChartInstance = new Chart(ctx.getContext('2d'), { type: 'line', data: { datasets }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { x: { type: 'linear', title: { display: true, text: 'Expected Return (%)', color: theme.axis, font: {size: 9} }, ticks: { color: theme.axis, font: {size: 9}, stepSize: 1 }, grid: { color: theme.grid } }, y: { position: 'left', ticks: { color: theme.axis, font: {size: 9}, callback: v => (v/1000).toFixed(0) + 'k' }, grid: { color: theme.grid } }, y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: theme.axis, font: {size: 9}, callback: v => v >= 1000000 ? (v/1000000).toFixed(1)+'M' : (v/1000).toFixed(0)+'k' } } }, plugins: { legend: { display: false }, datalabels: { display: false }, tooltip: { enabled: true, position: 'nearest', callbacks: { title: (items) => `Expected Return: ${items[0].parsed.x}%`, label: (item) => `${item.dataset.label}: ฿${item.parsed.y.toLocaleString(undefined,{maximumFractionDigits:0})}` } } } } });
     }
 
@@ -2810,21 +3035,252 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     }
 
     // ════════════════════════════════════════════════════
-    //   DASHBOARD PANEL LAYOUT
+    //   3-PANEL DRAG RESIZE
     // ════════════════════════════════════════════════════
-    function resizeDashboardCharts() {
-        if (charts.perf) charts.perf.resize();
-        if (charts.alloc) charts.alloc.resize();
-        if (typeof hbChartInst !== 'undefined' && hbChartInst) hbChartInst.resize();
-    }
-    window.addEventListener('resize', () => {
-        if (typeof applyHoldingsPanelState === 'function') applyHoldingsPanelState();
-        resizeDashboardCharts();
-    });
-    setTimeout(() => {
-        if (typeof applyHoldingsPanelState === 'function') applyHoldingsPanelState();
-        resizeDashboardCharts();
-    }, 0);
+    (function initPanelResize() {
+        const HANDLE_W = 14;
+        const handles = [
+            { handleId: 'drag-handle-1', leftId: 'panel-perf',  rightId: 'panel-alloc', leftVar: '--perf-col', rightVar: '--alloc-col', leftMin: 380, rightMin: 320 },
+            { handleId: 'drag-handle-2', leftId: 'panel-alloc', rightId: 'panel-holdings', leftVar: '--alloc-col', rightVar: '--hold-col', leftMin: 320, rightMin: 300 }
+        ];
+
+        function getDragMins(pairW, leftMin, rightMin) {
+            const floor = 120;
+            if (pairW <= floor * 2) return { left: pairW / 2, right: pairW / 2 };
+            const desiredLeft = Math.max(floor, leftMin || floor);
+            const desiredRight = Math.max(floor, rightMin || floor);
+            if (pairW >= desiredLeft + desiredRight) return { left: desiredLeft, right: desiredRight };
+            const scale = pairW / (desiredLeft + desiredRight);
+            return {
+                left: Math.max(floor, desiredLeft * scale),
+                right: Math.max(floor, desiredRight * scale)
+            };
+        }
+
+        function clampDragPair(leftW0, rightW0, delta, leftMin, rightMin) {
+            const pairW = leftW0 + rightW0;
+            const mins = getDragMins(pairW, leftMin, rightMin);
+            let newLeft = leftW0 + delta;
+            let newRight = rightW0 - delta;
+            if (newLeft < mins.left) {
+                newLeft = mins.left;
+                newRight = pairW - mins.left;
+            }
+            if (newRight < mins.right) {
+                newRight = mins.right;
+                newLeft = pairW - mins.right;
+            }
+            return { newLeft, newRight };
+        }
+
+        function fitPanelWidths(widths, mins, available) {
+            const keys = Object.keys(widths);
+            if (available <= 0) return widths;
+            let fitted = {};
+            let total = keys.reduce((sum, key) => sum + (Number(widths[key]) || 0), 0);
+            if (!total) {
+                const defaults = { perf: 0.5, alloc: 0.25, hold: 0.25 };
+                keys.forEach(key => fitted[key] = available * (defaults[key] || (1 / keys.length)));
+            } else {
+                keys.forEach(key => fitted[key] = widths[key] * available / total);
+            }
+
+            const minSum = keys.reduce((sum, key) => sum + (mins[key] || 0), 0);
+            if (minSum > available) {
+                const scale = available / minSum;
+                keys.forEach(key => fitted[key] = (mins[key] || 0) * scale);
+                return fitted;
+            }
+
+            let changed = true;
+            while (changed) {
+                changed = false;
+                let fixed = 0;
+                let flexibleTotal = 0;
+                const flexible = [];
+                keys.forEach(key => {
+                    const min = mins[key] || 0;
+                    if (fitted[key] < min) {
+                        fitted[key] = min;
+                        changed = true;
+                    } else {
+                        flexible.push(key);
+                        flexibleTotal += fitted[key];
+                    }
+                });
+                keys.forEach(key => {
+                    const min = mins[key] || 0;
+                    if (fitted[key] <= min) fixed += fitted[key];
+                });
+                const remaining = available - fixed;
+                if (changed && flexible.length && flexibleTotal > 0) {
+                    flexible.forEach(key => fitted[key] = fitted[key] * remaining / flexibleTotal);
+                }
+            }
+
+            const finalTotal = keys.reduce((sum, key) => sum + fitted[key], 0);
+            if (finalTotal > 0) keys.forEach(key => fitted[key] = fitted[key] * available / finalTotal);
+            return fitted;
+        }
+
+        function syncPanelGridColumns() {
+            const row = document.getElementById('three-panel-row');
+            if (!row || window.innerWidth < 1024) return;
+            const collapsed = localStorage.getItem(HOLDINGS_PANEL_COLLAPSED_KEY) === 'true';
+            const rowW = row.clientWidth;
+            const handleCount = collapsed ? 1 : 2;
+            const available = Math.max(0, rowW - (HANDLE_W * handleCount));
+            const perf = document.getElementById('panel-perf');
+            const alloc = document.getElementById('panel-alloc');
+            const hold = document.getElementById('panel-holdings');
+            const widths = collapsed
+                ? {
+                    perf: perf?.getBoundingClientRect().width || available * 0.6,
+                    alloc: alloc?.getBoundingClientRect().width || available * 0.4
+                }
+                : {
+                    perf: perf?.getBoundingClientRect().width || available * 0.5,
+                    alloc: alloc?.getBoundingClientRect().width || available * 0.25,
+                    hold: hold?.getBoundingClientRect().width || available * 0.25
+                };
+            const mins = collapsed
+                ? { perf: 420, alloc: 360 }
+                : { perf: 420, alloc: 320, hold: 300 };
+            const fitted = fitPanelWidths(widths, mins, available);
+            row.style.gridTemplateColumns = collapsed
+                ? `${fitted.perf.toFixed(2)}px ${HANDLE_W}px ${fitted.alloc.toFixed(2)}px`
+                : `${fitted.perf.toFixed(2)}px ${HANDLE_W}px ${fitted.alloc.toFixed(2)}px ${HANDLE_W}px ${fitted.hold.toFixed(2)}px`;
+        }
+        window.syncPanelGridColumns = syncPanelGridColumns;
+
+        function applyDragColumns(leftId, newLeft, rightId, newRight) {
+            const row = document.getElementById('three-panel-row');
+            if (!row) return;
+            const collapsed = localStorage.getItem(HOLDINGS_PANEL_COLLAPSED_KEY) === 'true';
+            const widths = {
+                perf: document.getElementById('panel-perf')?.getBoundingClientRect().width || 0,
+                alloc: document.getElementById('panel-alloc')?.getBoundingClientRect().width || 0,
+                hold: document.getElementById('panel-holdings')?.getBoundingClientRect().width || 0
+            };
+            const keyMap = { 'panel-perf': 'perf', 'panel-alloc': 'alloc', 'panel-holdings': 'hold' };
+            widths[keyMap[leftId]] = newLeft;
+            widths[keyMap[rightId]] = newRight;
+            row.style.gridTemplateColumns = collapsed
+                ? `${widths.perf.toFixed(2)}px ${HANDLE_W}px ${widths.alloc.toFixed(2)}px`
+                : `${widths.perf.toFixed(2)}px ${HANDLE_W}px ${widths.alloc.toFixed(2)}px ${HANDLE_W}px ${widths.hold.toFixed(2)}px`;
+        }
+
+        function resizePanelCharts() {
+            if (charts.perf) charts.perf.resize();
+            if (charts.alloc) charts.alloc.resize();
+            if (typeof hbChartInst !== 'undefined' && hbChartInst) hbChartInst.resize();
+        }
+
+        handles.forEach(({ handleId, leftId, rightId, leftVar, rightVar, leftMin, rightMin }) => {
+            const handle = document.getElementById(handleId);
+            const pip    = handle ? handle.querySelector('.drag-pip') : null;
+            if (!handle) return;
+
+            // Hover style
+            handle.addEventListener('mouseenter', () => { if (pip) { pip.style.background = '#3B82F6'; pip.style.transform = 'scaleX(1.5)'; } });
+            handle.addEventListener('mouseleave', () => { if (pip && !handle._dragging) { pip.style.background = '#334155'; pip.style.transform = ''; } });
+
+            handle.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                handle._dragging = true;
+                if (pip) { pip.style.background = '#60A5FA'; pip.style.transform = 'scaleX(1.8)'; }
+
+                const row      = document.getElementById('three-panel-row');
+                const leftEl   = document.getElementById(leftId);
+                const rightEl  = document.getElementById(rightId);
+                const startX   = e.clientX;
+                syncPanelGridColumns();
+                const leftW0   = leftEl.getBoundingClientRect().width;
+                const rightW0  = rightEl.getBoundingClientRect().width;
+
+                // Disable transitions & pointer events on panels during drag
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+
+                function onMove(me) {
+                    const delta = me.clientX - startX;
+                    const { newLeft, newRight } = clampDragPair(leftW0, rightW0, delta, leftMin, rightMin);
+                    applyDragColumns(leftId, newLeft, rightId, newRight);
+                    resizePanelCharts();
+                }
+
+                function onUp() {
+                    handle._dragging = false;
+                    if (pip) { pip.style.background = '#334155'; pip.style.transform = ''; }
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup',   onUp);
+                    resizePanelCharts();
+                }
+
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup',   onUp);
+            });
+
+            // Touch support
+            handle.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                const row      = document.getElementById('three-panel-row');
+                const leftEl   = document.getElementById(leftId);
+                const rightEl  = document.getElementById(rightId);
+                const startX   = touch.clientX;
+                syncPanelGridColumns();
+                const leftW0   = leftEl.getBoundingClientRect().width;
+                const rightW0  = rightEl.getBoundingClientRect().width;
+                if (pip) pip.style.background = '#60A5FA';
+
+                function onTMove(te) {
+                    const delta = te.touches[0].clientX - startX;
+                    const { newLeft, newRight } = clampDragPair(leftW0, rightW0, delta, leftMin, rightMin);
+                    applyDragColumns(leftId, newLeft, rightId, newRight);
+                    resizePanelCharts();
+                }
+                function onTEnd() {
+                    if (pip) pip.style.background = '#334155';
+                    handle.removeEventListener('touchmove', onTMove);
+                    handle.removeEventListener('touchend',  onTEnd);
+                    resizePanelCharts();
+                }
+                handle.addEventListener('touchmove', onTMove, { passive: true });
+                handle.addEventListener('touchend',  onTEnd);
+            }, { passive: true });
+        });
+
+        // On mobile (<1024px) collapse to vertical stack
+        function checkMobileStack() {
+            const row = document.getElementById('three-panel-row');
+            if (!row) return;
+            if (window.innerWidth < 1024) {
+                row.style.display = 'flex';
+                row.style.flexDirection = 'column';
+                document.querySelectorAll('.panel-drag-handle').forEach(h => h.style.display = 'none');
+                ['panel-perf','panel-alloc','panel-holdings'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) { el.style.flexBasis = 'auto'; el.style.flexGrow = '1'; }
+                });
+            } else {
+                row.style.display = 'grid';
+                row.style.flexDirection = '';
+                document.querySelectorAll('.panel-drag-handle').forEach(h => h.style.display = 'flex');
+                ['panel-perf','panel-alloc','panel-holdings'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) { el.style.flexBasis = ''; el.style.flexGrow = ''; }
+                });
+                syncPanelGridColumns();
+            }
+            if (typeof applyHoldingsPanelState === 'function') applyHoldingsPanelState();
+            resizePanelCharts();
+        }
+        window.addEventListener('resize', checkMobileStack);
+        // Run after DOM is ready
+        setTimeout(checkMobileStack, 0);
+    })();
 
     function clearCachedFinancialSettings() {
         ['settings_port1', 'settings_port2', 'exchangeRateDefaults', 'flows_port1'].forEach(key => localStorage.removeItem(key));
@@ -2936,8 +3392,12 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     //  PLATFORM SETTINGS
     // ══════════════════════════════════════════════════════
     const PLATFORM_ASSETS = ['stocks','bonds','crypto','gold'];
-    const PLATFORM_COLORS = { stocks:'#10B981', bonds:'#F59E0B', crypto:'#3B82F6', gold:'#FACC15' };
-    const DD_COLORS = { stocks:'#10B981', bonds:'#F59E0B', crypto:'#3B82F6', gold:'#FACC15' };
+    const PLATFORM_COLORS = document.body.classList.contains('earth-theme')
+        ? { stocks:'#58B7A2', bonds:'#D7A642', crypto:'#6F87B8', gold:'#E2C35D' }
+        : { stocks:'#10B981', bonds:'#F59E0B', crypto:'#3B82F6', gold:'#FACC15' };
+    const DD_COLORS = document.body.classList.contains('earth-theme')
+        ? { stocks:'#58B7A2', bonds:'#D7A642', crypto:'#6F87B8', gold:'#E2C35D' }
+        : { stocks:'#10B981', bonds:'#F59E0B', crypto:'#3B82F6', gold:'#FACC15' };
     const PLATFORM_DEFAULTS = {
         stocks: ['Streaming', 'Webull', 'Dime', 'Finnomena', 'SCB Fundclick'],
         bonds:  ['BBL', 'Finnomena', 'Dime', 'SCB Fundclick'],
@@ -2988,31 +3448,37 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
 
     function applyHoldingsPanelState() {
         const collapsed = localStorage.getItem(HOLDINGS_PANEL_COLLAPSED_KEY) === 'true';
-        const row = document.getElementById('dashboard-lower-row');
+        const isMobile = window.innerWidth < 1024;
+        const row = document.getElementById('three-panel-row');
         const panel = document.getElementById('panel-holdings');
+        const handle = document.getElementById('drag-handle-2');
+        const alloc = document.getElementById('panel-alloc');
         const btn = document.getElementById('toggle-holdings-panel');
-        if (panel) panel.classList.toggle('is-collapsed', collapsed);
-        if (row) row.classList.toggle('holdings-collapsed', collapsed);
+        if (panel) { panel.hidden = collapsed; panel.style.display = collapsed ? 'none' : 'flex'; }
+        if (handle) { handle.hidden = collapsed; handle.style.display = (collapsed || isMobile) ? 'none' : 'flex'; }
+        if (row && !isMobile) {
+            row.style.display = 'grid';
+            row.style.width = '100%';
+            if (typeof window.syncPanelGridColumns === 'function') {
+                setTimeout(() => window.syncPanelGridColumns(), 0);
+            }
+        }
+        if (alloc) {
+            alloc.style.flexBasis = isMobile ? 'auto' : '';
+            alloc.style.flexGrow = isMobile ? '1' : '';
+        }
         if (btn) {
-            btn.title = collapsed ? 'Expand holdings breakdown' : 'Collapse holdings breakdown';
-            btn.innerHTML = collapsed ? '<i class="fa-solid fa-chevron-left"></i>' : '<i class="fa-solid fa-chevron-up"></i>';
-            btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            btn.title = collapsed ? 'Show holdings breakdown' : 'Hide holdings breakdown';
+            btn.innerHTML = collapsed ? '<i class="fa-solid fa-eye"></i>' : '<i class="fa-solid fa-table-columns"></i>';
             btn.classList.toggle('text-blue-400', !collapsed);
         }
         if (charts.alloc) setTimeout(() => charts.alloc.resize(), 0);
         if (hbChartInst && !collapsed) setTimeout(() => hbChartInst.resize(), 0);
     }
 
-    function toggleHoldingsPanel(event) {
-        if (event) event.stopPropagation();
+    function toggleHoldingsPanel() {
         const next = localStorage.getItem(HOLDINGS_PANEL_COLLAPSED_KEY) !== 'true';
         localStorage.setItem(HOLDINGS_PANEL_COLLAPSED_KEY, next ? 'true' : 'false');
-        applyHoldingsPanelState();
-    }
-
-    function expandHoldingsPanel() {
-        if (localStorage.getItem(HOLDINGS_PANEL_COLLAPSED_KEY) !== 'true') return;
-        localStorage.setItem(HOLDINGS_PANEL_COLLAPSED_KEY, 'false');
         applyHoldingsPanelState();
     }
 
