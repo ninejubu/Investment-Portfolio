@@ -1,0 +1,2 @@
+id,ticker,name,side,status,openDate,closeDate,quantity,avgCost,currentPrice,exitPrice,realizedPL,dividends,fees,currency,fxRate,platform,owner,takeProfit,stopLoss,tags,thesis,review,updatedAt
+pos-example-long,NVDA,NVIDIA Corporation,long,open,2026-06-10,,2,147.50,147.50,0,0,0,0.35,USD,32.60,IBKR,Nine,165,139,"swing, breakout",Example only,,2026-06-10T10:00:00.000Z

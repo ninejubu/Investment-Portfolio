@@ -516,7 +516,7 @@
 
         .sentiment-strip {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 12px;
         }
         .sentiment-card {
@@ -553,6 +553,125 @@
             border-radius: inherit;
             background: #64748b;
             transition: width .6s ease, background-color .2s ease;
+        }
+
+        /* ── Satellite trading workspace ── */
+        .sat-workspace { --sat-accent: #D97757; --sat-green: #48B887; --sat-red: #E06C75; }
+        .sat-toolbar {
+            display: flex; align-items: center; justify-content: space-between; gap: 16px;
+            padding: 18px 20px; border: 1px solid #3A3532; background: #24211F; border-radius: 8px;
+        }
+        .sat-kicker { color: #D97757; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+        .sat-subtle { color: #8F8882; font-size: 11px; }
+        .sat-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .sat-btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+            min-height: 34px; padding: 7px 12px; border-radius: 6px; border: 1px solid #49433F;
+            background: #2B2724; color: #D9D4CF; font-size: 11px; font-weight: 700; transition: .15s ease;
+        }
+        .sat-btn:hover { border-color: #D97757; color: #FFFFFF; }
+        .sat-btn.primary { background: #D97757; border-color: #D97757; color: #171513; }
+        .sat-btn.danger { color: #F19A9A; border-color: rgba(224,108,117,.35); background: rgba(224,108,117,.07); }
+        .sat-stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+        .sat-stat-card, .sat-panel {
+            background: #24211F; border: 1px solid #3A3532; border-radius: 8px;
+        }
+        .sat-stat-card { min-height: 114px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; }
+        .sat-stat-label { color: #77716C; font-size: 9px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+        .sat-stat-value { color: #F4F0EC; font-size: 22px; line-height: 1.1; font-weight: 700; overflow-wrap: anywhere; }
+        .sat-stat-meta { color: #8F8882; font-size: 10px; }
+        .sat-positive { color: #48B887 !important; }
+        .sat-negative { color: #E06C75 !important; }
+        .sat-panel { padding: 20px; min-width: 0; overflow: hidden; }
+        .sat-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+        .sat-panel-title { color: #F4F0EC; font-size: 15px; font-weight: 700; }
+        .sat-segment {
+            display: inline-flex; align-items: center; padding: 3px; gap: 2px;
+            background: #1B1917; border: 1px solid #3A3532; border-radius: 6px;
+        }
+        .sat-segment button {
+            border: 0; border-radius: 4px; padding: 5px 10px; color: #8F8882;
+            background: transparent; font-size: 10px; font-weight: 700;
+        }
+        .sat-segment button.active { color: #171513; background: #D97757; }
+        .sat-performance-panel { min-height: 380px; }
+        .sat-performance-chart { height: 300px; position: relative; }
+        .sat-two-col { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr); gap: 16px; }
+        .sat-allocation-layout { display: grid; grid-template-columns: minmax(240px, .85fr) minmax(220px, 1.15fr); gap: 18px; align-items: center; }
+        .sat-allocation-chart { height: 290px; position: relative; }
+        .sat-alloc-list, .sat-insights-list { display: flex; flex-direction: column; gap: 7px; }
+        .sat-alloc-row, .sat-insight-row {
+            display: grid; align-items: center; gap: 10px; border-bottom: 1px solid #332F2C; padding: 9px 4px;
+        }
+        .sat-alloc-row { grid-template-columns: auto minmax(0,1fr) auto auto; }
+        .sat-alloc-dot { width: 8px; height: 8px; border-radius: 2px; }
+        .sat-alloc-ticker { color: #F4F0EC; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+        .sat-alloc-value, .sat-alloc-pct { color: #A9A29C; font-size: 10px; text-align: right; }
+        .sat-insight-row { grid-template-columns: 24px minmax(0,1fr); background: #201D1B; border: 1px solid #302C29; border-radius: 6px; padding: 10px; }
+        .sat-insight-icon { color: #D97757; text-align: center; }
+        .sat-insight-label { color: #77716C; font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
+        .sat-insight-value { color: #D9D4CF; font-size: 11px; margin-top: 2px; overflow-wrap: anywhere; }
+        .sat-table-wrap { overflow: auto; }
+        .sat-table { width: 100%; min-width: 960px; border-collapse: collapse; }
+        .sat-table th {
+            padding: 9px 10px; border-bottom: 1px solid #3A3532; color: #77716C;
+            font-size: 9px; letter-spacing: .09em; text-transform: uppercase; text-align: right; white-space: nowrap;
+        }
+        .sat-table th:first-child, .sat-table th:nth-child(2), .sat-table td:first-child, .sat-table td:nth-child(2) { text-align: left; }
+        .sat-table td { padding: 11px 10px; border-bottom: 1px solid #302C29; color: #CFC8C2; font-size: 11px; text-align: right; white-space: nowrap; }
+        .sat-table tr:hover td { background: rgba(217,119,87,.035); }
+        .sat-ticker { color: #D97757; font-weight: 800; }
+        .sat-badge { display: inline-flex; align-items: center; padding: 3px 7px; border-radius: 4px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+        .sat-badge.long, .sat-badge.buy, .sat-badge.cover, .sat-badge.deposit { color: #65C99A; background: rgba(72,184,135,.10); }
+        .sat-badge.short, .sat-badge.sell, .sat-badge.withdraw { color: #F19A9A; background: rgba(224,108,117,.10); }
+        .sat-badge.open { color: #E5B56D; background: rgba(229,181,109,.10); }
+        .sat-badge.closed { color: #AAA29B; background: rgba(143,136,130,.10); }
+        .sat-empty { padding: 34px 16px; text-align: center; color: #77716C; font-size: 11px; }
+        .sat-journal-layout { display: grid; grid-template-columns: minmax(210px, .72fr) minmax(0, 1.28fr); gap: 16px; min-height: 350px; }
+        .sat-journal-list { max-height: 330px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+        .sat-journal-item { border: 1px solid #332F2C; background: #201D1B; border-radius: 6px; padding: 10px; cursor: pointer; }
+        .sat-journal-item:hover, .sat-journal-item.active { border-color: #D97757; background: rgba(217,119,87,.07); }
+        .sat-journal-detail { border-left: 1px solid #3A3532; padding-left: 18px; min-width: 0; }
+        .sat-note-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+        .sat-note-block { background: #201D1B; border: 1px solid #302C29; border-radius: 6px; padding: 11px; }
+        .sat-note-block.wide { grid-column: 1 / -1; }
+        .sat-note-label { color: #77716C; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 5px; }
+        .sat-note-value { color: #D9D4CF; font-size: 11px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .sat-input, .sat-select, .sat-textarea {
+            width: 100%; border: 1px solid #49433F; border-radius: 6px; background: #1B1917;
+            color: #F4F0EC; padding: 8px 10px; font-size: 11px; outline: none;
+        }
+        .sat-input:focus, .sat-select:focus, .sat-textarea:focus { border-color: #D97757; }
+        .sat-textarea { min-height: 88px; resize: vertical; }
+        .sat-form-label { color: #77716C; display: block; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 5px; }
+        .sat-form-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
+        .sat-form-grid .span-2 { grid-column: span 2; }
+        .sat-form-grid .span-4 { grid-column: 1 / -1; }
+        .sat-modal-overlay { display: none; position: fixed; inset: 0; z-index: 420; background: rgba(0,0,0,.72); backdrop-filter: blur(5px); align-items: center; justify-content: center; padding: 16px; }
+        .sat-modal-overlay.open { display: flex; }
+        .sat-modal { width: min(900px, 96vw); max-height: 92vh; overflow-y: auto; background: #24211F; border: 1px solid #49433F; border-radius: 8px; padding: 22px; }
+        body.theme-port2 #tab-dashboard, body.theme-port2 #tab-transactions { color: #D9D4CF; }
+        body.theme-light .sat-toolbar, body.theme-light .sat-stat-card, body.theme-light .sat-panel, body.theme-light .sat-modal { background: #FFFFFF; border-color: #D8D2CC; }
+        body.theme-light .sat-stat-value, body.theme-light .sat-panel-title, body.theme-light .sat-alloc-ticker, body.theme-light .sat-ticker { color: #2A2522; }
+        body.theme-light .sat-input, body.theme-light .sat-select, body.theme-light .sat-textarea, body.theme-light .sat-segment { background: #F8F6F4; border-color: #D8D2CC; color: #2A2522; }
+        body.theme-light .sat-insight-row, body.theme-light .sat-journal-item, body.theme-light .sat-note-block { background: #FAF8F6; border-color: #E6E1DC; }
+        body.theme-light .sat-table td, body.theme-light .sat-insight-value, body.theme-light .sat-note-value { color: #4A433E; }
+
+        @media (max-width: 1180px) {
+            .sat-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .sat-two-col, .sat-allocation-layout { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 760px) {
+            .sat-toolbar { align-items: flex-start; flex-direction: column; }
+            .sat-actions { width: 100%; }
+            .sat-actions .sat-btn { flex: 1; }
+            .sat-stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .sat-stat-card { padding: 12px; min-height: 98px; }
+            .sat-panel { padding: 14px; }
+            .sat-journal-layout { grid-template-columns: 1fr; }
+            .sat-journal-detail { border-left: 0; border-top: 1px solid #3A3532; padding: 14px 0 0; }
+            .sat-form-grid { grid-template-columns: 1fr 1fr; }
+            .sat-form-grid .span-4 { grid-column: 1 / -1; }
         }
 
         body.theme-light { background-color: #F6F8FB; color: #0F172A; }
@@ -743,6 +862,7 @@
         <div class="p-8">
             <!-- ══════════ DASHBOARD TAB ══════════ -->
             <div id="tab-dashboard" class="tab-content active space-y-6">
+                <div id="core-dashboard-view" class="space-y-6">
                 <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
                     <div class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-2 flex flex-col justify-center">
                         <p class="text-slate-400 mb-1 font-medium flex items-center gap-2">Total Net Worth
@@ -820,6 +940,16 @@
                         </div>
                         <div class="sentiment-score" id="stock-fng-score">--</div>
                         <div class="sentiment-meter"><div class="sentiment-fill" id="stock-fng-fill"></div></div>
+                    </div>
+                    <div class="sentiment-card" id="vix-card">
+                        <div class="sentiment-icon"><i class="fa-solid fa-wave-square"></i></div>
+                        <div>
+                            <div class="sentiment-label">VIX Index</div>
+                            <div class="sentiment-value" id="vix-label">Loading...</div>
+                            <div class="sentiment-updated" id="vix-updated">CNN Markets · Cboe VIX</div>
+                        </div>
+                        <div class="sentiment-score" id="vix-score">--</div>
+                        <div class="sentiment-meter"><div class="sentiment-fill" id="vix-fill"></div></div>
                     </div>
                 </div>
 
@@ -923,10 +1053,148 @@
                         </div>
                     </div>
                 </div>
+                </div>
+
+                <!-- ══════════ SATELLITE TRADING DASHBOARD ══════════ -->
+                <div id="sat-dashboard-view" class="sat-workspace hidden space-y-4">
+                    <div class="sat-toolbar">
+                        <div>
+                            <div class="sat-kicker">Satellite Port</div>
+                            <h3 class="text-xl font-bold text-white mt-1">Trading Performance</h3>
+                            <p class="sat-subtle mt-1">Position-level tracking · Nine & Loki workspace</p>
+                        </div>
+                        <div class="sat-actions">
+                            <span class="sat-badge open"><i class="fa-solid fa-user-group mr-1"></i> Nine + Loki</span>
+                            <button class="sat-btn" onclick="switchTab('transactions')"><i class="fa-solid fa-list-check"></i> Transactions</button>
+                            <button class="sat-btn primary" onclick="satOpenPositionModal()"><i class="fa-solid fa-plus"></i> Position</button>
+                            <button class="sat-btn primary" onclick="satOpenTradeEntry()"><i class="fa-solid fa-arrow-right-arrow-left"></i> Trade</button>
+                        </div>
+                    </div>
+
+                    <div class="sat-stats-grid">
+                        <div class="sat-stat-card"><span class="sat-stat-label">Total Value</span><strong id="sat-total-value" class="sat-stat-value">฿0</strong><span id="sat-total-value-meta" class="sat-stat-meta">Cash + open positions</span></div>
+                        <div class="sat-stat-card"><span class="sat-stat-label">Total P/L</span><strong id="sat-total-pl" class="sat-stat-value">฿0</strong><span id="sat-total-pl-meta" class="sat-stat-meta">Realized + unrealized</span></div>
+                        <div class="sat-stat-card"><span class="sat-stat-label">Unrealized P/L</span><strong id="sat-unrealized-pl" class="sat-stat-value">฿0</strong><span id="sat-unrealized-pct" class="sat-stat-meta">0.0%</span></div>
+                        <div class="sat-stat-card"><span class="sat-stat-label">Realized P/L</span><strong id="sat-realized-pl" class="sat-stat-value">฿0</strong><span id="sat-realized-meta" class="sat-stat-meta">Closed positions</span></div>
+                        <div class="sat-stat-card"><span class="sat-stat-label">Cash</span><strong id="sat-cash" class="sat-stat-value">฿0</strong><span class="sat-stat-meta">From trade cash flow</span></div>
+                        <div class="sat-stat-card"><span class="sat-stat-label">Open Positions</span><strong id="sat-open-count" class="sat-stat-value">0</strong><span id="sat-hold-days" class="sat-stat-meta">No active positions</span></div>
+                        <div class="sat-stat-card"><span class="sat-stat-label">Win Rate</span><strong id="sat-win-rate" class="sat-stat-value">—</strong><span id="sat-closed-count" class="sat-stat-meta">0 closed positions</span></div>
+                        <div class="sat-stat-card"><span class="sat-stat-label">Net Deposited</span><strong id="sat-net-deposited" class="sat-stat-value">฿0</strong><span id="sat-trade-count" class="sat-stat-meta">0 trade records</span></div>
+                    </div>
+
+                    <section class="sat-panel sat-performance-panel">
+                        <div class="sat-panel-head">
+                            <div>
+                                <h4 class="sat-panel-title">Cumulative Trading P/L</h4>
+                                <p class="sat-subtle mt-1">Realized P/L from closed trades; current unrealized P/L is added at the latest point.</p>
+                            </div>
+                            <div class="sat-segment" id="sat-performance-range">
+                                <button type="button" data-range="mtd" onclick="satSetPerformanceRange('mtd')">MTD</button>
+                                <button type="button" data-range="ytd" onclick="satSetPerformanceRange('ytd')">YTD</button>
+                                <button type="button" data-range="all" class="active" onclick="satSetPerformanceRange('all')">ALL</button>
+                            </div>
+                        </div>
+                        <div class="sat-performance-chart"><canvas id="satPerformanceChart"></canvas></div>
+                    </section>
+
+                    <div class="sat-two-col">
+                        <section class="sat-panel">
+                            <div class="sat-panel-head">
+                                <div>
+                                    <h4 class="sat-panel-title">Allocation by Ticker</h4>
+                                    <p class="sat-subtle mt-1">Open positions only</p>
+                                </div>
+                                <div class="sat-segment" id="sat-allocation-mode">
+                                    <button type="button" data-mode="cost" class="active" onclick="satSetAllocationMode('cost')">Cost</button>
+                                    <button type="button" data-mode="current" onclick="satSetAllocationMode('current')">Current Value</button>
+                                </div>
+                            </div>
+                            <div class="sat-allocation-layout">
+                                <div class="sat-allocation-chart"><canvas id="satAllocationChart"></canvas></div>
+                                <div id="sat-allocation-list" class="sat-alloc-list"></div>
+                            </div>
+                        </section>
+
+                        <section class="sat-panel">
+                            <div class="sat-panel-head">
+                                <div>
+                                    <h4 class="sat-panel-title">Trading Insights</h4>
+                                    <p class="sat-subtle mt-1">Calculated from positions and trade history</p>
+                                </div>
+                            </div>
+                            <div id="sat-insights-list" class="sat-insights-list"></div>
+                        </section>
+                    </div>
+
+                    <section class="sat-panel">
+                        <div class="sat-panel-head">
+                            <div>
+                                <h4 class="sat-panel-title">Holdings</h4>
+                                <p class="sat-subtle mt-1">Edit a position here or record quantity changes from Satellite Transactions.</p>
+                            </div>
+                            <div class="sat-actions">
+                                <select id="sat-holdings-filter" class="sat-select" style="width:auto" onchange="satRenderHoldings()">
+                                    <option value="open">Open</option>
+                                    <option value="closed">Closed</option>
+                                    <option value="all">All</option>
+                                </select>
+                                <button class="sat-btn primary" onclick="satOpenPositionModal()"><i class="fa-solid fa-plus"></i> Add</button>
+                            </div>
+                        </div>
+                        <div class="sat-table-wrap">
+                            <table class="sat-table">
+                                <thead><tr><th>Ticker</th><th>Name / Side</th><th>Qty</th><th>Avg Cost</th><th>Current / Exit</th><th>Cost</th><th>Market Value</th><th>Unrealized P/L</th><th>Realized P/L</th><th>Weight</th><th>Days Held</th><th>Owner</th><th></th></tr></thead>
+                                <tbody id="sat-holdings-tbody"></tbody>
+                            </table>
+                        </div>
+                        <div id="sat-holdings-empty" class="sat-empty hidden">No positions in this view.</div>
+                    </section>
+
+                    <div class="sat-two-col">
+                        <section class="sat-panel">
+                            <div class="sat-panel-head">
+                                <div>
+                                    <h4 class="sat-panel-title">Position Journal</h4>
+                                    <p class="sat-subtle mt-1">Entry thesis, take profit, stop loss and review notes</p>
+                                </div>
+                            </div>
+                            <div class="sat-journal-layout">
+                                <div>
+                                    <input id="sat-journal-search" class="sat-input mb-2" type="search" placeholder="Search ticker or position..." oninput="satRenderJournal()">
+                                    <div class="sat-segment mb-3" id="sat-journal-status">
+                                        <button type="button" data-status="open" class="active" onclick="satSetJournalStatus('open')">Open</button>
+                                        <button type="button" data-status="closed" onclick="satSetJournalStatus('closed')">Closed</button>
+                                        <button type="button" data-status="all" onclick="satSetJournalStatus('all')">All</button>
+                                    </div>
+                                    <div id="sat-journal-list" class="sat-journal-list"></div>
+                                </div>
+                                <div id="sat-journal-detail" class="sat-journal-detail"></div>
+                            </div>
+                        </section>
+
+                        <section class="sat-panel">
+                            <div class="sat-panel-head">
+                                <div>
+                                    <h4 class="sat-panel-title">Trade Log</h4>
+                                    <p class="sat-subtle mt-1">Latest executions and portfolio cash movements</p>
+                                </div>
+                                <button class="sat-btn" onclick="switchTab('transactions')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Full Log</button>
+                            </div>
+                            <div class="sat-table-wrap" style="max-height:430px">
+                                <table class="sat-table" style="min-width:720px">
+                                    <thead><tr><th>Date</th><th>Ticker</th><th>Action</th><th>Qty</th><th>Price</th><th>Amount</th><th>Platform</th><th>Owner</th></tr></thead>
+                                    <tbody id="sat-dashboard-trades-tbody"></tbody>
+                                </table>
+                            </div>
+                            <div id="sat-dashboard-trades-empty" class="sat-empty hidden">No trade records yet.</div>
+                        </section>
+                    </div>
+                </div>
             </div>
 
             <!-- ══════════ TRANSACTIONS TAB ══════════ -->
             <div id="tab-transactions" class="tab-content space-y-6">
+                <div id="core-transactions-view">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="space-y-6">
                         <div class="bg-card p-6 rounded-xl border border-slate-700 h-fit">
@@ -962,6 +1230,70 @@
                             <div id="tx-empty-state" class="hidden flex-col items-center justify-center py-16 text-center"><div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mb-3 mx-auto"><i class="fa-solid fa-inbox text-slate-600 text-lg"></i></div><p class="text-slate-500 text-sm font-medium">No transactions yet</p><p class="text-slate-600 text-xs mt-1">Add a transaction or import a CSV file</p></div>
                         </div>
                     </div>
+                </div>
+                </div>
+
+                <!-- ══════════ SATELLITE TRANSACTIONS ══════════ -->
+                <div id="sat-transactions-view" class="sat-workspace hidden space-y-4">
+                    <div class="sat-toolbar">
+                        <div>
+                            <div class="sat-kicker">Satellite Port</div>
+                            <h3 class="text-xl font-bold text-white mt-1">Trade Entry & Position Ledger</h3>
+                            <p class="sat-subtle mt-1">Every execution updates the linked position and the dashboard immediately.</p>
+                        </div>
+                        <div class="sat-actions">
+                            <button class="sat-btn" onclick="switchTab('dashboard')"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
+                            <button class="sat-btn primary" onclick="satOpenPositionModal()"><i class="fa-solid fa-plus"></i> Position</button>
+                        </div>
+                    </div>
+
+                    <section class="sat-panel">
+                        <div class="sat-panel-head">
+                            <div>
+                                <h4 class="sat-panel-title">Quick Trade Entry</h4>
+                                <p class="sat-subtle mt-1">Choose an existing position, or enter a new ticker for the first Buy/Short.</p>
+                            </div>
+                        </div>
+                        <form id="sat-trade-form" class="sat-form-grid" onsubmit="satSubmitTrade(event)">
+                            <div><label class="sat-form-label">Action</label><select id="sat-trade-action" class="sat-select" onchange="satTradeActionChanged()"><option>BUY</option><option>SELL</option><option>SHORT</option><option>COVER</option><option>DIVIDEND</option><option>FEE</option><option>DEPOSIT</option><option>WITHDRAW</option></select></div>
+                            <div><label class="sat-form-label">Linked Position</label><select id="sat-trade-position" class="sat-select" onchange="satTradePositionChanged()"><option value="">New / Cash movement</option></select></div>
+                            <div><label class="sat-form-label">Ticker</label><input id="sat-trade-ticker" class="sat-input" maxlength="16" placeholder="e.g. NVDA"></div>
+                            <div><label class="sat-form-label">Date</label><input id="sat-trade-date" type="date" class="sat-input" required></div>
+                            <div><label class="sat-form-label">Quantity</label><input id="sat-trade-qty" type="number" step="any" min="0" class="sat-input" placeholder="0"></div>
+                            <div><label id="sat-trade-price-label" class="sat-form-label">Price</label><input id="sat-trade-price" type="number" step="any" min="0" class="sat-input" placeholder="0.00"></div>
+                            <div><label class="sat-form-label">Fees</label><input id="sat-trade-fees" type="number" step="any" min="0" class="sat-input" value="0"></div>
+                            <div><label class="sat-form-label">Currency</label><select id="sat-trade-currency" class="sat-select" onchange="satTradeCurrencyChanged()"><option value="USD">USD</option><option value="THB">THB</option></select></div>
+                            <div><label class="sat-form-label">FX Rate</label><input id="sat-trade-fx" type="number" step="any" min="0" class="sat-input" placeholder="USD/THB"></div>
+                            <div><label class="sat-form-label">Platform</label><input id="sat-trade-platform" class="sat-input" placeholder="Broker / exchange"></div>
+                            <div><label class="sat-form-label">Owner</label><select id="sat-trade-owner" class="sat-select"><option>Nine</option><option>Loki</option><option>Nine + Loki</option></select></div>
+                            <div><label class="sat-form-label">Reference</label><input id="sat-trade-ref" class="sat-input" placeholder="Order ID (optional)"></div>
+                            <div class="span-4"><label class="sat-form-label">Execution Note</label><input id="sat-trade-note" class="sat-input" placeholder="Reason, fill detail, adjustment or review note"></div>
+                            <div class="span-4 flex justify-end gap-2">
+                                <button type="reset" class="sat-btn" onclick="setTimeout(satResetTradeForm,0)">Clear</button>
+                                <button type="submit" class="sat-btn primary"><i class="fa-solid fa-check"></i> Record Trade</button>
+                            </div>
+                        </form>
+                    </section>
+
+                    <section class="sat-panel">
+                        <div class="sat-panel-head">
+                            <div>
+                                <h4 class="sat-panel-title">Satellite Trade Log</h4>
+                                <p id="sat-trade-log-count" class="sat-subtle mt-1">0 records</p>
+                            </div>
+                            <div class="sat-actions">
+                                <input id="sat-trade-log-search" type="search" class="sat-input" style="width:220px" placeholder="Search ticker, action, owner..." oninput="satRenderFullTradeLog()">
+                                <button class="sat-btn" onclick="satExportTrades()"><i class="fa-solid fa-file-export"></i> Export CSV</button>
+                            </div>
+                        </div>
+                        <div class="sat-table-wrap" style="max-height:620px">
+                            <table class="sat-table">
+                                <thead><tr><th>Date</th><th>Ticker</th><th>Action</th><th>Qty</th><th>Price</th><th>Fees</th><th>Amount (THB)</th><th>Platform</th><th>Owner</th><th>Note</th><th></th></tr></thead>
+                                <tbody id="sat-full-trades-tbody"></tbody>
+                            </table>
+                        </div>
+                        <div id="sat-full-trades-empty" class="sat-empty hidden">No matching trade records.</div>
+                    </section>
                 </div>
             </div>
 
@@ -1134,16 +1466,17 @@
                 </div>
                 <div class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-emerald-500">
                     <h4 class="text-white font-bold mb-2">Google Sheets Integration</h4>
-                    <p class="text-xs text-slate-400 mb-4">Both Investment Dashboard and Wheel Strategy can share the same Apps Script URL — set it here once.</p>
+                    <p class="text-xs text-slate-400 mb-4">Core Portfolio, Satellite Trading and Wheel Strategy share the same Apps Script URL — set it here once.</p>
                     <div class="space-y-4">
                         <div>
                             <label class="text-[10px] text-slate-500 uppercase block mb-1">Apps Script Web App URL (Single URL for both)</label>
                             <input type="text" id="unified-gs-url" class="w-full bg-slate-800 border border-slate-700 text-white rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" placeholder="https://script.google.com/macros/s/.../exec">
-                            <p class="text-[10px] text-slate-500 mt-1">Investment Dashboard uses GET (no param) + GET ?action=settings_read, Wheel uses GET ?action=wheel_read / POST action=wheel_write</p>
+                            <p class="text-[10px] text-slate-500 mt-1">Core uses Activities + Setting_data, Satellite uses Satellite_positions + Satellite_trades, and Wheel uses its three Wheel tabs.</p>
                         </div>
                         <div class="flex gap-3 flex-wrap">
                             <button onclick="saveUnifiedUrl()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Save & Connect Both</button>
                             <button onclick="testInvConnection()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Test Investment Sync</button>
+                            <button onclick="testSatelliteConnection()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Test Satellite Sync</button>
                             <button onclick="testWheelConnection()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Test Wheel Sync</button>
                         </div>
                         <div id="gs-status-msg" class="text-xs text-slate-500 hidden"></div>
@@ -1288,11 +1621,58 @@
                 &nbsp;<span style="background:#1E293B;padding:2px 7px;border-radius:4px;color:#94A3B8">Wheel_orders</span>
                 &nbsp;<span style="background:#1E293B;padding:2px 7px;border-radius:4px;color:#94A3B8">Wheel_lots</span>
                 &nbsp;<span style="background:#1E293B;padding:2px 7px;border-radius:4px;color:#94A3B8">Wheel_history</span>
+                &nbsp;<span style="background:#1E293B;padding:2px 7px;border-radius:4px;color:#94A3B8">Satellite_positions</span>
+                &nbsp;<span style="background:#1E293B;padding:2px 7px;border-radius:4px;color:#94A3B8">Satellite_trades</span>
             </div>
 
             <div class="wheel-modal-actions">
                 <button class="w-btn w-btn-secondary" onclick="closeWheelModal('mSyncModal')">Close</button>
             </div>
+        </div>
+    </div>
+
+    <!-- ══════════ SATELLITE POSITION MODAL ══════════ -->
+    <div id="sat-position-modal" class="sat-modal-overlay" onclick="if(event.target===this)satClosePositionModal()">
+        <div class="sat-modal sat-workspace">
+            <div class="sat-panel-head">
+                <div>
+                    <div class="sat-kicker">Satellite Position</div>
+                    <h3 id="sat-position-modal-title" class="sat-panel-title mt-1">Add Position</h3>
+                </div>
+                <button class="sat-btn" onclick="satClosePositionModal()" title="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="sat-position-form" class="sat-form-grid" onsubmit="satSubmitPosition(event)">
+                <input id="sat-pos-id" type="hidden">
+                <div><label class="sat-form-label">Ticker</label><input id="sat-pos-ticker" class="sat-input" maxlength="16" required placeholder="NVDA"></div>
+                <div><label class="sat-form-label">Position Name</label><input id="sat-pos-name" class="sat-input" placeholder="NVIDIA Corporation"></div>
+                <div><label class="sat-form-label">Side</label><select id="sat-pos-side" class="sat-select"><option value="long">Long</option><option value="short">Short</option></select></div>
+                <div><label class="sat-form-label">Status</label><select id="sat-pos-status" class="sat-select"><option value="open">Open</option><option value="closed">Closed</option></select></div>
+                <div><label class="sat-form-label">Open Date</label><input id="sat-pos-open-date" type="date" class="sat-input" required></div>
+                <div><label class="sat-form-label">Close Date</label><input id="sat-pos-close-date" type="date" class="sat-input"></div>
+                <div><label class="sat-form-label">Quantity</label><input id="sat-pos-qty" type="number" step="any" min="0" class="sat-input" value="0"></div>
+                <div><label class="sat-form-label">Average Cost</label><input id="sat-pos-avg-cost" type="number" step="any" min="0" class="sat-input" value="0"></div>
+                <div><label class="sat-form-label">Current Price</label><input id="sat-pos-current-price" type="number" step="any" min="0" class="sat-input" value="0"></div>
+                <div><label class="sat-form-label">Exit Price</label><input id="sat-pos-exit-price" type="number" step="any" min="0" class="sat-input" value="0"></div>
+                <div><label class="sat-form-label">Realized P/L</label><input id="sat-pos-realized" type="number" step="any" class="sat-input" value="0"></div>
+                <div><label class="sat-form-label">Dividends</label><input id="sat-pos-dividends" type="number" step="any" class="sat-input" value="0"></div>
+                <div><label class="sat-form-label">Currency</label><select id="sat-pos-currency" class="sat-select"><option value="USD">USD</option><option value="THB">THB</option></select></div>
+                <div><label class="sat-form-label">FX Rate</label><input id="sat-pos-fx" type="number" step="any" min="0" class="sat-input" placeholder="USD/THB"></div>
+                <div><label class="sat-form-label">Platform</label><input id="sat-pos-platform" class="sat-input" placeholder="IBKR / Binance / ..."></div>
+                <div><label class="sat-form-label">Owner</label><select id="sat-pos-owner" class="sat-select"><option>Nine</option><option>Loki</option><option>Nine + Loki</option></select></div>
+                <div><label class="sat-form-label">Take Profit</label><input id="sat-pos-tp" type="number" step="any" min="0" class="sat-input"></div>
+                <div><label class="sat-form-label">Stop Loss</label><input id="sat-pos-sl" type="number" step="any" min="0" class="sat-input"></div>
+                <div><label class="sat-form-label">Fees (position total)</label><input id="sat-pos-fees" type="number" step="any" min="0" class="sat-input" value="0"></div>
+                <div><label class="sat-form-label">Tags</label><input id="sat-pos-tags" class="sat-input" placeholder="swing, earnings, momentum"></div>
+                <div class="span-4"><label class="sat-form-label">Entry Thesis / Why Buy or Short</label><textarea id="sat-pos-thesis" class="sat-textarea" placeholder="Setup, catalyst, invalidation and what must be true..."></textarea></div>
+                <div class="span-4"><label class="sat-form-label">Review Note</label><textarea id="sat-pos-review" class="sat-textarea" placeholder="Post-trade review, lessons, adjustment plan..."></textarea></div>
+                <div class="span-4 flex justify-between gap-2">
+                    <button id="sat-position-delete-btn" type="button" class="sat-btn danger hidden" onclick="satDeletePositionFromModal()"><i class="fa-solid fa-trash-can"></i> Remove Position</button>
+                    <div class="flex gap-2 ml-auto">
+                        <button type="button" class="sat-btn" onclick="satClosePositionModal()">Cancel</button>
+                        <button type="submit" class="sat-btn primary"><i class="fa-solid fa-floppy-disk"></i> Save Position</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1316,12 +1696,21 @@
             port1: { goal: createDefaultGoal(), begBalances: getEmptyBegBalances(), endBalances: getEmptyEndBalances(), benchmarks: getEmptyBenchmarks(), flows: [] },
             port2: { goal: createDefaultGoal(), begBalances: getEmptyBegBalances(), endBalances: getEmptyEndBalances(), benchmarks: getEmptyBenchmarks(), flows: [] }
         },
+        satellite: {
+            positions: [],
+            trades: [],
+            allocationMode: 'cost',
+            performanceRange: 'all',
+            journalStatus: 'open',
+            selectedPositionId: null
+        },
         computed: { stocks: {}, bonds: {}, crypto: {}, gold: {}, portfolio: {} },
         ui: { expandedQuarters: { q1: false, q2: false, q3: false, q4: false } }
     };
 
     const pState = () => state.portfolios[state.currentPort];
-    const charts = { alloc: null, perf: null };
+    const satState = () => state.satellite;
+    const charts = { alloc: null, perf: null, satPerformance: null, satAllocation: null };
     const THEME_KEY = 'investment_dashboard_theme';
     const SIDEBAR_COLLAPSED_KEY = 'investment_dashboard_sidebar_collapsed';
     const HOLDINGS_PANEL_COLLAPSED_KEY = 'investment_dashboard_holdings_panel_collapsed';
@@ -1338,6 +1727,753 @@
         return `${sign}฿${abs.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
     }
     const getActiveRate = () => { for (let q = 4; q >= 1; q--) { const r = parseFloat(state.rates[`q${q}`]); if (r && r > 0) return r; } return parseFloat(state.rates.beginning) || 0; };
+
+    // ════════════════════════════════════════════════════
+    //   SATELLITE PORT — Trading Performance
+    // ════════════════════════════════════════════════════
+    const SAT_POSITIONS_KEY = 'satellite_positions_v1';
+    const SAT_TRADES_KEY = 'satellite_trades_v1';
+    const SAT_COLORS = ['#D97757','#48B887','#5C91D9','#D6A84F','#8B72C9','#4FA6A1','#C85F68','#8D9B65','#B47B55','#6E8FB2'];
+    let satPushTimer = null;
+
+    function satNumber(value) {
+        const n = Number(value);
+        return Number.isFinite(n) ? n : 0;
+    }
+
+    function satEsc(value) {
+        return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    }
+
+    function satMoney(value, currency='THB', digits=0) {
+        const n = satNumber(value);
+        const symbol = currency === 'USD' ? '$' : '฿';
+        return (n < 0 ? '-' : '') + symbol + Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    }
+
+    function satSignedMoney(value, currency='THB') {
+        const n = satNumber(value);
+        return (n >= 0 ? '+' : '-') + satMoney(Math.abs(n), currency);
+    }
+
+    function satToday() { return new Date().toISOString().slice(0, 10); }
+    function satId(prefix) { return prefix + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8); }
+    function satPositionRate(position) { return String(position.currency || 'USD').toUpperCase() === 'USD' ? (satNumber(position.fxRate) || getActiveRate() || 1) : 1; }
+    function satTradeRate(trade) { return String(trade.currency || 'USD').toUpperCase() === 'USD' ? (satNumber(trade.fxRate) || getActiveRate() || 1) : 1; }
+    function satDaysBetween(start, end) {
+        const a = parseDashboardDate(start), b = parseDashboardDate(end || satToday());
+        return a && b ? Math.max(0, Math.floor((b - a) / 86400000)) : 0;
+    }
+
+    function satNormalizePosition(raw={}) {
+        return {
+            id: String(raw.id || satId('pos')),
+            ticker: String(raw.ticker || '').trim().toUpperCase(),
+            name: String(raw.name || '').trim(),
+            side: String(raw.side || 'long').toLowerCase() === 'short' ? 'short' : 'long',
+            status: String(raw.status || 'open').toLowerCase() === 'closed' ? 'closed' : 'open',
+            openDate: toIsoDashboardDate(raw.openDate) || String(raw.openDate || ''),
+            closeDate: toIsoDashboardDate(raw.closeDate) || String(raw.closeDate || ''),
+            quantity: Math.max(0, satNumber(raw.quantity)),
+            avgCost: Math.max(0, satNumber(raw.avgCost)),
+            currentPrice: Math.max(0, satNumber(raw.currentPrice)),
+            exitPrice: Math.max(0, satNumber(raw.exitPrice)),
+            realizedPL: satNumber(raw.realizedPL),
+            dividends: satNumber(raw.dividends),
+            fees: Math.max(0, satNumber(raw.fees)),
+            currency: String(raw.currency || 'USD').toUpperCase() === 'THB' ? 'THB' : 'USD',
+            fxRate: Math.max(0, satNumber(raw.fxRate)),
+            platform: String(raw.platform || '').trim(),
+            owner: String(raw.owner || 'Nine').trim(),
+            takeProfit: Math.max(0, satNumber(raw.takeProfit)),
+            stopLoss: Math.max(0, satNumber(raw.stopLoss)),
+            tags: String(raw.tags || '').trim(),
+            thesis: String(raw.thesis || '').trim(),
+            review: String(raw.review || '').trim(),
+            updatedAt: String(raw.updatedAt || new Date().toISOString())
+        };
+    }
+
+    function satNormalizeTrade(raw={}) {
+        return {
+            id: String(raw.id || satId('trade')),
+            positionId: String(raw.positionId || ''),
+            date: toIsoDashboardDate(raw.date) || String(raw.date || ''),
+            ticker: String(raw.ticker || '').trim().toUpperCase(),
+            action: String(raw.action || 'BUY').trim().toUpperCase(),
+            quantity: Math.max(0, satNumber(raw.quantity)),
+            price: Math.max(0, satNumber(raw.price)),
+            fees: Math.max(0, satNumber(raw.fees)),
+            currency: String(raw.currency || 'USD').toUpperCase() === 'THB' ? 'THB' : 'USD',
+            fxRate: Math.max(0, satNumber(raw.fxRate)),
+            platform: String(raw.platform || '').trim(),
+            note: String(raw.note || '').trim(),
+            owner: String(raw.owner || 'Nine').trim(),
+            reference: String(raw.reference || '').trim(),
+            realizedPL: satNumber(raw.realizedPL),
+            createdAt: String(raw.createdAt || new Date().toISOString())
+        };
+    }
+
+    function satSaveLocal() {
+        localStorage.setItem(SAT_POSITIONS_KEY, JSON.stringify(satState().positions));
+        localStorage.setItem(SAT_TRADES_KEY, JSON.stringify(satState().trades));
+    }
+
+    function satLoadLocal() {
+        try {
+            const positions = JSON.parse(localStorage.getItem(SAT_POSITIONS_KEY) || '[]');
+            const trades = JSON.parse(localStorage.getItem(SAT_TRADES_KEY) || '[]');
+            if (Array.isArray(positions)) satState().positions = positions.map(satNormalizePosition).filter(p => p.ticker);
+            if (Array.isArray(trades)) satState().trades = trades.map(satNormalizeTrade).filter(t => t.date && t.action);
+        } catch (e) {
+            console.warn('Satellite local data could not be loaded:', e);
+        }
+    }
+
+    function satMetrics() {
+        const open = satState().positions.filter(p => p.status === 'open' && p.quantity > 0);
+        const closed = satState().positions.filter(p => p.status === 'closed');
+        let marketValue = 0, costValue = 0, unrealized = 0, realizedGross = 0, fees = 0, dividends = 0;
+        open.forEach(p => {
+            const rate = satPositionRate(p);
+            const price = p.currentPrice || p.avgCost;
+            const cost = p.quantity * p.avgCost * rate;
+            const value = p.quantity * price * rate;
+            costValue += cost;
+            marketValue += p.side === 'short' ? -value : value;
+            unrealized += (p.side === 'short' ? (p.avgCost - price) : (price - p.avgCost)) * p.quantity * rate;
+        });
+        satState().positions.forEach(p => {
+            const rate = satPositionRate(p);
+            realizedGross += p.realizedPL * rate;
+            fees += p.fees * rate;
+            dividends += p.dividends * rate;
+        });
+        let cash = 0, deposits = 0, withdrawals = 0;
+        satState().trades.forEach(t => {
+            const rate = satTradeRate(t);
+            const amount = t.quantity > 0 ? t.quantity * t.price : t.price;
+            const gross = amount * rate;
+            const fee = t.fees * rate;
+            if (t.action === 'DEPOSIT') { cash += gross; deposits += gross; }
+            else if (t.action === 'WITHDRAW') { cash -= gross; withdrawals += gross; }
+            else if (t.action === 'BUY' || t.action === 'COVER') cash -= gross + fee;
+            else if (t.action === 'SELL' || t.action === 'SHORT') cash += gross - fee;
+            else if (t.action === 'DIVIDEND') cash += gross;
+            else if (t.action === 'FEE') cash -= gross || fee;
+        });
+        const realizedNet = realizedGross + dividends - fees;
+        const totalPL = realizedNet + unrealized;
+        const totalValue = cash + marketValue;
+        const winners = closed.filter(p => (p.realizedPL + p.dividends - p.fees) > 0).length;
+        return {
+            open, closed, cash, marketValue, costValue, unrealized, realizedNet, totalPL, totalValue,
+            deposits, withdrawals, netDeposited: deposits - withdrawals,
+            winRate: closed.length ? winners / closed.length * 100 : null
+        };
+    }
+
+    function satPositionStats(position) {
+        const rate = satPositionRate(position);
+        const price = position.status === 'closed' ? (position.exitPrice || position.currentPrice || position.avgCost) : (position.currentPrice || position.avgCost);
+        const cost = position.quantity * position.avgCost * rate;
+        const value = position.quantity * price * rate;
+        const unrealized = position.status === 'open'
+            ? (position.side === 'short' ? (position.avgCost - price) : (price - position.avgCost)) * position.quantity * rate
+            : 0;
+        const realizedNet = (position.realizedPL + position.dividends - position.fees) * rate;
+        return { rate, price, cost, value, unrealized, realizedNet };
+    }
+
+    function satSetClassByValue(el, value) {
+        if (!el) return;
+        el.classList.remove('sat-positive', 'sat-negative');
+        if (value > 0) el.classList.add('sat-positive');
+        if (value < 0) el.classList.add('sat-negative');
+    }
+
+    function satRenderSummary() {
+        const m = satMetrics();
+        const set = (id, text, value=null) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = text;
+            if (value !== null) satSetClassByValue(el, value);
+        };
+        set('sat-total-value', satMoney(m.totalValue));
+        set('sat-total-pl', satSignedMoney(m.totalPL), m.totalPL);
+        set('sat-unrealized-pl', satSignedMoney(m.unrealized), m.unrealized);
+        set('sat-realized-pl', satSignedMoney(m.realizedNet), m.realizedNet);
+        set('sat-cash', satMoney(m.cash), m.cash);
+        set('sat-open-count', String(m.open.length));
+        set('sat-win-rate', m.winRate === null ? '—' : m.winRate.toFixed(1) + '%', m.winRate === null ? 0 : m.winRate - 50);
+        set('sat-net-deposited', satMoney(m.netDeposited), m.netDeposited);
+        const unrealizedPct = m.costValue > 0 ? m.unrealized / m.costValue * 100 : 0;
+        set('sat-unrealized-pct', (unrealizedPct >= 0 ? '+' : '') + unrealizedPct.toFixed(2) + '%', unrealizedPct);
+        const longest = m.open.sort((a,b) => satDaysBetween(b.openDate) - satDaysBetween(a.openDate))[0];
+        set('sat-hold-days', longest ? `${longest.ticker} · ${satDaysBetween(longest.openDate)} days` : 'No active positions');
+        set('sat-closed-count', `${m.closed.length} closed position${m.closed.length === 1 ? '' : 's'}`);
+        set('sat-trade-count', `${satState().trades.length} trade record${satState().trades.length === 1 ? '' : 's'}`);
+    }
+
+    function satSetAllocationMode(mode) {
+        satState().allocationMode = mode === 'current' ? 'current' : 'cost';
+        document.querySelectorAll('#sat-allocation-mode button').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === satState().allocationMode));
+        satRenderAllocation();
+    }
+
+    function satRenderAllocation() {
+        const open = satState().positions.filter(p => p.status === 'open' && p.quantity > 0);
+        const mode = satState().allocationMode;
+        const values = open.map(p => {
+            const s = satPositionStats(p);
+            return Math.abs(mode === 'current' ? s.value : s.cost);
+        });
+        const total = values.reduce((a,b) => a + b, 0);
+        const list = document.getElementById('sat-allocation-list');
+        if (list) {
+            list.innerHTML = open.length ? open.map((p, i) => {
+                const value = values[i];
+                const pct = total > 0 ? value / total * 100 : 0;
+                return `<div class="sat-alloc-row"><span class="sat-alloc-dot" style="background:${SAT_COLORS[i % SAT_COLORS.length]}"></span><span class="sat-alloc-ticker">${satEsc(p.ticker)}<small class="block sat-subtle">${satEsc(p.name || p.side)}</small></span><span class="sat-alloc-value">${satMoney(value)}</span><span class="sat-alloc-pct">${pct.toFixed(1)}%</span></div>`;
+            }).join('') : '<div class="sat-empty">Add an open position to build allocation.</div>';
+        }
+        const canvas = document.getElementById('satAllocationChart');
+        if (!canvas) return;
+        if (charts.satAllocation) charts.satAllocation.destroy();
+        charts.satAllocation = new Chart(canvas.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: open.map(p => p.ticker),
+                datasets: [{ data: values.length ? values : [1], backgroundColor: values.length ? values.map((_,i) => SAT_COLORS[i % SAT_COLORS.length]) : ['#3A3532'], borderWidth: 0, hoverOffset: 5 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '58%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: item => values.length ? `${item.label}: ${satMoney(item.raw)} (${total ? (item.raw/total*100).toFixed(1) : 0}%)` : 'No positions' } },
+                    datalabels: {
+                        display: ctx => values.length && ctx.dataset.data[ctx.dataIndex] / total >= .07,
+                        color: '#F4F0EC', font: { size: 9, weight: 'bold' },
+                        formatter: (value, ctx) => `${ctx.chart.data.labels[ctx.dataIndex]}\n${(value/total*100).toFixed(1)}%`
+                    }
+                }
+            }
+        });
+    }
+
+    function satSetPerformanceRange(range) {
+        satState().performanceRange = ['mtd','ytd','all'].includes(range) ? range : 'all';
+        document.querySelectorAll('#sat-performance-range button').forEach(btn => btn.classList.toggle('active', btn.dataset.range === satState().performanceRange));
+        satRenderPerformance();
+    }
+
+    function satRenderPerformance() {
+        const canvas = document.getElementById('satPerformanceChart');
+        if (!canvas) return;
+        const now = new Date();
+        const start = satState().performanceRange === 'mtd'
+            ? new Date(now.getFullYear(), now.getMonth(), 1)
+            : satState().performanceRange === 'ytd' ? new Date(now.getFullYear(), 0, 1) : null;
+        const trades = satState().trades.slice().sort((a,b) => String(a.date).localeCompare(String(b.date))).filter(t => !start || (parseDashboardDate(t.date) && parseDashboardDate(t.date) >= start));
+        let cumulative = 0;
+        const byDate = {};
+        trades.forEach(t => {
+            const rate = satTradeRate(t);
+            cumulative += t.realizedPL * rate;
+            if (t.action === 'DIVIDEND') cumulative += (t.quantity > 0 ? t.quantity * t.price : t.price) * rate;
+            if (t.action === 'FEE') cumulative -= (t.price || t.fees) * rate;
+            else cumulative -= t.fees * rate;
+            byDate[t.date] = cumulative;
+        });
+        let labels = Object.keys(byDate).sort();
+        let data = labels.map(date => byDate[date]);
+        const unrealized = satMetrics().unrealized;
+        if (!labels.length) { labels = [satToday()]; data = [unrealized]; }
+        else data[data.length - 1] += unrealized;
+        if (charts.satPerformance) charts.satPerformance.destroy();
+        charts.satPerformance = new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: { labels, datasets: [{ label: 'Cumulative P/L', data, borderColor: '#D97757', backgroundColor: 'rgba(217,119,87,.10)', fill: true, tension: .28, pointRadius: data.length > 24 ? 0 : 3, pointHoverRadius: 5 }] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#8F8882', maxTicksLimit: 8, font: { size: 9 } } },
+                    y: { grid: { color: 'rgba(73,67,63,.45)' }, ticks: { color: '#8F8882', callback: value => satMoney(value), font: { size: 9 } } }
+                },
+                plugins: {
+                    legend: { labels: { color: '#CFC8C2', boxWidth: 10, font: { size: 10 } } },
+                    datalabels: { display: false },
+                    tooltip: { callbacks: { label: item => ' P/L: ' + satSignedMoney(item.parsed.y) } }
+                }
+            }
+        });
+    }
+
+    function satRenderInsights() {
+        const target = document.getElementById('sat-insights-list');
+        if (!target) return;
+        const open = satState().positions.filter(p => p.status === 'open');
+        const closed = satState().positions.filter(p => p.status === 'closed');
+        const unrealizedRank = open.map(p => ({ p, value: satPositionStats(p).unrealized })).sort((a,b) => b.value - a.value);
+        const realizedRank = closed.map(p => ({ p, value: satPositionStats(p).realizedNet })).sort((a,b) => b.value - a.value);
+        const largest = open.map(p => ({ p, value: Math.abs(satPositionStats(p).value) })).sort((a,b) => b.value - a.value)[0];
+        const longest = open.slice().sort((a,b) => satDaysBetween(b.openDate) - satDaysBetween(a.openDate))[0];
+        const counts = {};
+        satState().trades.forEach(t => { if (t.ticker) counts[t.ticker] = (counts[t.ticker] || 0) + 1; });
+        const mostTraded = Object.entries(counts).sort((a,b) => b[1] - a[1])[0];
+        const latest = satState().trades.slice().sort((a,b) => String(b.date).localeCompare(String(a.date)))[0];
+        const rows = [
+            ['fa-trophy', 'Best Unrealized', unrealizedRank[0] ? `${unrealizedRank[0].p.ticker} · ${satSignedMoney(unrealizedRank[0].value)}` : '—'],
+            ['fa-arrow-trend-down', 'Worst Unrealized', unrealizedRank.length ? `${unrealizedRank[unrealizedRank.length-1].p.ticker} · ${satSignedMoney(unrealizedRank[unrealizedRank.length-1].value)}` : '—'],
+            ['fa-circle-check', 'Best Realized', realizedRank[0] ? `${realizedRank[0].p.ticker} · ${satSignedMoney(realizedRank[0].value)}` : '—'],
+            ['fa-circle-xmark', 'Worst Realized', realizedRank.length ? `${realizedRank[realizedRank.length-1].p.ticker} · ${satSignedMoney(realizedRank[realizedRank.length-1].value)}` : '—'],
+            ['fa-chart-pie', 'Largest Position', largest ? `${largest.p.ticker} · ${satMoney(largest.value)}` : '—'],
+            ['fa-hourglass-half', 'Longest Hold', longest ? `${longest.ticker} · ${satDaysBetween(longest.openDate)} days` : '—'],
+            ['fa-repeat', 'Most Traded', mostTraded ? `${mostTraded[0]} · ${mostTraded[1]} records` : '—'],
+            ['fa-clock', 'Latest Trade', latest ? `${latest.action} ${latest.ticker || 'Cash'} · ${latest.date}` : '—']
+        ];
+        target.innerHTML = rows.map(row => `<div class="sat-insight-row"><i class="fa-solid ${row[0]} sat-insight-icon"></i><div><div class="sat-insight-label">${row[1]}</div><div class="sat-insight-value">${satEsc(row[2])}</div></div></div>`).join('');
+    }
+
+    function satRenderHoldings() {
+        const tbody = document.getElementById('sat-holdings-tbody');
+        if (!tbody) return;
+        const filter = document.getElementById('sat-holdings-filter')?.value || 'open';
+        const rows = satState().positions.filter(p => filter === 'all' || p.status === filter);
+        const totalOpenValue = satState().positions.filter(p => p.status === 'open').reduce((sum,p) => sum + Math.abs(satPositionStats(p).value), 0);
+        tbody.innerHTML = rows.map(p => {
+            const s = satPositionStats(p);
+            const weight = p.status === 'open' && totalOpenValue > 0 ? Math.abs(s.value) / totalOpenValue * 100 : 0;
+            const price = p.status === 'closed' ? (p.exitPrice || p.currentPrice) : (p.currentPrice || p.avgCost);
+            return `<tr>
+                <td><button class="sat-ticker hover:underline" onclick="satSelectJournalPosition('${satEsc(p.id)}')">${satEsc(p.ticker)}</button></td>
+                <td><div>${satEsc(p.name || '—')}</div><span class="sat-badge ${p.side} mt-1">${satEsc(p.side)}</span> <span class="sat-badge ${p.status} mt-1">${satEsc(p.status)}</span></td>
+                <td>${p.quantity.toLocaleString(undefined,{maximumFractionDigits:6})}</td>
+                <td>${satMoney(p.avgCost,p.currency,2)}</td>
+                <td>${satMoney(price,p.currency,2)}</td>
+                <td>${satMoney(s.cost)}</td>
+                <td>${satMoney(Math.abs(s.value))}</td>
+                <td class="${s.unrealized >= 0 ? 'sat-positive' : 'sat-negative'}">${p.status === 'open' ? satSignedMoney(s.unrealized) : '—'}</td>
+                <td class="${s.realizedNet >= 0 ? 'sat-positive' : 'sat-negative'}">${satSignedMoney(s.realizedNet)}</td>
+                <td>${weight.toFixed(1)}%</td>
+                <td>${satDaysBetween(p.openDate, p.closeDate || satToday())}</td>
+                <td>${satEsc(p.owner || '—')}</td>
+                <td><div class="flex justify-end gap-1"><button class="sat-btn" style="min-height:28px;padding:4px 8px" onclick="satOpenTradeEntry('${satEsc(p.id)}')" title="Record trade"><i class="fa-solid fa-arrow-right-arrow-left"></i></button><button class="sat-btn" style="min-height:28px;padding:4px 8px" onclick="satOpenPositionModal('${satEsc(p.id)}')" title="Edit position"><i class="fa-solid fa-pen"></i></button></div></td>
+            </tr>`;
+        }).join('');
+        document.getElementById('sat-holdings-empty')?.classList.toggle('hidden', rows.length > 0);
+    }
+
+    function satSetJournalStatus(status) {
+        satState().journalStatus = ['open','closed','all'].includes(status) ? status : 'open';
+        document.querySelectorAll('#sat-journal-status button').forEach(btn => btn.classList.toggle('active', btn.dataset.status === satState().journalStatus));
+        satRenderJournal();
+    }
+
+    function satSelectJournalPosition(id) {
+        satState().selectedPositionId = id;
+        if (state.currentPort !== 'port2') switchPortfolio('port2');
+        switchTab('dashboard');
+        satRenderJournal();
+        document.getElementById('sat-journal-detail')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function satRenderJournal() {
+        const list = document.getElementById('sat-journal-list');
+        const detail = document.getElementById('sat-journal-detail');
+        if (!list || !detail) return;
+        const search = (document.getElementById('sat-journal-search')?.value || '').trim().toLowerCase();
+        const filtered = satState().positions.filter(p => {
+            const statusOk = satState().journalStatus === 'all' || p.status === satState().journalStatus;
+            const searchOk = !search || `${p.ticker} ${p.name} ${p.tags} ${p.thesis}`.toLowerCase().includes(search);
+            return statusOk && searchOk;
+        }).sort((a,b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+        if (!filtered.some(p => p.id === satState().selectedPositionId)) satState().selectedPositionId = filtered[0]?.id || null;
+        list.innerHTML = filtered.length ? filtered.map(p => `<button type="button" class="sat-journal-item text-left ${p.id === satState().selectedPositionId ? 'active' : ''}" onclick="satState().selectedPositionId='${satEsc(p.id)}';satRenderJournal()"><div class="flex justify-between gap-2"><strong class="sat-ticker">${satEsc(p.ticker)}</strong><span class="sat-badge ${p.status}">${satEsc(p.status)}</span></div><div class="sat-subtle mt-1 truncate">${satEsc(p.name || p.thesis || 'No note yet')}</div></button>`).join('') : '<div class="sat-empty">No positions match this view.</div>';
+        const p = satState().positions.find(item => item.id === satState().selectedPositionId);
+        if (!p) { detail.innerHTML = '<div class="sat-empty">Select a position to view its trade plan.</div>'; return; }
+        const s = satPositionStats(p);
+        detail.innerHTML = `
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div><div class="sat-ticker text-lg">${satEsc(p.ticker)}</div><div class="sat-subtle mt-1">${satEsc(p.name || '')}</div></div>
+                <button class="sat-btn" onclick="satOpenPositionModal('${satEsc(p.id)}')"><i class="fa-solid fa-pen"></i> Edit</button>
+            </div>
+            <div class="sat-note-grid">
+                <div class="sat-note-block"><div class="sat-note-label">Position</div><div class="sat-note-value">${satEsc(p.side.toUpperCase())} · ${satEsc(p.status.toUpperCase())} · ${satEsc(p.owner)}</div></div>
+                <div class="sat-note-block"><div class="sat-note-label">Performance</div><div class="sat-note-value ${s.unrealized >= 0 ? 'sat-positive' : 'sat-negative'}">${p.status === 'open' ? satSignedMoney(s.unrealized) + ' unrealized' : satSignedMoney(s.realizedNet) + ' realized'}</div></div>
+                <div class="sat-note-block"><div class="sat-note-label">Take Profit</div><div class="sat-note-value">${p.takeProfit ? satMoney(p.takeProfit,p.currency,2) : 'Not set'}</div></div>
+                <div class="sat-note-block"><div class="sat-note-label">Stop Loss</div><div class="sat-note-value">${p.stopLoss ? satMoney(p.stopLoss,p.currency,2) : 'Not set'}</div></div>
+                <div class="sat-note-block wide"><div class="sat-note-label">Entry Thesis</div><div class="sat-note-value">${satEsc(p.thesis || 'No thesis recorded.')}</div></div>
+                <div class="sat-note-block wide"><div class="sat-note-label">Review Note</div><div class="sat-note-value">${satEsc(p.review || 'No review note yet.')}</div></div>
+                <div class="sat-note-block wide"><div class="sat-note-label">Tags / Platform</div><div class="sat-note-value">${satEsc(p.tags || 'No tags')} · ${satEsc(p.platform || 'No platform')}</div></div>
+            </div>`;
+    }
+
+    function satTradeAmountTHB(trade) {
+        const amount = trade.quantity > 0 ? trade.quantity * trade.price : trade.price;
+        return amount * satTradeRate(trade);
+    }
+
+    function satTradeRow(trade, editable=false) {
+        const amount = satTradeAmountTHB(trade);
+        return `<tr>
+            <td>${satEsc(trade.date)}</td>
+            <td><span class="sat-ticker">${satEsc(trade.ticker || 'CASH')}</span></td>
+            <td><span class="sat-badge ${trade.action.toLowerCase()}">${satEsc(trade.action)}</span></td>
+            <td>${trade.quantity ? trade.quantity.toLocaleString(undefined,{maximumFractionDigits:6}) : '—'}</td>
+            <td>${satMoney(trade.price,trade.currency,2)}</td>
+            ${editable ? `<td>${satMoney(trade.fees,trade.currency,2)}</td>` : ''}
+            <td>${satMoney(amount)}</td>
+            <td>${satEsc(trade.platform || '—')}</td>
+            <td>${satEsc(trade.owner || '—')}</td>
+            ${editable ? `<td style="max-width:240px;overflow:hidden;text-overflow:ellipsis" title="${satEsc(trade.note)}">${satEsc(trade.note || '—')}</td><td><button class="sat-btn" style="min-height:28px;padding:4px 8px" onclick="satEditTradeNote('${satEsc(trade.id)}')" title="Edit trade note"><i class="fa-solid fa-note-sticky"></i></button></td>` : ''}
+        </tr>`;
+    }
+
+    function satRenderTradeLogs() {
+        const sorted = satState().trades.slice().sort((a,b) => String(b.date).localeCompare(String(a.date)) || String(b.createdAt).localeCompare(String(a.createdAt)));
+        const dash = document.getElementById('sat-dashboard-trades-tbody');
+        if (dash) dash.innerHTML = sorted.slice(0, 12).map(t => satTradeRow(t, false)).join('');
+        document.getElementById('sat-dashboard-trades-empty')?.classList.toggle('hidden', sorted.length > 0);
+        satRenderFullTradeLog();
+    }
+
+    function satRenderFullTradeLog() {
+        const tbody = document.getElementById('sat-full-trades-tbody');
+        if (!tbody) return;
+        const search = (document.getElementById('sat-trade-log-search')?.value || '').trim().toLowerCase();
+        const rows = satState().trades.slice().sort((a,b) => String(b.date).localeCompare(String(a.date)) || String(b.createdAt).localeCompare(String(a.createdAt))).filter(t => !search || `${t.ticker} ${t.action} ${t.owner} ${t.platform} ${t.note} ${t.reference}`.toLowerCase().includes(search));
+        tbody.innerHTML = rows.map(t => satTradeRow(t, true)).join('');
+        document.getElementById('sat-full-trades-empty')?.classList.toggle('hidden', rows.length > 0);
+        const count = document.getElementById('sat-trade-log-count');
+        if (count) count.textContent = `${rows.length} of ${satState().trades.length} records`;
+    }
+
+    function satRenderPositionOptions() {
+        const select = document.getElementById('sat-trade-position');
+        if (!select) return;
+        const current = select.value;
+        const options = satState().positions.slice().sort((a,b) => a.ticker.localeCompare(b.ticker));
+        select.innerHTML = '<option value="">New / Cash movement</option>' + options.map(p => `<option value="${satEsc(p.id)}">${satEsc(p.ticker)} · ${satEsc(p.side)} · ${satEsc(p.status)}</option>`).join('');
+        if (options.some(p => p.id === current)) select.value = current;
+    }
+
+    function satRenderAll() {
+        satRenderSummary();
+        satRenderPerformance();
+        satRenderAllocation();
+        satRenderInsights();
+        satRenderHoldings();
+        satRenderJournal();
+        satRenderTradeLogs();
+        satRenderPositionOptions();
+    }
+
+    function satApplyWorkspace() {
+        const isSatellite = state.currentPort === 'port2';
+        document.getElementById('core-dashboard-view')?.classList.toggle('hidden', isSatellite);
+        document.getElementById('sat-dashboard-view')?.classList.toggle('hidden', !isSatellite);
+        document.getElementById('core-transactions-view')?.classList.toggle('hidden', isSatellite);
+        document.getElementById('sat-transactions-view')?.classList.toggle('hidden', !isSatellite);
+        const activeTab = document.querySelector('.tab-content.active')?.id?.replace('tab-','') || 'dashboard';
+        const titles = isSatellite
+            ? { dashboard: 'Satellite Trading Dashboard', transactions: 'Satellite Trade Ledger', wheel: 'Wheel Strategy', settings: 'Settings' }
+            : { dashboard: 'Portfolio Overview', transactions: 'Transaction Ledger', wheel: 'Wheel Strategy', settings: 'Settings' };
+        const title = document.getElementById('page-title');
+        if (title) title.textContent = titles[activeTab] || '';
+        if (isSatellite) requestAnimationFrame(satRenderAll);
+    }
+
+    function satOpenPositionModal(id='') {
+        const p = id ? satState().positions.find(item => item.id === id) : null;
+        const value = (key, fallback='') => p ? (p[key] ?? fallback) : fallback;
+        document.getElementById('sat-position-modal-title').textContent = p ? `Edit ${p.ticker}` : 'Add Position';
+        document.getElementById('sat-pos-id').value = value('id');
+        document.getElementById('sat-pos-ticker').value = value('ticker');
+        document.getElementById('sat-pos-name').value = value('name');
+        document.getElementById('sat-pos-side').value = value('side','long');
+        document.getElementById('sat-pos-status').value = value('status','open');
+        document.getElementById('sat-pos-open-date').value = value('openDate',satToday());
+        document.getElementById('sat-pos-close-date').value = value('closeDate');
+        document.getElementById('sat-pos-qty').value = value('quantity',0);
+        document.getElementById('sat-pos-avg-cost').value = value('avgCost',0);
+        document.getElementById('sat-pos-current-price').value = value('currentPrice',0);
+        document.getElementById('sat-pos-exit-price').value = value('exitPrice',0);
+        document.getElementById('sat-pos-realized').value = value('realizedPL',0);
+        document.getElementById('sat-pos-dividends').value = value('dividends',0);
+        document.getElementById('sat-pos-currency').value = value('currency','USD');
+        document.getElementById('sat-pos-fx').value = value('fxRate',getActiveRate() || '');
+        document.getElementById('sat-pos-platform').value = value('platform');
+        document.getElementById('sat-pos-owner').value = value('owner','Nine');
+        document.getElementById('sat-pos-tp').value = value('takeProfit',0) || '';
+        document.getElementById('sat-pos-sl').value = value('stopLoss',0) || '';
+        document.getElementById('sat-pos-fees').value = value('fees',0);
+        document.getElementById('sat-pos-tags').value = value('tags');
+        document.getElementById('sat-pos-thesis').value = value('thesis');
+        document.getElementById('sat-pos-review').value = value('review');
+        document.getElementById('sat-position-delete-btn').classList.toggle('hidden', !p);
+        document.getElementById('sat-position-modal').classList.add('open');
+    }
+
+    function satClosePositionModal() { document.getElementById('sat-position-modal')?.classList.remove('open'); }
+
+    function satSubmitPosition(event) {
+        event.preventDefault();
+        const id = document.getElementById('sat-pos-id').value || satId('pos');
+        const existingIndex = satState().positions.findIndex(p => p.id === id);
+        const position = satNormalizePosition({
+            id,
+            ticker: document.getElementById('sat-pos-ticker').value,
+            name: document.getElementById('sat-pos-name').value,
+            side: document.getElementById('sat-pos-side').value,
+            status: document.getElementById('sat-pos-status').value,
+            openDate: document.getElementById('sat-pos-open-date').value,
+            closeDate: document.getElementById('sat-pos-close-date').value,
+            quantity: document.getElementById('sat-pos-qty').value,
+            avgCost: document.getElementById('sat-pos-avg-cost').value,
+            currentPrice: document.getElementById('sat-pos-current-price').value,
+            exitPrice: document.getElementById('sat-pos-exit-price').value,
+            realizedPL: document.getElementById('sat-pos-realized').value,
+            dividends: document.getElementById('sat-pos-dividends').value,
+            currency: document.getElementById('sat-pos-currency').value,
+            fxRate: document.getElementById('sat-pos-fx').value,
+            platform: document.getElementById('sat-pos-platform').value,
+            owner: document.getElementById('sat-pos-owner').value,
+            takeProfit: document.getElementById('sat-pos-tp').value,
+            stopLoss: document.getElementById('sat-pos-sl').value,
+            fees: document.getElementById('sat-pos-fees').value,
+            tags: document.getElementById('sat-pos-tags').value,
+            thesis: document.getElementById('sat-pos-thesis').value,
+            review: document.getElementById('sat-pos-review').value,
+            updatedAt: new Date().toISOString()
+        });
+        if (!position.ticker) return;
+        if (position.status === 'closed' && !position.closeDate) position.closeDate = satToday();
+        if (existingIndex >= 0) satState().positions[existingIndex] = position;
+        else satState().positions.push(position);
+        satState().selectedPositionId = position.id;
+        satClosePositionModal();
+        satCommitChanges();
+    }
+
+    function satDeletePositionFromModal() {
+        const id = document.getElementById('sat-pos-id').value;
+        const p = satState().positions.find(item => item.id === id);
+        if (!p || !confirm(`Remove ${p.ticker} and its linked trade records?`)) return;
+        satState().positions = satState().positions.filter(item => item.id !== id);
+        satState().trades = satState().trades.filter(item => item.positionId !== id);
+        if (satState().selectedPositionId === id) satState().selectedPositionId = null;
+        satClosePositionModal();
+        satCommitChanges();
+    }
+
+    function satOpenTradeEntry(positionId='') {
+        switchPortfolio('port2');
+        switchTab('transactions');
+        satResetTradeForm();
+        if (positionId) {
+            document.getElementById('sat-trade-position').value = positionId;
+            satTradePositionChanged();
+        }
+        setTimeout(() => document.getElementById('sat-trade-action')?.focus(), 50);
+    }
+
+    function satResetTradeForm() {
+        const form = document.getElementById('sat-trade-form');
+        if (!form) return;
+        form.reset();
+        document.getElementById('sat-trade-date').value = satToday();
+        document.getElementById('sat-trade-action').value = 'BUY';
+        document.getElementById('sat-trade-currency').value = 'USD';
+        document.getElementById('sat-trade-fx').value = getActiveRate() || '';
+        document.getElementById('sat-trade-owner').value = 'Nine';
+        satTradeActionChanged();
+        satRenderPositionOptions();
+    }
+
+    function satTradePositionChanged() {
+        const p = satState().positions.find(item => item.id === document.getElementById('sat-trade-position').value);
+        if (!p) return;
+        document.getElementById('sat-trade-ticker').value = p.ticker;
+        document.getElementById('sat-trade-currency').value = p.currency;
+        document.getElementById('sat-trade-fx').value = p.fxRate || getActiveRate() || '';
+        document.getElementById('sat-trade-platform').value = p.platform;
+        document.getElementById('sat-trade-owner').value = p.owner || 'Nine';
+    }
+
+    function satTradeCurrencyChanged() {
+        if (document.getElementById('sat-trade-currency').value === 'THB') document.getElementById('sat-trade-fx').value = 1;
+        else if (!satNumber(document.getElementById('sat-trade-fx').value)) document.getElementById('sat-trade-fx').value = getActiveRate() || '';
+    }
+
+    function satTradeActionChanged() {
+        const action = document.getElementById('sat-trade-action')?.value || 'BUY';
+        const cashAction = ['DEPOSIT','WITHDRAW','DIVIDEND','FEE'].includes(action);
+        const qty = document.getElementById('sat-trade-qty');
+        const ticker = document.getElementById('sat-trade-ticker');
+        const priceLabel = document.getElementById('sat-trade-price-label');
+        if (qty) qty.required = !cashAction;
+        if (ticker) ticker.required = !['DEPOSIT','WITHDRAW'].includes(action);
+        if (priceLabel) priceLabel.textContent = cashAction ? 'Total Amount' : 'Price';
+    }
+
+    function satSubmitTrade(event) {
+        event.preventDefault();
+        const action = document.getElementById('sat-trade-action').value;
+        const positionId = document.getElementById('sat-trade-position').value;
+        const ticker = document.getElementById('sat-trade-ticker').value.trim().toUpperCase();
+        let position = satState().positions.find(p => p.id === positionId);
+        if (!position && ticker) position = satState().positions.find(p => p.ticker === ticker && p.status === 'open');
+        const qty = Math.max(0, satNumber(document.getElementById('sat-trade-qty').value));
+        const price = Math.max(0, satNumber(document.getElementById('sat-trade-price').value));
+        const fees = Math.max(0, satNumber(document.getElementById('sat-trade-fees').value));
+        let effectiveQty = qty;
+        if (!['DEPOSIT','WITHDRAW','DIVIDEND','FEE'].includes(action) && (!qty || !price)) {
+            alert('Quantity and price are required for this action.');
+            return;
+        }
+        if (['DEPOSIT','WITHDRAW','DIVIDEND','FEE'].includes(action) && !price && !fees) {
+            alert('Enter the total amount in the Price field.');
+            return;
+        }
+        if (['SELL','COVER','DIVIDEND','FEE'].includes(action) && !position) {
+            alert('Choose a linked position for this action.');
+            return;
+        }
+        if (!position && ['BUY','SHORT'].includes(action)) {
+            position = satNormalizePosition({
+                id: satId('pos'), ticker, name: '', side: action === 'SHORT' ? 'short' : 'long', status: 'open',
+                openDate: document.getElementById('sat-trade-date').value, quantity: 0, avgCost: 0,
+                currentPrice: price, currency: document.getElementById('sat-trade-currency').value,
+                fxRate: document.getElementById('sat-trade-fx').value, platform: document.getElementById('sat-trade-platform').value,
+                owner: document.getElementById('sat-trade-owner').value
+            });
+            satState().positions.push(position);
+        }
+        let realizedPL = 0;
+        if (position) {
+            if ((action === 'BUY' && position.side !== 'long') || (action === 'SHORT' && position.side !== 'short')) {
+                alert(`This position is ${position.side}. Use ${position.side === 'long' ? 'BUY/SELL' : 'SHORT/COVER'}.`);
+                return;
+            }
+            if ((action === 'SELL' && position.side !== 'long') || (action === 'COVER' && position.side !== 'short')) {
+                alert(`This position is ${position.side}. Use ${position.side === 'long' ? 'BUY/SELL' : 'SHORT/COVER'}.`);
+                return;
+            }
+            if (action === 'BUY' || action === 'SHORT') {
+                const newQty = position.quantity + qty;
+                position.avgCost = newQty > 0 ? ((position.quantity * position.avgCost) + (qty * price)) / newQty : price;
+                position.quantity = newQty;
+                position.status = 'open';
+                position.closeDate = '';
+            } else if (action === 'SELL' || action === 'COVER') {
+                const closeQty = Math.min(qty, position.quantity);
+                if (closeQty <= 0) { alert('This position has no quantity to close.'); return; }
+                effectiveQty = closeQty;
+                realizedPL = (position.side === 'short' ? (position.avgCost - price) : (price - position.avgCost)) * closeQty;
+                position.realizedPL += realizedPL;
+                position.quantity = Math.max(0, position.quantity - closeQty);
+                position.exitPrice = price;
+                if (position.quantity === 0) {
+                    position.status = 'closed';
+                    position.closeDate = document.getElementById('sat-trade-date').value;
+                }
+            } else if (action === 'DIVIDEND') {
+                position.dividends += price;
+            } else if (action === 'FEE') {
+                position.fees += price || fees;
+            }
+            if (!['FEE'].includes(action)) position.fees += fees;
+            position.currentPrice = price || position.currentPrice;
+            position.fxRate = satNumber(document.getElementById('sat-trade-fx').value) || position.fxRate;
+            position.platform = document.getElementById('sat-trade-platform').value || position.platform;
+            position.owner = document.getElementById('sat-trade-owner').value || position.owner;
+            position.updatedAt = new Date().toISOString();
+        }
+        const trade = satNormalizeTrade({
+            id: satId('trade'), positionId: position?.id || '', date: document.getElementById('sat-trade-date').value,
+            ticker: position?.ticker || ticker, action, quantity: effectiveQty, price, fees,
+            currency: document.getElementById('sat-trade-currency').value,
+            fxRate: document.getElementById('sat-trade-fx').value,
+            platform: document.getElementById('sat-trade-platform').value,
+            note: document.getElementById('sat-trade-note').value,
+            owner: document.getElementById('sat-trade-owner').value,
+            reference: document.getElementById('sat-trade-ref').value,
+            realizedPL
+        });
+        satState().trades.push(trade);
+        if (position) satState().selectedPositionId = position.id;
+        satCommitChanges();
+        satResetTradeForm();
+    }
+
+    function satEditTradeNote(id) {
+        const trade = satState().trades.find(t => t.id === id);
+        if (!trade) return;
+        const next = prompt(`Edit note for ${trade.action} ${trade.ticker || 'cash movement'} on ${trade.date}:`, trade.note || '');
+        if (next === null) return;
+        trade.note = next.trim();
+        satCommitChanges();
+    }
+
+    function satExportTrades() {
+        if (!satState().trades.length) return;
+        const headers = ['Date','Ticker','Action','Quantity','Price','Fees','Currency','FX Rate','Platform','Owner','Reference','Note','Realized P/L'];
+        const lines = [headers, ...satState().trades.map(t => [t.date,t.ticker,t.action,t.quantity,t.price,t.fees,t.currency,t.fxRate,t.platform,t.owner,t.reference,t.note,t.realizedPL])];
+        const csv = lines.map(row => row.map(value => `"${String(value ?? '').replace(/"/g,'""')}"`).join(',')).join('\n');
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+        link.download = `satellite-trades-${satToday()}.csv`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
+    function satCommitChanges() {
+        satSaveLocal();
+        satRenderAll();
+        clearTimeout(satPushTimer);
+        satPushTimer = setTimeout(() => satPushToSheets(true).catch(() => {}), 500);
+    }
+
+    async function satPullFromSheets(silent=false) {
+        const url = getGsUrl();
+        if (!url) return false;
+        try {
+            const data = await fetchGsAction('satellite_read');
+            if (!data || !Array.isArray(data.positions) || !Array.isArray(data.trades)) throw new Error('Invalid Satellite data');
+            if (data.initialized === false) {
+                if (satState().positions.length || satState().trades.length) await satPushToSheets(true);
+                return true;
+            }
+            satState().positions = data.positions.map(satNormalizePosition).filter(p => p.ticker);
+            satState().trades = data.trades.map(satNormalizeTrade).filter(t => t.date && t.action);
+            satSaveLocal();
+            satRenderAll();
+            return true;
+        } catch (e) {
+            if (!silent) console.warn('Satellite pull error:', e);
+            return false;
+        }
+    }
+
+    async function satPushToSheets(silent=false) {
+        const url = getGsUrl();
+        if (!url) return false;
+        try {
+            const payload = { action: 'satellite_write', positions: satState().positions, trades: satState().trades };
+            const response = await fetch(url, { method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload) });
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+            if (!silent) setSyncPill('ok', 'Satellite synced');
+            return true;
+        } catch (e) {
+            if (!silent) setSyncPill('err', 'Satellite sync failed');
+            throw e;
+        }
+    }
 
     function parseDashboardDate(value) {
         if (!value) return null;
@@ -1439,6 +2575,43 @@
         if (fillEl) { fillEl.style.width = '0%'; fillEl.style.background = '#64748b'; }
     }
 
+    function getVixTone(value) {
+        if (!Number.isFinite(value)) return { label: 'Unavailable', color: '#64748b' };
+        if (value < 15) return { label: 'Low Volatility', color: '#10B981' };
+        if (value < 20) return { label: 'Normal', color: '#22C55E' };
+        if (value < 30) return { label: 'Elevated', color: '#F59E0B' };
+        if (value < 40) return { label: 'High Volatility', color: '#F97316' };
+        return { label: 'Extreme Volatility', color: '#EF4444' };
+    }
+
+    function setVixCard(value, timestamp) {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue)) return setVixUnavailable();
+        const tone = getVixTone(numericValue);
+        const scoreEl = document.getElementById('vix-score');
+        const labelEl = document.getElementById('vix-label');
+        const updatedEl = document.getElementById('vix-updated');
+        const fillEl = document.getElementById('vix-fill');
+        if (scoreEl) { scoreEl.textContent = numericValue.toFixed(1); scoreEl.style.color = tone.color; }
+        if (labelEl) labelEl.textContent = tone.label;
+        if (updatedEl) updatedEl.textContent = formatFearGreedTime(timestamp) + ' · Cboe VIX';
+        if (fillEl) {
+            fillEl.style.width = Math.max(0, Math.min(100, numericValue / 50 * 100)) + '%';
+            fillEl.style.background = tone.color;
+        }
+    }
+
+    function setVixUnavailable() {
+        const scoreEl = document.getElementById('vix-score');
+        const labelEl = document.getElementById('vix-label');
+        const updatedEl = document.getElementById('vix-updated');
+        const fillEl = document.getElementById('vix-fill');
+        if (scoreEl) { scoreEl.textContent = '--'; scoreEl.style.color = '#64748b'; }
+        if (labelEl) labelEl.textContent = 'Unavailable';
+        if (updatedEl) updatedEl.textContent = 'VIX data not reachable';
+        if (fillEl) { fillEl.style.width = '0%'; fillEl.style.background = '#64748b'; }
+    }
+
     async function updateCryptoFearGreed() {
         try {
             const json = await fetchJsonWithTimeout('https://api.alternative.me/fng/?limit=1');
@@ -1468,19 +2641,53 @@
         return null;
     }
 
-    async function updateStockFearGreed() {
+    function parseVixIndex(json) {
+        const source = json && (json.market_volatility_vix || json.vix || json.marketVolatilityVix);
+        if (!source) return null;
+        if (source.value !== undefined || source.y !== undefined || source.close !== undefined) {
+            return {
+                value: source.value ?? source.y ?? source.close,
+                timestamp: source.timestamp ?? source.lastUpdated ?? source.x
+            };
+        }
+        const points = Array.isArray(source) ? source : (source.data || source.values || source.historical);
+        if (!Array.isArray(points) || !points.length) return null;
+        const valid = points.map(point => {
+            if (Array.isArray(point)) return { timestamp: point[0], value: point[1] };
+            return {
+                timestamp: point.x ?? point.timestamp ?? point.date,
+                value: point.y ?? point.value ?? point.close ?? point.score
+            };
+        }).filter(point => Number.isFinite(Number(point.value)));
+        if (!valid.length) return null;
+        valid.sort((a, b) => {
+            const aTime = Number(a.timestamp) || Date.parse(a.timestamp) || 0;
+            const bTime = Number(b.timestamp) || Date.parse(b.timestamp) || 0;
+            return aTime - bTime;
+        });
+        return valid[valid.length - 1];
+    }
+
+    async function updateStockMarketIndicators() {
         try {
             const json = await fetchJsonWithTimeout('https://production.dataviz.cnn.io/index/fearandgreed/graphdata');
-            const latest = parseStockFearGreed(json);
-            if (!latest || latest.score === undefined || latest.score === null) throw new Error('Missing stock FNG data');
-            setFearGreedCard('stock', latest.score, latest.label, latest.timestamp, 'CNN Markets');
+            const stock = parseStockFearGreed(json);
+            const vix = parseVixIndex(json);
+            if (stock && stock.score !== undefined && stock.score !== null) {
+                setFearGreedCard('stock', stock.score, stock.label, stock.timestamp, 'CNN Markets');
+            } else {
+                setFearGreedUnavailable('stock', 'CNN Markets');
+            }
+            if (vix && vix.value !== undefined && vix.value !== null) setVixCard(vix.value, vix.timestamp);
+            else setVixUnavailable();
         } catch(e) {
             setFearGreedUnavailable('stock', 'CNN Markets');
+            setVixUnavailable();
         }
     }
 
     async function fetchFearGreedIndexes() {
-        await Promise.allSettled([updateCryptoFearGreed(), updateStockFearGreed()]);
+        await Promise.allSettled([updateCryptoFearGreed(), updateStockMarketIndicators()]);
     }
 
     function applyColorTheme(mode) {
@@ -1562,7 +2769,9 @@
             if(mBtn2) mBtn2.className = "flex-1 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:bg-slate-700/50 transition-all";
         }
         if(document.getElementById('tab-settings').classList.contains('active')) initSettings();
+        satApplyWorkspace();
         updateDashboard(); renderMonthlyTiers();
+        if (id === 'port2') satRenderAll();
     }
 
     function computeData() {
@@ -1855,14 +3064,19 @@
         document.getElementById('tab-'+id).classList.add('active');
         const btn = document.getElementById('btn-'+id);
         btn.classList.remove('text-slate-400', 'hover:bg-slate-700'); btn.classList.add('bg-blue-600/20', 'text-blue-400');
-        const titles = { dashboard: 'Portfolio Overview', transactions: 'Transaction Ledger', wheel: 'Wheel Strategy', settings: 'Settings' };
+        const titles = state.currentPort === 'port2'
+            ? { dashboard: 'Satellite Trading Dashboard', transactions: 'Satellite Trade Ledger', wheel: 'Wheel Strategy', settings: 'Settings' }
+            : { dashboard: 'Portfolio Overview', transactions: 'Transaction Ledger', wheel: 'Wheel Strategy', settings: 'Settings' };
         document.getElementById('page-title').innerText = titles[id] || '';
         // Show BTC price chip only on Wheel tab
         const btcChip = document.getElementById('wheel-header-btc');
         if (btcChip) btcChip.classList.toggle('hidden', id !== 'wheel');
         if(id === 'settings') initSettings();
-        else if(id !== 'wheel') { updateDashboard(); applyBalanceMask(); }
-        if (id === 'dashboard') fetchFearGreedIndexes();
+        else if(id !== 'wheel') {
+            if (state.currentPort === 'port2') satRenderAll();
+            else { updateDashboard(); applyBalanceMask(); }
+        }
+        if (id === 'dashboard' && state.currentPort === 'port1') fetchFearGreedIndexes();
     }
 
     function switchWheelTab(el) {
@@ -2010,7 +3224,7 @@
         if (!url) { openSyncModal(); return; }
         setSyncPill('loading', 'Syncing…');
         setRefreshSpin(true);
-        let invOk = false, wheelOk = false;
+        let invOk = false, wheelOk = false, satelliteOk = false;
         try {
             invOk = await loadFromGSheet();
             if (invOk) { updateDashboard(); renderMonthlyTiers(); }
@@ -2018,10 +3232,13 @@
         try {
             wheelOk = await wPullFromSheets(true);
         } catch(e) {}
+        try {
+            satelliteOk = await satPullFromSheets(true);
+        } catch(e) {}
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-        if (invOk && wheelOk) setSyncPill('ok', 'Synced ' + now);
-        else if (invOk || wheelOk) setSyncPill('ok', 'Partial sync ' + now);
+        if (invOk && wheelOk && satelliteOk) setSyncPill('ok', 'Synced ' + now);
+        else if (invOk || wheelOk || satelliteOk) setSyncPill('ok', 'Partial sync ' + now);
         else setSyncPill('err', 'Sync failed');
     }
 
@@ -2065,12 +3282,13 @@
         setSyncPill('loading', 'Connecting…');
         setRefreshSpin(true);
         // Try both
-        let invOk = false, wheelOk = false;
+        let invOk = false, wheelOk = false, satelliteOk = false;
         try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
         try { wheelOk = await wPullFromSheets(true); } catch(e) {}
+        try { satelliteOk = await satPullFromSheets(true); } catch(e) {}
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-        if (invOk || wheelOk) {
+        if (invOk || wheelOk || satelliteOk) {
             setSyncPill('ok', 'Synced ' + now);
             const last = document.getElementById('modal-last-sync');
             if (last) last.textContent = 'Last synced: ' + new Date().toLocaleString();
@@ -2087,14 +3305,15 @@
         if (!url) { alert('No URL saved. Please enter the Apps Script URL first.'); return; }
         setSyncPill('loading', 'Pulling…');
         setRefreshSpin(true);
-        let invOk = false, wheelOk = false;
+        let invOk = false, wheelOk = false, satelliteOk = false;
         try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
         try { wheelOk = await wPullFromSheets(true); } catch(e) {}
+        try { satelliteOk = await satPullFromSheets(true); } catch(e) {}
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-        setSyncPill(invOk || wheelOk ? 'ok' : 'err', invOk || wheelOk ? 'Synced ' + now : 'Pull failed');
+        setSyncPill(invOk || wheelOk || satelliteOk ? 'ok' : 'err', invOk || wheelOk || satelliteOk ? 'Synced ' + now : 'Pull failed');
         const last = document.getElementById('modal-last-sync');
-        if (last) last.textContent = (invOk || wheelOk) ? 'Last pulled: ' + new Date().toLocaleString() : '✗ Pull failed — check connection';
+        if (last) last.textContent = (invOk || wheelOk || satelliteOk) ? 'Last pulled: ' + new Date().toLocaleString() : '✗ Pull failed — check connection';
     }
 
     async function modalPushWheel() {
@@ -2232,6 +3451,12 @@
         const ok = await loadFromGSheet();
         if(ok) { updateDashboard(); renderMonthlyTiers(); if(msg) { msg.textContent = '✓ Investment sync OK'; msg.style.color = '#34D399'; } }
         else { if(msg) { msg.textContent = '✗ Failed — check URL or sheet permissions'; msg.style.color = '#FCA5A5'; } }
+    }
+
+    async function testSatelliteConnection() {
+        const msg = document.getElementById('gs-status-msg'); if(msg) { msg.classList.remove('hidden'); msg.textContent = 'Testing Satellite...'; msg.style.color = '#F59E0B'; }
+        const ok = await satPullFromSheets(true);
+        if(msg) { msg.textContent = ok ? '✓ Satellite sync OK' : '✗ Satellite sync failed — deploy the updated Apps Script first'; msg.style.color = ok ? '#34D399' : '#FCA5A5'; }
     }
 
     async function testWheelConnection() {
@@ -2400,6 +3625,13 @@
         wCalcAll();
         wAutoPush();
     }
+    function wUpdateHistPLByIndex(index, val) {
+        const item = wClosed[index];
+        if (!item) return;
+        item.exercisePL = wpn(val);
+        wCalcAll();
+        wAutoPush();
+    }
 
     function wRenderHistory() {
         const tot=wClosed.reduce((s,o)=>s+o.premium*o.contracts,0); const wins=wClosed.filter(o=>o.status==='closed').length; const wr=wClosed.length>0?(wins/wClosed.length*100).toFixed(1)+'%':'—';
@@ -2410,12 +3642,14 @@
         cont.innerHTML='';
         const bal=wpn(document.getElementById('optBalance').value)||0;
         Object.keys(byM).sort().reverse().forEach(month=>{ const items=byM[month]; const mPrem=items.reduce((s,o)=>s+o.premium*o.contracts,0); const mExercisePL=items.reduce((s,o)=>s+(o.status==='exercised'?wExercisePL(o):0),0); const mPct=bal>0?(mPrem/bal*100).toFixed(2):'0'; const div=document.createElement('div'); div.className='hist-month-card';
-            div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><div style="font-size:14px;font-weight:700">${month}</div><div style="display:flex;gap:22px">${[['Premium',wusd(mPrem,2),'#10B981'],['Exercise P/L',wSignedUsd(mExercisePL,2),mExercisePL>=0?'#10B981':'#EF4444'],['% Capital',mPct+'%','#F59E0B'],['Orders',items.length,'#93C5FD']].map(([l,v,c])=>`<div><div style="font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.06em;font-weight:600">${l}</div><div style="font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:${c}">${v}</div></div>`).join('')}</div></div><div style="overflow-x:auto"><table class="hist-table"><thead><tr><th>Product</th><th>Strike</th><th>Open</th><th>Closed</th><th>Contracts</th><th>Prem/Ct</th><th>Premium</th><th>Ex. P/L</th><th>Status</th><th>Note</th><th></th></tr></thead><tbody>${items.map((o,i)=>{ const exPL=wExercisePL(o); const exInput=o.status==='exercised'?`<input type="text" value="${exPL.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}" onfocus="this.value=this.value.replace(/,/g,'')" onblur="wUpdateHistPL(${o.id},this.value)" style="width:82px;background:transparent;border:1px solid #334155;border-radius:5px;color:${exPL>=0?'#10B981':'#EF4444'};font-size:11px;padding:3px 5px;text-align:right;outline:none">`:'<span style="color:#475569">—</span>'; return `<tr><td><span class="badge ${o.product==='Short Put'?'put':'call'}">${o.product}</span></td><td class="m">${wusd(o.strike)}</td><td class="m" style="color:#64748b">${o.openDate}</td><td class="m" style="color:#64748b">${o.expiryDate||'—'}</td><td class="m">${o.contracts}</td><td class="m" style="color:#10B981">${wusd(o.premium,0)}</td><td class="m" style="color:#10B981;font-weight:500">${wusd(o.premium*o.contracts,2)}</td><td class="m">${exInput}</td><td><span class="badge ${o.status}">${o.status}</span></td><td style="color:#334155;font-size:11px">${o.note||'—'}</td><td style="white-space:nowrap"><button class="w-btn-icon" title="Re-open" onclick="wReOpen(${i},'${month}')">↩ Re-open</button><button class="w-btn-icon w-btn-danger" onclick="wDelHist(${i},'${month}')" style="margin-left:3px">✕</button></td></tr>`; }).join('')}</tbody></table></div>`;
+            div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><div style="font-size:14px;font-weight:700">${month}</div><div style="display:flex;gap:22px">${[['Premium',wusd(mPrem,2),'#10B981'],['Exercise P/L',wSignedUsd(mExercisePL,2),mExercisePL>=0?'#10B981':'#EF4444'],['% Capital',mPct+'%','#F59E0B'],['Orders',items.length,'#93C5FD']].map(([l,v,c])=>`<div><div style="font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.06em;font-weight:600">${l}</div><div style="font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:${c}">${v}</div></div>`).join('')}</div></div><div style="overflow-x:auto"><table class="hist-table"><thead><tr><th>Product</th><th>Strike</th><th>Open</th><th>Closed</th><th>Contracts</th><th>Prem/Ct</th><th>Premium</th><th>Ex. P/L</th><th>Status</th><th>Note</th><th></th></tr></thead><tbody>${items.map((o,i)=>{ const gi=wClosed.indexOf(o); const exPL=wExercisePL(o); const exInput=o.status==='exercised'?`<input type="text" value="${exPL.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}" onfocus="this.value=this.value.replace(/,/g,'')" onblur="wUpdateHistPLByIndex(${gi},this.value)" style="width:82px;background:transparent;border:1px solid #334155;border-radius:5px;color:${exPL>=0?'#10B981':'#EF4444'};font-size:11px;padding:3px 5px;text-align:right;outline:none">`:'<span style="color:#475569">—</span>'; return `<tr><td><span class="badge ${o.product==='Short Put'?'put':'call'}">${o.product}</span></td><td class="m">${wusd(o.strike)}</td><td class="m" style="color:#64748b">${o.openDate}</td><td class="m" style="color:#64748b">${o.expiryDate||'—'}</td><td class="m">${o.contracts}</td><td class="m" style="color:#10B981">${wusd(o.premium,0)}</td><td class="m" style="color:#10B981;font-weight:500">${wusd(o.premium*o.contracts,2)}</td><td class="m">${exInput}</td><td><span class="badge ${o.status}">${o.status}</span></td><td style="color:#334155;font-size:11px">${o.note||'—'}</td><td style="white-space:nowrap"><button class="w-btn-icon" title="Re-open" onclick="wReOpenByIndex(${gi})">↩ Re-open</button><button class="w-btn-icon w-btn-danger" onclick="wDelHistByIndex(${gi})" style="margin-left:3px">✕</button></td></tr>`; }).join('')}</tbody></table></div>`;
             cont.appendChild(div); });
     }
 
-    function wReOpen(i,month){ const byM={}; wClosed.forEach(o=>{const k=(o.expiryDate||'unknown').slice(0,7);if(!byM[k])byM[k]=[];byM[k].push(o)}); const item=byM[month][i]; if(!item)return; const newO={...item,id:wNextId++,status:'open'}; wOrders.push(newO); if(item.product==='Short Call'&&item.status==='closed'){ const profit=item.premium*item.contracts; const parts=item.note?item.note.split(/[-&,\s:]+/).map(s=>s.trim()).filter(Boolean):[]; wLots.forEach(l=>{if(parts.some(p=>l.name.toLowerCase().includes(p.toLowerCase()))) l.accRealPL-=profit/Math.max(1,parts.length)}); } wClosed.splice(wClosed.indexOf(item),1); document.querySelector('.wheel-subtab[data-wtab="w-dashboard"]').click(); wCalcAll(); wAutoPush(); }
-    function wDelHist(i,month){ if(!confirm('Remove?'))return; const byM={}; wClosed.forEach(o=>{const k=(o.expiryDate||'unknown').slice(0,7);if(!byM[k])byM[k]=[];byM[k].push(o)}); const item=byM[month][i]; const gi=wClosed.indexOf(item); if(gi>=0) wClosed.splice(gi,1); wCalcAll(); wAutoPush(); }
+    function wReOpenByIndex(index){ const item=wClosed[index]; if(!item)return; const newO={...item,id:wNextId++,status:'open'}; wOrders.push(newO); if(item.product==='Short Call'&&item.status==='closed'){ const profit=item.premium*item.contracts; const parts=item.note?item.note.split(/[-&,\s:]+/).map(s=>s.trim()).filter(Boolean):[]; wLots.forEach(l=>{if(parts.some(p=>l.name.toLowerCase().includes(p.toLowerCase()))) l.accRealPL-=profit/Math.max(1,parts.length)}); } wClosed.splice(index,1); document.querySelector('.wheel-subtab[data-wtab="w-dashboard"]').click(); wCalcAll(); wAutoPush(); }
+    function wDelHistByIndex(index){ if(!confirm('Remove?'))return; if(index>=0&&index<wClosed.length) wClosed.splice(index,1); wCalcAll(); wAutoPush(); }
+    function wReOpen(i,month){ const byM={}; wClosed.forEach(o=>{const k=(o.expiryDate||'unknown').slice(0,7);if(!byM[k])byM[k]=[];byM[k].push(o)}); const item=byM[month][i]; const gi=wClosed.indexOf(item); if(gi>=0) wReOpenByIndex(gi); }
+    function wDelHist(i,month){ const byM={}; wClosed.forEach(o=>{const k=(o.expiryDate||'unknown').slice(0,7);if(!byM[k])byM[k]=[];byM[k].push(o)}); const item=byM[month][i]; const gi=wClosed.indexOf(item); if(gi>=0) wDelHistByIndex(gi); }
 
     let wCalcMode = 'put'; // 'put' or 'call'
 
@@ -2815,6 +4049,8 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     function resizeDashboardCharts() {
         if (charts.perf) charts.perf.resize();
         if (charts.alloc) charts.alloc.resize();
+        if (charts.satPerformance) charts.satPerformance.resize();
+        if (charts.satAllocation) charts.satAllocation.resize();
         if (typeof hbChartInst !== 'undefined' && hbChartInst) hbChartInst.resize();
     }
     window.addEventListener('resize', () => {
@@ -2851,6 +4087,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
 
     window.onload = async () => {
         clearCachedFinancialSettings();
+        satLoadLocal();
         applyColorTheme(localStorage.getItem(THEME_KEY) || 'dark');
         applySidebarState();
         initHoldingsBreakdownDefaultPeriod();
@@ -2862,9 +4099,11 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         } catch(e) {}
         saveGoals();
 
-        updateDashboard(); renderMonthlyTiers();
+        satApplyWorkspace();
+        updateDashboard(); renderMonthlyTiers(); satRenderAll();
         fetchFearGreedIndexes();
         document.getElementById('tx-date').valueAsDate = new Date();
+        satResetTradeForm();
 
         // BTC price polling
         fetchBtc(); setInterval(fetchBtc, 15000);
@@ -2875,14 +4114,15 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             showSkeleton();
             setSyncPill('loading', 'Connecting…');
             setRefreshSpin(true);
-            let invOk = false, wheelOk = false;
+            let invOk = false, wheelOk = false, satelliteOk = false;
             try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
             try { wheelOk = await wPullFromSheets(true); } catch(e) {}
+            try { satelliteOk = await satPullFromSheets(true); } catch(e) {}
             // updateDashboard() above already replaced skeleton content with real values
             if (!invOk) { updateDashboard(); } // ensure skeleton is cleared even on failure
             setRefreshSpin(false);
             const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-            if (invOk || wheelOk) setSyncPill('ok', 'Synced ' + now);
+            if (invOk || wheelOk || satelliteOk) setSyncPill('ok', 'Synced ' + now);
             else setSyncPill('err', 'Sync failed');
         } else {
             setSyncPill('idle', 'Not connected');

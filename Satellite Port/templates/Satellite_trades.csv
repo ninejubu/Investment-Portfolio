@@ -1,0 +1,2 @@
+id,positionId,date,ticker,action,quantity,price,fees,currency,fxRate,platform,note,owner,reference,realizedPL,createdAt
+trade-example-001,pos-example-long,2026-06-10,NVDA,BUY,2,147.50,0.35,USD,32.60,IBKR,Example only,Nine,ORDER-EXAMPLE,0,2026-06-10T10:00:00.000Z

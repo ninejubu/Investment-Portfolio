@@ -1,0 +1,9 @@
+inbox/screenshots/*
+inbox/pdfs/*
+inbox/chat/*
+processed/*
+
+!inbox/screenshots/.gitkeep
+!inbox/pdfs/.gitkeep
+!inbox/chat/.gitkeep
+!processed/.gitkeep
