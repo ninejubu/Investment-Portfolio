@@ -604,6 +604,10 @@
         }
         .sat-performance-panel { min-height: 380px; }
         .sat-performance-chart { height: 300px; position: relative; }
+        .sat-performance-controls { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+        .sat-benchmark-toggle button { min-width: 78px; text-transform: uppercase; }
+        .sat-benchmark-status { color: #8F8882; font-size: 9px; min-height: 12px; text-align: right; }
+        .sat-benchmark-status.warning { color: #D6A84F; }
         .sat-two-col { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr); gap: 16px; }
         .sat-allocation-layout { display: grid; grid-template-columns: minmax(240px, .85fr) minmax(220px, 1.15fr); gap: 18px; align-items: center; }
         .sat-allocation-chart { height: 290px; position: relative; }
@@ -629,9 +633,29 @@
         .sat-table th:first-child, .sat-table th:nth-child(2), .sat-table td:first-child, .sat-table td:nth-child(2) { text-align: left; }
         .sat-table td { padding: 11px 10px; border-bottom: 1px solid #302C29; color: #CFC8C2; font-size: 11px; text-align: right; white-space: nowrap; }
         .sat-table tr:hover td { background: rgba(217,119,87,.035); }
+        .sat-trade-row { cursor: pointer; transition: opacity .18s ease, background .18s ease; }
+        .sat-trade-row.focused td { background: rgba(217,119,87,.10); }
+        .sat-trade-row.faded { opacity: .22; }
+        .sat-tag {
+            display: inline-flex; align-items: center; padding: 3px 7px; border-radius: 999px;
+            background: rgba(92,145,217,.12); color: #9CC8F0; font-size: 9px; font-weight: 700;
+            white-space: nowrap;
+        }
+        .sat-pair-list { display: grid; gap: 10px; }
+        .sat-pair-card { border: 1px solid #3A3532; background: #201D1B; border-radius: 7px; overflow: hidden; }
+        .sat-pair-main {
+            display: grid; grid-template-columns: minmax(110px,1.2fr) repeat(6,minmax(76px,1fr)) auto;
+            gap: 12px; align-items: center; padding: 13px 14px;
+        }
+        .sat-pair-label { color: #77716C; font-size: 8px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+        .sat-pair-value { color: #D9D4CF; font-size: 11px; margin-top: 3px; overflow-wrap: anywhere; }
+        .sat-pair-note { display: none; padding: 0 14px 14px; border-top: 1px solid #302C29; }
+        .sat-pair-card.note-open .sat-pair-note { display: block; padding-top: 12px; }
+        .sat-pair-note textarea { min-height: 78px; resize: vertical; }
         .sat-ticker { color: #D97757; font-weight: 800; }
         .sat-badge { display: inline-flex; align-items: center; padding: 3px 7px; border-radius: 4px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
         .sat-badge.long, .sat-badge.buy, .sat-badge.cover, .sat-badge.deposit { color: #65C99A; background: rgba(72,184,135,.10); }
+        .sat-badge.cash_balance { color: #79B8E8; background: rgba(92,145,217,.11); }
         .sat-badge.short, .sat-badge.sell, .sat-badge.withdraw { color: #F19A9A; background: rgba(224,108,117,.10); }
         .sat-badge.open { color: #E5B56D; background: rgba(229,181,109,.10); }
         .sat-badge.closed { color: #AAA29B; background: rgba(143,136,130,.10); }
@@ -671,6 +695,7 @@
             .sat-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .sat-two-col, .sat-allocation-layout { grid-template-columns: 1fr; }
             .sat-insights-list { grid-template-columns: 1fr; }
+            .sat-pair-main { grid-template-columns: repeat(4,minmax(0,1fr)); }
         }
         @media (max-width: 760px) {
             .sat-toolbar { align-items: flex-start; flex-direction: column; }
@@ -679,10 +704,15 @@
             .sat-stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
             .sat-stat-card { padding: 12px; min-height: 98px; }
             .sat-panel { padding: 14px; }
+            .sat-performance-controls { width: 100%; justify-content: flex-start; }
+            .sat-benchmark-toggle { width: 100%; }
+            .sat-benchmark-toggle button { flex: 1; min-width: 0; }
+            .sat-benchmark-status { text-align: left; }
             .sat-journal-layout { grid-template-columns: 1fr; }
             .sat-journal-detail { border-left: 0; border-top: 1px solid #3A3532; padding: 14px 0 0; }
             .sat-form-grid { grid-template-columns: 1fr 1fr; }
             .sat-form-grid .span-4 { grid-column: 1 / -1; }
+            .sat-pair-main { grid-template-columns: 1fr 1fr; gap: 10px; }
         }
 
         body.theme-light { background-color: #F6F8FB; color: #0F172A; }
@@ -1100,12 +1130,23 @@
                     <section class="sat-panel sat-performance-panel">
                         <div class="sat-panel-head">
                             <div>
-                                <h4 class="sat-panel-title">Cumulative Trading P/L</h4>
+                                <h4 id="sat-performance-title" class="sat-panel-title">Cumulative Trading P/L</h4>
+                                <div id="sat-benchmark-status" class="sat-benchmark-status"></div>
                             </div>
-                            <div class="sat-segment" id="sat-performance-range">
-                                <button type="button" data-range="mtd" onclick="satSetPerformanceRange('mtd')">MTD</button>
-                                <button type="button" data-range="ytd" onclick="satSetPerformanceRange('ytd')">YTD</button>
-                                <button type="button" data-range="all" class="active" onclick="satSetPerformanceRange('all')">ALL</button>
+                            <div class="sat-performance-controls">
+                                <div class="sat-segment" id="sat-performance-mode">
+                                    <button type="button" data-mode="value" onclick="satSetPerformanceMode('value')">P/L</button>
+                                    <button type="button" data-mode="percent" onclick="satSetPerformanceMode('percent')">P/L %</button>
+                                </div>
+                                <div class="sat-segment sat-benchmark-toggle" id="sat-performance-benchmark">
+                                    <button type="button" data-benchmark="sp500" onclick="satSetPerformanceBenchmark('sp500')">S&amp;P 500</button>
+                                    <button type="button" data-benchmark="nasdaq" onclick="satSetPerformanceBenchmark('nasdaq')">NASDAQ</button>
+                                </div>
+                                <div class="sat-segment" id="sat-performance-range">
+                                    <button type="button" data-range="mtd" onclick="satSetPerformanceRange('mtd')">MTD</button>
+                                    <button type="button" data-range="ytd" onclick="satSetPerformanceRange('ytd')">YTD</button>
+                                    <button type="button" data-range="all" class="active" onclick="satSetPerformanceRange('all')">ALL</button>
+                                </div>
                             </div>
                         </div>
                         <div class="sat-performance-chart"><canvas id="satPerformanceChart"></canvas></div>
@@ -1118,8 +1159,8 @@
                                     <h4 class="sat-panel-title">Allocation by Ticker</h4>
                                 </div>
                                 <div class="sat-segment" id="sat-allocation-mode">
-                                    <button type="button" data-mode="cost" class="active" onclick="satSetAllocationMode('cost')">Cost</button>
-                                    <button type="button" data-mode="current" onclick="satSetAllocationMode('current')">Current Value</button>
+                                    <button type="button" data-mode="cost" onclick="satSetAllocationMode('cost')">Cost</button>
+                                    <button type="button" data-mode="current" class="active" onclick="satSetAllocationMode('current')">Current Value</button>
                                 </div>
                             </div>
                             <div class="sat-allocation-layout">
@@ -1154,7 +1195,7 @@
                         </div>
                         <div class="sat-table-wrap">
                             <table class="sat-table">
-                                <thead><tr><th>Ticker</th><th>Name / Side</th><th>Qty</th><th>Avg Cost</th><th>Current / Exit</th><th>Cost</th><th>Market Value</th><th>Unrealized P/L</th><th>Realized P/L</th><th>Weight</th><th>Days Held</th><th>Owner</th><th></th></tr></thead>
+                                <thead><tr><th>Ticker</th><th>Name / Side</th><th>Qty</th><th>Avg Cost</th><th>Current / Exit</th><th>Cost</th><th>Market Value</th><th>Unrealized P/L</th><th>Realized P/L</th><th title="Share of cash plus open current market value">Portfolio Weight</th><th>Days Held</th><th>Owner</th><th></th></tr></thead>
                                 <tbody id="sat-holdings-tbody"></tbody>
                             </table>
                         </div>
@@ -1191,7 +1232,7 @@
                             </div>
                             <div class="sat-table-wrap" style="max-height:430px">
                                 <table class="sat-table" style="min-width:720px">
-                                    <thead><tr><th>Date</th><th>Ticker</th><th>Action</th><th>Qty</th><th>Price</th><th>Amount</th><th>Platform</th><th>Owner</th></tr></thead>
+                                    <thead><tr><th>Date</th><th>Ticker</th><th>Action</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead>
                                     <tbody id="sat-dashboard-trades-tbody"></tbody>
                                 </table>
                             </div>
@@ -1270,17 +1311,15 @@
                             </div>
                         </div>
                         <form id="sat-trade-form" class="sat-form-grid" onsubmit="satSubmitTrade(event)">
-                            <div><label class="sat-form-label">Action</label><select id="sat-trade-action" class="sat-select" onchange="satTradeActionChanged()"><option>BUY</option><option>SELL</option><option>SHORT</option><option>COVER</option><option>DIVIDEND</option><option>FEE</option><option>DEPOSIT</option><option>WITHDRAW</option></select></div>
+                            <div><label class="sat-form-label">Action</label><select id="sat-trade-action" class="sat-select" onchange="satTradeActionChanged()"><option>BUY</option><option>SELL</option><option>SHORT</option><option>COVER</option><option>DIVIDEND</option><option>FEE</option><option>DEPOSIT</option><option>WITHDRAW</option><option value="CASH_BALANCE">CASH BALANCE</option></select></div>
                             <div><label class="sat-form-label">Linked Position</label><select id="sat-trade-position" class="sat-select" onchange="satTradePositionChanged()"><option value="">New / Cash movement</option></select></div>
                             <div><label class="sat-form-label">Ticker</label><input id="sat-trade-ticker" class="sat-input" maxlength="16" placeholder="e.g. NVDA"></div>
-                            <div><label class="sat-form-label">Date</label><input id="sat-trade-date" type="date" class="sat-input" required onchange="satUpdateTradeFxPreview()"></div>
+                            <div><label class="sat-form-label">Date</label><input id="sat-trade-date" type="date" class="sat-input" required></div>
                             <div><label class="sat-form-label">Quantity</label><input id="sat-trade-qty" type="number" step="any" min="0" class="sat-input" placeholder="0"></div>
                             <div><label id="sat-trade-price-label" class="sat-form-label">Price</label><input id="sat-trade-price" type="number" step="any" min="0" class="sat-input" placeholder="0.00"></div>
                             <div><label class="sat-form-label">Fees</label><input id="sat-trade-fees" type="number" step="any" min="0" class="sat-input" value="0"></div>
-                            <div><label class="sat-form-label">Currency</label><select id="sat-trade-currency" class="sat-select" onchange="satTradeCurrencyChanged()"><option value="USD">USD</option><option value="THB">THB</option></select></div>
-                            <div><label class="sat-form-label">Execution FX (Auto)</label><div id="sat-trade-fx-info" class="sat-fx-readonly">Select date and currency</div></div>
-                            <div><label class="sat-form-label">Platform</label><input id="sat-trade-platform" class="sat-input" placeholder="Broker / exchange"></div>
-                            <div><label class="sat-form-label">Owner</label><select id="sat-trade-owner" class="sat-select"><option>Nine</option><option>Loki</option><option>Nine + Loki</option></select></div>
+                            <div><label class="sat-form-label">Currency</label><select id="sat-trade-currency" class="sat-select"><option value="USD">USD</option><option value="THB">THB</option></select></div>
+                            <div><label class="sat-form-label">Tag</label><input id="sat-trade-tags" class="sat-input" placeholder="swing, breakout, earnings"></div>
                             <div><label class="sat-form-label">Reference</label><input id="sat-trade-ref" class="sat-input" placeholder="Order ID (optional)"></div>
                             <div class="span-4"><label class="sat-form-label">Execution Note</label><input id="sat-trade-note" class="sat-input" placeholder="Reason, fill detail, adjustment or review note"></div>
                             <div class="span-4 flex justify-end gap-2">
@@ -1297,16 +1336,21 @@
                                 <p id="sat-trade-log-count" class="sat-subtle mt-1">0 records</p>
                             </div>
                             <div class="sat-actions">
-                                <input id="sat-trade-log-search" type="search" class="sat-input" style="width:220px" placeholder="Search ticker, action, owner..." oninput="satRenderFullTradeLog()">
+                                <div class="sat-segment" id="sat-trade-log-mode">
+                                    <button type="button" data-mode="list" class="active" onclick="satSetTradeLogMode('list')">LIST</button>
+                                    <button type="button" data-mode="pair" onclick="satSetTradeLogMode('pair')">PAIR</button>
+                                </div>
+                                <input id="sat-trade-log-search" type="search" class="sat-input" style="width:220px" placeholder="Search ticker, action, tag..." oninput="satRenderFullTradeLog()">
                                 <button class="sat-btn" onclick="satExportTrades()"><i class="fa-solid fa-file-export"></i> Export CSV</button>
                             </div>
                         </div>
-                        <div class="sat-table-wrap" style="max-height:620px">
+                        <div id="sat-trade-list-view" class="sat-table-wrap" style="max-height:620px">
                             <table class="sat-table">
-                                <thead><tr><th>Date</th><th>Ticker</th><th>Action</th><th>Qty</th><th>Price</th><th>Fees</th><th>Amount</th><th>Platform</th><th>Owner</th><th>Note</th><th></th></tr></thead>
+                                <thead><tr><th>Date</th><th>Ticker</th><th>Action</th><th>Tag</th><th>Qty</th><th>Price</th><th>Fees</th><th>Amount</th><th>Note</th><th></th></tr></thead>
                                 <tbody id="sat-full-trades-tbody"></tbody>
                             </table>
                         </div>
+                        <div id="sat-trade-pair-view" class="sat-pair-list hidden"></div>
                         <div id="sat-full-trades-empty" class="sat-empty hidden">No matching trade records.</div>
                     </section>
                 </div>
@@ -1716,8 +1760,14 @@
             trades: [],
             displayCurrency: localStorage.getItem('satellite_display_currency_v1') === 'USD' ? 'USD' : 'THB',
             fx: { latest: null, historical: {}, status: 'idle', warning: '' },
-            allocationMode: 'cost',
+            allocationMode: 'current',
             performanceRange: 'all',
+            performanceMode: localStorage.getItem('satellite_performance_mode_v1') === 'percent' ? 'percent' : 'value',
+            performanceBenchmark: localStorage.getItem('satellite_performance_benchmark_v1') === 'nasdaq' ? 'nasdaq' : 'sp500',
+            benchmarkCache: {},
+            tradeLogMode: 'list',
+            focusedTradeTicker: '',
+            expandedPairNotes: {},
             journalStatus: 'open',
             selectedPositionId: null
         },
@@ -1757,6 +1807,7 @@
     const SAT_FX_SOURCE = 'Frankfurter (central-bank reference)';
     const SAT_COLORS = ['#D97757','#48B887','#5C91D9','#D6A84F','#8B72C9','#4FA6A1','#C85F68','#8D9B65','#B47B55','#6E8FB2'];
     let satPushTimer = null;
+    let satPerformanceRenderToken = 0;
 
     function satNumber(value) {
         const n = Number(value);
@@ -2009,6 +2060,8 @@
             platform: String(raw.platform || '').trim(),
             note: String(raw.note || '').trim(),
             owner: String(raw.owner || 'Nine').trim(),
+            tags: String(raw.tags || '').trim(),
+            pairNote: String(raw.pairNote || '').trim(),
             reference: String(raw.reference || '').trim(),
             realizedPL: satNumber(raw.realizedPL),
             createdAt: String(raw.createdAt || new Date().toISOString())
@@ -2044,11 +2097,12 @@
         });
         satState().positions.forEach(p => { realizedNet += satPositionStats(p).realizedNet; });
         let cash = 0, deposits = 0, withdrawals = 0;
-        satState().trades.forEach(t => {
+        satState().trades.slice().sort((a,b) => String(a.date).localeCompare(String(b.date)) || String(a.createdAt).localeCompare(String(b.createdAt))).forEach(t => {
             const amount = t.quantity > 0 ? t.quantity * t.price : t.price;
-            const gross = satConvertNative(amount, t.currency, 'historical', t);
+            const gross = satConvertNative(amount, t.currency, t.action === 'CASH_BALANCE' ? 'latest' : 'historical', t);
             const fee = satConvertNative(t.fees, t.currency, 'historical', t);
-            if (t.action === 'DEPOSIT') { cash += gross; deposits += gross; }
+            if (t.action === 'CASH_BALANCE') cash = gross;
+            else if (t.action === 'DEPOSIT') { cash += gross; deposits += gross; }
             else if (t.action === 'WITHDRAW') { cash -= gross; withdrawals += gross; }
             else if (t.action === 'BUY' || t.action === 'COVER') cash -= gross + fee;
             else if (t.action === 'SELL' || t.action === 'SHORT') cash += gross - fee;
@@ -2132,18 +2186,34 @@
     function satRenderAllocation() {
         const open = satState().positions.filter(p => p.status === 'open' && p.quantity > 0);
         const mode = satState().allocationMode;
-        const values = open.map(p => {
+        const positionValues = open.map(p => {
             const s = satPositionStats(p);
             return Math.abs(mode === 'current' ? s.value : s.cost);
         });
+        const cashValue = Math.max(0, satMetrics().cash);
+        const entries = open.map((p, i) => ({
+            label: p.ticker,
+            detail: p.name || p.side,
+            value: positionValues[i],
+            color: SAT_COLORS[i % SAT_COLORS.length]
+        }));
+        if (cashValue > 0) {
+            entries.push({
+                label: 'Cash',
+                detail: 'Available cash',
+                value: cashValue,
+                color: '#79B8E8'
+            });
+        }
+        const values = entries.map(entry => entry.value);
         const total = values.reduce((a,b) => a + b, 0);
         const list = document.getElementById('sat-allocation-list');
         if (list) {
-            list.innerHTML = open.length ? open.map((p, i) => {
-                const value = values[i];
+            list.innerHTML = entries.length ? entries.map(entry => {
+                const value = entry.value;
                 const pct = total > 0 ? value / total * 100 : 0;
-                return `<div class="sat-alloc-row"><span class="sat-alloc-dot" style="background:${SAT_COLORS[i % SAT_COLORS.length]}"></span><span class="sat-alloc-ticker">${satEsc(p.ticker)}<small class="block sat-subtle">${satEsc(p.name || p.side)}</small></span><span class="sat-alloc-value">${satDisplayValue(value)}</span><span class="sat-alloc-pct">${pct.toFixed(1)}%</span></div>`;
-            }).join('') : '<div class="sat-empty">Add an open position to build allocation.</div>';
+                return `<div class="sat-alloc-row"><span class="sat-alloc-dot" style="background:${entry.color}"></span><span class="sat-alloc-ticker">${satEsc(entry.label)}<small class="block sat-subtle">${satEsc(entry.detail)}</small></span><span class="sat-alloc-value">${satDisplayValue(value)}</span><span class="sat-alloc-pct">${pct.toFixed(1)}%</span></div>`;
+            }).join('') : '<div class="sat-empty">Add cash or an open position to build allocation.</div>';
         }
         const canvas = document.getElementById('satAllocationChart');
         if (!canvas) return;
@@ -2151,14 +2221,14 @@
         charts.satAllocation = new Chart(canvas.getContext('2d'), {
             type: 'doughnut',
             data: {
-                labels: open.map(p => p.ticker),
-                datasets: [{ data: values.length ? values : [1], backgroundColor: values.length ? values.map((_,i) => SAT_COLORS[i % SAT_COLORS.length]) : ['#3A3532'], borderWidth: 0, hoverOffset: 5 }]
+                labels: entries.map(entry => entry.label),
+                datasets: [{ data: values.length ? values : [1], backgroundColor: values.length ? entries.map(entry => entry.color) : ['#3A3532'], borderWidth: 0, hoverOffset: 5 }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false, cutout: '58%',
                 plugins: {
                     legend: { display: false },
-                    tooltip: { callbacks: { label: item => values.length ? `${item.label}: ${satDisplayValue(item.raw)} (${total ? (item.raw/total*100).toFixed(1) : 0}%)` : 'No positions' } },
+                    tooltip: { callbacks: { label: item => values.length ? `${item.label}: ${satDisplayValue(item.raw)} (${total ? (item.raw/total*100).toFixed(1) : 0}%)` : 'No allocation data' } },
                     datalabels: {
                         display: ctx => values.length && ctx.dataset.data[ctx.dataIndex] / total >= .07,
                         color: '#F4F0EC', font: { size: 9, weight: 'bold' },
@@ -2175,14 +2245,33 @@
         satRenderPerformance();
     }
 
-    function satRenderPerformance() {
-        const canvas = document.getElementById('satPerformanceChart');
-        if (!canvas) return;
+    function satSetPerformanceMode(mode) {
+        satState().performanceMode = mode === 'percent' ? 'percent' : 'value';
+        localStorage.setItem('satellite_performance_mode_v1', satState().performanceMode);
+        satRenderPerformance();
+    }
+
+    function satSetPerformanceBenchmark(benchmark) {
+        satState().performanceBenchmark = benchmark === 'nasdaq' ? 'nasdaq' : 'sp500';
+        localStorage.setItem('satellite_performance_benchmark_v1', satState().performanceBenchmark);
+        satRenderPerformance();
+    }
+
+    function satPerformanceStartDate() {
         const now = new Date();
-        const start = satState().performanceRange === 'mtd'
-            ? new Date(now.getFullYear(), now.getMonth(), 1)
-            : satState().performanceRange === 'ytd' ? new Date(now.getFullYear(), 0, 1) : null;
-        const trades = satState().trades.slice().sort((a,b) => String(a.date).localeCompare(String(b.date))).filter(t => !start || (parseDashboardDate(t.date) && parseDashboardDate(t.date) >= start));
+        if (satState().performanceRange === 'mtd') return new Date(now.getFullYear(), now.getMonth(), 1);
+        if (satState().performanceRange === 'ytd') return new Date(now.getFullYear(), 0, 1);
+        const dates = [
+            ...satState().trades.map(t => parseDashboardDate(t.date)),
+            ...satState().positions.map(p => parseDashboardDate(p.openDate))
+        ].filter(Boolean).sort((a, b) => a - b);
+        return dates[0] || new Date(now.getFullYear(), 0, 1);
+    }
+
+    function satPerformanceSeries(start) {
+        const trades = satState().trades.slice()
+            .sort((a,b) => String(a.date).localeCompare(String(b.date)))
+            .filter(t => parseDashboardDate(t.date) && parseDashboardDate(t.date) >= start);
         let cumulative = 0;
         const byDate = {};
         trades.forEach(t => {
@@ -2192,25 +2281,163 @@
             else cumulative -= satConvertNative(t.fees, t.currency, 'historical', t);
             byDate[t.date] = cumulative;
         });
-        let labels = Object.keys(byDate).sort();
-        let data = labels.map(date => byDate[date]);
-        const unrealized = satMetrics().unrealized;
-        if (!labels.length) { labels = [satToday()]; data = [unrealized]; }
-        else data[data.length - 1] += unrealized;
+        const metrics = satMetrics();
+        const capitalBase = Math.abs(metrics.netDeposited) || (Math.abs(metrics.cash) + Math.abs(metrics.costValue)) || 0;
+        return { byDate, unrealized: metrics.unrealized, capitalBase };
+    }
+
+    async function satFetchBenchmarkSeries(benchmark, startDate, endDate) {
+        const start = toIsoDashboardDate(startDate);
+        const end = toIsoDashboardDate(endDate);
+        const cacheKey = `${benchmark}:${start}:${end}`;
+        if (satState().benchmarkCache[cacheKey]) return satState().benchmarkCache[cacheKey];
+        const url = getGsUrl();
+        let sheetError = null;
+        if (url) {
+            try {
+                const requestUrl = gsActionUrl(url, 'satellite_benchmark')
+                    + `&benchmark=${encodeURIComponent(benchmark)}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`;
+                const response = await fetch(requestUrl);
+                if (!response.ok) throw new Error('Benchmark HTTP ' + response.status);
+                const payload = await response.json();
+                if (payload.error) throw new Error(payload.error);
+                if (!Array.isArray(payload.points) || !payload.points.length) throw new Error('Redeploy Apps Script Latest to enable benchmark data');
+                satState().benchmarkCache[cacheKey] = payload;
+                return payload;
+            } catch (error) {
+                sheetError = error;
+            }
+        }
+        try {
+            const symbol = benchmark === 'nasdaq' ? '^IXIC' : '^GSPC';
+            const from = Math.floor(new Date(`${start}T00:00:00Z`).getTime() / 1000) - 7 * 86400;
+            const to = Math.floor(new Date(`${end}T00:00:00Z`).getTime() / 1000) + 86400;
+            const requestUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${from}&period2=${to}&interval=1d&events=history`;
+            const response = await fetch(requestUrl);
+            if (!response.ok) throw new Error('Market benchmark HTTP ' + response.status);
+            const result = (await response.json())?.chart?.result?.[0];
+            const timestamps = result?.timestamp || [];
+            const closes = result?.indicators?.quote?.[0]?.close || [];
+            const raw = timestamps.map((timestamp, index) => ({
+                date: new Date(timestamp * 1000).toISOString().slice(0, 10),
+                close: satNumber(closes[index])
+            })).filter(point => point.close > 0 && point.date <= end);
+            if (!raw.length) throw new Error('Market benchmark data unavailable');
+            const prior = raw.filter(point => point.date < start);
+            const display = raw.filter(point => point.date >= start);
+            const base = (prior[prior.length - 1] || display[0])?.close;
+            if (!base || !display.length) throw new Error('Market benchmark data unavailable');
+            const payload = {
+                benchmark,
+                name: benchmark === 'nasdaq' ? 'NASDAQ' : 'S&P 500',
+                source: 'Yahoo Finance fallback',
+                points: display.map(point => ({ date: point.date, returnPct: (point.close / base - 1) * 100 }))
+            };
+            satState().benchmarkCache[cacheKey] = payload;
+            return payload;
+        } catch (fallbackError) {
+            const details = [sheetError?.message, fallbackError?.message].filter(Boolean).join(' · ');
+            throw new Error(details || 'Benchmark unavailable');
+        }
+    }
+
+    function satSetBenchmarkStatus(text='', warning=false) {
+        const status = document.getElementById('sat-benchmark-status');
+        if (!status) return;
+        status.textContent = text;
+        status.classList.toggle('warning', warning);
+    }
+
+    async function satRenderPerformance() {
+        const canvas = document.getElementById('satPerformanceChart');
+        if (!canvas) return;
+        const renderToken = ++satPerformanceRenderToken;
+        document.querySelectorAll('#sat-performance-range button').forEach(btn => btn.classList.toggle('active', btn.dataset.range === satState().performanceRange));
+        document.querySelectorAll('#sat-performance-mode button').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === satState().performanceMode));
+        const title = document.getElementById('sat-performance-title');
+        if (title) title.textContent = satState().performanceMode === 'percent' ? 'Cumulative Trading P/L (%)' : 'Cumulative Trading P/L';
+        document.querySelectorAll('#sat-performance-benchmark button').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.benchmark === satState().performanceBenchmark);
+        });
+        const start = satPerformanceStartDate();
+        const end = new Date();
+        const portfolio = satPerformanceSeries(start);
+        const percentMode = satState().performanceMode === 'percent';
+        let benchmarkPayload = null;
+        satSetBenchmarkStatus('Loading benchmark...');
+        try {
+            benchmarkPayload = await satFetchBenchmarkSeries(satState().performanceBenchmark, start, end);
+            if (renderToken !== satPerformanceRenderToken) return;
+            const periodNote = satState().performanceRange !== 'all' ? 'Period uses recorded P/L; daily NAV snapshots are not available' : '';
+            satSetBenchmarkStatus([periodNote, benchmarkPayload.source].filter(Boolean).join(' · '));
+        } catch (error) {
+            if (renderToken !== satPerformanceRenderToken) return;
+            satSetBenchmarkStatus(error.message || 'Benchmark unavailable', true);
+        }
+        const benchmarkPoints = benchmarkPayload?.points || [];
+        let labels = [...new Set([
+            ...Object.keys(portfolio.byDate),
+            ...benchmarkPoints.map(point => point.date),
+            satToday()
+        ])].sort();
+        let runningPL = 0;
+        let portfolioData = labels.map(date => {
+            if (Object.prototype.hasOwnProperty.call(portfolio.byDate, date)) runningPL = portfolio.byDate[date];
+            return runningPL;
+        });
+        portfolioData[portfolioData.length - 1] += portfolio.unrealized;
+        if (percentMode) {
+            portfolioData = portfolioData.map(value => portfolio.capitalBase > 0 ? value / portfolio.capitalBase * 100 : null);
+            if (!portfolio.capitalBase) satSetBenchmarkStatus('Add cash, deposit, or position cost to calculate return', true);
+        }
+        const datasets = [{
+            label: percentMode ? 'Portfolio P/L %' : 'Cumulative P/L',
+            data: portfolioData,
+            borderColor: '#D97757',
+            backgroundColor: 'rgba(217,119,87,.10)',
+            fill: !percentMode,
+            tension: .28,
+            pointRadius: labels.length > 24 ? 0 : 3,
+            pointHoverRadius: 5,
+            spanGaps: true
+        }];
+        if (benchmarkPoints.length) {
+            const benchmarkByDate = Object.fromEntries(benchmarkPoints.map(point => [point.date, point.returnPct]));
+            let runningBenchmark = null;
+            datasets.push({
+                label: benchmarkPayload.name || (satState().performanceBenchmark === 'nasdaq' ? 'NASDAQ' : 'S&P 500'),
+                data: labels.map(date => {
+                    if (Object.prototype.hasOwnProperty.call(benchmarkByDate, date)) runningBenchmark = benchmarkByDate[date];
+                    if (runningBenchmark === null) return null;
+                    return percentMode ? runningBenchmark : portfolio.capitalBase * runningBenchmark / 100;
+                }),
+                borderColor: '#5C91D9',
+                borderWidth: 2,
+                borderDash: [7, 5],
+                backgroundColor: 'transparent',
+                fill: false,
+                tension: .2,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                spanGaps: true
+            });
+        }
         if (charts.satPerformance) charts.satPerformance.destroy();
         charts.satPerformance = new Chart(canvas.getContext('2d'), {
             type: 'line',
-            data: { labels, datasets: [{ label: 'Cumulative P/L', data, borderColor: '#D97757', backgroundColor: 'rgba(217,119,87,.10)', fill: true, tension: .28, pointRadius: data.length > 24 ? 0 : 3, pointHoverRadius: 5 }] },
+            data: { labels, datasets },
             options: {
                 responsive: true, maintainAspectRatio: false,
                 scales: {
                     x: { grid: { display: false }, ticks: { color: '#8F8882', maxTicksLimit: 8, font: { size: 9 } } },
-                    y: { grid: { color: 'rgba(73,67,63,.45)' }, ticks: { color: '#8F8882', callback: value => satDisplayValue(value), font: { size: 9 } } }
+                    y: { grid: { color: 'rgba(73,67,63,.45)' }, ticks: { color: '#8F8882', callback: value => percentMode ? `${Number(value).toFixed(1)}%` : satDisplayValue(value), font: { size: 9 } } }
                 },
                 plugins: {
                     legend: { labels: { color: '#CFC8C2', boxWidth: 10, font: { size: 10 } } },
                     datalabels: { display: false },
-                    tooltip: { callbacks: { label: item => ' P/L: ' + satSignedDisplayValue(item.parsed.y) } }
+                    tooltip: { callbacks: { label: item => percentMode
+                        ? ` ${item.dataset.label}: ${item.parsed.y === null ? '—' : item.parsed.y.toFixed(2) + '%'}`
+                        : ` ${item.dataset.label}: ${item.parsed.y === null ? '—' : satSignedDisplayValue(item.parsed.y)}` } }
                 }
             }
         });
@@ -2248,9 +2475,10 @@
         const filter = document.getElementById('sat-holdings-filter')?.value || 'open';
         const rows = satState().positions.filter(p => filter === 'all' || p.status === filter);
         const totalOpenValue = satState().positions.filter(p => p.status === 'open').reduce((sum,p) => sum + Math.abs(satPositionStats(p).value), 0);
+        const portfolioAllocationValue = Math.max(0, satMetrics().cash) + totalOpenValue;
         tbody.innerHTML = rows.map(p => {
             const s = satPositionStats(p);
-            const weight = p.status === 'open' && totalOpenValue > 0 ? Math.abs(s.value) / totalOpenValue * 100 : 0;
+            const weight = p.status === 'open' && portfolioAllocationValue > 0 ? Math.abs(s.value) / portfolioAllocationValue * 100 : 0;
             const price = p.status === 'closed' ? (p.exitPrice || p.currentPrice) : (p.currentPrice || p.avgCost);
             return `<tr>
                 <td><button class="sat-ticker hover:underline" onclick="satSelectJournalPosition('${satEsc(p.id)}')">${satEsc(p.ticker)}</button></td>
@@ -2323,18 +2551,137 @@
 
     function satTradeRow(trade, editable=false) {
         const amount = satTradeAmountDisplay(trade);
-        return `<tr>
+        const focusedTicker = satState().focusedTradeTicker;
+        const focusClass = !editable || !focusedTicker ? '' : trade.ticker === focusedTicker ? ' focused' : ' faded';
+        const focusClick = editable && trade.ticker ? ` onclick="satFocusTradeTicker('${satEsc(trade.ticker)}')"` : '';
+        return `<tr class="${editable ? 'sat-trade-row' : ''}${focusClass}"${focusClick}>
             <td>${satEsc(trade.date)}</td>
-            <td><span class="sat-ticker">${satEsc(trade.ticker || 'CASH')}</span></td>
+            <td>${editable && trade.ticker
+                ? `<button type="button" class="sat-ticker hover:underline" onclick="event.stopPropagation();satFocusTradeTicker('${satEsc(trade.ticker)}')">${satEsc(trade.ticker)}</button>`
+                : `<span class="sat-ticker">${satEsc(trade.ticker || 'CASH')}</span>`}</td>
             <td><span class="sat-badge ${trade.action.toLowerCase()}">${satEsc(trade.action)}</span></td>
+            ${editable ? `<td>${trade.tags ? `<span class="sat-tag">${satEsc(trade.tags)}</span>` : '—'}</td>` : ''}
             <td>${trade.quantity ? trade.quantity.toLocaleString(undefined,{maximumFractionDigits:6}) : '—'}</td>
             <td>${satDisplayMoney(trade.price,trade.currency,'historical',trade,2)}</td>
             ${editable ? `<td>${satDisplayMoney(trade.fees,trade.currency,'historical',trade,2)}</td>` : ''}
             <td>${satDisplayValue(amount)}</td>
-            <td>${satEsc(trade.platform || '—')}</td>
-            <td>${satEsc(trade.owner || '—')}</td>
-            ${editable ? `<td style="max-width:240px;overflow:hidden;text-overflow:ellipsis" title="${satEsc(trade.note)}">${satEsc(trade.note || '—')}</td><td><button class="sat-btn" style="min-height:28px;padding:4px 8px" onclick="satEditTradeNote('${satEsc(trade.id)}')" title="Edit trade note"><i class="fa-solid fa-note-sticky"></i></button></td>` : ''}
+            ${editable ? `<td style="max-width:240px;overflow:hidden;text-overflow:ellipsis" title="${satEsc(trade.note)}">${satEsc(trade.note || '—')}</td><td><button class="sat-btn" style="min-height:28px;padding:4px 8px" onclick="event.stopPropagation();satEditTradeNote('${satEsc(trade.id)}')" title="Edit trade note"><i class="fa-solid fa-note-sticky"></i></button></td>` : ''}
         </tr>`;
+    }
+
+    function satSetTradeLogMode(mode) {
+        satState().tradeLogMode = mode === 'pair' ? 'pair' : 'list';
+        satState().focusedTradeTicker = '';
+        satRenderFullTradeLog();
+    }
+
+    function satFocusTradeTicker(ticker) {
+        satState().focusedTradeTicker = satState().focusedTradeTicker === ticker ? '' : ticker;
+        satRenderFullTradeLog();
+    }
+
+    function satPairKey(entryTrade, exitTrade, index) {
+        return `${entryTrade.id}|${exitTrade?.id || 'holding'}|${index}`;
+    }
+
+    function satBuildTradePairs() {
+        const queues = {};
+        const pairs = [];
+        const executions = satState().trades.slice()
+            .filter(t => ['BUY','SELL','SHORT','COVER'].includes(t.action) && t.ticker && t.quantity > 0)
+            .sort((a,b) => String(a.date).localeCompare(String(b.date)) || String(a.createdAt).localeCompare(String(b.createdAt)));
+        executions.forEach(trade => {
+            const side = ['BUY','SELL'].includes(trade.action) ? 'long' : 'short';
+            const isEntry = trade.action === 'BUY' || trade.action === 'SHORT';
+            const key = `${trade.ticker}|${side}`;
+            if (!queues[key]) queues[key] = [];
+            if (isEntry) {
+                queues[key].push({ trade, remaining: trade.quantity });
+                return;
+            }
+            let remaining = trade.quantity;
+            let pairIndex = 0;
+            while (remaining > 0 && queues[key].length) {
+                const lot = queues[key][0];
+                const quantity = Math.min(remaining, lot.remaining);
+                const nativePL = (side === 'long' ? trade.price - lot.trade.price : lot.trade.price - trade.price) * quantity
+                    - (lot.trade.fees * quantity / lot.trade.quantity)
+                    - (trade.fees * quantity / trade.quantity);
+                const convertedPL = satConvertNative(nativePL, trade.currency, 'historical', trade);
+                const nativeCost = lot.trade.price * quantity;
+                const cost = Math.abs(satConvertNative(nativeCost, lot.trade.currency, 'historical', lot.trade));
+                pairs.push({
+                    key: satPairKey(lot.trade, trade, pairIndex++),
+                    ticker: trade.ticker, side, status: 'closed', quantity,
+                    entryTrade: lot.trade, exitTrade: trade,
+                    entryDate: lot.trade.date, exitDate: trade.date,
+                    entryPrice: lot.trade.price, exitPrice: trade.price,
+                    daysHeld: satDaysBetween(lot.trade.date, trade.date),
+                    pl: convertedPL, plPct: cost > 0 ? convertedPL / cost * 100 : null,
+                    noteTrade: trade
+                });
+                lot.remaining -= quantity;
+                remaining -= quantity;
+                if (lot.remaining <= 1e-10) queues[key].shift();
+            }
+        });
+        Object.values(queues).flat().forEach((lot, index) => {
+            if (lot.remaining <= 0) return;
+            const position = satState().positions.find(p => p.ticker === lot.trade.ticker && p.status === 'open' && p.side === (lot.trade.action === 'SHORT' ? 'short' : 'long'));
+            const currentPrice = position?.currentPrice || position?.avgCost || lot.trade.price;
+            const nativePL = ((lot.trade.action === 'SHORT' ? lot.trade.price - currentPrice : currentPrice - lot.trade.price) * lot.remaining)
+                - (lot.trade.fees * lot.remaining / lot.trade.quantity);
+            const convertedPL = satConvertNative(nativePL, lot.trade.currency, 'latest', position || lot.trade);
+            const cost = Math.abs(satConvertNative(lot.trade.price * lot.remaining, lot.trade.currency, 'historical', lot.trade));
+            pairs.push({
+                key: satPairKey(lot.trade, null, index),
+                ticker: lot.trade.ticker, side: lot.trade.action === 'SHORT' ? 'short' : 'long',
+                status: 'holding', quantity: lot.remaining,
+                entryTrade: lot.trade, exitTrade: null,
+                entryDate: lot.trade.date, exitDate: '',
+                entryPrice: lot.trade.price, exitPrice: currentPrice,
+                daysHeld: satDaysBetween(lot.trade.date),
+                pl: convertedPL, plPct: cost > 0 ? convertedPL / cost * 100 : null,
+                noteTrade: lot.trade
+            });
+        });
+        return pairs.sort((a,b) => String(b.exitDate || b.entryDate).localeCompare(String(a.exitDate || a.entryDate)));
+    }
+
+    function satTogglePairNote(key) {
+        satState().expandedPairNotes[key] = !satState().expandedPairNotes[key];
+        satRenderFullTradeLog();
+    }
+
+    function satUpdatePairNote(tradeId, value) {
+        const trade = satState().trades.find(item => item.id === tradeId);
+        if (!trade || trade.pairNote === value) return;
+        trade.pairNote = value.trim();
+        satCommitChanges();
+    }
+
+    function satRenderPairTradeLog(search='') {
+        const target = document.getElementById('sat-trade-pair-view');
+        if (!target) return [];
+        const pairs = satBuildTradePairs().filter(pair => !search || `${pair.ticker} ${pair.side} ${pair.status} ${pair.entryTrade.tags} ${pair.noteTrade.pairNote}`.toLowerCase().includes(search));
+        target.innerHTML = pairs.map(pair => {
+            const open = !!satState().expandedPairNotes[pair.key];
+            const plClass = pair.pl >= 0 ? 'sat-positive' : 'sat-negative';
+            return `<article class="sat-pair-card ${open ? 'note-open' : ''}">
+                <div class="sat-pair-main">
+                    <div><div class="sat-pair-label">Ticker</div><div class="sat-pair-value"><strong class="sat-ticker">${satEsc(pair.ticker)}</strong> <span class="sat-badge ${pair.status === 'holding' ? 'open' : 'closed'}">${pair.status}</span>${pair.entryTrade.tags ? ` <span class="sat-tag">${satEsc(pair.entryTrade.tags)}</span>` : ''}</div></div>
+                    <div><div class="sat-pair-label">Entry</div><div class="sat-pair-value">${satEsc(pair.entryDate)}<br>${satDisplayMoney(pair.entryPrice,pair.entryTrade.currency,'historical',pair.entryTrade,2)}</div></div>
+                    <div><div class="sat-pair-label">${pair.status === 'holding' ? 'Current' : 'Exit'}</div><div class="sat-pair-value">${pair.exitDate ? satEsc(pair.exitDate) + '<br>' : ''}${satDisplayMoney(pair.exitPrice,pair.entryTrade.currency,pair.status === 'holding' ? 'latest' : 'historical',pair.exitTrade || pair.entryTrade,2)}</div></div>
+                    <div><div class="sat-pair-label">Quantity</div><div class="sat-pair-value">${pair.quantity.toLocaleString(undefined,{maximumFractionDigits:6})}</div></div>
+                    <div><div class="sat-pair-label">Held</div><div class="sat-pair-value">${pair.daysHeld} days</div></div>
+                    <div><div class="sat-pair-label">${pair.status === 'holding' ? 'Unrealized P/L' : 'Realized P/L'}</div><div class="sat-pair-value ${plClass}">${satSignedDisplayValue(pair.pl)}</div></div>
+                    <div><div class="sat-pair-label">P/L %</div><div class="sat-pair-value ${plClass}">${pair.plPct === null ? '—' : `${pair.plPct >= 0 ? '+' : ''}${pair.plPct.toFixed(2)}%`}</div></div>
+                    <button type="button" class="sat-btn" onclick="satTogglePairNote('${satEsc(pair.key)}')" title="${open ? 'Hide note' : 'Show note'}"><i class="fa-solid ${open ? 'fa-chevron-up' : 'fa-note-sticky'}"></i></button>
+                </div>
+                <div class="sat-pair-note"><label class="sat-form-label">Trade Review Note</label><textarea class="sat-textarea" placeholder="Entry/exit rationale, mistakes and improvements..." onblur="satUpdatePairNote('${satEsc(pair.noteTrade.id)}',this.value)">${satEsc(pair.noteTrade.pairNote || '')}</textarea></div>
+            </article>`;
+        }).join('');
+        return pairs;
     }
 
     function satRenderTradeLogs() {
@@ -2349,11 +2696,18 @@
         const tbody = document.getElementById('sat-full-trades-tbody');
         if (!tbody) return;
         const search = (document.getElementById('sat-trade-log-search')?.value || '').trim().toLowerCase();
-        const rows = satState().trades.slice().sort((a,b) => String(b.date).localeCompare(String(a.date)) || String(b.createdAt).localeCompare(String(a.createdAt))).filter(t => !search || `${t.ticker} ${t.action} ${t.owner} ${t.platform} ${t.note} ${t.reference}`.toLowerCase().includes(search));
-        tbody.innerHTML = rows.map(t => satTradeRow(t, true)).join('');
-        document.getElementById('sat-full-trades-empty')?.classList.toggle('hidden', rows.length > 0);
+        document.querySelectorAll('#sat-trade-log-mode button').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === satState().tradeLogMode));
+        document.getElementById('sat-trade-list-view')?.classList.toggle('hidden', satState().tradeLogMode !== 'list');
+        document.getElementById('sat-trade-pair-view')?.classList.toggle('hidden', satState().tradeLogMode !== 'pair');
+        const rows = satState().trades.slice().sort((a,b) => String(b.date).localeCompare(String(a.date)) || String(b.createdAt).localeCompare(String(a.createdAt))).filter(t => !search || `${t.ticker} ${t.action} ${t.tags} ${t.note} ${t.pairNote} ${t.reference}`.toLowerCase().includes(search));
+        let visibleCount = rows.length;
+        if (satState().tradeLogMode === 'list') tbody.innerHTML = rows.map(t => satTradeRow(t, true)).join('');
+        else visibleCount = satRenderPairTradeLog(search).length;
+        document.getElementById('sat-full-trades-empty')?.classList.toggle('hidden', visibleCount > 0);
         const count = document.getElementById('sat-trade-log-count');
-        if (count) count.textContent = `${rows.length} of ${satState().trades.length} records`;
+        if (count) count.textContent = satState().tradeLogMode === 'pair'
+            ? `${visibleCount} paired position${visibleCount === 1 ? '' : 's'}`
+            : `${rows.length} of ${satState().trades.length} records`;
     }
 
     function satRenderPositionOptions() {
@@ -2548,10 +2902,8 @@
         document.getElementById('sat-trade-date').value = satToday();
         document.getElementById('sat-trade-action').value = 'BUY';
         document.getElementById('sat-trade-currency').value = 'USD';
-        document.getElementById('sat-trade-owner').value = 'Nine';
         satTradeActionChanged();
         satRenderPositionOptions();
-        satUpdateTradeFxPreview();
     }
 
     function satTradePositionChanged() {
@@ -2559,23 +2911,18 @@
         if (!p) return;
         document.getElementById('sat-trade-ticker').value = p.ticker;
         document.getElementById('sat-trade-currency').value = p.currency;
-        document.getElementById('sat-trade-platform').value = p.platform;
-        document.getElementById('sat-trade-owner').value = p.owner || 'Nine';
-        satUpdateTradeFxPreview();
     }
 
-    function satTradeCurrencyChanged() {
-        satUpdateTradeFxPreview();
-    }
+    function satTradeCurrencyChanged() {}
 
     function satTradeActionChanged() {
         const action = document.getElementById('sat-trade-action')?.value || 'BUY';
-        const cashAction = ['DEPOSIT','WITHDRAW','DIVIDEND','FEE'].includes(action);
+        const cashAction = ['DEPOSIT','WITHDRAW','DIVIDEND','FEE','CASH_BALANCE'].includes(action);
         const qty = document.getElementById('sat-trade-qty');
         const ticker = document.getElementById('sat-trade-ticker');
         const priceLabel = document.getElementById('sat-trade-price-label');
         if (qty) qty.required = !cashAction;
-        if (ticker) ticker.required = !['DEPOSIT','WITHDRAW'].includes(action);
+        if (ticker) ticker.required = !['DEPOSIT','WITHDRAW','CASH_BALANCE'].includes(action);
         if (priceLabel) priceLabel.textContent = cashAction ? 'Total Amount' : 'Price';
     }
 
@@ -2586,6 +2933,7 @@
         const ticker = document.getElementById('sat-trade-ticker').value.trim().toUpperCase();
         let position = satState().positions.find(p => p.id === positionId);
         if (!position && ticker) position = satState().positions.find(p => p.ticker === ticker && p.status === 'open');
+        if (action === 'CASH_BALANCE') position = null;
         const qty = Math.max(0, satNumber(document.getElementById('sat-trade-qty').value));
         const price = Math.max(0, satNumber(document.getElementById('sat-trade-price').value));
         const fees = Math.max(0, satNumber(document.getElementById('sat-trade-fees').value));
@@ -2593,11 +2941,11 @@
         const tradeCurrency = document.getElementById('sat-trade-currency').value;
         const fx = await satExecutionFx(tradeDate, tradeCurrency);
         let effectiveQty = qty;
-        if (!['DEPOSIT','WITHDRAW','DIVIDEND','FEE'].includes(action) && (!qty || !price)) {
+        if (!['DEPOSIT','WITHDRAW','DIVIDEND','FEE','CASH_BALANCE'].includes(action) && (!qty || !price)) {
             alert('Quantity and price are required for this action.');
             return;
         }
-        if (['DEPOSIT','WITHDRAW','DIVIDEND','FEE'].includes(action) && !price && !fees) {
+        if (['DEPOSIT','WITHDRAW','DIVIDEND','FEE','CASH_BALANCE'].includes(action) && !price && !fees) {
             alert('Enter the total amount in the Price field.');
             return;
         }
@@ -2611,8 +2959,8 @@
                 openDate: tradeDate, quantity: 0, avgCost: 0,
                 currentPrice: price, currency: tradeCurrency,
                 fxRate: fx.rate, fxDate: fx.rateDate, fxSource: fx.source,
-                platform: document.getElementById('sat-trade-platform').value,
-                owner: document.getElementById('sat-trade-owner').value
+                platform: '',
+                owner: 'Nine'
             });
             satState().positions.push(position);
         }
@@ -2663,8 +3011,6 @@
             }
             if (!['FEE'].includes(action)) position.fees += fees;
             position.currentPrice = price || position.currentPrice;
-            position.platform = document.getElementById('sat-trade-platform').value || position.platform;
-            position.owner = document.getElementById('sat-trade-owner').value || position.owner;
             position.updatedAt = new Date().toISOString();
         }
         const trade = satNormalizeTrade({
@@ -2674,9 +3020,10 @@
             fxRate: fx.rate,
             fxDate: fx.rateDate,
             fxSource: fx.source,
-            platform: document.getElementById('sat-trade-platform').value,
+            platform: '',
             note: document.getElementById('sat-trade-note').value,
-            owner: document.getElementById('sat-trade-owner').value,
+            owner: 'Nine',
+            tags: document.getElementById('sat-trade-tags').value,
             reference: document.getElementById('sat-trade-ref').value,
             realizedPL
         });
@@ -2689,16 +3036,19 @@
     function satEditTradeNote(id) {
         const trade = satState().trades.find(t => t.id === id);
         if (!trade) return;
+        const tags = prompt(`Edit tag for ${trade.action} ${trade.ticker || 'cash movement'} on ${trade.date}:`, trade.tags || '');
+        if (tags === null) return;
         const next = prompt(`Edit note for ${trade.action} ${trade.ticker || 'cash movement'} on ${trade.date}:`, trade.note || '');
         if (next === null) return;
+        trade.tags = tags.trim();
         trade.note = next.trim();
         satCommitChanges();
     }
 
     function satExportTrades() {
         if (!satState().trades.length) return;
-        const headers = ['Date','Ticker','Action','Quantity','Price','Fees','Currency','FX Rate','FX Date','FX Source','Platform','Owner','Reference','Note','Realized P/L'];
-        const lines = [headers, ...satState().trades.map(t => [t.date,t.ticker,t.action,t.quantity,t.price,t.fees,t.currency,t.fxRate,t.fxDate,t.fxSource,t.platform,t.owner,t.reference,t.note,t.realizedPL])];
+        const headers = ['Date','Ticker','Action','Tags','Quantity','Price','Fees','Currency','FX Rate','FX Date','FX Source','Reference','Execution Note','Pair Review Note','Realized P/L'];
+        const lines = [headers, ...satState().trades.map(t => [t.date,t.ticker,t.action,t.tags,t.quantity,t.price,t.fees,t.currency,t.fxRate,t.fxDate,t.fxSource,t.reference,t.note,t.pairNote,t.realizedPL])];
         const csv = lines.map(row => row.map(value => `"${String(value ?? '').replace(/"/g,'""')}"`).join(',')).join('\n');
         const link = document.createElement('a');
         link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
