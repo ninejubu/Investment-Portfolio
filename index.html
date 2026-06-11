@@ -594,6 +594,14 @@
             background: transparent; font-size: 10px; font-weight: 700;
         }
         .sat-segment button.active { color: #171513; background: #D97757; }
+        .sat-currency-control { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .sat-fx-meta { color: #8F8882; font-size: 9px; line-height: 1.35; max-width: 260px; }
+        .sat-fx-meta.warning { color: #D6A84F; }
+        .sat-fx-readonly {
+            min-height: 38px; display: flex; align-items: center; padding: 8px 10px;
+            border: 1px solid #49433F; background: #211E1C; color: #CFC8C2;
+            border-radius: 6px; font-size: 11px; line-height: 1.35;
+        }
         .sat-performance-panel { min-height: 380px; }
         .sat-performance-chart { height: 300px; position: relative; }
         .sat-two-col { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr); gap: 16px; }
@@ -654,6 +662,7 @@
         body.theme-light .sat-toolbar, body.theme-light .sat-stat-card, body.theme-light .sat-panel, body.theme-light .sat-modal { background: #FFFFFF; border-color: #D8D2CC; }
         body.theme-light .sat-stat-value, body.theme-light .sat-panel-title, body.theme-light .sat-alloc-ticker, body.theme-light .sat-ticker { color: #2A2522; }
         body.theme-light .sat-input, body.theme-light .sat-select, body.theme-light .sat-textarea, body.theme-light .sat-segment { background: #F8F6F4; border-color: #D8D2CC; color: #2A2522; }
+        body.theme-light .sat-fx-readonly { background: #F8F6F4; border-color: #D8D2CC; color: #5F5852; }
         body.theme-light .sat-insight-row, body.theme-light .sat-journal-item, body.theme-light .sat-note-block { background: #FAF8F6; border-color: #E6E1DC; }
         body.theme-light .sat-table td, body.theme-light .sat-insight-value, body.theme-light .sat-note-value { color: #4A433E; }
 
@@ -1064,6 +1073,13 @@
                             <p class="sat-subtle mt-1">Position-level tracking · Nine & Loki workspace</p>
                         </div>
                         <div class="sat-actions">
+                            <div class="sat-currency-control">
+                                <div class="sat-segment sat-currency-toggle">
+                                    <button type="button" data-currency="USD" onclick="satSetDisplayCurrency('USD')">USD</button>
+                                    <button type="button" data-currency="THB" onclick="satSetDisplayCurrency('THB')">THB</button>
+                                </div>
+                                <span class="sat-fx-meta" data-sat-fx-status>FX loading...</span>
+                            </div>
                             <span class="sat-badge open"><i class="fa-solid fa-user-group mr-1"></i> Nine + Loki</span>
                             <button class="sat-btn" onclick="switchTab('transactions')"><i class="fa-solid fa-list-check"></i> Transactions</button>
                             <button class="sat-btn primary" onclick="satOpenPositionModal()"><i class="fa-solid fa-plus"></i> Position</button>
@@ -1242,6 +1258,13 @@
                             <p class="sat-subtle mt-1">Every execution updates the linked position and the dashboard immediately.</p>
                         </div>
                         <div class="sat-actions">
+                            <div class="sat-currency-control">
+                                <div class="sat-segment sat-currency-toggle">
+                                    <button type="button" data-currency="USD" onclick="satSetDisplayCurrency('USD')">USD</button>
+                                    <button type="button" data-currency="THB" onclick="satSetDisplayCurrency('THB')">THB</button>
+                                </div>
+                                <span class="sat-fx-meta" data-sat-fx-status>FX loading...</span>
+                            </div>
                             <button class="sat-btn" onclick="switchTab('dashboard')"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
                             <button class="sat-btn primary" onclick="satOpenPositionModal()"><i class="fa-solid fa-plus"></i> Position</button>
                         </div>
@@ -1258,12 +1281,12 @@
                             <div><label class="sat-form-label">Action</label><select id="sat-trade-action" class="sat-select" onchange="satTradeActionChanged()"><option>BUY</option><option>SELL</option><option>SHORT</option><option>COVER</option><option>DIVIDEND</option><option>FEE</option><option>DEPOSIT</option><option>WITHDRAW</option></select></div>
                             <div><label class="sat-form-label">Linked Position</label><select id="sat-trade-position" class="sat-select" onchange="satTradePositionChanged()"><option value="">New / Cash movement</option></select></div>
                             <div><label class="sat-form-label">Ticker</label><input id="sat-trade-ticker" class="sat-input" maxlength="16" placeholder="e.g. NVDA"></div>
-                            <div><label class="sat-form-label">Date</label><input id="sat-trade-date" type="date" class="sat-input" required></div>
+                            <div><label class="sat-form-label">Date</label><input id="sat-trade-date" type="date" class="sat-input" required onchange="satUpdateTradeFxPreview()"></div>
                             <div><label class="sat-form-label">Quantity</label><input id="sat-trade-qty" type="number" step="any" min="0" class="sat-input" placeholder="0"></div>
                             <div><label id="sat-trade-price-label" class="sat-form-label">Price</label><input id="sat-trade-price" type="number" step="any" min="0" class="sat-input" placeholder="0.00"></div>
                             <div><label class="sat-form-label">Fees</label><input id="sat-trade-fees" type="number" step="any" min="0" class="sat-input" value="0"></div>
                             <div><label class="sat-form-label">Currency</label><select id="sat-trade-currency" class="sat-select" onchange="satTradeCurrencyChanged()"><option value="USD">USD</option><option value="THB">THB</option></select></div>
-                            <div><label class="sat-form-label">FX Rate</label><input id="sat-trade-fx" type="number" step="any" min="0" class="sat-input" placeholder="USD/THB"></div>
+                            <div><label class="sat-form-label">Execution FX (Auto)</label><div id="sat-trade-fx-info" class="sat-fx-readonly">Select date and currency</div></div>
                             <div><label class="sat-form-label">Platform</label><input id="sat-trade-platform" class="sat-input" placeholder="Broker / exchange"></div>
                             <div><label class="sat-form-label">Owner</label><select id="sat-trade-owner" class="sat-select"><option>Nine</option><option>Loki</option><option>Nine + Loki</option></select></div>
                             <div><label class="sat-form-label">Reference</label><input id="sat-trade-ref" class="sat-input" placeholder="Order ID (optional)"></div>
@@ -1288,7 +1311,7 @@
                         </div>
                         <div class="sat-table-wrap" style="max-height:620px">
                             <table class="sat-table">
-                                <thead><tr><th>Date</th><th>Ticker</th><th>Action</th><th>Qty</th><th>Price</th><th>Fees</th><th>Amount (THB)</th><th>Platform</th><th>Owner</th><th>Note</th><th></th></tr></thead>
+                                <thead><tr><th>Date</th><th>Ticker</th><th>Action</th><th>Qty</th><th>Price</th><th>Fees</th><th>Amount</th><th>Platform</th><th>Owner</th><th>Note</th><th></th></tr></thead>
                                 <tbody id="sat-full-trades-tbody"></tbody>
                             </table>
                         </div>
@@ -1647,7 +1670,7 @@
                 <div><label class="sat-form-label">Position Name</label><input id="sat-pos-name" class="sat-input" placeholder="NVIDIA Corporation"></div>
                 <div><label class="sat-form-label">Side</label><select id="sat-pos-side" class="sat-select"><option value="long">Long</option><option value="short">Short</option></select></div>
                 <div><label class="sat-form-label">Status</label><select id="sat-pos-status" class="sat-select"><option value="open">Open</option><option value="closed">Closed</option></select></div>
-                <div><label class="sat-form-label">Open Date</label><input id="sat-pos-open-date" type="date" class="sat-input" required></div>
+                <div><label class="sat-form-label">Open Date</label><input id="sat-pos-open-date" type="date" class="sat-input" required onchange="satUpdatePositionFxPreview()"></div>
                 <div><label class="sat-form-label">Close Date</label><input id="sat-pos-close-date" type="date" class="sat-input"></div>
                 <div><label class="sat-form-label">Quantity</label><input id="sat-pos-qty" type="number" step="any" min="0" class="sat-input" value="0"></div>
                 <div><label class="sat-form-label">Average Cost</label><input id="sat-pos-avg-cost" type="number" step="any" min="0" class="sat-input" value="0"></div>
@@ -1655,8 +1678,8 @@
                 <div><label class="sat-form-label">Exit Price</label><input id="sat-pos-exit-price" type="number" step="any" min="0" class="sat-input" value="0"></div>
                 <div><label class="sat-form-label">Realized P/L</label><input id="sat-pos-realized" type="number" step="any" class="sat-input" value="0"></div>
                 <div><label class="sat-form-label">Dividends</label><input id="sat-pos-dividends" type="number" step="any" class="sat-input" value="0"></div>
-                <div><label class="sat-form-label">Currency</label><select id="sat-pos-currency" class="sat-select"><option value="USD">USD</option><option value="THB">THB</option></select></div>
-                <div><label class="sat-form-label">FX Rate</label><input id="sat-pos-fx" type="number" step="any" min="0" class="sat-input" placeholder="USD/THB"></div>
+                <div><label class="sat-form-label">Currency</label><select id="sat-pos-currency" class="sat-select" onchange="satUpdatePositionFxPreview()"><option value="USD">USD</option><option value="THB">THB</option></select></div>
+                <div><label class="sat-form-label">Entry FX (Auto)</label><div id="sat-pos-fx-info" class="sat-fx-readonly">Select open date and currency</div></div>
                 <div><label class="sat-form-label">Platform</label><input id="sat-pos-platform" class="sat-input" placeholder="IBKR / Binance / ..."></div>
                 <div><label class="sat-form-label">Owner</label><select id="sat-pos-owner" class="sat-select"><option>Nine</option><option>Loki</option><option>Nine + Loki</option></select></div>
                 <div><label class="sat-form-label">Take Profit</label><input id="sat-pos-tp" type="number" step="any" min="0" class="sat-input"></div>
@@ -1699,6 +1722,8 @@
         satellite: {
             positions: [],
             trades: [],
+            displayCurrency: localStorage.getItem('satellite_display_currency_v1') === 'USD' ? 'USD' : 'THB',
+            fx: { latest: null, historical: {}, status: 'idle', warning: '' },
             allocationMode: 'cost',
             performanceRange: 'all',
             journalStatus: 'open',
@@ -1733,6 +1758,11 @@
     // ════════════════════════════════════════════════════
     const SAT_POSITIONS_KEY = 'satellite_positions_v1';
     const SAT_TRADES_KEY = 'satellite_trades_v1';
+    const SAT_DISPLAY_CURRENCY_KEY = 'satellite_display_currency_v1';
+    const SAT_FX_CACHE_KEY = 'satellite_fx_cache_v1';
+    const SAT_FX_API_BASE = 'https://api.frankfurter.dev/v1';
+    const SAT_FX_LATEST_TTL_MS = 6 * 60 * 60 * 1000;
+    const SAT_FX_SOURCE = 'Frankfurter (central-bank reference)';
     const SAT_COLORS = ['#D97757','#48B887','#5C91D9','#D6A84F','#8B72C9','#4FA6A1','#C85F68','#8D9B65','#B47B55','#6E8FB2'];
     let satPushTimer = null;
 
@@ -1758,8 +1788,182 @@
 
     function satToday() { return new Date().toISOString().slice(0, 10); }
     function satId(prefix) { return prefix + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8); }
-    function satPositionRate(position) { return String(position.currency || 'USD').toUpperCase() === 'USD' ? (satNumber(position.fxRate) || getActiveRate() || 1) : 1; }
-    function satTradeRate(trade) { return String(trade.currency || 'USD').toUpperCase() === 'USD' ? (satNumber(trade.fxRate) || getActiveRate() || 1) : 1; }
+
+    function satLoadFxCache() {
+        try {
+            const cached = JSON.parse(localStorage.getItem(SAT_FX_CACHE_KEY) || '{}');
+            satState().fx.latest = cached.latest || null;
+            satState().fx.historical = cached.historical && typeof cached.historical === 'object' ? cached.historical : {};
+        } catch (error) {
+            satState().fx.latest = null;
+            satState().fx.historical = {};
+        }
+    }
+
+    function satSaveFxCache() {
+        localStorage.setItem(SAT_FX_CACHE_KEY, JSON.stringify({
+            latest: satState().fx.latest,
+            historical: satState().fx.historical
+        }));
+    }
+
+    async function satFetchFxJson(url) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        try {
+            const response = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+            if (!response.ok) throw new Error('FX HTTP ' + response.status);
+            return await response.json();
+        } finally {
+            clearTimeout(timeout);
+        }
+    }
+
+    function satFxEntry(data, requestedDate='latest') {
+        const rate = satNumber(data?.rates?.THB);
+        if (!rate) throw new Error('USD/THB rate missing');
+        return {
+            rate,
+            requestedDate,
+            rateDate: String(data.date || requestedDate),
+            source: SAT_FX_SOURCE,
+            fetchedAt: new Date().toISOString(),
+            fallback: false
+        };
+    }
+
+    async function satFetchLatestFx(force=false) {
+        const cached = satState().fx.latest;
+        const isFresh = cached?.rate && Date.now() - new Date(cached.fetchedAt || 0).getTime() < SAT_FX_LATEST_TTL_MS;
+        if (!force && isFresh) return cached;
+        const data = await satFetchFxJson(`${SAT_FX_API_BASE}/latest?base=USD&symbols=THB`);
+        const entry = satFxEntry(data);
+        satState().fx.latest = entry;
+        satSaveFxCache();
+        return entry;
+    }
+
+    async function satFetchHistoricalFx(date, force=false) {
+        const requestedDate = toIsoDashboardDate(date);
+        if (!requestedDate) throw new Error('Execution date is required');
+        if (!force && satState().fx.historical[requestedDate]?.rate) return satState().fx.historical[requestedDate];
+        const data = await satFetchFxJson(`${SAT_FX_API_BASE}/${requestedDate}?base=USD&symbols=THB`);
+        const entry = satFxEntry(data, requestedDate);
+        satState().fx.historical[requestedDate] = entry;
+        satSaveFxCache();
+        return entry;
+    }
+
+    function satSettingsFxFallback(requestedDate='latest') {
+        const rate = getActiveRate();
+        if (!rate) return null;
+        return {
+            rate,
+            requestedDate,
+            rateDate: 'Setting_data',
+            source: 'Setting_data fallback',
+            fetchedAt: new Date().toISOString(),
+            fallback: true
+        };
+    }
+
+    function satResolveLatestFx() {
+        return satState().fx.latest?.rate
+            ? satState().fx.latest
+            : satSettingsFxFallback() || {
+                rate: 1, requestedDate: 'latest', rateDate: 'unavailable',
+                source: 'No FX available (1:1 emergency fallback)', fallback: true
+            };
+    }
+
+    function satResolveHistoricalFx(date, savedRate=0, savedDate='', savedSource='') {
+        const requestedDate = toIsoDashboardDate(date);
+        if (satNumber(savedRate) > 0) {
+            return {
+                rate: satNumber(savedRate),
+                requestedDate,
+                rateDate: savedDate || requestedDate || 'legacy',
+                source: savedSource || 'Saved legacy execution rate',
+                fallback: !savedSource
+            };
+        }
+        if (requestedDate && satState().fx.historical[requestedDate]?.rate) return satState().fx.historical[requestedDate];
+        const setting = satSettingsFxFallback(requestedDate);
+        if (setting) return setting;
+        const latest = satState().fx.latest;
+        if (latest?.rate) return { ...latest, requestedDate, source: 'Cached latest fallback', fallback: true };
+        return {
+            rate: 1, requestedDate, rateDate: 'unavailable',
+            source: 'No historical FX available (1:1 emergency fallback)', fallback: true
+        };
+    }
+
+    function satConvertNative(value, nativeCurrency='USD', rateMode='latest', record={}) {
+        const amount = satNumber(value);
+        const from = String(nativeCurrency || 'USD').toUpperCase() === 'THB' ? 'THB' : 'USD';
+        const to = satState().displayCurrency;
+        if (from === to) return amount;
+        const fx = rateMode === 'historical'
+            ? satResolveHistoricalFx(record.date || record.openDate, record.fxRate, record.fxDate, record.fxSource)
+            : satResolveLatestFx();
+        return from === 'USD' ? amount * fx.rate : amount / fx.rate;
+    }
+
+    function satDisplayMoney(value, nativeCurrency='USD', rateMode='latest', record={}, digits=0) {
+        return satMoney(satConvertNative(value, nativeCurrency, rateMode, record), satState().displayCurrency, digits);
+    }
+
+    function satDisplayValue(value, digits=0) {
+        return satMoney(value, satState().displayCurrency, digits);
+    }
+
+    function satSignedDisplayValue(value) {
+        return satSignedMoney(value, satState().displayCurrency);
+    }
+
+    function satSetDisplayCurrency(currency) {
+        satState().displayCurrency = currency === 'USD' ? 'USD' : 'THB';
+        localStorage.setItem(SAT_DISPLAY_CURRENCY_KEY, satState().displayCurrency);
+        satRenderAll();
+    }
+
+    function satRenderFxStatus() {
+        document.querySelectorAll('.sat-currency-toggle button').forEach(button => {
+            button.classList.toggle('active', button.dataset.currency === satState().displayCurrency);
+        });
+        const fx = satResolveLatestFx();
+        const missingHistorical = [...satState().positions, ...satState().trades]
+            .filter(item => item.currency === 'USD' && !satNumber(item.fxRate) && !satState().fx.historical[item.date || item.openDate]).length;
+        const legacyHistorical = [...satState().positions, ...satState().trades]
+            .filter(item => item.currency === 'USD' && satNumber(item.fxRate) && !item.fxSource).length;
+        const offlineFallback = satState().fx.status === 'fallback';
+        const warning = fx.fallback || missingHistorical > 0 || legacyHistorical > 0 || offlineFallback || !!satState().fx.warning;
+        const text = fx.rate === 1 && fx.rateDate === 'unavailable'
+            ? fx.source
+            : `1 USD = ฿${fx.rate.toFixed(4)} · ${fx.rateDate} · ${fx.source}${offlineFallback ? ' · offline cache/fallback' : ''}${missingHistorical ? ` · ${missingHistorical} missing historical FX` : ''}${legacyHistorical ? ` · ${legacyHistorical} legacy saved FX` : ''}`;
+        document.querySelectorAll('[data-sat-fx-status]').forEach(el => {
+            el.textContent = text;
+            el.classList.toggle('warning', warning);
+            el.title = satState().fx.warning || (warning ? 'Fallback is shown explicitly because a requested FX rate is unavailable.' : text);
+        });
+    }
+
+    async function satWarmFxRates(force=false) {
+        satState().fx.status = 'loading';
+        satRenderFxStatus();
+        const dates = [...new Set([
+            ...satState().positions.filter(p => p.currency === 'USD' && !satNumber(p.fxRate)).map(p => p.openDate),
+            ...satState().trades.filter(t => t.currency === 'USD' && !satNumber(t.fxRate)).map(t => t.date)
+        ].map(toIsoDashboardDate).filter(Boolean))];
+        const failures = [];
+        try { await satFetchLatestFx(force); } catch (error) { failures.push('latest'); }
+        await Promise.all(dates.map(async date => {
+            try { await satFetchHistoricalFx(date, force); } catch (error) { failures.push(date); }
+        }));
+        satState().fx.status = failures.length ? 'fallback' : 'ready';
+        satState().fx.warning = failures.length ? `FX API unavailable for ${failures.join(', ')}` : '';
+        satRenderAll();
+    }
     function satDaysBetween(start, end) {
         const a = parseDashboardDate(start), b = parseDashboardDate(end || satToday());
         return a && b ? Math.max(0, Math.floor((b - a) / 86400000)) : 0;
@@ -1783,6 +1987,8 @@
             fees: Math.max(0, satNumber(raw.fees)),
             currency: String(raw.currency || 'USD').toUpperCase() === 'THB' ? 'THB' : 'USD',
             fxRate: Math.max(0, satNumber(raw.fxRate)),
+            fxDate: String(raw.fxDate || ''),
+            fxSource: String(raw.fxSource || ''),
             platform: String(raw.platform || '').trim(),
             owner: String(raw.owner || 'Nine').trim(),
             takeProfit: Math.max(0, satNumber(raw.takeProfit)),
@@ -1806,6 +2012,8 @@
             fees: Math.max(0, satNumber(raw.fees)),
             currency: String(raw.currency || 'USD').toUpperCase() === 'THB' ? 'THB' : 'USD',
             fxRate: Math.max(0, satNumber(raw.fxRate)),
+            fxDate: String(raw.fxDate || ''),
+            fxSource: String(raw.fxSource || ''),
             platform: String(raw.platform || '').trim(),
             note: String(raw.note || '').trim(),
             owner: String(raw.owner || 'Nine').trim(),
@@ -1821,6 +2029,7 @@
     }
 
     function satLoadLocal() {
+        satLoadFxCache();
         try {
             const positions = JSON.parse(localStorage.getItem(SAT_POSITIONS_KEY) || '[]');
             const trades = JSON.parse(localStorage.getItem(SAT_TRADES_KEY) || '[]');
@@ -1834,28 +2043,19 @@
     function satMetrics() {
         const open = satState().positions.filter(p => p.status === 'open' && p.quantity > 0);
         const closed = satState().positions.filter(p => p.status === 'closed');
-        let marketValue = 0, costValue = 0, unrealized = 0, realizedGross = 0, fees = 0, dividends = 0;
+        let marketValue = 0, costValue = 0, unrealized = 0, realizedNet = 0;
         open.forEach(p => {
-            const rate = satPositionRate(p);
-            const price = p.currentPrice || p.avgCost;
-            const cost = p.quantity * p.avgCost * rate;
-            const value = p.quantity * price * rate;
-            costValue += cost;
-            marketValue += p.side === 'short' ? -value : value;
-            unrealized += (p.side === 'short' ? (p.avgCost - price) : (price - p.avgCost)) * p.quantity * rate;
+            const stats = satPositionStats(p);
+            costValue += stats.cost;
+            marketValue += p.side === 'short' ? -stats.value : stats.value;
+            unrealized += stats.unrealized;
         });
-        satState().positions.forEach(p => {
-            const rate = satPositionRate(p);
-            realizedGross += p.realizedPL * rate;
-            fees += p.fees * rate;
-            dividends += p.dividends * rate;
-        });
+        satState().positions.forEach(p => { realizedNet += satPositionStats(p).realizedNet; });
         let cash = 0, deposits = 0, withdrawals = 0;
         satState().trades.forEach(t => {
-            const rate = satTradeRate(t);
             const amount = t.quantity > 0 ? t.quantity * t.price : t.price;
-            const gross = amount * rate;
-            const fee = t.fees * rate;
+            const gross = satConvertNative(amount, t.currency, 'historical', t);
+            const fee = satConvertNative(t.fees, t.currency, 'historical', t);
             if (t.action === 'DEPOSIT') { cash += gross; deposits += gross; }
             else if (t.action === 'WITHDRAW') { cash -= gross; withdrawals += gross; }
             else if (t.action === 'BUY' || t.action === 'COVER') cash -= gross + fee;
@@ -1863,7 +2063,6 @@
             else if (t.action === 'DIVIDEND') cash += gross;
             else if (t.action === 'FEE') cash -= gross || fee;
         });
-        const realizedNet = realizedGross + dividends - fees;
         const totalPL = realizedNet + unrealized;
         const totalValue = cash + marketValue;
         const winners = closed.filter(p => (p.realizedPL + p.dividends - p.fees) > 0).length;
@@ -1875,15 +2074,30 @@
     }
 
     function satPositionStats(position) {
-        const rate = satPositionRate(position);
         const price = position.status === 'closed' ? (position.exitPrice || position.currentPrice || position.avgCost) : (position.currentPrice || position.avgCost);
-        const cost = position.quantity * position.avgCost * rate;
-        const value = position.quantity * price * rate;
+        const cost = satConvertNative(position.quantity * position.avgCost, position.currency, 'historical', position);
+        const value = satConvertNative(position.quantity * price, position.currency, 'latest', position);
         const unrealized = position.status === 'open'
-            ? (position.side === 'short' ? (position.avgCost - price) : (price - position.avgCost)) * position.quantity * rate
+            ? satConvertNative(
+                (position.side === 'short' ? (position.avgCost - price) : (price - position.avgCost)) * position.quantity,
+                position.currency, 'latest', position
+            )
             : 0;
-        const realizedNet = (position.realizedPL + position.dividends - position.fees) * rate;
-        return { rate, price, cost, value, unrealized, realizedNet };
+        const linkedTrades = satState().trades.filter(t => t.positionId === position.id);
+        let realizedNet;
+        if (linkedTrades.length) {
+            realizedNet = linkedTrades.reduce((sum, trade) => {
+                let native = trade.action === 'FEE' ? -(trade.price || trade.fees) : trade.realizedPL - trade.fees;
+                if (trade.action === 'DIVIDEND') native += trade.quantity > 0 ? trade.quantity * trade.price : trade.price;
+                return sum + satConvertNative(native, trade.currency, 'historical', trade);
+            }, 0);
+        } else {
+            realizedNet = satConvertNative(
+                position.realizedPL + position.dividends - position.fees,
+                position.currency, 'historical', position
+            );
+        }
+        return { price, cost, value, unrealized, realizedNet };
     }
 
     function satSetClassByValue(el, value) {
@@ -1901,14 +2115,14 @@
             el.textContent = text;
             if (value !== null) satSetClassByValue(el, value);
         };
-        set('sat-total-value', satMoney(m.totalValue));
-        set('sat-total-pl', satSignedMoney(m.totalPL), m.totalPL);
-        set('sat-unrealized-pl', satSignedMoney(m.unrealized), m.unrealized);
-        set('sat-realized-pl', satSignedMoney(m.realizedNet), m.realizedNet);
-        set('sat-cash', satMoney(m.cash), m.cash);
+        set('sat-total-value', satDisplayValue(m.totalValue));
+        set('sat-total-pl', satSignedDisplayValue(m.totalPL), m.totalPL);
+        set('sat-unrealized-pl', satSignedDisplayValue(m.unrealized), m.unrealized);
+        set('sat-realized-pl', satSignedDisplayValue(m.realizedNet), m.realizedNet);
+        set('sat-cash', satDisplayValue(m.cash), m.cash);
         set('sat-open-count', String(m.open.length));
         set('sat-win-rate', m.winRate === null ? '—' : m.winRate.toFixed(1) + '%', m.winRate === null ? 0 : m.winRate - 50);
-        set('sat-net-deposited', satMoney(m.netDeposited), m.netDeposited);
+        set('sat-net-deposited', satDisplayValue(m.netDeposited), m.netDeposited);
         const unrealizedPct = m.costValue > 0 ? m.unrealized / m.costValue * 100 : 0;
         set('sat-unrealized-pct', (unrealizedPct >= 0 ? '+' : '') + unrealizedPct.toFixed(2) + '%', unrealizedPct);
         const longest = m.open.sort((a,b) => satDaysBetween(b.openDate) - satDaysBetween(a.openDate))[0];
@@ -1936,7 +2150,7 @@
             list.innerHTML = open.length ? open.map((p, i) => {
                 const value = values[i];
                 const pct = total > 0 ? value / total * 100 : 0;
-                return `<div class="sat-alloc-row"><span class="sat-alloc-dot" style="background:${SAT_COLORS[i % SAT_COLORS.length]}"></span><span class="sat-alloc-ticker">${satEsc(p.ticker)}<small class="block sat-subtle">${satEsc(p.name || p.side)}</small></span><span class="sat-alloc-value">${satMoney(value)}</span><span class="sat-alloc-pct">${pct.toFixed(1)}%</span></div>`;
+                return `<div class="sat-alloc-row"><span class="sat-alloc-dot" style="background:${SAT_COLORS[i % SAT_COLORS.length]}"></span><span class="sat-alloc-ticker">${satEsc(p.ticker)}<small class="block sat-subtle">${satEsc(p.name || p.side)}</small></span><span class="sat-alloc-value">${satDisplayValue(value)}</span><span class="sat-alloc-pct">${pct.toFixed(1)}%</span></div>`;
             }).join('') : '<div class="sat-empty">Add an open position to build allocation.</div>';
         }
         const canvas = document.getElementById('satAllocationChart');
@@ -1952,7 +2166,7 @@
                 responsive: true, maintainAspectRatio: false, cutout: '58%',
                 plugins: {
                     legend: { display: false },
-                    tooltip: { callbacks: { label: item => values.length ? `${item.label}: ${satMoney(item.raw)} (${total ? (item.raw/total*100).toFixed(1) : 0}%)` : 'No positions' } },
+                    tooltip: { callbacks: { label: item => values.length ? `${item.label}: ${satDisplayValue(item.raw)} (${total ? (item.raw/total*100).toFixed(1) : 0}%)` : 'No positions' } },
                     datalabels: {
                         display: ctx => values.length && ctx.dataset.data[ctx.dataIndex] / total >= .07,
                         color: '#F4F0EC', font: { size: 9, weight: 'bold' },
@@ -1980,11 +2194,10 @@
         let cumulative = 0;
         const byDate = {};
         trades.forEach(t => {
-            const rate = satTradeRate(t);
-            cumulative += t.realizedPL * rate;
-            if (t.action === 'DIVIDEND') cumulative += (t.quantity > 0 ? t.quantity * t.price : t.price) * rate;
-            if (t.action === 'FEE') cumulative -= (t.price || t.fees) * rate;
-            else cumulative -= t.fees * rate;
+            cumulative += satConvertNative(t.realizedPL, t.currency, 'historical', t);
+            if (t.action === 'DIVIDEND') cumulative += satConvertNative(t.quantity > 0 ? t.quantity * t.price : t.price, t.currency, 'historical', t);
+            if (t.action === 'FEE') cumulative -= satConvertNative(t.price || t.fees, t.currency, 'historical', t);
+            else cumulative -= satConvertNative(t.fees, t.currency, 'historical', t);
             byDate[t.date] = cumulative;
         });
         let labels = Object.keys(byDate).sort();
@@ -2000,12 +2213,12 @@
                 responsive: true, maintainAspectRatio: false,
                 scales: {
                     x: { grid: { display: false }, ticks: { color: '#8F8882', maxTicksLimit: 8, font: { size: 9 } } },
-                    y: { grid: { color: 'rgba(73,67,63,.45)' }, ticks: { color: '#8F8882', callback: value => satMoney(value), font: { size: 9 } } }
+                    y: { grid: { color: 'rgba(73,67,63,.45)' }, ticks: { color: '#8F8882', callback: value => satDisplayValue(value), font: { size: 9 } } }
                 },
                 plugins: {
                     legend: { labels: { color: '#CFC8C2', boxWidth: 10, font: { size: 10 } } },
                     datalabels: { display: false },
-                    tooltip: { callbacks: { label: item => ' P/L: ' + satSignedMoney(item.parsed.y) } }
+                    tooltip: { callbacks: { label: item => ' P/L: ' + satSignedDisplayValue(item.parsed.y) } }
                 }
             }
         });
@@ -2025,11 +2238,11 @@
         const mostTraded = Object.entries(counts).sort((a,b) => b[1] - a[1])[0];
         const latest = satState().trades.slice().sort((a,b) => String(b.date).localeCompare(String(a.date)))[0];
         const rows = [
-            ['fa-trophy', 'Best Unrealized', unrealizedRank[0] ? `${unrealizedRank[0].p.ticker} · ${satSignedMoney(unrealizedRank[0].value)}` : '—'],
-            ['fa-arrow-trend-down', 'Worst Unrealized', unrealizedRank.length ? `${unrealizedRank[unrealizedRank.length-1].p.ticker} · ${satSignedMoney(unrealizedRank[unrealizedRank.length-1].value)}` : '—'],
-            ['fa-circle-check', 'Best Realized', realizedRank[0] ? `${realizedRank[0].p.ticker} · ${satSignedMoney(realizedRank[0].value)}` : '—'],
-            ['fa-circle-xmark', 'Worst Realized', realizedRank.length ? `${realizedRank[realizedRank.length-1].p.ticker} · ${satSignedMoney(realizedRank[realizedRank.length-1].value)}` : '—'],
-            ['fa-chart-pie', 'Largest Position', largest ? `${largest.p.ticker} · ${satMoney(largest.value)}` : '—'],
+            ['fa-trophy', 'Best Unrealized', unrealizedRank[0] ? `${unrealizedRank[0].p.ticker} · ${satSignedDisplayValue(unrealizedRank[0].value)}` : '—'],
+            ['fa-arrow-trend-down', 'Worst Unrealized', unrealizedRank.length ? `${unrealizedRank[unrealizedRank.length-1].p.ticker} · ${satSignedDisplayValue(unrealizedRank[unrealizedRank.length-1].value)}` : '—'],
+            ['fa-circle-check', 'Best Realized', realizedRank[0] ? `${realizedRank[0].p.ticker} · ${satSignedDisplayValue(realizedRank[0].value)}` : '—'],
+            ['fa-circle-xmark', 'Worst Realized', realizedRank.length ? `${realizedRank[realizedRank.length-1].p.ticker} · ${satSignedDisplayValue(realizedRank[realizedRank.length-1].value)}` : '—'],
+            ['fa-chart-pie', 'Largest Position', largest ? `${largest.p.ticker} · ${satDisplayValue(largest.value)}` : '—'],
             ['fa-hourglass-half', 'Longest Hold', longest ? `${longest.ticker} · ${satDaysBetween(longest.openDate)} days` : '—'],
             ['fa-repeat', 'Most Traded', mostTraded ? `${mostTraded[0]} · ${mostTraded[1]} records` : '—'],
             ['fa-clock', 'Latest Trade', latest ? `${latest.action} ${latest.ticker || 'Cash'} · ${latest.date}` : '—']
@@ -2051,12 +2264,12 @@
                 <td><button class="sat-ticker hover:underline" onclick="satSelectJournalPosition('${satEsc(p.id)}')">${satEsc(p.ticker)}</button></td>
                 <td><div>${satEsc(p.name || '—')}</div><span class="sat-badge ${p.side} mt-1">${satEsc(p.side)}</span> <span class="sat-badge ${p.status} mt-1">${satEsc(p.status)}</span></td>
                 <td>${p.quantity.toLocaleString(undefined,{maximumFractionDigits:6})}</td>
-                <td>${satMoney(p.avgCost,p.currency,2)}</td>
-                <td>${satMoney(price,p.currency,2)}</td>
-                <td>${satMoney(s.cost)}</td>
-                <td>${satMoney(Math.abs(s.value))}</td>
-                <td class="${s.unrealized >= 0 ? 'sat-positive' : 'sat-negative'}">${p.status === 'open' ? satSignedMoney(s.unrealized) : '—'}</td>
-                <td class="${s.realizedNet >= 0 ? 'sat-positive' : 'sat-negative'}">${satSignedMoney(s.realizedNet)}</td>
+                <td>${satDisplayMoney(p.avgCost,p.currency,'historical',p,2)}</td>
+                <td>${satDisplayMoney(price,p.currency,'latest',p,2)}</td>
+                <td>${satDisplayValue(s.cost)}</td>
+                <td>${satDisplayValue(Math.abs(s.value))}</td>
+                <td class="${s.unrealized >= 0 ? 'sat-positive' : 'sat-negative'}">${p.status === 'open' ? satSignedDisplayValue(s.unrealized) : '—'}</td>
+                <td class="${s.realizedNet >= 0 ? 'sat-positive' : 'sat-negative'}">${satSignedDisplayValue(s.realizedNet)}</td>
                 <td>${weight.toFixed(1)}%</td>
                 <td>${satDaysBetween(p.openDate, p.closeDate || satToday())}</td>
                 <td>${satEsc(p.owner || '—')}</td>
@@ -2102,30 +2315,30 @@
             </div>
             <div class="sat-note-grid">
                 <div class="sat-note-block"><div class="sat-note-label">Position</div><div class="sat-note-value">${satEsc(p.side.toUpperCase())} · ${satEsc(p.status.toUpperCase())} · ${satEsc(p.owner)}</div></div>
-                <div class="sat-note-block"><div class="sat-note-label">Performance</div><div class="sat-note-value ${s.unrealized >= 0 ? 'sat-positive' : 'sat-negative'}">${p.status === 'open' ? satSignedMoney(s.unrealized) + ' unrealized' : satSignedMoney(s.realizedNet) + ' realized'}</div></div>
-                <div class="sat-note-block"><div class="sat-note-label">Take Profit</div><div class="sat-note-value">${p.takeProfit ? satMoney(p.takeProfit,p.currency,2) : 'Not set'}</div></div>
-                <div class="sat-note-block"><div class="sat-note-label">Stop Loss</div><div class="sat-note-value">${p.stopLoss ? satMoney(p.stopLoss,p.currency,2) : 'Not set'}</div></div>
+                <div class="sat-note-block"><div class="sat-note-label">Performance</div><div class="sat-note-value ${s.unrealized >= 0 ? 'sat-positive' : 'sat-negative'}">${p.status === 'open' ? satSignedDisplayValue(s.unrealized) + ' unrealized' : satSignedDisplayValue(s.realizedNet) + ' realized'}</div></div>
+                <div class="sat-note-block"><div class="sat-note-label">Take Profit</div><div class="sat-note-value">${p.takeProfit ? satDisplayMoney(p.takeProfit,p.currency,'latest',p,2) : 'Not set'}</div></div>
+                <div class="sat-note-block"><div class="sat-note-label">Stop Loss</div><div class="sat-note-value">${p.stopLoss ? satDisplayMoney(p.stopLoss,p.currency,'latest',p,2) : 'Not set'}</div></div>
                 <div class="sat-note-block wide"><div class="sat-note-label">Entry Thesis</div><div class="sat-note-value">${satEsc(p.thesis || 'No thesis recorded.')}</div></div>
                 <div class="sat-note-block wide"><div class="sat-note-label">Review Note</div><div class="sat-note-value">${satEsc(p.review || 'No review note yet.')}</div></div>
                 <div class="sat-note-block wide"><div class="sat-note-label">Tags / Platform</div><div class="sat-note-value">${satEsc(p.tags || 'No tags')} · ${satEsc(p.platform || 'No platform')}</div></div>
             </div>`;
     }
 
-    function satTradeAmountTHB(trade) {
+    function satTradeAmountDisplay(trade) {
         const amount = trade.quantity > 0 ? trade.quantity * trade.price : trade.price;
-        return amount * satTradeRate(trade);
+        return satConvertNative(amount, trade.currency, 'historical', trade);
     }
 
     function satTradeRow(trade, editable=false) {
-        const amount = satTradeAmountTHB(trade);
+        const amount = satTradeAmountDisplay(trade);
         return `<tr>
             <td>${satEsc(trade.date)}</td>
             <td><span class="sat-ticker">${satEsc(trade.ticker || 'CASH')}</span></td>
             <td><span class="sat-badge ${trade.action.toLowerCase()}">${satEsc(trade.action)}</span></td>
             <td>${trade.quantity ? trade.quantity.toLocaleString(undefined,{maximumFractionDigits:6}) : '—'}</td>
-            <td>${satMoney(trade.price,trade.currency,2)}</td>
-            ${editable ? `<td>${satMoney(trade.fees,trade.currency,2)}</td>` : ''}
-            <td>${satMoney(amount)}</td>
+            <td>${satDisplayMoney(trade.price,trade.currency,'historical',trade,2)}</td>
+            ${editable ? `<td>${satDisplayMoney(trade.fees,trade.currency,'historical',trade,2)}</td>` : ''}
+            <td>${satDisplayValue(amount)}</td>
             <td>${satEsc(trade.platform || '—')}</td>
             <td>${satEsc(trade.owner || '—')}</td>
             ${editable ? `<td style="max-width:240px;overflow:hidden;text-overflow:ellipsis" title="${satEsc(trade.note)}">${satEsc(trade.note || '—')}</td><td><button class="sat-btn" style="min-height:28px;padding:4px 8px" onclick="satEditTradeNote('${satEsc(trade.id)}')" title="Edit trade note"><i class="fa-solid fa-note-sticky"></i></button></td>` : ''}
@@ -2161,6 +2374,7 @@
     }
 
     function satRenderAll() {
+        satRenderFxStatus();
         satRenderSummary();
         satRenderPerformance();
         satRenderAllocation();
@@ -2186,6 +2400,54 @@
         if (isSatellite) requestAnimationFrame(satRenderAll);
     }
 
+    async function satExecutionFx(date, currency, saved={}) {
+        if (currency === 'THB') {
+            return { rate: 1, requestedDate: date, rateDate: date, source: 'Native THB', fallback: false };
+        }
+        const sameSavedExecution = !saved.openDate || toIsoDashboardDate(saved.openDate) === toIsoDashboardDate(date);
+        if (satNumber(saved.fxRate) > 0 && sameSavedExecution) {
+            return satResolveHistoricalFx(date, saved.fxRate, saved.fxDate, saved.fxSource);
+        }
+        try {
+            return await satFetchHistoricalFx(date);
+        } catch (error) {
+            const fallback = satResolveHistoricalFx(date, saved.fxRate, saved.fxDate, saved.fxSource);
+            satState().fx.warning = `Historical FX for ${date || 'unknown date'} unavailable; using ${fallback.source}.`;
+            return fallback;
+        }
+    }
+
+    function satFxPreviewText(fx) {
+        if (!fx) return 'Select date and currency';
+        if (fx.rate === 1 && fx.source === 'Native THB') return 'THB transaction · no conversion required';
+        return `1 USD = ฿${fx.rate.toFixed(4)} · ${fx.rateDate} · ${fx.source}${fx.fallback ? ' (fallback)' : ''}`;
+    }
+
+    async function satUpdateTradeFxPreview() {
+        const target = document.getElementById('sat-trade-fx-info');
+        if (!target) return;
+        const date = document.getElementById('sat-trade-date')?.value;
+        const currency = document.getElementById('sat-trade-currency')?.value || 'USD';
+        if (!date) { target.textContent = 'Select execution date'; return; }
+        target.textContent = currency === 'USD' ? 'Loading historical USD/THB...' : 'THB transaction · no conversion required';
+        const fx = await satExecutionFx(date, currency);
+        target.textContent = satFxPreviewText(fx);
+        target.classList.toggle('warning', fx.fallback);
+        satRenderFxStatus();
+    }
+
+    async function satUpdatePositionFxPreview(saved={}) {
+        const target = document.getElementById('sat-pos-fx-info');
+        if (!target) return;
+        const date = document.getElementById('sat-pos-open-date')?.value;
+        const currency = document.getElementById('sat-pos-currency')?.value || 'USD';
+        if (!date) { target.textContent = 'Select open date'; return; }
+        target.textContent = currency === 'USD' ? 'Loading historical USD/THB...' : 'THB position · no conversion required';
+        const fx = await satExecutionFx(date, currency, saved);
+        target.textContent = satFxPreviewText(fx);
+        target.classList.toggle('warning', fx.fallback);
+    }
+
     function satOpenPositionModal(id='') {
         const p = id ? satState().positions.find(item => item.id === id) : null;
         const value = (key, fallback='') => p ? (p[key] ?? fallback) : fallback;
@@ -2204,7 +2466,6 @@
         document.getElementById('sat-pos-realized').value = value('realizedPL',0);
         document.getElementById('sat-pos-dividends').value = value('dividends',0);
         document.getElementById('sat-pos-currency').value = value('currency','USD');
-        document.getElementById('sat-pos-fx').value = value('fxRate',getActiveRate() || '');
         document.getElementById('sat-pos-platform').value = value('platform');
         document.getElementById('sat-pos-owner').value = value('owner','Nine');
         document.getElementById('sat-pos-tp').value = value('takeProfit',0) || '';
@@ -2215,21 +2476,27 @@
         document.getElementById('sat-pos-review').value = value('review');
         document.getElementById('sat-position-delete-btn').classList.toggle('hidden', !p);
         document.getElementById('sat-position-modal').classList.add('open');
+        satUpdatePositionFxPreview(p || {});
     }
 
     function satClosePositionModal() { document.getElementById('sat-position-modal')?.classList.remove('open'); }
 
-    function satSubmitPosition(event) {
+    async function satSubmitPosition(event) {
         event.preventDefault();
         const id = document.getElementById('sat-pos-id').value || satId('pos');
         const existingIndex = satState().positions.findIndex(p => p.id === id);
+        const existing = existingIndex >= 0 ? satState().positions[existingIndex] : {};
+        const currency = document.getElementById('sat-pos-currency').value;
+        const openDate = document.getElementById('sat-pos-open-date').value;
+        const existingForFx = toIsoDashboardDate(existing.openDate) === toIsoDashboardDate(openDate) ? existing : {};
+        const fx = await satExecutionFx(openDate, currency, existingForFx);
         const position = satNormalizePosition({
             id,
             ticker: document.getElementById('sat-pos-ticker').value,
             name: document.getElementById('sat-pos-name').value,
             side: document.getElementById('sat-pos-side').value,
             status: document.getElementById('sat-pos-status').value,
-            openDate: document.getElementById('sat-pos-open-date').value,
+            openDate,
             closeDate: document.getElementById('sat-pos-close-date').value,
             quantity: document.getElementById('sat-pos-qty').value,
             avgCost: document.getElementById('sat-pos-avg-cost').value,
@@ -2237,8 +2504,10 @@
             exitPrice: document.getElementById('sat-pos-exit-price').value,
             realizedPL: document.getElementById('sat-pos-realized').value,
             dividends: document.getElementById('sat-pos-dividends').value,
-            currency: document.getElementById('sat-pos-currency').value,
-            fxRate: document.getElementById('sat-pos-fx').value,
+            currency,
+            fxRate: fx.rate,
+            fxDate: fx.rateDate,
+            fxSource: fx.source,
             platform: document.getElementById('sat-pos-platform').value,
             owner: document.getElementById('sat-pos-owner').value,
             takeProfit: document.getElementById('sat-pos-tp').value,
@@ -2287,10 +2556,10 @@
         document.getElementById('sat-trade-date').value = satToday();
         document.getElementById('sat-trade-action').value = 'BUY';
         document.getElementById('sat-trade-currency').value = 'USD';
-        document.getElementById('sat-trade-fx').value = getActiveRate() || '';
         document.getElementById('sat-trade-owner').value = 'Nine';
         satTradeActionChanged();
         satRenderPositionOptions();
+        satUpdateTradeFxPreview();
     }
 
     function satTradePositionChanged() {
@@ -2298,14 +2567,13 @@
         if (!p) return;
         document.getElementById('sat-trade-ticker').value = p.ticker;
         document.getElementById('sat-trade-currency').value = p.currency;
-        document.getElementById('sat-trade-fx').value = p.fxRate || getActiveRate() || '';
         document.getElementById('sat-trade-platform').value = p.platform;
         document.getElementById('sat-trade-owner').value = p.owner || 'Nine';
+        satUpdateTradeFxPreview();
     }
 
     function satTradeCurrencyChanged() {
-        if (document.getElementById('sat-trade-currency').value === 'THB') document.getElementById('sat-trade-fx').value = 1;
-        else if (!satNumber(document.getElementById('sat-trade-fx').value)) document.getElementById('sat-trade-fx').value = getActiveRate() || '';
+        satUpdateTradeFxPreview();
     }
 
     function satTradeActionChanged() {
@@ -2319,7 +2587,7 @@
         if (priceLabel) priceLabel.textContent = cashAction ? 'Total Amount' : 'Price';
     }
 
-    function satSubmitTrade(event) {
+    async function satSubmitTrade(event) {
         event.preventDefault();
         const action = document.getElementById('sat-trade-action').value;
         const positionId = document.getElementById('sat-trade-position').value;
@@ -2329,6 +2597,9 @@
         const qty = Math.max(0, satNumber(document.getElementById('sat-trade-qty').value));
         const price = Math.max(0, satNumber(document.getElementById('sat-trade-price').value));
         const fees = Math.max(0, satNumber(document.getElementById('sat-trade-fees').value));
+        const tradeDate = document.getElementById('sat-trade-date').value;
+        const tradeCurrency = document.getElementById('sat-trade-currency').value;
+        const fx = await satExecutionFx(tradeDate, tradeCurrency);
         let effectiveQty = qty;
         if (!['DEPOSIT','WITHDRAW','DIVIDEND','FEE'].includes(action) && (!qty || !price)) {
             alert('Quantity and price are required for this action.');
@@ -2345,9 +2616,10 @@
         if (!position && ['BUY','SHORT'].includes(action)) {
             position = satNormalizePosition({
                 id: satId('pos'), ticker, name: '', side: action === 'SHORT' ? 'short' : 'long', status: 'open',
-                openDate: document.getElementById('sat-trade-date').value, quantity: 0, avgCost: 0,
-                currentPrice: price, currency: document.getElementById('sat-trade-currency').value,
-                fxRate: document.getElementById('sat-trade-fx').value, platform: document.getElementById('sat-trade-platform').value,
+                openDate: tradeDate, quantity: 0, avgCost: 0,
+                currentPrice: price, currency: tradeCurrency,
+                fxRate: fx.rate, fxDate: fx.rateDate, fxSource: fx.source,
+                platform: document.getElementById('sat-trade-platform').value,
                 owner: document.getElementById('sat-trade-owner').value
             });
             satState().positions.push(position);
@@ -2363,8 +2635,20 @@
                 return;
             }
             if (action === 'BUY' || action === 'SHORT') {
+                const oldQty = position.quantity;
+                const oldAvgCost = position.avgCost;
                 const newQty = position.quantity + qty;
                 position.avgCost = newQty > 0 ? ((position.quantity * position.avgCost) + (qty * price)) / newQty : price;
+                if (position.currency === 'USD' && newQty > 0) {
+                    const oldRate = satResolveHistoricalFx(position.openDate, position.fxRate, position.fxDate, position.fxSource).rate;
+                    const oldNativeCost = oldQty * oldAvgCost;
+                    const newNativeCost = qty * price;
+                    position.fxRate = oldNativeCost + newNativeCost > 0
+                        ? ((oldNativeCost * oldRate) + (newNativeCost * fx.rate)) / (oldNativeCost + newNativeCost)
+                        : fx.rate;
+                    position.fxDate = tradeDate;
+                    position.fxSource = oldQty > 0 ? 'Weighted historical execution rates' : fx.source;
+                }
                 position.quantity = newQty;
                 position.status = 'open';
                 position.closeDate = '';
@@ -2378,7 +2662,7 @@
                 position.exitPrice = price;
                 if (position.quantity === 0) {
                     position.status = 'closed';
-                    position.closeDate = document.getElementById('sat-trade-date').value;
+                    position.closeDate = tradeDate;
                 }
             } else if (action === 'DIVIDEND') {
                 position.dividends += price;
@@ -2387,16 +2671,17 @@
             }
             if (!['FEE'].includes(action)) position.fees += fees;
             position.currentPrice = price || position.currentPrice;
-            position.fxRate = satNumber(document.getElementById('sat-trade-fx').value) || position.fxRate;
             position.platform = document.getElementById('sat-trade-platform').value || position.platform;
             position.owner = document.getElementById('sat-trade-owner').value || position.owner;
             position.updatedAt = new Date().toISOString();
         }
         const trade = satNormalizeTrade({
-            id: satId('trade'), positionId: position?.id || '', date: document.getElementById('sat-trade-date').value,
+            id: satId('trade'), positionId: position?.id || '', date: tradeDate,
             ticker: position?.ticker || ticker, action, quantity: effectiveQty, price, fees,
-            currency: document.getElementById('sat-trade-currency').value,
-            fxRate: document.getElementById('sat-trade-fx').value,
+            currency: tradeCurrency,
+            fxRate: fx.rate,
+            fxDate: fx.rateDate,
+            fxSource: fx.source,
             platform: document.getElementById('sat-trade-platform').value,
             note: document.getElementById('sat-trade-note').value,
             owner: document.getElementById('sat-trade-owner').value,
@@ -2420,8 +2705,8 @@
 
     function satExportTrades() {
         if (!satState().trades.length) return;
-        const headers = ['Date','Ticker','Action','Quantity','Price','Fees','Currency','FX Rate','Platform','Owner','Reference','Note','Realized P/L'];
-        const lines = [headers, ...satState().trades.map(t => [t.date,t.ticker,t.action,t.quantity,t.price,t.fees,t.currency,t.fxRate,t.platform,t.owner,t.reference,t.note,t.realizedPL])];
+        const headers = ['Date','Ticker','Action','Quantity','Price','Fees','Currency','FX Rate','FX Date','FX Source','Platform','Owner','Reference','Note','Realized P/L'];
+        const lines = [headers, ...satState().trades.map(t => [t.date,t.ticker,t.action,t.quantity,t.price,t.fees,t.currency,t.fxRate,t.fxDate,t.fxSource,t.platform,t.owner,t.reference,t.note,t.realizedPL])];
         const csv = lines.map(row => row.map(value => `"${String(value ?? '').replace(/"/g,'""')}"`).join(',')).join('\n');
         const link = document.createElement('a');
         link.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
@@ -2451,6 +2736,7 @@
             satState().trades = data.trades.map(satNormalizeTrade).filter(t => t.date && t.action);
             satSaveLocal();
             satRenderAll();
+            satWarmFxRates().catch(error => console.warn('Satellite FX warm-up failed:', error));
             return true;
         } catch (e) {
             if (!silent) console.warn('Satellite pull error:', e);
@@ -4101,6 +4387,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
 
         satApplyWorkspace();
         updateDashboard(); renderMonthlyTiers(); satRenderAll();
+        satWarmFxRates().catch(error => console.warn('Satellite FX warm-up failed:', error));
         fetchFearGreedIndexes();
         document.getElementById('tx-date').valueAsDate = new Date();
         satResetTradeForm();
