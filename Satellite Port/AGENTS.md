@@ -41,6 +41,7 @@
 - `FEE`: ค่าธรรมเนียมที่บันทึกแยก
 - `DEPOSIT`: เงินเข้า Satellite Port
 - `WITHDRAW`: เงินออก Satellite Port
+- `CASH_BALANCE`: Snapshot ของ cash ปัจจุบัน ใช้กำหนดยอด cash โดยตรง ไม่ใช่เงินฝากใหม่
 
 ห้ามใช้ `SELL` เพื่อเปิด Short และห้ามใช้ `BUY` เพื่อปิด Short
 
@@ -57,10 +58,14 @@
 | `price` | ราคาต่อหน่วย; cash movement ใช้ยอดรวม |
 | `fees` | ค่าธรรมเนียมใน currency ของรายการ |
 | `currency` | `USD` หรือ `THB` |
-| `fxRate` | USD/THB ณ รายการ; THB ใช้ `1` |
+| `fxRate` | Dashboard เติม USD/THB ตาม execution date อัตโนมัติ; THB ใช้ `1` |
+| `fxDate` | วันที่อัตรา FX ที่ API ส่งกลับ (อาจเป็นวันทำการก่อนหน้า) |
+| `fxSource` | แหล่งอัตรา FX หรือชื่อ fallback ที่ระบบใช้ |
 | `platform` | ชื่อ Exchange/Broker |
 | `note` | execution note หรือเหตุผลที่เกี่ยวข้อง |
 | `owner` | `Nine`, `Loki` หรือ `Nine + Loki` |
+| `tags` | setup หรือกลยุทธ์ เช่น `swing, breakout, earnings` |
+| `pairNote` | review ของคู่ entry/exit; สำหรับรายการที่ยังถือให้เก็บที่ entry trade |
 | `reference` | Order ID / Trade ID จาก source เมื่อมี |
 | `realizedPL` | P/L ต่อรายการใน currency เดิม; คำนวณเฉพาะ SELL/COVER |
 | `createdAt` | ISO timestamp |
@@ -80,7 +85,8 @@
 | `exitPrice` | ราคาปิดล่าสุด/เฉลี่ยเมื่อปิด |
 | `realizedPL` | Realized P/L สะสมก่อน FX conversion |
 | `dividends`, `fees` | ยอดสะสมใน currency ของ position |
-| `currency`, `fxRate` | Currency และ USD/THB ที่ใช้แสดงผล |
+| `currency`, `fxRate` | Native currency และ weighted historical entry FX; ห้ามแปลงค่าต้นฉบับเพื่อเปลี่ยน display |
+| `fxDate`, `fxSource` | วันที่และแหล่งอัตรา entry FX ล่าสุดที่บันทึก |
 | `platform`, `owner` | แหล่งถือ position และผู้รับผิดชอบ |
 | `takeProfit`, `stopLoss` | TP/SL จาก Nine; ถ้าไม่ให้มาใช้ค่าว่าง |
 | `tags` | กลยุทธ์หรือหมวด เช่น `swing, momentum` |
@@ -125,6 +131,14 @@ date + platform + ticker + action + quantity + price + fees
 - ถ้าข้อมูลถูก mask หรือ crop ให้ระบุ field ที่ขาด
 - ไม่เก็บ account number, email, address หรือข้อมูลส่วนตัวลง note
 
+### Confirmed Platform UI
+
+- Screenshot หน้า position detail แบบ Webull ที่มี `Open P&L(USD)`, `Market Value`,
+  `Total Cost`, `Average Price`, `Filled Records` และปุ่ม `Sell to Close / Buy /
+  Quotes` ให้ระบุ `platform` เป็น `Webull`
+- ใช้ mapping นี้เฉพาะเมื่อองค์ประกอบ UI ตรงกับรูปแบบที่ Nine ยืนยันแล้ว หาก UI
+  แตกต่างหรือมีข้อขัดแย้ง ให้ถามก่อนระบุ platform
+
 ## Chat Parsing
 
 ข้อมูลขั้นต่ำสำหรับ execution:
@@ -144,7 +158,7 @@ date + platform + ticker + action + quantity + price + fees
 - Owner
 - Position side เมื่อ action คลุมเครือ
 
-TP, SL, thesis, tags และ review เป็น Position Journal ไม่ใช่ execution field
+TP, SL และ thesis เป็น Position Journal ส่วน `tags` และ `pairNote` สามารถใส่ที่ execution เพื่อใช้ใน Trade Log LIST/PAIR ได้
 
 ## Safety
 

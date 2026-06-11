@@ -51,7 +51,22 @@ TP 165, SL 139, Owner Nine
 - `Satellite_positions`: สถานะล่าสุด แผนการเทรด TP/SL และ Position Journal
 - `Satellite_trades`: Execution log และ cash movement ทุกครั้ง
 
+หน้า Satellite Trade Log มี 2 มุมมอง:
+
+- `LIST`: ดู execution ทุกบรรทัด กด ticker เพื่อเน้นรายการของ ticker เดียวกัน
+- `PAIR`: จับคู่ BUY/SELL และ SHORT/COVER แบบ FIFO พร้อมระยะเวลาถือ, P/L, P/L % และ review note ที่พับเก็บได้
+
 แถวที่ 3 เป็นชื่อ columns ห้ามเปลี่ยนชื่อหรือสลับลำดับโดยไม่แก้ Apps Script ให้ตรงกัน
+
+Dashboard เก็บราคา จำนวน และ P/L ใน native currency (`USD` หรือ `THB`) ตามเดิม
+ปุ่ม USD/THB เปลี่ยนเฉพาะการคำนวณและการแสดงผล ไม่เขียนทับค่าต้นฉบับใน Sheets
+
+- Cost และ realized P/L ใช้ historical USD/THB ตาม execution date
+- Current market value และ unrealized P/L ใช้ USD/THB ล่าสุด
+- `fxRate`, `fxDate`, `fxSource` ถูกเติมอัตโนมัติ; ไม่ต้องพิมพ์ FX เอง
+- `tags` ใช้จัดกลุ่ม setup เช่น `swing`, `breakout`, `earnings`
+- `pairNote` ใช้บันทึก post-trade review ของคู่ entry/exit
+- ถ้า API ใช้ไม่ได้ Dashboard จะแสดงชื่อ fallback และใช้ cache/`Setting_data` อย่างชัดเจน
 
 ## หลักสำคัญ
 

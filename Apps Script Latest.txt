@@ -5,6 +5,7 @@
 //  GET  ?action=settings_read   → settingsRead
 //  GET  ?action=wheel_read      → wheelRead
 //  GET  ?action=satellite_read  → satelliteRead
+//  GET  ?action=satellite_benchmark → satelliteBenchmark
 //  POST action=wheel_write      → wheelWrite
 //  POST action=satellite_write  → satelliteWrite
 // ============================================================
@@ -24,6 +25,7 @@ function doGet(e) {
   if (p.action === 'settings_read')    return settingsRead();
   if (p.action === 'wheel_read')       return wheelRead();
   if (p.action === 'satellite_read')   return satelliteRead();
+  if (p.action === 'satellite_benchmark') return satelliteBenchmark(p);
   return investRead();
 }
 
@@ -380,13 +382,13 @@ function settingPercent(v) {
 var SAT_POSITION_HEADERS = [
   'id','ticker','name','side','status','openDate','closeDate','quantity',
   'avgCost','currentPrice','exitPrice','realizedPL','dividends','fees',
-  'currency','fxRate','platform','owner','takeProfit','stopLoss','tags',
+  'currency','fxRate','fxDate','fxSource','platform','owner','takeProfit','stopLoss','tags',
   'thesis','review','updatedAt'
 ];
 
 var SAT_TRADE_HEADERS = [
   'id','positionId','date','ticker','action','quantity','price','fees',
-  'currency','fxRate','platform','note','owner','reference','realizedPL','createdAt'
+  'currency','fxRate','fxDate','fxSource','platform','note','owner','tags','pairNote','reference','realizedPL','createdAt'
 ];
 
 function satelliteRead() {
@@ -412,6 +414,75 @@ function satelliteWrite(data) {
     return jsonOut({ ok: true, timestamp: new Date().toISOString() });
   } catch (err) {
     return jsonOut({ error: err.message });
+  }
+}
+
+function satelliteBenchmark(p) {
+  try {
+    var benchmark = p.benchmark === 'nasdaq' ? 'nasdaq' : 'sp500';
+    var seriesId = benchmark === 'nasdaq' ? 'NASDAQCOM' : 'SP500';
+    var name = benchmark === 'nasdaq' ? 'Nasdaq Composite' : 'S&P 500';
+    var start = String(p.start || '').trim();
+    var end = String(p.end || '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)) {
+      return jsonOut({ error: 'Invalid benchmark date range' });
+    }
+
+    var cache = CacheService.getScriptCache();
+    var cacheKey = ['sat-benchmark', benchmark, start, end].join(':');
+    var cached = cache.get(cacheKey);
+    if (cached) return jsonOut(JSON.parse(cached));
+
+    var startDate = new Date(start + 'T00:00:00Z');
+    var queryStart = Utilities.formatDate(new Date(startDate.getTime() - 7 * 86400000), 'UTC', 'yyyy-MM-dd');
+    var url = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id='
+      + encodeURIComponent(seriesId)
+      + '&cosd=' + encodeURIComponent(queryStart)
+      + '&coed=' + encodeURIComponent(end);
+    var response = UrlFetchApp.fetch(url, {
+      muteHttpExceptions: true
+    });
+    if (response.getResponseCode() !== 200) {
+      return jsonOut({ error: 'Benchmark provider unavailable' });
+    }
+
+    var csvRows = Utilities.parseCsv(response.getContentText());
+    if (!csvRows || csvRows.length < 2) return jsonOut({ error: 'Benchmark data unavailable' });
+    var rawPoints = [];
+    for (var i = 1; i < csvRows.length; i++) {
+      var date = String(csvRows[i][0] || '').trim();
+      var close = Number(csvRows[i][1]);
+      if (!isFinite(close) || close <= 0) continue;
+      if (date > end) continue;
+      rawPoints.push({ date: date, close: close });
+    }
+    if (!rawPoints.length) return jsonOut({ error: 'No benchmark prices in selected range' });
+
+    var basePoint = rawPoints[0];
+    for (var j = 0; j < rawPoints.length; j++) {
+      if (rawPoints[j].date < start) basePoint = rawPoints[j];
+      else break;
+    }
+    var displayPoints = rawPoints.filter(function(point) { return point.date >= start; });
+    if (!displayPoints.length) return jsonOut({ error: 'No benchmark prices in selected range' });
+    var base = basePoint.close;
+    var output = {
+      benchmark: benchmark,
+      name: name,
+      source: 'FRED',
+      start: start,
+      end: end,
+      points: displayPoints.map(function(point) {
+        return {
+          date: point.date,
+          returnPct: (point.close / base - 1) * 100
+        };
+      })
+    };
+    cache.put(cacheKey, JSON.stringify(output), 21600);
+    return jsonOut(output);
+  } catch (err) {
+    return jsonOut({ error: 'Benchmark error: ' + err.message });
   }
 }
 
