@@ -1337,20 +1337,20 @@
                             </div>
                             <div class="sat-actions">
                                 <div class="sat-segment" id="sat-trade-log-mode">
-                                    <button type="button" data-mode="list" class="active" onclick="satSetTradeLogMode('list')">LIST</button>
-                                    <button type="button" data-mode="pair" onclick="satSetTradeLogMode('pair')">PAIR</button>
+                                    <button type="button" data-mode="list" onclick="satSetTradeLogMode('list')">LIST</button>
+                                    <button type="button" data-mode="pair" class="active" onclick="satSetTradeLogMode('pair')">PAIR</button>
                                 </div>
                                 <input id="sat-trade-log-search" type="search" class="sat-input" style="width:220px" placeholder="Search ticker, action, tag..." oninput="satRenderFullTradeLog()">
                                 <button class="sat-btn" onclick="satExportTrades()"><i class="fa-solid fa-file-export"></i> Export CSV</button>
                             </div>
                         </div>
-                        <div id="sat-trade-list-view" class="sat-table-wrap" style="max-height:620px">
+                        <div id="sat-trade-list-view" class="sat-table-wrap hidden" style="max-height:620px">
                             <table class="sat-table">
                                 <thead><tr><th>Date</th><th>Ticker</th><th>Action</th><th>Tag</th><th>Qty</th><th>Price</th><th>Fees</th><th>Amount</th><th>Note</th><th></th></tr></thead>
                                 <tbody id="sat-full-trades-tbody"></tbody>
                             </table>
                         </div>
-                        <div id="sat-trade-pair-view" class="sat-pair-list hidden"></div>
+                        <div id="sat-trade-pair-view" class="sat-pair-list"></div>
                         <div id="sat-full-trades-empty" class="sat-empty hidden">No matching trade records.</div>
                     </section>
                 </div>
@@ -1764,7 +1764,7 @@
             performanceMode: localStorage.getItem('satellite_performance_mode_v1') === 'percent' ? 'percent' : 'value',
             performanceBenchmark: localStorage.getItem('satellite_performance_benchmark_v1') === 'nasdaq' ? 'nasdaq' : 'sp500',
             benchmarkCache: {},
-            tradeLogMode: 'list',
+            tradeLogMode: 'pair',
             focusedTradeTicker: '',
             expandedPairNotes: {},
             journalStatus: 'open',
@@ -2641,7 +2641,12 @@
                 noteTrade: lot.trade
             });
         });
-        return pairs.sort((a,b) => String(b.exitDate || b.entryDate).localeCompare(String(a.exitDate || a.entryDate)));
+        return pairs.sort((a,b) => {
+            const statusOrder = { holding: 0, closed: 1 };
+            const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+            if (statusDiff) return statusDiff;
+            return String(b.exitDate || b.entryDate).localeCompare(String(a.exitDate || a.entryDate));
+        });
     }
 
     function satTogglePairNote(key) {
