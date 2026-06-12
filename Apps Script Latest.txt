@@ -382,13 +382,13 @@ function settingPercent(v) {
 var SAT_POSITION_HEADERS = [
   'id','ticker','name','side','status','openDate','closeDate','quantity',
   'avgCost','currentPrice','exitPrice','realizedPL','dividends','fees',
-  'currency','fxRate','fxDate','fxSource','platform','owner','takeProfit','stopLoss','tags',
+  'currency','fxRate','fxDate','fxSource','platform','takeProfit','stopLoss','tags',
   'thesis','review','updatedAt'
 ];
 
 var SAT_TRADE_HEADERS = [
   'id','positionId','date','ticker','action','quantity','price','fees',
-  'currency','fxRate','fxDate','fxSource','platform','note','owner','tags','pairNote','reference','realizedPL','createdAt'
+  'currency','fxRate','fxDate','fxSource','platform','note','tags','pairNote','reference','realizedPL','createdAt'
 ];
 
 function satelliteRead() {
@@ -472,9 +472,11 @@ function satelliteBenchmark(p) {
       source: 'FRED',
       start: start,
       end: end,
+      updatedThrough: rawPoints[rawPoints.length - 1].date,
       points: displayPoints.map(function(point) {
         return {
           date: point.date,
+          close: point.close,
           returnPct: (point.close / base - 1) * 100
         };
       })

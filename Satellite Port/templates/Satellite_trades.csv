@@ -1,2 +1,2 @@
-id,positionId,date,ticker,action,quantity,price,fees,currency,fxRate,fxDate,fxSource,platform,note,owner,tags,pairNote,reference,realizedPL,createdAt
-trade-example-001,pos-example-long,2026-06-10,NVDA,BUY,2,147.50,0.35,USD,32.60,2026-06-10,Frankfurter (central-bank reference),IBKR,Example only,Nine,"swing, breakout",Review after exit,ORDER-EXAMPLE,0,2026-06-10T10:00:00.000Z
+id,positionId,date,ticker,action,quantity,price,fees,currency,fxRate,fxDate,fxSource,platform,note,tags,pairNote,reference,realizedPL,createdAt
+trade-example-001,pos-example-long,2026-06-10,NVDA,BUY,2,147.50,0.35,USD,32.60,2026-06-10,Frankfurter (central-bank reference),IBKR,Example only,"swing, breakout",Review after exit,ORDER-EXAMPLE,0,2026-06-10T10:00:00.000Z

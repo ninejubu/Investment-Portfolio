@@ -1,8 +1,12 @@
-# Loki Instructions: Satellite Port
+# Loki Instructions: Portfolio Data
 
 ## Mission
 
-ช่วย Nine รับข้อมูลการเทรดจาก Screenshot, PDF, CSV หรือข้อความแชท แล้วบันทึกให้ถูกต้องใน Satellite Port โดยรักษา `Satellite_trades` เป็น audit trail และอัปเดต `Satellite_positions` ให้ตรงกับสถานะล่าสุด
+ช่วย Nine รับข้อมูลการเทรดจาก Screenshot, PDF, CSV หรือข้อความแชท แล้วบันทึกให้ถูกต้องใน Investment Dashboard ครอบคลุม Main Port, Satellite Port และ Wheel Strategy
+
+- Main Port: บันทึก transaction และ holdings ตาม schema ของ Core Portfolio
+- Satellite Port: รักษา `Satellite_trades` เป็น audit trail และอัปเดต `Satellite_positions`
+- Wheel Strategy: บันทึก open options ใน `Wheel_orders` และรายการที่ปิดแล้วใน `Wheel_history`
 
 ไฟล์ UI และ calculation หลักอยู่ที่ `../index.html` ส่วน Apps Script อยู่ที่ `../Apps Script Latest.txt`
 
@@ -20,7 +24,7 @@
 
 ## Required Workflow
 
-1. ระบุ source, platform, owner และช่วงวันที่
+1. ระบุ source, platform และช่วงวันที่
 2. Extract รายการแบบ execution-by-execution
 3. Normalize วันที่เป็น `YYYY-MM-DD`, ticker เป็นตัวพิมพ์ใหญ่ และ action ตามรายการที่รองรับ
 4. ตรวจ duplicate ก่อนบันทึก
@@ -62,8 +66,7 @@
 | `fxDate` | วันที่อัตรา FX ที่ API ส่งกลับ (อาจเป็นวันทำการก่อนหน้า) |
 | `fxSource` | แหล่งอัตรา FX หรือชื่อ fallback ที่ระบบใช้ |
 | `platform` | ชื่อ Exchange/Broker |
-| `note` | execution note หรือเหตุผลที่เกี่ยวข้อง |
-| `owner` | `Nine`, `Loki` หรือ `Nine + Loki` |
+| `note` | เว้นว่างเป็นค่าเริ่มต้น; เติมเฉพาะเมื่อ Nine ระบุให้ใส่หรือ source จำเป็นต่อการตีความ |
 | `tags` | setup หรือกลยุทธ์ เช่น `swing, breakout, earnings` |
 | `pairNote` | review ของคู่ entry/exit; สำหรับรายการที่ยังถือให้เก็บที่ entry trade |
 | `reference` | Order ID / Trade ID จาก source เมื่อมี |
@@ -87,7 +90,7 @@
 | `dividends`, `fees` | ยอดสะสมใน currency ของ position |
 | `currency`, `fxRate` | Native currency และ weighted historical entry FX; ห้ามแปลงค่าต้นฉบับเพื่อเปลี่ยน display |
 | `fxDate`, `fxSource` | วันที่และแหล่งอัตรา entry FX ล่าสุดที่บันทึก |
-| `platform`, `owner` | แหล่งถือ position และผู้รับผิดชอบ |
+| `platform` | แหล่งถือ position |
 | `takeProfit`, `stopLoss` | TP/SL จาก Nine; ถ้าไม่ให้มาใช้ค่าว่าง |
 | `tags` | กลยุทธ์หรือหมวด เช่น `swing, momentum` |
 | `thesis` | เหตุผลเข้า position และ invalidation |
@@ -130,6 +133,24 @@ date + platform + ticker + action + quantity + price + fees
 - ถ้า PDF มีหลายหน้า ให้ตรวจ page count และสรุปจำนวน execution ที่พบ
 - ถ้าข้อมูลถูก mask หรือ crop ให้ระบุ field ที่ขาด
 - ไม่เก็บ account number, email, address หรือข้อมูลส่วนตัวลง note
+- เวลา add transaction ปกติไม่ต้องใส่ `note` เว้นแต่ Nine สั่งให้เติมหรือมีข้อมูลสำคัญที่ถ้าไม่เก็บแล้วจะตีความรายการผิด
+
+## Wheel Options Extraction
+
+- อ่าน symbol รูปแบบ `ASSET-YYMMDD-STRIKE-P/C` เช่น
+  `BTC-260619-55000-P`
+- แปลง expiry `YYMMDD` เป็น `YYYY-MM-DD`
+- `P` + `Sell` หมายถึง `Short Put`; `C` + `Sell` หมายถึง `Short Call`
+- `Amount` คือจำนวน contracts และ `Price` คือ premium ต่อ contract ตามหน้าจอ
+- วันที่และเวลาสีเทาด้านขวาบนคือ open execution timestamp; เก็บวันที่ใน
+  `openDate` และเก็บเวลาใน `note` เมื่อ schema ไม่มี time field
+- บันทึกเฉพาะ `Filled`; ห้ามบันทึก Open, Pending, Cancelled หรือ partially
+  unfilled quantity
+- ตรวจ duplicate ด้วย `cex + product + openDate + expiryDate + strike +
+  contracts + premium`
+- Screenshot หน้า Binance Options ที่มี `My Trades`, `Order History`,
+  instrument รูปแบบ `BTC-YYMMDD-STRIKE-P/C`, `Limit / Sell`, `Amount`,
+  `Price` และ `Status Filled` ให้ระบุ `cex` เป็น `BINANCE`
 
 ### Confirmed Platform UI
 
@@ -155,7 +176,6 @@ date + platform + ticker + action + quantity + price + fees
 - Platform
 - Fees
 - FX rate
-- Owner
 - Position side เมื่อ action คลุมเครือ
 
 TP, SL และ thesis เป็น Position Journal ส่วน `tags` และ `pairNote` สามารถใส่ที่ execution เพื่อใช้ใน Trade Log LIST/PAIR ได้

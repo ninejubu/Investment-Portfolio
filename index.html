@@ -231,6 +231,22 @@
             transition: color .15s ease, border-color .15s ease, background .15s ease;
         }
         .sidebar-collapse-btn:hover { color: #F8FAFC; border-color: #3B82F6; background: #1E293B; }
+        #sidebar-port-toggle-collapsed {
+            display: none; width: 44px; height: 44px; padding: 4px; gap: 4px;
+            border: 1px solid #334155; border-radius: 10px; background: #0F172A;
+        }
+        .collapsed-port-btn {
+            flex: 1; height: 34px; min-width: 0; border-radius: 6px; border: 0;
+            display: block; opacity: .3;
+            transition: opacity .15s ease, box-shadow .15s ease;
+        }
+        .collapsed-port-btn:hover { opacity: .72; }
+        #btn-port1-c { background: #3B82F6; }
+        #btn-port2-c { background: #D97757; }
+        .collapsed-port-btn.active-core,
+        .collapsed-port-btn.active-satellite {
+            opacity: 1; box-shadow: 0 0 0 1px rgba(255,255,255,.18);
+        }
         body.sidebar-collapsed #sidebar { width: 72px; }
         body.sidebar-collapsed #sidebar .sidebar-header { padding: 1rem 0.75rem; }
         body.sidebar-collapsed #sidebar-brand,
@@ -238,7 +254,10 @@
         body.sidebar-collapsed #sidebar-port-toggle,
         body.sidebar-collapsed #sidebar-nav .nav-label,
         body.sidebar-collapsed #sidebar-nav .port-toggle { display: none !important; }
+        body.sidebar-collapsed #sidebar-header-row > div:first-child { display: none; }
         body.sidebar-collapsed #sidebar-header-row { justify-content: center; }
+        body.sidebar-collapsed #sidebar-collapse-btn { width: 44px; height: 44px; flex-shrink: 0; }
+        body.sidebar-collapsed #sidebar-port-toggle-collapsed { display: flex; margin-top: 10px; justify-content: center; }
         body.sidebar-collapsed #sidebar-nav { padding: 0.75rem; align-items: center; }
         body.sidebar-collapsed #sidebar-nav .nav-btn {
             width: 44px; height: 44px; padding: 0; justify-content: center; gap: 0;
@@ -250,6 +269,7 @@
             #app-body { flex-direction: column; height: 100dvh; }
             #sidebar { width: 100%; flex-direction: row; align-items: center; border-right: none; border-bottom: 1px solid #334155; flex-shrink: 0; overflow: hidden; }
             #sidebar .sidebar-header { display: none; }
+            body.sidebar-collapsed #sidebar-port-toggle-collapsed { display: none; }
             body.sidebar-collapsed #sidebar { width: 100%; }
             #sidebar-nav { flex-direction: row; flex: 1; padding: 0.35rem 0.5rem; gap: 0.15rem; align-items: center; }
             #sidebar-nav .nav-btn { flex: 1; flex-direction: column; gap: 2px; padding: 0.4rem 0.25rem; font-size: 10px; align-items: center; justify-content: center; border-radius: 8px; }
@@ -606,8 +626,26 @@
         .sat-performance-chart { height: 300px; position: relative; }
         .sat-performance-controls { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
         .sat-benchmark-toggle button { min-width: 78px; text-transform: uppercase; }
-        .sat-benchmark-status { color: #8F8882; font-size: 9px; min-height: 12px; text-align: right; }
+        .sat-benchmark-meta { display: flex; align-items: center; gap: 5px; min-height: 18px; margin-top: 5px; }
+        .sat-benchmark-status { color: #8F8882; font-size: 9px; min-height: 12px; }
         .sat-benchmark-status.warning { color: #D6A84F; }
+        .sat-benchmark-refresh {
+            width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center;
+            border: 1px solid #3A3532; border-radius: 5px; color: #8F8882; background: transparent;
+            font-size: 8px; flex-shrink: 0;
+        }
+        .sat-benchmark-refresh:hover { color: #F4F0EC; border-color: #D97757; }
+        .sat-benchmark-refresh.loading i { animation: spin 1s linear infinite; }
+        .sat-performance-period {
+            display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+            margin: -4px 0 14px; flex-wrap: wrap;
+        }
+        .sat-date-field { display: flex; align-items: center; gap: 5px; color: #8F8882; font-size: 9px; font-weight: 700; }
+        .sat-date-input {
+            height: 28px; width: 128px; padding: 4px 7px; border: 1px solid #3A3532;
+            border-radius: 6px; color: #CFC8C2; background: #1B1917; font-size: 10px;
+            color-scheme: dark;
+        }
         .sat-two-col { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr); gap: 16px; }
         .sat-allocation-layout { display: grid; grid-template-columns: minmax(240px, .85fr) minmax(220px, 1.15fr); gap: 18px; align-items: center; }
         .sat-allocation-chart { height: 290px; position: relative; }
@@ -633,6 +671,12 @@
         .sat-table th:first-child, .sat-table th:nth-child(2), .sat-table td:first-child, .sat-table td:nth-child(2) { text-align: left; }
         .sat-table td { padding: 11px 10px; border-bottom: 1px solid #302C29; color: #CFC8C2; font-size: 11px; text-align: right; white-space: nowrap; }
         .sat-table tr:hover td { background: rgba(217,119,87,.035); }
+        .sat-table-wrap.sticky-head .sat-table th {
+            position: sticky; top: 0; z-index: 2; background: #24211F;
+        }
+        .sat-dashboard-trade-table { min-width: 0; table-layout: fixed; }
+        .sat-dashboard-trade-table th, .sat-dashboard-trade-table td { padding-left: 8px; padding-right: 8px; }
+        .sat-dashboard-trade-table th:nth-child(3), .sat-dashboard-trade-table td:nth-child(3) { text-align: center; }
         .sat-trade-row { cursor: pointer; transition: opacity .18s ease, background .18s ease; }
         .sat-trade-row.focused td { background: rgba(217,119,87,.10); }
         .sat-trade-row.faded { opacity: .22; }
@@ -688,6 +732,8 @@
         body.theme-light .sat-stat-value, body.theme-light .sat-panel-title, body.theme-light .sat-alloc-ticker, body.theme-light .sat-ticker { color: #2A2522; }
         body.theme-light .sat-input, body.theme-light .sat-select, body.theme-light .sat-textarea, body.theme-light .sat-segment { background: #F8F6F4; border-color: #D8D2CC; color: #2A2522; }
         body.theme-light .sat-fx-readonly { background: #F8F6F4; border-color: #D8D2CC; color: #5F5852; }
+        body.theme-light .sat-date-input { background: #F8F6F4; border-color: #D8D2CC; color: #4A433E; color-scheme: light; }
+        body.theme-light .sat-table-wrap.sticky-head .sat-table th { background: #FFFFFF; }
         body.theme-light .sat-insight-row, body.theme-light .sat-journal-item, body.theme-light .sat-note-block { background: #FAF8F6; border-color: #E6E1DC; }
         body.theme-light .sat-table td, body.theme-light .sat-insight-value, body.theme-light .sat-note-value { color: #4A433E; }
 
@@ -707,7 +753,11 @@
             .sat-performance-controls { width: 100%; justify-content: flex-start; }
             .sat-benchmark-toggle { width: 100%; }
             .sat-benchmark-toggle button { flex: 1; min-width: 0; }
-            .sat-benchmark-status { text-align: left; }
+            .sat-benchmark-meta { justify-content: flex-start; }
+            .sat-performance-period { justify-content: flex-start; margin-top: 0; }
+            .sat-date-field { flex: 1; min-width: 145px; }
+            .sat-date-input { width: 100%; }
+            .sat-dashboard-trade-table { min-width: 560px; }
             .sat-journal-layout { grid-template-columns: 1fr; }
             .sat-journal-detail { border-left: 0; border-top: 1px solid #3A3532; padding: 14px 0 0; }
             .sat-form-grid { grid-template-columns: 1fr 1fr; }
@@ -834,6 +884,10 @@
             <div id="sidebar-port-toggle" class="bg-slate-800/80 p-1 rounded-lg flex space-x-1 border border-slate-700">
                 <button id="btn-port1" onclick="switchPortfolio('port1')" class="flex-1 py-1.5 text-xs font-bold rounded-md bg-blue-600 text-white shadow transition-all">Core Port</button>
                 <button id="btn-port2" onclick="switchPortfolio('port2')" class="flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">Satellite Port</button>
+            </div>
+            <div id="sidebar-port-toggle-collapsed" aria-label="Portfolio selector">
+                <button id="btn-port1-c" class="collapsed-port-btn" onclick="switchPortfolio('port1')" title="Core Port" aria-label="Core Port"></button>
+                <button id="btn-port2-c" class="collapsed-port-btn" onclick="switchPortfolio('port2')" title="Satellite Port" aria-label="Satellite Port"></button>
             </div>
         </div>
 
@@ -1131,7 +1185,12 @@
                         <div class="sat-panel-head">
                             <div>
                                 <h4 id="sat-performance-title" class="sat-panel-title">Cumulative Trading P/L</h4>
-                                <div id="sat-benchmark-status" class="sat-benchmark-status"></div>
+                                <div class="sat-benchmark-meta">
+                                    <div id="sat-benchmark-status" class="sat-benchmark-status"></div>
+                                    <button id="sat-benchmark-refresh" class="sat-benchmark-refresh" type="button" onclick="satRefreshBenchmarkData()" title="Refresh benchmark data" aria-label="Refresh benchmark data">
+                                        <i class="fa-solid fa-rotate"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="sat-performance-controls">
                                 <div class="sat-segment" id="sat-performance-mode">
@@ -1143,11 +1202,19 @@
                                     <button type="button" data-benchmark="nasdaq" onclick="satSetPerformanceBenchmark('nasdaq')">NASDAQ</button>
                                 </div>
                                 <div class="sat-segment" id="sat-performance-range">
-                                    <button type="button" data-range="mtd" onclick="satSetPerformanceRange('mtd')">MTD</button>
-                                    <button type="button" data-range="ytd" onclick="satSetPerformanceRange('ytd')">YTD</button>
+                                    <button type="button" data-range="1m" onclick="satSetPerformanceRange('1m')">1M</button>
+                                    <button type="button" data-range="3m" onclick="satSetPerformanceRange('3m')">3M</button>
                                     <button type="button" data-range="all" class="active" onclick="satSetPerformanceRange('all')">ALL</button>
                                 </div>
                             </div>
+                        </div>
+                        <div class="sat-performance-period">
+                            <label class="sat-date-field">START
+                                <input id="sat-performance-start" class="sat-date-input" type="date" onchange="satSetPerformanceCustomRange()">
+                            </label>
+                            <label class="sat-date-field">END
+                                <input id="sat-performance-end" class="sat-date-input" type="date" onchange="satSetPerformanceCustomRange()">
+                            </label>
                         </div>
                         <div class="sat-performance-chart"><canvas id="satPerformanceChart"></canvas></div>
                     </section>
@@ -1195,7 +1262,7 @@
                         </div>
                         <div class="sat-table-wrap">
                             <table class="sat-table">
-                                <thead><tr><th>Ticker</th><th>Name / Side</th><th>Qty</th><th>Avg Cost</th><th>Current / Exit</th><th>Cost</th><th>Market Value</th><th>Unrealized P/L</th><th>Realized P/L</th><th title="Share of cash plus open current market value">Portfolio Weight</th><th>Days Held</th><th>Owner</th><th></th></tr></thead>
+                                <thead><tr><th>Ticker</th><th>Name / Side</th><th>Qty</th><th>Avg Cost</th><th>Current / Exit</th><th>Cost</th><th>Market Value</th><th>Unrealized P/L</th><th>Realized P/L</th><th title="Share of cash plus open current market value">Portfolio Weight</th><th>Days Held</th><th></th></tr></thead>
                                 <tbody id="sat-holdings-tbody"></tbody>
                             </table>
                         </div>
@@ -1230,8 +1297,16 @@
                                 </div>
                                 <button class="sat-btn" onclick="switchTab('transactions')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Full Log</button>
                             </div>
-                            <div class="sat-table-wrap" style="max-height:430px">
-                                <table class="sat-table" style="min-width:720px">
+                            <div class="sat-table-wrap sticky-head" style="max-height:430px">
+                                <table class="sat-table sat-dashboard-trade-table">
+                                    <colgroup>
+                                        <col style="width:22%">
+                                        <col style="width:18%">
+                                        <col style="width:16%">
+                                        <col style="width:12%">
+                                        <col style="width:16%">
+                                        <col style="width:16%">
+                                    </colgroup>
                                     <thead><tr><th>Date</th><th>Ticker</th><th>Action</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead>
                                     <tbody id="sat-dashboard-trades-tbody"></tbody>
                                 </table>
@@ -1337,20 +1412,20 @@
                             </div>
                             <div class="sat-actions">
                                 <div class="sat-segment" id="sat-trade-log-mode">
-                                    <button type="button" data-mode="list" class="active" onclick="satSetTradeLogMode('list')">LIST</button>
-                                    <button type="button" data-mode="pair" onclick="satSetTradeLogMode('pair')">PAIR</button>
+                                    <button type="button" data-mode="list" onclick="satSetTradeLogMode('list')">LIST</button>
+                                    <button type="button" data-mode="pair" class="active" onclick="satSetTradeLogMode('pair')">PAIR</button>
                                 </div>
                                 <input id="sat-trade-log-search" type="search" class="sat-input" style="width:220px" placeholder="Search ticker, action, tag..." oninput="satRenderFullTradeLog()">
                                 <button class="sat-btn" onclick="satExportTrades()"><i class="fa-solid fa-file-export"></i> Export CSV</button>
                             </div>
                         </div>
-                        <div id="sat-trade-list-view" class="sat-table-wrap" style="max-height:620px">
+                        <div id="sat-trade-list-view" class="sat-table-wrap hidden" style="max-height:620px">
                             <table class="sat-table">
                                 <thead><tr><th>Date</th><th>Ticker</th><th>Action</th><th>Tag</th><th>Qty</th><th>Price</th><th>Fees</th><th>Amount</th><th>Note</th><th></th></tr></thead>
                                 <tbody id="sat-full-trades-tbody"></tbody>
                             </table>
                         </div>
-                        <div id="sat-trade-pair-view" class="sat-pair-list hidden"></div>
+                        <div id="sat-trade-pair-view" class="sat-pair-list"></div>
                         <div id="sat-full-trades-empty" class="sat-empty hidden">No matching trade records.</div>
                     </section>
                 </div>
@@ -1717,7 +1792,6 @@
                 <div><label class="sat-form-label">Currency</label><select id="sat-pos-currency" class="sat-select" onchange="satUpdatePositionFxPreview()"><option value="USD">USD</option><option value="THB">THB</option></select></div>
                 <div><label class="sat-form-label">Entry FX (Auto)</label><div id="sat-pos-fx-info" class="sat-fx-readonly">Select open date and currency</div></div>
                 <div><label class="sat-form-label">Platform</label><input id="sat-pos-platform" class="sat-input" placeholder="IBKR / Binance / ..."></div>
-                <div><label class="sat-form-label">Owner</label><select id="sat-pos-owner" class="sat-select"><option>Nine</option><option>Loki</option><option>Nine + Loki</option></select></div>
                 <div><label class="sat-form-label">Take Profit</label><input id="sat-pos-tp" type="number" step="any" min="0" class="sat-input"></div>
                 <div><label class="sat-form-label">Stop Loss</label><input id="sat-pos-sl" type="number" step="any" min="0" class="sat-input"></div>
                 <div><label class="sat-form-label">Fees (position total)</label><input id="sat-pos-fees" type="number" step="any" min="0" class="sat-input" value="0"></div>
@@ -1748,6 +1822,16 @@
     const getEmptyBegBalances = () => ({ stocks: 0, bonds: 0, crypto: 0, gold: 0 });
     const getEmptyBenchmarks = () => ({ stocks: { name: '', q1: null, q2: null, q3: null, q4: null }, bonds: { name: '', q1: null, q2: null, q3: null, q4: null }, crypto: { name: '', q1: null, q2: null, q3: null, q4: null }, gold: { name: '', q1: null, q2: null, q3: null, q4: null } });
     const createDefaultGoal = () => ({ amount: 10000000, year: 2031, monthly: 20000, return: 12, monthlyTiers: [{year: 2026, amount: 20000}, {year: 2028, amount: 36000}] });
+    const SAT_BENCHMARK_CACHE_KEY = 'satellite_benchmark_market_cache_v1';
+    const SAT_BENCHMARK_REFRESH_KEY = 'satellite_benchmark_refresh_date_v1';
+    const satParseBenchmarkCsv = csv => csv.split(';').map(row => {
+        const [date, close] = row.split(',');
+        return { date, close: Number(close) };
+    }).filter(point => point.date && Number.isFinite(point.close) && point.close > 0);
+    const SAT_BENCHMARK_OFFLINE = {
+        sp500: satParseBenchmarkCsv('2025-12-01,6812.63;2025-12-02,6829.37;2025-12-03,6849.72;2025-12-04,6857.12;2025-12-05,6870.40;2025-12-08,6846.51;2025-12-09,6840.51;2025-12-10,6886.68;2025-12-11,6901.00;2025-12-12,6827.41;2025-12-15,6816.51;2025-12-16,6800.26;2025-12-17,6721.43;2025-12-18,6774.76;2025-12-19,6834.50;2025-12-22,6878.49;2025-12-23,6909.79;2025-12-24,6932.05;2025-12-26,6929.94;2025-12-29,6905.74;2025-12-30,6896.24;2025-12-31,6845.50;2026-01-02,6858.47;2026-01-05,6902.05;2026-01-06,6944.82;2026-01-07,6920.93;2026-01-08,6921.46;2026-01-09,6966.28;2026-01-12,6977.27;2026-01-13,6963.74;2026-01-14,6926.60;2026-01-15,6944.47;2026-01-16,6940.01;2026-01-20,6796.86;2026-01-21,6875.62;2026-01-22,6913.35;2026-01-23,6915.61;2026-01-26,6950.23;2026-01-27,6978.60;2026-01-28,6978.03;2026-01-29,6969.01;2026-01-30,6939.03;2026-02-02,6976.44;2026-02-03,6917.81;2026-02-04,6882.72;2026-02-05,6798.40;2026-02-06,6932.30;2026-02-09,6964.82;2026-02-10,6941.81;2026-02-11,6941.47;2026-02-12,6832.76;2026-02-13,6836.17;2026-02-17,6843.22;2026-02-18,6881.31;2026-02-19,6861.89;2026-02-20,6909.51;2026-02-23,6837.75;2026-02-24,6890.07;2026-02-25,6946.13;2026-02-26,6908.86;2026-02-27,6878.88;2026-03-02,6881.62;2026-03-03,6816.63;2026-03-04,6869.50;2026-03-05,6830.71;2026-03-06,6740.02;2026-03-09,6795.99;2026-03-10,6781.48;2026-03-11,6775.80;2026-03-12,6672.62;2026-03-13,6632.19;2026-03-16,6699.38;2026-03-17,6716.09;2026-03-18,6624.70;2026-03-19,6606.49;2026-03-20,6506.48;2026-03-23,6581.00;2026-03-24,6556.37;2026-03-25,6591.90;2026-03-26,6477.16;2026-03-27,6368.85;2026-03-30,6343.72;2026-03-31,6528.52;2026-04-01,6575.32;2026-04-02,6582.69;2026-04-06,6611.83;2026-04-07,6616.85;2026-04-08,6782.81;2026-04-09,6824.66;2026-04-10,6816.89;2026-04-13,6886.24;2026-04-14,6967.38;2026-04-15,7022.95;2026-04-16,7041.28;2026-04-17,7126.06;2026-04-20,7109.14;2026-04-21,7064.01;2026-04-22,7137.90;2026-04-23,7108.40;2026-04-24,7165.08;2026-04-27,7173.91;2026-04-28,7138.80;2026-04-29,7135.95;2026-04-30,7209.01;2026-05-01,7230.12;2026-05-04,7200.75;2026-05-05,7259.22;2026-05-06,7365.12;2026-05-07,7337.11;2026-05-08,7398.93;2026-05-11,7412.84;2026-05-12,7400.96;2026-05-13,7444.25;2026-05-14,7501.24;2026-05-15,7408.50;2026-05-18,7403.05;2026-05-19,7353.61;2026-05-20,7432.97;2026-05-21,7445.72;2026-05-22,7473.47;2026-05-26,7519.12;2026-05-27,7520.36;2026-05-28,7563.63;2026-05-29,7580.06;2026-06-01,7599.96;2026-06-02,7609.78;2026-06-03,7553.68;2026-06-04,7584.31;2026-06-05,7383.74;2026-06-08,7405.73;2026-06-09,7386.65;2026-06-10,7266.99;2026-06-11,7394.30'),
+        nasdaq: satParseBenchmarkCsv('2025-12-01,23275.920;2025-12-02,23413.670;2025-12-03,23454.090;2025-12-04,23505.140;2025-12-05,23578.130;2025-12-08,23545.900;2025-12-09,23576.490;2025-12-10,23654.160;2025-12-11,23593.860;2025-12-12,23195.170;2025-12-15,23057.410;2025-12-16,23111.460;2025-12-17,22693.320;2025-12-18,23006.360;2025-12-19,23307.620;2025-12-22,23428.830;2025-12-23,23561.840;2025-12-24,23613.310;2025-12-26,23593.100;2025-12-29,23474.350;2025-12-30,23419.080;2025-12-31,23241.990;2026-01-02,23235.630;2026-01-05,23395.820;2026-01-06,23547.170;2026-01-07,23584.270;2026-01-08,23480.020;2026-01-09,23671.350;2026-01-12,23733.900;2026-01-13,23709.870;2026-01-14,23471.750;2026-01-15,23530.020;2026-01-16,23515.390;2026-01-20,22954.320;2026-01-21,23224.820;2026-01-22,23436.020;2026-01-23,23501.240;2026-01-26,23601.360;2026-01-27,23817.100;2026-01-28,23857.450;2026-01-29,23685.120;2026-01-30,23461.820;2026-02-02,23592.110;2026-02-03,23255.190;2026-02-04,22904.580;2026-02-05,22540.590;2026-02-06,23031.210;2026-02-09,23238.670;2026-02-10,23102.470;2026-02-11,23066.470;2026-02-12,22597.150;2026-02-13,22546.670;2026-02-17,22578.380;2026-02-18,22753.630;2026-02-19,22682.730;2026-02-20,22886.070;2026-02-23,22627.270;2026-02-24,22863.680;2026-02-25,23152.080;2026-02-26,22878.380;2026-02-27,22668.210;2026-03-02,22748.860;2026-03-03,22516.690;2026-03-04,22807.480;2026-03-05,22748.990;2026-03-06,22387.680;2026-03-09,22695.950;2026-03-10,22697.100;2026-03-11,22716.130;2026-03-12,22311.980;2026-03-13,22105.360;2026-03-16,22374.180;2026-03-17,22479.530;2026-03-18,22152.420;2026-03-19,22090.690;2026-03-20,21647.610;2026-03-23,21946.760;2026-03-24,21761.890;2026-03-25,21929.830;2026-03-26,21408.080;2026-03-27,20948.360;2026-03-30,20794.640;2026-03-31,21590.630;2026-04-01,21840.950;2026-04-02,21879.180;2026-04-06,21996.340;2026-04-07,22017.850;2026-04-08,22635.000;2026-04-09,22822.420;2026-04-10,22902.890;2026-04-13,23183.740;2026-04-14,23639.080;2026-04-15,24016.020;2026-04-16,24102.700;2026-04-17,24468.480;2026-04-20,24404.390;2026-04-21,24259.960;2026-04-22,24657.570;2026-04-23,24438.500;2026-04-24,24836.600;2026-04-27,24887.100;2026-04-28,24663.800;2026-04-29,24673.240;2026-04-30,24892.310;2026-05-01,25114.440;2026-05-04,25067.800;2026-05-05,25326.130;2026-05-06,25838.940;2026-05-07,25806.200;2026-05-08,26247.080;2026-05-11,26274.130;2026-05-12,26088.200;2026-05-13,26402.340;2026-05-14,26635.220;2026-05-15,26225.140;2026-05-18,26090.730;2026-05-19,25870.710;2026-05-20,26270.360;2026-05-21,26293.100;2026-05-22,26343.970;2026-05-26,26656.180;2026-05-27,26674.730;2026-05-28,26917.470;2026-05-29,26972.620;2026-06-01,27086.810;2026-06-02,27093.900;2026-06-03,26853.980;2026-06-04,26830.960;2026-06-05,25709.430;2026-06-08,25929.660;2026-06-09,25678.820;2026-06-10,25169.500;2026-06-11,25809.660')
+    };
 
     const state = {
         currentPort: 'port1', rates: savedRates,
@@ -1762,10 +1846,12 @@
             fx: { latest: null, historical: {}, status: 'idle', warning: '' },
             allocationMode: 'current',
             performanceRange: 'all',
+            performanceStart: '',
+            performanceEnd: '',
             performanceMode: localStorage.getItem('satellite_performance_mode_v1') === 'percent' ? 'percent' : 'value',
             performanceBenchmark: localStorage.getItem('satellite_performance_benchmark_v1') === 'nasdaq' ? 'nasdaq' : 'sp500',
             benchmarkCache: {},
-            tradeLogMode: 'list',
+            tradeLogMode: 'pair',
             focusedTradeTicker: '',
             expandedPairNotes: {},
             journalStatus: 'open',
@@ -2033,7 +2119,6 @@
             fxDate: String(raw.fxDate || ''),
             fxSource: String(raw.fxSource || ''),
             platform: String(raw.platform || '').trim(),
-            owner: String(raw.owner || 'Nine').trim(),
             takeProfit: Math.max(0, satNumber(raw.takeProfit)),
             stopLoss: Math.max(0, satNumber(raw.stopLoss)),
             tags: String(raw.tags || '').trim(),
@@ -2059,7 +2144,6 @@
             fxSource: String(raw.fxSource || ''),
             platform: String(raw.platform || '').trim(),
             note: String(raw.note || '').trim(),
-            owner: String(raw.owner || 'Nine').trim(),
             tags: String(raw.tags || '').trim(),
             pairNote: String(raw.pairNote || '').trim(),
             reference: String(raw.reference || '').trim(),
@@ -2239,9 +2323,47 @@
         });
     }
 
+    function satShiftMonths(date, months) {
+        const shifted = new Date(date);
+        const originalDay = shifted.getDate();
+        shifted.setDate(1);
+        shifted.setMonth(shifted.getMonth() + months);
+        const lastDay = new Date(shifted.getFullYear(), shifted.getMonth() + 1, 0).getDate();
+        shifted.setDate(Math.min(originalDay, lastDay));
+        return shifted;
+    }
+
+    function satAllPerformanceStartDate() {
+        const dates = [
+            ...satState().trades.map(t => parseDashboardDate(t.date)),
+            ...satState().positions.map(p => parseDashboardDate(p.openDate))
+        ].filter(Boolean).sort((a, b) => a - b);
+        return dates[0] || new Date(new Date().getFullYear(), 0, 1);
+    }
+
     function satSetPerformanceRange(range) {
-        satState().performanceRange = ['mtd','ytd','all'].includes(range) ? range : 'all';
+        satState().performanceRange = ['1m','3m','all'].includes(range) ? range : 'all';
+        const end = new Date();
+        const start = range === '1m' ? satShiftMonths(end, -1)
+            : range === '3m' ? satShiftMonths(end, -3)
+            : satAllPerformanceStartDate();
+        satState().performanceStart = toIsoDashboardDate(start);
+        satState().performanceEnd = toIsoDashboardDate(end);
         document.querySelectorAll('#sat-performance-range button').forEach(btn => btn.classList.toggle('active', btn.dataset.range === satState().performanceRange));
+        satRenderPerformance();
+    }
+
+    function satSetPerformanceCustomRange() {
+        const startInput = document.getElementById('sat-performance-start');
+        const endInput = document.getElementById('sat-performance-end');
+        if (!startInput?.value || !endInput?.value) return;
+        if (startInput.value > endInput.value) {
+            endInput.value = startInput.value;
+        }
+        satState().performanceRange = 'custom';
+        satState().performanceStart = startInput.value;
+        satState().performanceEnd = endInput.value;
+        document.querySelectorAll('#sat-performance-range button').forEach(btn => btn.classList.remove('active'));
         satRenderPerformance();
     }
 
@@ -2257,21 +2379,38 @@
         satRenderPerformance();
     }
 
-    function satPerformanceStartDate() {
-        const now = new Date();
-        if (satState().performanceRange === 'mtd') return new Date(now.getFullYear(), now.getMonth(), 1);
-        if (satState().performanceRange === 'ytd') return new Date(now.getFullYear(), 0, 1);
-        const dates = [
-            ...satState().trades.map(t => parseDashboardDate(t.date)),
-            ...satState().positions.map(p => parseDashboardDate(p.openDate))
-        ].filter(Boolean).sort((a, b) => a - b);
-        return dates[0] || new Date(now.getFullYear(), 0, 1);
+    function satPerformanceDateRange() {
+        const today = new Date();
+        if (satState().performanceRange === 'all') {
+            satState().performanceStart = toIsoDashboardDate(satAllPerformanceStartDate());
+            satState().performanceEnd = toIsoDashboardDate(today);
+        } else if (satState().performanceRange === '1m') {
+            satState().performanceStart = toIsoDashboardDate(satShiftMonths(today, -1));
+            satState().performanceEnd = toIsoDashboardDate(today);
+        } else if (satState().performanceRange === '3m') {
+            satState().performanceStart = toIsoDashboardDate(satShiftMonths(today, -3));
+            satState().performanceEnd = toIsoDashboardDate(today);
+        } else if (!satState().performanceStart || !satState().performanceEnd) {
+            satState().performanceStart = toIsoDashboardDate(satAllPerformanceStartDate());
+            satState().performanceEnd = toIsoDashboardDate(today);
+        }
+        return {
+            start: parseDashboardDate(satState().performanceStart) || satAllPerformanceStartDate(),
+            end: parseDashboardDate(satState().performanceEnd) || today
+        };
     }
 
-    function satPerformanceSeries(start) {
+    function satPerformanceStartDate() {
+        return satPerformanceDateRange().start;
+    }
+
+    function satPerformanceSeries(start, end) {
         const trades = satState().trades.slice()
             .sort((a,b) => String(a.date).localeCompare(String(b.date)))
-            .filter(t => parseDashboardDate(t.date) && parseDashboardDate(t.date) >= start);
+            .filter(t => {
+                const date = parseDashboardDate(t.date);
+                return date && date >= start && date <= end;
+            });
         let cumulative = 0;
         const byDate = {};
         trades.forEach(t => {
@@ -2286,59 +2425,146 @@
         return { byDate, unrealized: metrics.unrealized, capitalBase };
     }
 
+    function satLoadStoredBenchmarkData() {
+        try {
+            const parsed = JSON.parse(localStorage.getItem(SAT_BENCHMARK_CACHE_KEY) || '{}');
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (error) {
+            return {};
+        }
+    }
+
+    function satMergedBenchmarkData(benchmark) {
+        const stored = satLoadStoredBenchmarkData()[benchmark];
+        const byDate = new Map((SAT_BENCHMARK_OFFLINE[benchmark] || []).map(point => [point.date, point]));
+        if (Array.isArray(stored?.points)) {
+            stored.points.forEach(point => {
+                const close = satNumber(point.close);
+                if (point.date && close > 0) byDate.set(point.date, { date: point.date, close });
+            });
+        }
+        return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+    }
+
+    function satBuildBenchmarkPayload(benchmark, start, end) {
+        const raw = satMergedBenchmarkData(benchmark).filter(point => point.date <= end);
+        const prior = raw.filter(point => point.date < start);
+        const display = raw.filter(point => point.date >= start);
+        const base = (prior[prior.length - 1] || display[0])?.close;
+        if (!base || !display.length) throw new Error('No offline benchmark prices for this period');
+        return {
+            benchmark,
+            name: benchmark === 'nasdaq' ? 'NASDAQ' : 'S&P 500',
+            updatedThrough: raw[raw.length - 1]?.date || '',
+            points: display.map(point => ({
+                date: point.date,
+                close: point.close,
+                returnPct: (point.close / base - 1) * 100
+            }))
+        };
+    }
+
     async function satFetchBenchmarkSeries(benchmark, startDate, endDate) {
         const start = toIsoDashboardDate(startDate);
         const end = toIsoDashboardDate(endDate);
         const cacheKey = `${benchmark}:${start}:${end}`;
         if (satState().benchmarkCache[cacheKey]) return satState().benchmarkCache[cacheKey];
+        const payload = satBuildBenchmarkPayload(benchmark, start, end);
+        satState().benchmarkCache[cacheKey] = payload;
+        return payload;
+    }
+
+    async function satFetchLatestBenchmarkRaw(benchmark) {
+        const start = '2025-12-01';
+        const end = satToday();
+        const fetchWithTimeout = async requestUrl => {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 8000);
+            try {
+                return await fetch(requestUrl, { signal: controller.signal });
+            } finally {
+                clearTimeout(timeout);
+            }
+        };
         const url = getGsUrl();
-        let sheetError = null;
         if (url) {
             try {
                 const requestUrl = gsActionUrl(url, 'satellite_benchmark')
-                    + `&benchmark=${encodeURIComponent(benchmark)}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`;
-                const response = await fetch(requestUrl);
+                    + `&benchmark=${encodeURIComponent(benchmark)}&start=${start}&end=${end}`;
+                const response = await fetchWithTimeout(requestUrl);
                 if (!response.ok) throw new Error('Benchmark HTTP ' + response.status);
                 const payload = await response.json();
-                if (payload.error) throw new Error(payload.error);
-                if (!Array.isArray(payload.points) || !payload.points.length) throw new Error('Redeploy Apps Script Latest to enable benchmark data');
-                satState().benchmarkCache[cacheKey] = payload;
-                return payload;
+                const points = (payload.points || []).map(point => ({
+                    date: point.date,
+                    close: satNumber(point.close)
+                })).filter(point => point.date && point.close > 0);
+                if (points.length) return points;
             } catch (error) {
-                sheetError = error;
+                console.warn('Apps Script benchmark refresh unavailable:', error.message);
             }
         }
+
+        const symbol = benchmark === 'nasdaq' ? '^IXIC' : '^GSPC';
+        const from = Math.floor(new Date(`${start}T00:00:00Z`).getTime() / 1000);
+        const to = Math.floor(new Date(`${end}T23:59:59Z`).getTime() / 1000) + 86400;
+        const response = await fetchWithTimeout(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${from}&period2=${to}&interval=1d&events=history`);
+        if (!response.ok) throw new Error('Latest market data unavailable');
+        const result = (await response.json())?.chart?.result?.[0];
+        const timestamps = result?.timestamp || [];
+        const closes = result?.indicators?.quote?.[0]?.close || [];
+        const points = timestamps.map((timestamp, index) => ({
+            date: new Date(timestamp * 1000).toISOString().slice(0, 10),
+            close: satNumber(closes[index])
+        })).filter(point => point.close > 0 && point.date <= end);
+        if (!points.length) throw new Error('Latest market data unavailable');
+        return points;
+    }
+
+    async function satRefreshBenchmarkData(silent=false) {
+        const button = document.getElementById('sat-benchmark-refresh');
+        button?.classList.add('loading');
+        if (!silent) satSetBenchmarkStatus('Checking latest prices...');
         try {
-            const symbol = benchmark === 'nasdaq' ? '^IXIC' : '^GSPC';
-            const from = Math.floor(new Date(`${start}T00:00:00Z`).getTime() / 1000) - 7 * 86400;
-            const to = Math.floor(new Date(`${end}T00:00:00Z`).getTime() / 1000) + 86400;
-            const requestUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${from}&period2=${to}&interval=1d&events=history`;
-            const response = await fetch(requestUrl);
-            if (!response.ok) throw new Error('Market benchmark HTTP ' + response.status);
-            const result = (await response.json())?.chart?.result?.[0];
-            const timestamps = result?.timestamp || [];
-            const closes = result?.indicators?.quote?.[0]?.close || [];
-            const raw = timestamps.map((timestamp, index) => ({
-                date: new Date(timestamp * 1000).toISOString().slice(0, 10),
-                close: satNumber(closes[index])
-            })).filter(point => point.close > 0 && point.date <= end);
-            if (!raw.length) throw new Error('Market benchmark data unavailable');
-            const prior = raw.filter(point => point.date < start);
-            const display = raw.filter(point => point.date >= start);
-            const base = (prior[prior.length - 1] || display[0])?.close;
-            if (!base || !display.length) throw new Error('Market benchmark data unavailable');
-            const payload = {
-                benchmark,
-                name: benchmark === 'nasdaq' ? 'NASDAQ' : 'S&P 500',
-                source: 'Yahoo Finance fallback',
-                points: display.map(point => ({ date: point.date, returnPct: (point.close / base - 1) * 100 }))
-            };
-            satState().benchmarkCache[cacheKey] = payload;
-            return payload;
-        } catch (fallbackError) {
-            const details = [sheetError?.message, fallbackError?.message].filter(Boolean).join(' · ');
-            throw new Error(details || 'Benchmark unavailable');
+            const existing = satLoadStoredBenchmarkData();
+            const results = await Promise.all(['sp500', 'nasdaq'].map(async benchmark => {
+                try {
+                    return [benchmark, await satFetchLatestBenchmarkRaw(benchmark)];
+                } catch (error) {
+                    console.warn(`${benchmark} benchmark refresh failed:`, error.message);
+                    return [benchmark, null];
+                }
+            }));
+            let updated = false;
+            results.forEach(([benchmark, points]) => {
+                if (!points?.length) return;
+                existing[benchmark] = { points, fetchedAt: new Date().toISOString() };
+                updated = true;
+            });
+            if (updated) {
+                localStorage.setItem(SAT_BENCHMARK_CACHE_KEY, JSON.stringify(existing));
+                localStorage.setItem(SAT_BENCHMARK_REFRESH_KEY, satToday());
+                satState().benchmarkCache = {};
+            }
+            await satRenderPerformance();
+            if (!updated && !silent) {
+                const range = satPerformanceDateRange();
+                const payload = satBuildBenchmarkPayload(satState().performanceBenchmark, toIsoDashboardDate(range.start), toIsoDashboardDate(range.end));
+                satSetBenchmarkStatus(`Updated through ${satFormatBenchmarkDate(payload.updatedThrough)}`);
+            }
+        } finally {
+            button?.classList.remove('loading');
         }
+    }
+
+    function satAutoRefreshBenchmarks() {
+        if (localStorage.getItem(SAT_BENCHMARK_REFRESH_KEY) === satToday()) return;
+        satRefreshBenchmarkData(true).catch(error => console.warn('Benchmark auto-refresh failed:', error.message));
+    }
+
+    function satFormatBenchmarkDate(date) {
+        if (!date) return '—';
+        const parsed = new Date(`${date}T00:00:00`);
+        return parsed.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     }
 
     function satSetBenchmarkStatus(text='', warning=false) {
@@ -2352,6 +2578,15 @@
         const canvas = document.getElementById('satPerformanceChart');
         if (!canvas) return;
         const renderToken = ++satPerformanceRenderToken;
+        const range = satPerformanceDateRange();
+        const start = range.start;
+        const end = range.end;
+        const startIso = toIsoDashboardDate(start);
+        const endIso = toIsoDashboardDate(end);
+        const startInput = document.getElementById('sat-performance-start');
+        const endInput = document.getElementById('sat-performance-end');
+        if (startInput && startInput.value !== startIso) startInput.value = startIso;
+        if (endInput && endInput.value !== endIso) endInput.value = endIso;
         document.querySelectorAll('#sat-performance-range button').forEach(btn => btn.classList.toggle('active', btn.dataset.range === satState().performanceRange));
         document.querySelectorAll('#sat-performance-mode button').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === satState().performanceMode));
         const title = document.getElementById('sat-performance-title');
@@ -2359,33 +2594,32 @@
         document.querySelectorAll('#sat-performance-benchmark button').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.benchmark === satState().performanceBenchmark);
         });
-        const start = satPerformanceStartDate();
-        const end = new Date();
-        const portfolio = satPerformanceSeries(start);
+        const portfolio = satPerformanceSeries(start, end);
         const percentMode = satState().performanceMode === 'percent';
         let benchmarkPayload = null;
         satSetBenchmarkStatus('Loading benchmark...');
         try {
             benchmarkPayload = await satFetchBenchmarkSeries(satState().performanceBenchmark, start, end);
             if (renderToken !== satPerformanceRenderToken) return;
-            const periodNote = satState().performanceRange !== 'all' ? 'Period uses recorded P/L; daily NAV snapshots are not available' : '';
-            satSetBenchmarkStatus([periodNote, benchmarkPayload.source].filter(Boolean).join(' · '));
+            const updated = `Updated through ${satFormatBenchmarkDate(benchmarkPayload.updatedThrough)}`;
+            satSetBenchmarkStatus(updated);
         } catch (error) {
             if (renderToken !== satPerformanceRenderToken) return;
             satSetBenchmarkStatus(error.message || 'Benchmark unavailable', true);
         }
         const benchmarkPoints = benchmarkPayload?.points || [];
         let labels = [...new Set([
+            startIso,
             ...Object.keys(portfolio.byDate),
             ...benchmarkPoints.map(point => point.date),
-            satToday()
+            endIso
         ])].sort();
         let runningPL = 0;
         let portfolioData = labels.map(date => {
             if (Object.prototype.hasOwnProperty.call(portfolio.byDate, date)) runningPL = portfolio.byDate[date];
             return runningPL;
         });
-        portfolioData[portfolioData.length - 1] += portfolio.unrealized;
+        if (endIso >= satToday()) portfolioData[portfolioData.length - 1] += portfolio.unrealized;
         if (percentMode) {
             portfolioData = portfolioData.map(value => portfolio.capitalBase > 0 ? value / portfolio.capitalBase * 100 : null);
             if (!portfolio.capitalBase) satSetBenchmarkStatus('Add cash, deposit, or position cost to calculate return', true);
@@ -2492,7 +2726,6 @@
                 <td class="${s.realizedNet >= 0 ? 'sat-positive' : 'sat-negative'}">${satSignedDisplayValue(s.realizedNet)}</td>
                 <td>${weight.toFixed(1)}%</td>
                 <td>${satDaysBetween(p.openDate, p.closeDate || satToday())}</td>
-                <td>${satEsc(p.owner || '—')}</td>
                 <td><div class="flex justify-end gap-1"><button class="sat-btn" style="min-height:28px;padding:4px 8px" onclick="satOpenTradeEntry('${satEsc(p.id)}')" title="Record trade"><i class="fa-solid fa-arrow-right-arrow-left"></i></button><button class="sat-btn" style="min-height:28px;padding:4px 8px" onclick="satOpenPositionModal('${satEsc(p.id)}')" title="Edit position"><i class="fa-solid fa-pen"></i></button></div></td>
             </tr>`;
         }).join('');
@@ -2534,7 +2767,7 @@
                 <button class="sat-btn" onclick="satOpenPositionModal('${satEsc(p.id)}')"><i class="fa-solid fa-pen"></i> Edit</button>
             </div>
             <div class="sat-note-grid">
-                <div class="sat-note-block"><div class="sat-note-label">Position</div><div class="sat-note-value">${satEsc(p.side.toUpperCase())} · ${satEsc(p.status.toUpperCase())} · ${satEsc(p.owner)}</div></div>
+                <div class="sat-note-block"><div class="sat-note-label">Position</div><div class="sat-note-value">${satEsc(p.side.toUpperCase())} · ${satEsc(p.status.toUpperCase())}</div></div>
                 <div class="sat-note-block"><div class="sat-note-label">Performance</div><div class="sat-note-value ${s.unrealized >= 0 ? 'sat-positive' : 'sat-negative'}">${p.status === 'open' ? satSignedDisplayValue(s.unrealized) + ' unrealized' : satSignedDisplayValue(s.realizedNet) + ' realized'}</div></div>
                 <div class="sat-note-block"><div class="sat-note-label">Take Profit</div><div class="sat-note-value">${p.takeProfit ? satDisplayMoney(p.takeProfit,p.currency,'latest',p,2) : 'Not set'}</div></div>
                 <div class="sat-note-block"><div class="sat-note-label">Stop Loss</div><div class="sat-note-value">${p.stopLoss ? satDisplayMoney(p.stopLoss,p.currency,'latest',p,2) : 'Not set'}</div></div>
@@ -2645,7 +2878,12 @@
                 noteTrade: lot.trade
             });
         });
-        return pairs.sort((a,b) => String(b.exitDate || b.entryDate).localeCompare(String(a.exitDate || a.entryDate)));
+        return pairs.sort((a,b) => {
+            const statusOrder = { holding: 0, closed: 1 };
+            const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+            if (statusDiff) return statusDiff;
+            return String(b.exitDate || b.entryDate).localeCompare(String(a.exitDate || a.entryDate));
+        });
     }
 
     function satTogglePairNote(key) {
@@ -2813,7 +3051,6 @@
         document.getElementById('sat-pos-dividends').value = value('dividends',0);
         document.getElementById('sat-pos-currency').value = value('currency','USD');
         document.getElementById('sat-pos-platform').value = value('platform');
-        document.getElementById('sat-pos-owner').value = value('owner','Nine');
         document.getElementById('sat-pos-tp').value = value('takeProfit',0) || '';
         document.getElementById('sat-pos-sl').value = value('stopLoss',0) || '';
         document.getElementById('sat-pos-fees').value = value('fees',0);
@@ -2855,7 +3092,6 @@
             fxDate: fx.rateDate,
             fxSource: fx.source,
             platform: document.getElementById('sat-pos-platform').value,
-            owner: document.getElementById('sat-pos-owner').value,
             takeProfit: document.getElementById('sat-pos-tp').value,
             stopLoss: document.getElementById('sat-pos-sl').value,
             fees: document.getElementById('sat-pos-fees').value,
@@ -2959,8 +3195,7 @@
                 openDate: tradeDate, quantity: 0, avgCost: 0,
                 currentPrice: price, currency: tradeCurrency,
                 fxRate: fx.rate, fxDate: fx.rateDate, fxSource: fx.source,
-                platform: '',
-                owner: 'Nine'
+                platform: ''
             });
             satState().positions.push(position);
         }
@@ -3022,7 +3257,6 @@
             fxSource: fx.source,
             platform: '',
             note: document.getElementById('sat-trade-note').value,
-            owner: 'Nine',
             tags: document.getElementById('sat-trade-tags').value,
             reference: document.getElementById('sat-trade-ref').value,
             realizedPL
@@ -3380,26 +3614,54 @@
         val = val.replace(/[^0-9.]/g, ''); let num = parseFloat(val) || 0; return isNeg ? -num : num;
     }
 
-    function switchPortfolio(id) {
-        state.currentPort = id;
-        const mBtn1 = document.getElementById('btn-port1-m'); const mBtn2 = document.getElementById('btn-port2-m');
-        if(id === 'port2') {
-            document.body.classList.add('theme-port2');
-            document.getElementById('btn-port1').className = "flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all";
-            document.getElementById('btn-port2').className = "flex-1 py-1.5 text-xs font-bold rounded-md bg-slate-600 text-white shadow transition-all";
-            if(mBtn1) mBtn1.className = "flex-1 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:bg-slate-700/50 transition-all";
-            if(mBtn2) mBtn2.className = "flex-1 py-1 text-[10px] font-bold rounded-md bg-slate-600 text-white shadow transition-all";
-        } else {
-            document.body.classList.remove('theme-port2');
-            document.getElementById('btn-port1').className = "flex-1 py-1.5 text-xs font-bold rounded-md bg-blue-600 text-white shadow transition-all";
-            document.getElementById('btn-port2').className = "flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all";
-            if(mBtn1) mBtn1.className = "flex-1 py-1 text-[10px] font-bold rounded-md bg-blue-600 text-white shadow transition-all";
-            if(mBtn2) mBtn2.className = "flex-1 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:bg-slate-700/50 transition-all";
+    function updatePortfolioControls() {
+        const isSatellite = state.currentPort === 'port2';
+        const btn1 = document.getElementById('btn-port1');
+        const btn2 = document.getElementById('btn-port2');
+        const mBtn1 = document.getElementById('btn-port1-m');
+        const mBtn2 = document.getElementById('btn-port2-m');
+        const cBtn1 = document.getElementById('btn-port1-c');
+        const cBtn2 = document.getElementById('btn-port2-c');
+
+        document.body.classList.toggle('theme-port2', isSatellite);
+        if (btn1) btn1.className = isSatellite
+            ? "flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all"
+            : "flex-1 py-1.5 text-xs font-bold rounded-md bg-blue-600 text-white shadow transition-all";
+        if (btn2) btn2.className = isSatellite
+            ? "flex-1 py-1.5 text-xs font-bold rounded-md bg-slate-600 text-white shadow transition-all"
+            : "flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all";
+        if (mBtn1) mBtn1.className = isSatellite
+            ? "flex-1 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:bg-slate-700/50 transition-all"
+            : "flex-1 py-1 text-[10px] font-bold rounded-md bg-blue-600 text-white shadow transition-all";
+        if (mBtn2) mBtn2.className = isSatellite
+            ? "flex-1 py-1 text-[10px] font-bold rounded-md bg-slate-600 text-white shadow transition-all"
+            : "flex-1 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:bg-slate-700/50 transition-all";
+        if (cBtn1) {
+            cBtn1.classList.toggle('active-core', !isSatellite);
+            cBtn1.setAttribute('aria-pressed', String(!isSatellite));
         }
-        if(document.getElementById('tab-settings').classList.contains('active')) initSettings();
+        if (cBtn2) {
+            cBtn2.classList.toggle('active-satellite', isSatellite);
+            cBtn2.setAttribute('aria-pressed', String(isSatellite));
+        }
+
+        ['btn-wheel', 'btn-settings'].forEach(buttonId => {
+            document.getElementById(buttonId)?.classList.toggle('hidden', isSatellite);
+        });
+    }
+
+    function switchPortfolio(id) {
+        state.currentPort = id === 'port2' ? 'port2' : 'port1';
+        updatePortfolioControls();
+        const activeTab = document.querySelector('.tab-content.active')?.id?.replace('tab-', '') || 'dashboard';
+        if (state.currentPort === 'port2' && (activeTab === 'wheel' || activeTab === 'settings')) {
+            switchTab('dashboard');
+        } else if (activeTab === 'settings') {
+            initSettings();
+        }
         satApplyWorkspace();
         updateDashboard(); renderMonthlyTiers();
-        if (id === 'port2') satRenderAll();
+        if (state.currentPort === 'port2') satRenderAll();
     }
 
     function computeData() {
@@ -3687,10 +3949,13 @@
     function clearLedger() { if(confirm("Clear all?")) { pState().flows = []; saveFlows(); updateDashboard(); } }
 
     function switchTab(id) {
+        if (state.currentPort === 'port2' && (id === 'wheel' || id === 'settings')) id = 'dashboard';
+        const tab = document.getElementById('tab-'+id);
+        const btn = document.getElementById('btn-'+id);
+        if (!tab || !btn) return;
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('bg-blue-600/20', 'text-blue-400'); b.classList.add('text-slate-400', 'hover:bg-slate-700'); });
-        document.getElementById('tab-'+id).classList.add('active');
-        const btn = document.getElementById('btn-'+id);
+        tab.classList.add('active');
         btn.classList.remove('text-slate-400', 'hover:bg-slate-700'); btn.classList.add('bg-blue-600/20', 'text-blue-400');
         const titles = state.currentPort === 'port2'
             ? { dashboard: 'Satellite Trading Dashboard', transactions: 'Satellite Trade Ledger', wheel: 'Wheel Strategy', settings: 'Settings' }
@@ -4718,6 +4983,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         satLoadLocal();
         applyColorTheme(localStorage.getItem(THEME_KEY) || 'dark');
         applySidebarState();
+        updatePortfolioControls();
         initHoldingsBreakdownDefaultPeriod();
         applyHoldingsPanelState();
         try {
@@ -4730,6 +4996,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         satApplyWorkspace();
         updateDashboard(); renderMonthlyTiers(); satRenderAll();
         satWarmFxRates().catch(error => console.warn('Satellite FX warm-up failed:', error));
+        setTimeout(satAutoRefreshBenchmarks, 2500);
         fetchFearGreedIndexes();
         document.getElementById('tx-date').valueAsDate = new Date();
         satResetTradeForm();
