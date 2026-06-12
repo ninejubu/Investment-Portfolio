@@ -1195,7 +1195,7 @@
                         </div>
                         <div class="sat-table-wrap">
                             <table class="sat-table">
-                                <thead><tr><th>Ticker</th><th>Name / Side</th><th>Qty</th><th>Avg Cost</th><th>Current / Exit</th><th>Cost</th><th>Market Value</th><th>Unrealized P/L</th><th>Realized P/L</th><th title="Share of cash plus open current market value">Portfolio Weight</th><th>Days Held</th><th>Owner</th><th></th></tr></thead>
+                                <thead><tr><th>Ticker</th><th>Name / Side</th><th>Qty</th><th>Avg Cost</th><th>Current / Exit</th><th>Cost</th><th>Market Value</th><th>Unrealized P/L</th><th>Realized P/L</th><th title="Share of cash plus open current market value">Portfolio Weight</th><th>Days Held</th><th></th></tr></thead>
                                 <tbody id="sat-holdings-tbody"></tbody>
                             </table>
                         </div>
@@ -1717,7 +1717,6 @@
                 <div><label class="sat-form-label">Currency</label><select id="sat-pos-currency" class="sat-select" onchange="satUpdatePositionFxPreview()"><option value="USD">USD</option><option value="THB">THB</option></select></div>
                 <div><label class="sat-form-label">Entry FX (Auto)</label><div id="sat-pos-fx-info" class="sat-fx-readonly">Select open date and currency</div></div>
                 <div><label class="sat-form-label">Platform</label><input id="sat-pos-platform" class="sat-input" placeholder="IBKR / Binance / ..."></div>
-                <div><label class="sat-form-label">Owner</label><select id="sat-pos-owner" class="sat-select"><option>Nine</option><option>Loki</option><option>Nine + Loki</option></select></div>
                 <div><label class="sat-form-label">Take Profit</label><input id="sat-pos-tp" type="number" step="any" min="0" class="sat-input"></div>
                 <div><label class="sat-form-label">Stop Loss</label><input id="sat-pos-sl" type="number" step="any" min="0" class="sat-input"></div>
                 <div><label class="sat-form-label">Fees (position total)</label><input id="sat-pos-fees" type="number" step="any" min="0" class="sat-input" value="0"></div>
@@ -2033,7 +2032,6 @@
             fxDate: String(raw.fxDate || ''),
             fxSource: String(raw.fxSource || ''),
             platform: String(raw.platform || '').trim(),
-            owner: String(raw.owner || 'Nine').trim(),
             takeProfit: Math.max(0, satNumber(raw.takeProfit)),
             stopLoss: Math.max(0, satNumber(raw.stopLoss)),
             tags: String(raw.tags || '').trim(),
@@ -2059,7 +2057,6 @@
             fxSource: String(raw.fxSource || ''),
             platform: String(raw.platform || '').trim(),
             note: String(raw.note || '').trim(),
-            owner: String(raw.owner || 'Nine').trim(),
             tags: String(raw.tags || '').trim(),
             pairNote: String(raw.pairNote || '').trim(),
             reference: String(raw.reference || '').trim(),
@@ -2492,7 +2489,6 @@
                 <td class="${s.realizedNet >= 0 ? 'sat-positive' : 'sat-negative'}">${satSignedDisplayValue(s.realizedNet)}</td>
                 <td>${weight.toFixed(1)}%</td>
                 <td>${satDaysBetween(p.openDate, p.closeDate || satToday())}</td>
-                <td>${satEsc(p.owner || '—')}</td>
                 <td><div class="flex justify-end gap-1"><button class="sat-btn" style="min-height:28px;padding:4px 8px" onclick="satOpenTradeEntry('${satEsc(p.id)}')" title="Record trade"><i class="fa-solid fa-arrow-right-arrow-left"></i></button><button class="sat-btn" style="min-height:28px;padding:4px 8px" onclick="satOpenPositionModal('${satEsc(p.id)}')" title="Edit position"><i class="fa-solid fa-pen"></i></button></div></td>
             </tr>`;
         }).join('');
@@ -2534,7 +2530,7 @@
                 <button class="sat-btn" onclick="satOpenPositionModal('${satEsc(p.id)}')"><i class="fa-solid fa-pen"></i> Edit</button>
             </div>
             <div class="sat-note-grid">
-                <div class="sat-note-block"><div class="sat-note-label">Position</div><div class="sat-note-value">${satEsc(p.side.toUpperCase())} · ${satEsc(p.status.toUpperCase())} · ${satEsc(p.owner)}</div></div>
+                <div class="sat-note-block"><div class="sat-note-label">Position</div><div class="sat-note-value">${satEsc(p.side.toUpperCase())} · ${satEsc(p.status.toUpperCase())}</div></div>
                 <div class="sat-note-block"><div class="sat-note-label">Performance</div><div class="sat-note-value ${s.unrealized >= 0 ? 'sat-positive' : 'sat-negative'}">${p.status === 'open' ? satSignedDisplayValue(s.unrealized) + ' unrealized' : satSignedDisplayValue(s.realizedNet) + ' realized'}</div></div>
                 <div class="sat-note-block"><div class="sat-note-label">Take Profit</div><div class="sat-note-value">${p.takeProfit ? satDisplayMoney(p.takeProfit,p.currency,'latest',p,2) : 'Not set'}</div></div>
                 <div class="sat-note-block"><div class="sat-note-label">Stop Loss</div><div class="sat-note-value">${p.stopLoss ? satDisplayMoney(p.stopLoss,p.currency,'latest',p,2) : 'Not set'}</div></div>
@@ -2813,7 +2809,6 @@
         document.getElementById('sat-pos-dividends').value = value('dividends',0);
         document.getElementById('sat-pos-currency').value = value('currency','USD');
         document.getElementById('sat-pos-platform').value = value('platform');
-        document.getElementById('sat-pos-owner').value = value('owner','Nine');
         document.getElementById('sat-pos-tp').value = value('takeProfit',0) || '';
         document.getElementById('sat-pos-sl').value = value('stopLoss',0) || '';
         document.getElementById('sat-pos-fees').value = value('fees',0);
@@ -2855,7 +2850,6 @@
             fxDate: fx.rateDate,
             fxSource: fx.source,
             platform: document.getElementById('sat-pos-platform').value,
-            owner: document.getElementById('sat-pos-owner').value,
             takeProfit: document.getElementById('sat-pos-tp').value,
             stopLoss: document.getElementById('sat-pos-sl').value,
             fees: document.getElementById('sat-pos-fees').value,
@@ -2959,8 +2953,7 @@
                 openDate: tradeDate, quantity: 0, avgCost: 0,
                 currentPrice: price, currency: tradeCurrency,
                 fxRate: fx.rate, fxDate: fx.rateDate, fxSource: fx.source,
-                platform: '',
-                owner: 'Nine'
+                platform: ''
             });
             satState().positions.push(position);
         }
@@ -3022,7 +3015,6 @@
             fxSource: fx.source,
             platform: '',
             note: document.getElementById('sat-trade-note').value,
-            owner: 'Nine',
             tags: document.getElementById('sat-trade-tags').value,
             reference: document.getElementById('sat-trade-ref').value,
             realizedPL
