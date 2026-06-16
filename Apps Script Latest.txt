@@ -6,6 +6,7 @@
 //  GET  ?action=wheel_read      → wheelRead
 //  GET  ?action=satellite_read  → satelliteRead
 //  GET  ?action=satellite_benchmark → satelliteBenchmark
+//  GET  ?action=satellite_quotes → satelliteQuotes
 //  POST action=wheel_write      → wheelWrite
 //  POST action=satellite_write  → satelliteWrite
 // ============================================================
@@ -26,6 +27,7 @@ function doGet(e) {
   if (p.action === 'wheel_read')       return wheelRead();
   if (p.action === 'satellite_read')   return satelliteRead();
   if (p.action === 'satellite_benchmark') return satelliteBenchmark(p);
+  if (p.action === 'satellite_quotes') return satelliteQuotes(p);
   return investRead();
 }
 
@@ -382,7 +384,7 @@ function settingPercent(v) {
 var SAT_POSITION_HEADERS = [
   'id','ticker','name','side','status','openDate','closeDate','quantity',
   'avgCost','currentPrice','exitPrice','realizedPL','dividends','fees',
-  'currency','fxRate','fxDate','fxSource','platform','takeProfit','stopLoss','tags',
+  'currency','fxRate','fxDate','fxSource','priceDate','priceSource','platform','takeProfit','stopLoss','tags',
   'thesis','review','updatedAt'
 ];
 
@@ -417,6 +419,61 @@ function satelliteWrite(data) {
   }
 }
 
+function satelliteYahooDailyCloses(symbol, start, end) {
+  var from = Math.floor(new Date(start + 'T00:00:00Z').getTime() / 1000);
+  var to = Math.floor(new Date(end + 'T23:59:59Z').getTime() / 1000) + 86400;
+  var url = 'https://query1.finance.yahoo.com/v8/finance/chart/'
+    + encodeURIComponent(symbol)
+    + '?period1=' + from
+    + '&period2=' + to
+    + '&interval=1d&events=history';
+  var response = UrlFetchApp.fetch(url, {
+    muteHttpExceptions: true,
+    headers: { 'User-Agent': 'Mozilla/5.0' }
+  });
+  if (response.getResponseCode() !== 200) throw new Error('Yahoo HTTP ' + response.getResponseCode());
+  var json = JSON.parse(response.getContentText());
+  var result = json && json.chart && json.chart.result && json.chart.result[0];
+  var timestamps = result && result.timestamp ? result.timestamp : [];
+  var closes = result && result.indicators && result.indicators.quote && result.indicators.quote[0]
+    ? result.indicators.quote[0].close : [];
+  var points = [];
+  for (var i = 0; i < timestamps.length; i++) {
+    var close = Number(closes[i]);
+    if (!isFinite(close) || close <= 0) continue;
+    var date = Utilities.formatDate(new Date(timestamps[i] * 1000), 'UTC', 'yyyy-MM-dd');
+    if (date <= end) points.push({ date: date, close: close });
+  }
+  return points;
+}
+
+function satelliteQuotes(p) {
+  try {
+    var symbols = String(p.symbols || '').split(',')
+      .map(function(symbol) { return symbol.trim().toUpperCase(); })
+      .filter(function(symbol, index, arr) { return symbol && arr.indexOf(symbol) === index; });
+    if (!symbols.length) return jsonOut({ quotes: {} });
+    var end = /^\d{4}-\d{2}-\d{2}$/.test(String(p.end || '')) ? String(p.end) : Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd');
+    var startDate = new Date(end + 'T00:00:00Z');
+    var start = Utilities.formatDate(new Date(startDate.getTime() - 14 * 86400000), 'UTC', 'yyyy-MM-dd');
+    var quotes = {};
+    symbols.forEach(function(symbol) {
+      try {
+        var points = satelliteYahooDailyCloses(symbol, start, end);
+        if (points.length) {
+          var latest = points[points.length - 1];
+          quotes[symbol] = { close: latest.close, date: latest.date, source: 'Yahoo Finance' };
+        }
+      } catch (err) {
+        quotes[symbol] = { error: err.message };
+      }
+    });
+    return jsonOut({ quotes: quotes, source: 'Yahoo Finance', fetchedAt: new Date().toISOString() });
+  } catch (err) {
+    return jsonOut({ error: 'Quote error: ' + err.message });
+  }
+}
+
 function satelliteBenchmark(p) {
   try {
     var benchmark = p.benchmark === 'nasdaq' ? 'nasdaq' : 'sp500';
@@ -429,12 +486,47 @@ function satelliteBenchmark(p) {
     }
 
     var cache = CacheService.getScriptCache();
-    var cacheKey = ['sat-benchmark', benchmark, start, end].join(':');
+    var cacheKey = ['sat-benchmark-v2', benchmark, start, end].join(':');
     var cached = cache.get(cacheKey);
     if (cached) return jsonOut(JSON.parse(cached));
 
     var startDate = new Date(start + 'T00:00:00Z');
     var queryStart = Utilities.formatDate(new Date(startDate.getTime() - 7 * 86400000), 'UTC', 'yyyy-MM-dd');
+    try {
+      var yahooSymbol = benchmark === 'nasdaq' ? '^IXIC' : '^GSPC';
+      var yahooPoints = satelliteYahooDailyCloses(yahooSymbol, queryStart, end);
+      if (yahooPoints.length) {
+        var yahooBasePoint = yahooPoints[0];
+        for (var y = 0; y < yahooPoints.length; y++) {
+          if (yahooPoints[y].date < start) yahooBasePoint = yahooPoints[y];
+          else break;
+        }
+        var yahooDisplayPoints = yahooPoints.filter(function(point) { return point.date >= start; });
+        if (yahooDisplayPoints.length) {
+          var yahooBase = yahooBasePoint.close;
+          var yahooOutput = {
+            benchmark: benchmark,
+            name: name,
+            source: 'Yahoo Finance',
+            start: start,
+            end: end,
+            updatedThrough: yahooPoints[yahooPoints.length - 1].date,
+            points: yahooDisplayPoints.map(function(point) {
+              return {
+                date: point.date,
+                close: point.close,
+                returnPct: (point.close / yahooBase - 1) * 100
+              };
+            })
+          };
+          cache.put(cacheKey, JSON.stringify(yahooOutput), 21600);
+          return jsonOut(yahooOutput);
+        }
+      }
+    } catch (yahooErr) {
+      // Fall back to FRED below. FRED can lag but is useful when Yahoo is unavailable.
+    }
+
     var url = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id='
       + encodeURIComponent(seriesId)
       + '&cosd=' + encodeURIComponent(queryStart)
