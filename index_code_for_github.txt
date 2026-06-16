@@ -2538,7 +2538,165 @@
         return points;
     }
 
+    function satOpenQuoteTickers() {
+        return [...new Set(satState().positions
+            .filter(p => p.status === 'open' && p.ticker && p.ticker !== 'CASH')
+            .map(p => p.ticker.toUpperCase()))];
+    }
+
+    async function satFetchTextWithTimeout(url, timeoutMs=10000) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const response = await fetch(url, { signal: controller.signal });
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return await response.text();
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
+    async function satFetchJsonWithTimeout(url, timeoutMs=9000) {
+        const text = await satFetchTextWithTimeout(url, timeoutMs);
+        return JSON.parse(text);
+    }
+
+    function satParseGoogleFinanceText(text, ticker) {
+        if (!text) return null;
+        const tickerPattern = new RegExp(`^${ticker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}:([A-Z]+)$`, 'i');
+        const lines = String(text).split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+        const tickerLine = lines.findIndex(line => tickerPattern.test(line));
+        if (tickerLine < 0) return null;
+        const windowLines = lines.slice(tickerLine, tickerLine + 14);
+        const priceLine = windowLines.find(line => /^\$[0-9,]+(?:\.\d+)?$/.test(line));
+        const close = satNumber(priceLine?.replace(/[$,]/g, ''));
+        if (!close) return null;
+        const dateLine = windowLines.find(line => /^[A-Z][a-z]{2}\s+\d{1,2},/.test(line));
+        const dateParts = dateLine?.match(/^([A-Z][a-z]{2})\s+(\d{1,2}),/);
+        const monthIndex = dateParts ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].indexOf(dateParts[1]) : -1;
+        const date = monthIndex >= 0
+            ? new Date(Date.UTC(new Date().getFullYear(), monthIndex, Number(dateParts[2]))).toISOString().slice(0, 10)
+            : satToday();
+        return { close, date, source: 'Google Finance' };
+    }
+
+    function satParseGoogleFinanceHtml(html) {
+        const priceMatch = String(html || '').match(/data-last-price="([0-9.,]+)"/);
+        const close = satNumber(priceMatch?.[1]?.replace(/,/g, ''));
+        if (!close) return null;
+        const timestampMatch = String(html || '').match(/data-last-normal-market-timestamp="(\d+)"/);
+        const date = timestampMatch
+            ? new Date(Number(timestampMatch[1]) * 1000).toISOString().slice(0, 10)
+            : satToday();
+        return { close, date, source: 'Google Finance' };
+    }
+
+    async function satFetchGoogleFinanceQuote(ticker) {
+        const exchanges = ['NASDAQ', 'NYSE', 'NYSEARCA'];
+        const sources = exchanges.flatMap(exchange => {
+            const symbol = `${encodeURIComponent(ticker)}:${exchange}`;
+            return [
+                { url: `https://r.jina.ai/http://www.google.com/finance/quote/${symbol}`, parser: text => satParseGoogleFinanceText(text, ticker), source: 'Google Finance via Jina' },
+                { url: `https://www.google.com/finance/quote/${symbol}`, parser: satParseGoogleFinanceHtml, source: 'Google Finance' }
+            ];
+        });
+        let lastError = null;
+        for (const source of sources) {
+            try {
+                const quote = source.parser(await satFetchTextWithTimeout(source.url, 12000));
+                if (quote?.close) return { ...quote, source: source.source };
+            } catch (error) {
+                lastError = error;
+            }
+        }
+        throw lastError || new Error('Google Finance quote unavailable');
+    }
+
+    function satParseYahooChartPayload(payload, source) {
+        const result = payload?.chart?.result?.[0];
+        const timestamps = result?.timestamp || [];
+        const closes = result?.indicators?.quote?.[0]?.close || [];
+        const points = timestamps.map((timestamp, index) => ({
+            date: new Date(timestamp * 1000).toISOString().slice(0, 10),
+            close: satNumber(closes[index])
+        })).filter(point => point.close > 0);
+        const latest = points[points.length - 1];
+        return latest ? { close: latest.close, date: latest.date, source } : null;
+    }
+
+    async function satFetchYahooDailyQuote(ticker) {
+        const chartUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=10d&interval=1d&events=history`;
+        const urls = [
+            chartUrl,
+            `https://api.allorigins.win/raw?url=${encodeURIComponent(chartUrl)}`,
+            `https://corsproxy.io/?${encodeURIComponent(chartUrl)}`,
+            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(chartUrl)}`
+        ];
+        let lastError = null;
+        for (const url of urls) {
+            try {
+                const quote = satParseYahooChartPayload(await satFetchJsonWithTimeout(url), url === chartUrl ? 'Yahoo Finance' : 'Yahoo Finance proxy');
+                if (quote) return quote;
+            } catch (error) {
+                lastError = error;
+            }
+        }
+        throw lastError || new Error('Quote unavailable');
+    }
+
+    async function satFetchMarketQuote(ticker) {
+        try {
+            return await satFetchGoogleFinanceQuote(ticker);
+        } catch (googleError) {
+            console.warn(`Google Finance quote failed for ${ticker}:`, googleError.message);
+        }
+        return await satFetchYahooDailyQuote(ticker);
+    }
+
+    function satApplyMarketPriceQuotes(quotes={}) {
+        let changed = false;
+        satState().positions.forEach(position => {
+            if (position.status !== 'open') return;
+            const quote = quotes[position.ticker?.toUpperCase()];
+            const close = satNumber(quote?.close);
+            if (!close || !quote?.date) return;
+            if (position.currentPrice !== close || position.priceDate !== quote.date || position.priceSource !== quote.source) changed = true;
+            position.currentPrice = close;
+            position.priceDate = quote.date;
+            position.priceSource = quote.source || 'Market data';
+            position.updatedAt = new Date().toISOString();
+        });
+        if (changed) {
+            satSaveLocal();
+            satRenderAll();
+        }
+        return changed;
+    }
+
+    async function satRefreshBrowserMarketPrices() {
+        const tickers = satOpenQuoteTickers();
+        if (!tickers.length) return false;
+        const entries = await Promise.all(tickers.map(async ticker => {
+            try {
+                return [ticker, await satFetchMarketQuote(ticker)];
+            } catch (error) {
+                console.warn(`Direct quote failed for ${ticker}:`, error.message);
+                return [ticker, null];
+            }
+        }));
+        const quotes = Object.fromEntries(entries.filter(([, quote]) => quote));
+        if (!Object.keys(quotes).length) return false;
+        satApplyMarketPriceQuotes(quotes);
+        return true;
+    }
+
     async function satRefreshMarketPrices(force=false) {
+        const webOk = await satRefreshBrowserMarketPrices().catch(error => {
+            console.warn('Direct market price refresh failed:', error.message);
+            return false;
+        });
+        if (webOk) return true;
+
         const url = getGsUrl();
         if (!url) return false;
         try {
@@ -3348,11 +3506,11 @@
         satPushTimer = setTimeout(() => satPushToSheets(true).catch(() => {}), 500);
     }
 
-    async function satPullFromSheets(silent=false) {
+    async function satPullFromSheets(silent=false, options={}) {
         const url = getGsUrl();
         if (!url) return false;
         try {
-            const data = await fetchGsAction('satellite_read');
+            const data = await fetchGsAction('satellite_read', options.forcePrices ? { forcePrices: '1' } : {});
             if (!data || !Array.isArray(data.positions) || !Array.isArray(data.trades)) throw new Error('Invalid Satellite data');
             if (data.initialized === false) {
                 if (satState().positions.length || satState().trades.length) await satPushToSheets(true);
@@ -3363,6 +3521,7 @@
             satSaveLocal();
             satRenderAll();
             satWarmFxRates().catch(error => console.warn('Satellite FX warm-up failed:', error));
+            await satRefreshBrowserMarketPrices().catch(error => console.warn('Direct market price refresh failed:', error.message));
             return true;
         } catch (e) {
             if (!silent) console.warn('Satellite pull error:', e);
@@ -4176,7 +4335,7 @@
             wheelOk = await wPullFromSheets(true);
         } catch(e) {}
         try {
-            satelliteOk = await satPullFromSheets(true);
+            satelliteOk = await satPullFromSheets(true, { forcePrices: true });
         } catch(e) {}
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
@@ -4228,7 +4387,7 @@
         let invOk = false, wheelOk = false, satelliteOk = false;
         try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
         try { wheelOk = await wPullFromSheets(true); } catch(e) {}
-        try { satelliteOk = await satPullFromSheets(true); } catch(e) {}
+        try { satelliteOk = await satPullFromSheets(true, { forcePrices: true }); } catch(e) {}
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
         if (invOk || wheelOk || satelliteOk) {
@@ -4251,7 +4410,7 @@
         let invOk = false, wheelOk = false, satelliteOk = false;
         try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
         try { wheelOk = await wPullFromSheets(true); } catch(e) {}
-        try { satelliteOk = await satPullFromSheets(true); } catch(e) {}
+        try { satelliteOk = await satPullFromSheets(true, { forcePrices: true }); } catch(e) {}
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
         setSyncPill(invOk || wheelOk || satelliteOk ? 'ok' : 'err', invOk || wheelOk || satelliteOk ? 'Synced ' + now : 'Pull failed');
@@ -4291,9 +4450,13 @@
         return url + sep + new URLSearchParams({ action, t: Date.now() }).toString();
     }
 
-    async function fetchGsAction(action) {
+    async function fetchGsAction(action, params={}) {
         const url = getInvUrl();
-        const res = await fetch(gsActionUrl(url, action));
+        let requestUrl = gsActionUrl(url, action);
+        const extra = new URLSearchParams(params);
+        const extraText = extra.toString();
+        if (extraText) requestUrl += '&' + extraText;
+        const res = await fetch(requestUrl);
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         if (data && data.error) throw new Error(data.error);
@@ -4398,7 +4561,7 @@
 
     async function testSatelliteConnection() {
         const msg = document.getElementById('gs-status-msg'); if(msg) { msg.classList.remove('hidden'); msg.textContent = 'Testing Satellite...'; msg.style.color = '#F59E0B'; }
-        const ok = await satPullFromSheets(true);
+        const ok = await satPullFromSheets(true, { forcePrices: true });
         if(msg) { msg.textContent = ok ? '✓ Satellite sync OK' : '✗ Satellite sync failed — deploy the updated Apps Script first'; msg.style.color = ok ? '#34D399' : '#FCA5A5'; }
     }
 
@@ -5063,7 +5226,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             let invOk = false, wheelOk = false, satelliteOk = false;
             try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
             try { wheelOk = await wPullFromSheets(true); } catch(e) {}
-            try { satelliteOk = await satPullFromSheets(true); } catch(e) {}
+            try { satelliteOk = await satPullFromSheets(true, { forcePrices: true }); } catch(e) {}
             if (satelliteOk) satRefreshMarketPrices(false).catch(error => console.warn('Market price refresh failed:', error.message));
             // updateDashboard() above already replaced skeleton content with real values
             if (!invOk) { updateDashboard(); } // ensure skeleton is cleared even on failure
