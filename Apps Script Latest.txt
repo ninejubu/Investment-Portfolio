@@ -25,7 +25,7 @@ function doGet(e) {
   if (p.action === 'activities_write') return activitiesWriteFromParams(p);
   if (p.action === 'settings_read')    return settingsRead();
   if (p.action === 'wheel_read')       return wheelRead();
-  if (p.action === 'satellite_read')   return satelliteRead();
+  if (p.action === 'satellite_read')   return satelliteRead(p);
   if (p.action === 'satellite_benchmark') return satelliteBenchmark(p);
   if (p.action === 'satellite_refresh_prices') return satelliteRefreshPrices(p);
   return investRead();
@@ -393,15 +393,27 @@ var SAT_TRADE_HEADERS = [
   'currency','fxRate','fxDate','fxSource','platform','note','tags','pairNote','reference','realizedPL','createdAt'
 ];
 
-function satelliteRead() {
+function satelliteRead(p) {
   try {
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     var positionSheet = ss.getSheetByName(TAB_SAT_POSITIONS);
     var tradeSheet = ss.getSheetByName(TAB_SAT_TRADES);
+    var positions = structuredSheetToJson(positionSheet, SAT_POSITION_HEADERS);
+    var priceRefresh = { updated: 0 };
+    try {
+      priceRefresh = satelliteRefreshPositionPrices_(ss, positions, {
+        end: p && p.end,
+        force: p && String(p.forcePrices || p.refreshPrices || '') === '1'
+      });
+      positions = priceRefresh.positions || positions;
+    } catch (priceErr) {
+      priceRefresh = { updated: 0, error: priceErr.message };
+    }
     return jsonOut({
       initialized: !!positionSheet && !!tradeSheet,
-      positions: structuredSheetToJson(positionSheet, SAT_POSITION_HEADERS),
-      trades: structuredSheetToJson(tradeSheet, SAT_TRADE_HEADERS)
+      positions: positions,
+      trades: structuredSheetToJson(tradeSheet, SAT_TRADE_HEADERS),
+      priceRefresh: priceRefresh
     });
   } catch (err) {
     return jsonOut({ error: err.message });
@@ -447,51 +459,80 @@ function satelliteYahooDailyCloses(symbol, start, end) {
   return points;
 }
 
+function satelliteExpectedLatestMarketDate_() {
+  var expected = new Date();
+  if (expected.getUTCHours() < 6) expected = new Date(expected.getTime() - 86400000);
+  expected = new Date(expected.getTime() - 86400000);
+  while (expected.getUTCDay() === 0 || expected.getUTCDay() === 6) {
+    expected = new Date(expected.getTime() - 86400000);
+  }
+  return Utilities.formatDate(expected, 'UTC', 'yyyy-MM-dd');
+}
+
+function satelliteRefreshPositionPrices_(ss, positions, options) {
+  options = options || {};
+  positions = positions || [];
+  var expectedDate = satelliteExpectedLatestMarketDate_();
+  var hasStaleOpen = false;
+  var openTickers = {};
+  positions.forEach(function(position) {
+    var ticker = String(position.ticker || '').trim().toUpperCase();
+    var status = String(position.status || 'open').trim().toLowerCase();
+    if (ticker && ticker !== 'CASH' && status !== 'closed') {
+      openTickers[ticker] = true;
+      if (options.force || Number(position.currentPrice) <= 0 || String(position.priceDate || '') < expectedDate) {
+        hasStaleOpen = true;
+      }
+    }
+  });
+  var symbols = Object.keys(openTickers);
+  if (!symbols.length || !hasStaleOpen) {
+    return { ok: true, updated: 0, skipped: !hasStaleOpen, expectedDate: expectedDate, quotes: {}, positions: positions };
+  }
+
+  var end = /^\d{4}-\d{2}-\d{2}$/.test(String(options.end || '')) ? String(options.end) : Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd');
+  var startDate = new Date(end + 'T00:00:00Z');
+  var start = Utilities.formatDate(new Date(startDate.getTime() - 14 * 86400000), 'UTC', 'yyyy-MM-dd');
+  var quotes = {};
+  symbols.forEach(function(symbol) {
+    try {
+      var points = satelliteYahooDailyCloses(symbol, start, end);
+      if (points.length) {
+        var latest = points[points.length - 1];
+        quotes[symbol] = { close: latest.close, date: latest.date, source: 'Yahoo Finance' };
+      }
+    } catch (err) {
+      quotes[symbol] = { error: err.message };
+    }
+  });
+
+  var updated = 0;
+  positions = positions.map(function(position) {
+    var ticker = String(position.ticker || '').trim().toUpperCase();
+    var quote = quotes[ticker];
+    if (!quote || !quote.close || !quote.date) return position;
+    if (!options.force && String(position.priceDate || '') >= quote.date && Number(position.currentPrice) === Number(quote.close)) return position;
+    position.currentPrice = quote.close;
+    position.priceDate = quote.date;
+    position.priceSource = quote.source || 'Yahoo Finance';
+    position.updatedAt = new Date().toISOString();
+    updated++;
+    return position;
+  });
+  if (updated) writeStructuredSheet(ss, TAB_SAT_POSITIONS, SAT_POSITION_HEADERS, positions);
+  return { ok: true, updated: updated, expectedDate: expectedDate, quotes: quotes, positions: positions, fetchedAt: new Date().toISOString() };
+}
+
 function satelliteRefreshPrices(p) {
   try {
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     var positionSheet = ss.getSheetByName(TAB_SAT_POSITIONS);
     if (!positionSheet) return jsonOut({ error: "Sheet '" + TAB_SAT_POSITIONS + "' not found" });
     var positions = structuredSheetToJson(positionSheet, SAT_POSITION_HEADERS);
-    var openTickers = {};
-    positions.forEach(function(position) {
-      var ticker = String(position.ticker || '').trim().toUpperCase();
-      var status = String(position.status || 'open').trim().toLowerCase();
-      if (ticker && ticker !== 'CASH' && status !== 'closed') openTickers[ticker] = true;
-    });
-    var symbols = Object.keys(openTickers);
-    if (!symbols.length) return jsonOut({ ok: true, updated: 0, quotes: {}, positions: positions });
-
-    var end = /^\d{4}-\d{2}-\d{2}$/.test(String(p.end || '')) ? String(p.end) : Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd');
-    var startDate = new Date(end + 'T00:00:00Z');
-    var start = Utilities.formatDate(new Date(startDate.getTime() - 14 * 86400000), 'UTC', 'yyyy-MM-dd');
-    var quotes = {};
-    symbols.forEach(function(symbol) {
-      try {
-        var points = satelliteYahooDailyCloses(symbol, start, end);
-        if (points.length) {
-          var latest = points[points.length - 1];
-          quotes[symbol] = { close: latest.close, date: latest.date, source: 'Yahoo Finance' };
-        }
-      } catch (err) {
-        quotes[symbol] = { error: err.message };
-      }
-    });
-
-    var updated = 0;
-    positions = positions.map(function(position) {
-      var ticker = String(position.ticker || '').trim().toUpperCase();
-      var quote = quotes[ticker];
-      if (!quote || !quote.close || !quote.date) return position;
-      position.currentPrice = quote.close;
-      position.priceDate = quote.date;
-      position.priceSource = quote.source || 'Yahoo Finance';
-      position.updatedAt = new Date().toISOString();
-      updated++;
-      return position;
-    });
-    if (updated) writeStructuredSheet(ss, TAB_SAT_POSITIONS, SAT_POSITION_HEADERS, positions);
-    return jsonOut({ ok: true, updated: updated, quotes: quotes, positions: positions, fetchedAt: new Date().toISOString() });
+    return jsonOut(satelliteRefreshPositionPrices_(ss, positions, {
+      end: p && p.end,
+      force: String((p && p.force) || '') === '1'
+    }));
   } catch (err) {
     return jsonOut({ error: 'Price refresh error: ' + err.message });
   }
