@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="cashflow_local_data.js" onerror="this.remove()"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
@@ -223,6 +224,7 @@
         #sidebar { width: 256px; flex-shrink: 0; border-right: 1px solid #334155; transition: width .2s ease; }
         #sidebar .sidebar-header { display: block; }
         #sidebar-nav { display: flex; flex-direction: column; padding: 1rem; gap: 0.5rem; }
+        #sidebar-nav .port-toggle { display: none; }
         #app-main { flex: 1; overflow-y: auto; }
         .sidebar-collapse-btn {
             width: 32px; height: 32px; border-radius: 8px;
@@ -243,8 +245,10 @@
         .collapsed-port-btn:hover { opacity: .72; }
         #btn-port1-c { background: #3B82F6; }
         #btn-port2-c { background: #D97757; }
+        #btn-port3-c { background: #14B8A6; }
         .collapsed-port-btn.active-core,
-        .collapsed-port-btn.active-satellite {
+        .collapsed-port-btn.active-satellite,
+        .collapsed-port-btn.active-cashflow {
             opacity: 1; box-shadow: 0 0 0 1px rgba(255,255,255,.18);
         }
         body.sidebar-collapsed #sidebar { width: 72px; }
@@ -252,6 +256,7 @@
         body.sidebar-collapsed #sidebar-brand,
         body.sidebar-collapsed #sidebar-edition,
         body.sidebar-collapsed #sidebar-port-toggle,
+        body.sidebar-collapsed #btn-port3,
         body.sidebar-collapsed #sidebar-nav .nav-label,
         body.sidebar-collapsed #sidebar-nav .port-toggle { display: none !important; }
         body.sidebar-collapsed #sidebar-header-row > div:first-child { display: none; }
@@ -273,23 +278,41 @@
             body.sidebar-collapsed #sidebar { width: 100%; }
             #sidebar-nav { flex-direction: row; flex: 1; padding: 0.35rem 0.5rem; gap: 0.15rem; align-items: center; }
             #sidebar-nav .nav-btn { flex: 1; flex-direction: column; gap: 2px; padding: 0.4rem 0.25rem; font-size: 10px; align-items: center; justify-content: center; border-radius: 8px; }
+            #sidebar-nav .port-toggle { display: flex !important; flex: 1.35; min-width: 116px; }
             #sidebar-nav .nav-label { font-size: 9px; }
             body.sidebar-collapsed #sidebar-nav .nav-label { display: inline !important; }
             body.sidebar-collapsed #sidebar-nav .nav-btn { width: auto; height: auto; flex: 1; gap: 2px; }
+            body.sidebar-collapsed #sidebar-nav .port-toggle { display: flex !important; }
             #app-main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
             #app-main header { padding: 8px 12px; gap: 6px; flex-wrap: wrap; }
             #app-main header h2 { font-size: 13px; }
+            #app-main header > div { flex-wrap:nowrap; }
             #app-main .p-8 { padding: 0.75rem; }
             #sidebar-nav .port-toggle { display: flex !important; min-width: 70px; }
             /* Header: hide less-critical items on mobile */
-            #refresh-btn .fa-arrows-rotate + * { display: none; }
-            #sync-btn span:last-child { display: none; }
+            #refresh-btn .header-btn-label,
+            #sync-btn .header-btn-label { display: none; }
             #sync-pill-msg { display: none; }
-            #sync-status-pill { min-width: unset; padding: 6px 8px; }
+            #sync-status-pill {
+                width:36px; height:36px; min-width:36px !important; padding:0 !important;
+                border-radius:999px !important; justify-content:center; gap:0;
+            }
+            #sync-dot { width:10px; height:10px; }
+            #refresh-btn, #sync-btn {
+                width:36px; height:36px; min-width:36px; padding:0; justify-content:center;
+                border-radius:999px;
+            }
         }
 
         @media (max-width: 640px) {
             #app-main .p-8 { padding: 0.6rem; }
+            #sidebar-nav { gap:2px; }
+            #sidebar-nav .nav-btn { min-width:34px; padding:0.4rem 0.2rem; }
+            #sidebar-nav .port-toggle,
+            body.sidebar-collapsed #sidebar-nav .port-toggle {
+                display:flex !important; flex:1.6; min-width:112px;
+            }
+            #sidebar-nav .port-toggle button { min-width:0; padding-inline:3px; }
 
             /* ── Dashboard ── */
             .grid { gap: 0.6rem !important; }
@@ -671,6 +694,12 @@
         .sat-table th:first-child, .sat-table th:nth-child(2), .sat-table td:first-child, .sat-table td:nth-child(2) { text-align: left; }
         .sat-table td { padding: 11px 10px; border-bottom: 1px solid #302C29; color: #CFC8C2; font-size: 11px; text-align: right; white-space: nowrap; }
         .sat-table tr:hover td { background: rgba(217,119,87,.035); }
+        .sat-table tfoot td {
+            border-top: 1px solid #49433F; border-bottom: 0; background: #211E1C;
+            color: #F4F0EC; font-weight: 750;
+        }
+        .sat-table tfoot tr:hover td { background: #211E1C; }
+        .sat-total-meta { display:block; margin-top:3px; color:#77716C; font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
         .sat-table-wrap.sticky-head .sat-table th {
             position: sticky; top: 0; z-index: 2; background: #24211F;
         }
@@ -763,6 +792,196 @@
             .sat-form-grid { grid-template-columns: 1fr 1fr; }
             .sat-form-grid .span-4 { grid-column: 1 / -1; }
             .sat-pair-main { grid-template-columns: 1fr 1fr; gap: 10px; }
+        }
+
+        /* ── Personal cashflow planner ── */
+        .cf-workspace { --cf-accent:#14B8A6; --cf-warning:#F59E0B; --cf-danger:#F87171; --cf-good:#34D399; }
+        .cf-toolbar, .cf-panel, .cf-stat {
+            background:#111827; border:1px solid #334155; border-radius:8px;
+        }
+        .cf-toolbar { padding:18px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+        .cf-kicker { color:var(--cf-accent); font-size:10px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+        .cf-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .cf-toolbar-controls {
+            display:grid; grid-template-columns:minmax(180px,230px) auto auto;
+            align-items:end; gap:8px;
+        }
+        .cf-toolbar-controls .cf-label { margin:0; }
+        .cf-toolbar-controls .cf-input, .cf-toolbar-controls .cf-btn { height:36px; min-height:36px; }
+        .cf-btn {
+            min-height:34px; padding:7px 11px; border-radius:6px; border:1px solid #475569;
+            display:inline-flex; align-items:center; justify-content:center; gap:7px;
+            background:#0F172A; color:#CBD5E1; font-size:11px; font-weight:700;
+        }
+        .cf-btn:hover { color:#FFFFFF; border-color:var(--cf-accent); }
+        .cf-btn.primary { color:#062B27; background:var(--cf-accent); border-color:var(--cf-accent); }
+        .cf-btn.danger { color:#FCA5A5; border-color:rgba(248,113,113,.35); }
+        .cf-stats { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; }
+        .cf-stat { min-height:88px; padding:15px; display:flex; flex-direction:column; justify-content:space-between; min-width:0; }
+        .cf-stat-label { color:#64748B; font-size:9px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
+        .cf-stat-value { color:#F8FAFC; font-size:21px; font-weight:750; overflow-wrap:anywhere; }
+        .cf-stat-meta { color:#64748B; font-size:10px; line-height:1.4; }
+        .cf-positive { color:var(--cf-good)!important; }
+        .cf-negative { color:var(--cf-danger)!important; }
+        .cf-warning { color:var(--cf-warning)!important; }
+        .cf-panel { padding:18px; min-width:0; overflow:hidden; }
+        .cf-panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+        .cf-title { color:#F8FAFC; font-size:14px; font-weight:750; }
+        .cf-subtle { color:#64748B; font-size:10px; line-height:1.45; }
+        .cf-grid-2 { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; }
+        .cf-overview-grid { display:grid; grid-template-columns:minmax(300px,.78fr) minmax(0,1.22fr); gap:14px; align-items:stretch; }
+        .cf-snapshot-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; align-items:end; }
+        .cf-snapshot-form .cf-snapshot-primary { grid-column:1/-1; }
+        .cf-snapshot-form .cf-actions-cell { grid-column:1/-1; display:flex; justify-content:flex-end; }
+        .cf-snapshot-form .cf-btn { min-width:120px; min-height:36px; padding-inline:16px; }
+        .cf-grid-3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+        .cf-form-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+        .cf-form-grid .span-2 { grid-column:span 2; }
+        .cf-form-grid .span-4 { grid-column:1/-1; }
+        .cf-label { display:block; color:#64748B; font-size:9px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; margin-bottom:5px; }
+        .cf-input, .cf-select {
+            width:100%; min-height:36px; padding:7px 9px; border:1px solid #475569; border-radius:6px;
+            background:#0B1220; color:#F8FAFC; font-size:11px; outline:none;
+        }
+        .cf-input:focus, .cf-select:focus { border-color:var(--cf-accent); }
+        .cf-table-wrap { overflow:auto; }
+        .cf-table { width:100%; border-collapse:collapse; min-width:760px; }
+        .cf-table th { padding:9px; color:#64748B; font-size:9px; text-transform:uppercase; letter-spacing:.07em; border-bottom:1px solid #334155; text-align:left; white-space:nowrap; }
+        .cf-table td { padding:10px 9px; color:#CBD5E1; font-size:11px; border-bottom:1px solid #1E293B; white-space:nowrap; }
+        .cf-table th.num, .cf-table td.num { text-align:right; }
+        .cf-progress { height:7px; border-radius:999px; overflow:hidden; background:#0B1220; }
+        .cf-progress > span { display:block; height:100%; border-radius:inherit; background:var(--cf-accent); }
+        .cf-wallet-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+        .cf-wallet { padding:13px; border:1px solid #334155; background:#0F172A; border-radius:7px; }
+        .cf-wallet-top { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+        .cf-wallet strong { color:#F8FAFC; font-size:12px; overflow:hidden; text-overflow:ellipsis; }
+        .cf-wallet-amount { color:#CBD5E1; font-size:11px; }
+        .cf-wallet-checks { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:11px; }
+        .cf-wallet-check {
+            display:flex; align-items:flex-start; gap:7px; padding:8px; border:1px solid #334155;
+            border-radius:6px; color:#94A3B8; font-size:10px; line-height:1.35; cursor:pointer;
+        }
+        .cf-wallet-check input { margin-top:1px; accent-color:var(--cf-accent); }
+        .cf-section-label {
+            color:#94A3B8; font-size:10px; font-weight:800; letter-spacing:.12em;
+            text-transform:uppercase; padding:3px 1px 0;
+        }
+        .cf-calendar-wrap { overflow:hidden; border:1px solid #273449; border-radius:8px; background:#0B1220; }
+        .cf-calendar { width:100%; min-width:0; }
+        .cf-calendar-row {
+            --group-rgb:71,85,105;
+            display:grid; grid-template-columns:minmax(62px,.7fr) minmax(84px,1.2fr) repeat(31,minmax(0,1fr)) minmax(68px,.8fr);
+            min-height:38px; border-bottom:1px solid rgba(71,85,105,.22);
+        }
+        .cf-calendar-row:last-child { border-bottom:0; }
+        .cf-calendar-row.card-row { background:rgba(var(--group-rgb),.07); }
+        .cf-calendar-row.card-row:hover { background:rgba(var(--group-rgb),.12); }
+        .cf-calendar-cell {
+            display:flex; align-items:center; justify-content:center; min-width:0;
+            border-right:1px solid rgba(71,85,105,.18); color:#CBD5E1; font-size:9px;
+        }
+        .cf-calendar-cell.issuer, .cf-calendar-cell.card-name {
+            justify-content:flex-start; padding:0 7px; font-weight:750; overflow:hidden;
+        }
+        .cf-calendar-cell.issuer { color:#64748B; }
+        .cf-calendar-cell.card-name { color:#F8FAFC; white-space:nowrap; text-overflow:ellipsis; }
+        .cf-calendar-cell.limit { justify-content:flex-end; padding:0 7px; font-variant-numeric:tabular-nums; font-weight:700; white-space:nowrap; }
+        .cf-calendar-limit-stack { display:flex; flex-direction:column; align-items:flex-end; gap:1px; line-height:1.1; }
+        .cf-calendar-limit-meta { color:#64748B; font-size:7px; font-weight:750; letter-spacing:.04em; text-transform:uppercase; }
+        .cf-calendar-cell.day.major { border-right-color:rgba(148,163,184,.55); }
+        .cf-calendar-cell.day.drop-target { background:rgba(20,184,166,.08); }
+        .cf-calendar-cell.day.range {
+            position:relative; z-index:1; border-right-color:transparent;
+        }
+        .cf-calendar-cell.day.range::before {
+            content:''; position:absolute; z-index:0; left:-2px; right:-2px; top:50%; height:28px;
+            transform:translateY(-50%);
+            background:rgb(var(--group-rgb));
+        }
+        .cf-calendar-cell.day.range-start::before { left:0; border-radius:5px 0 0 5px; }
+        .cf-calendar-cell.day.range-end::before { right:0; border-radius:0 5px 5px 0; }
+        .cf-calendar-cell.day.range-start.range-end::before { left:0; right:0; border-radius:5px; }
+        .cf-calendar-marker {
+            width:100%; min-width:0; height:28px; border:0; border-radius:0; overflow:hidden;
+            position:relative; z-index:1; display:flex; align-items:center; justify-content:center; color:#FFFFFF;
+            font-size:7px; font-weight:900; letter-spacing:-.02em; cursor:grab; touch-action:manipulation;
+        }
+        .cf-calendar-markers { width:100%; display:flex; align-items:center; justify-content:center; gap:0; overflow:hidden; }
+        .cf-calendar-markers .cf-calendar-marker { flex:1; width:auto; }
+        .cf-calendar-marker:active { cursor:grabbing; }
+        .cf-calendar-marker.statement { background:rgb(var(--group-rgb)); border-radius:5px 0 0 5px; }
+        .cf-calendar-marker.due { background:rgb(var(--group-rgb)); border-radius:0 5px 5px 0; box-shadow:none; }
+        .cf-calendar-row.header { min-height:34px; background:#111827; }
+        .cf-calendar-row.header .cf-calendar-cell { color:#64748B; font-size:8px; font-weight:800; }
+        .cf-calendar-bank {
+            --group-rgb:71,85,105; width:100%; min-height:34px; padding:0 10px;
+            display:flex; align-items:center; justify-content:space-between; gap:10px;
+            border:0; border-bottom:1px solid rgba(var(--group-rgb),.35);
+            background:rgba(var(--group-rgb),.12); color:#E2E8F0; text-align:left;
+        }
+        .cf-calendar-bank:hover { background:rgba(var(--group-rgb),.18); }
+        .cf-calendar-bank strong { font-size:10px; letter-spacing:.04em; }
+        .cf-calendar-bank span { color:#64748B; font-size:9px; }
+        .cf-calendar-bank i { width:12px; color:#64748B; font-size:9px; transition:transform .15s ease; }
+        .cf-calendar-bank.collapsed i { transform:rotate(-90deg); }
+        .cf-timeline-editor {
+            grid-column:1/-1; display:grid; grid-template-columns:minmax(130px,1fr) minmax(105px,.7fr) minmax(120px,.8fr) auto auto;
+            gap:8px; align-items:end; padding:10px; background:#0D1726; border-top:1px solid rgba(var(--group-rgb),.35);
+        }
+        .cf-timeline-editor .cf-label { margin:0; }
+        .cf-timeline-editor-title { align-self:center; min-width:0; }
+        .cf-timeline-editor-title strong { display:block; color:#F8FAFC; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .cf-timeline-editor-title span { color:#64748B; font-size:9px; }
+        .cf-calendar-legend { display:flex; align-items:center; gap:14px; color:#64748B; font-size:9px; }
+        .cf-calendar-legend span { display:inline-flex; align-items:center; gap:5px; }
+        .cf-calendar-toggle {
+            min-height:28px; padding:5px 9px; border:1px solid #334155; border-radius:6px;
+            display:inline-flex; align-items:center; gap:6px; background:transparent;
+            color:#94A3B8; font-size:9px; font-weight:750;
+        }
+        .cf-calendar-toggle:hover { color:#F8FAFC; border-color:#64748B; }
+        .cf-calendar-dot { width:9px; height:9px; border-radius:2px; background:#64748B; }
+        .cf-calendar-dot.due { background:#14B8A6; }
+        .cf-badge { display:inline-flex; align-items:center; justify-content:center; padding:3px 7px; border-radius:4px; font-size:9px; font-weight:800; }
+        .cf-badge.due { color:#FCD34D; background:rgba(245,158,11,.10); }
+        .cf-badge.statement { color:#93C5FD; background:rgba(59,130,246,.10); }
+        .cf-cycle-log { max-height:330px; overflow:auto; }
+        .cf-empty { color:#64748B; font-size:11px; text-align:center; padding:26px 10px; }
+        .cf-callout { padding:12px 14px; border:1px solid rgba(20,184,166,.28); background:rgba(20,184,166,.06); border-radius:7px; color:#A7F3D0; font-size:11px; line-height:1.55; }
+        body.theme-port3 { background:#07131A!important; }
+        body.theme-port3 header { background:rgba(7,19,26,.92)!important; }
+        body.theme-light .cf-toolbar, body.theme-light .cf-panel, body.theme-light .cf-stat { background:#FFFFFF; border-color:#CBD5E1; }
+        body.theme-light .cf-title, body.theme-light .cf-stat-value, body.theme-light .cf-wallet strong { color:#0F172A; }
+        body.theme-light .cf-input, body.theme-light .cf-select, body.theme-light .cf-wallet { background:#F8FAFC; border-color:#CBD5E1; color:#0F172A; }
+        body.theme-light .cf-calendar-wrap { background:#F8FAFC; border-color:#CBD5E1; }
+        body.theme-light .cf-calendar-row.header { background:#E2E8F0; }
+        body.theme-light .cf-calendar-cell.card-name { color:#0F172A; }
+        body.theme-light .cf-timeline-editor { background:#F8FAFC; }
+        @media (max-width:1180px) {
+            .cf-stats { grid-template-columns:repeat(3,minmax(0,1fr)); }
+            .cf-wallet-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+        }
+        @media (max-width:760px) {
+            .cf-toolbar { flex-direction:column; align-items:flex-start; }
+            .cf-actions { width:100%; }
+            .cf-actions .cf-btn { flex:1; }
+            .cf-toolbar-controls { width:100%; grid-template-columns:1fr 1fr; }
+            .cf-toolbar-controls .cf-label { grid-column:1/-1; }
+            .cf-toolbar-controls .cf-btn { width:100%; }
+            .cf-stats { grid-template-columns:1fr 1fr; gap:8px; }
+            .cf-grid-2, .cf-grid-3, .cf-overview-grid { grid-template-columns:1fr; }
+            .cf-snapshot-form { grid-template-columns:1fr 1fr; }
+            .cf-snapshot-form .cf-actions-cell { grid-column:1/-1; }
+            .cf-wallet-grid { grid-template-columns:1fr 1fr; }
+            .cf-form-grid { grid-template-columns:1fr 1fr; }
+            .cf-form-grid .span-4 { grid-column:1/-1; }
+            .cf-calendar-row { grid-template-columns:minmax(44px,.65fr) minmax(64px,1fr) repeat(31,minmax(0,1fr)) minmax(52px,.7fr); }
+            .cf-calendar-cell { font-size:7px; }
+            .cf-calendar-cell.issuer, .cf-calendar-cell.card-name, .cf-calendar-cell.limit { padding-inline:4px; }
+            .cf-calendar-marker { height:25px; font-size:0; }
+            .cf-calendar-marker::after { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; }
+            .cf-timeline-editor { grid-template-columns:1fr 1fr; }
+            .cf-timeline-editor-title { grid-column:1/-1; }
         }
 
         body.theme-light { background-color: #F6F8FB; color: #0F172A; }
@@ -885,9 +1104,13 @@
                 <button id="btn-port1" onclick="switchPortfolio('port1')" class="flex-1 py-1.5 text-xs font-bold rounded-md bg-blue-600 text-white shadow transition-all">Core Port</button>
                 <button id="btn-port2" onclick="switchPortfolio('port2')" class="flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">Satellite Port</button>
             </div>
+            <button id="btn-port3" onclick="switchPortfolio('port3')" class="mt-2 w-full py-1.5 text-xs font-bold rounded-md border border-slate-700 text-slate-400 hover:text-white hover:border-teal-500/60 hover:bg-teal-500/10 transition-all">
+                Cashflow Planner
+            </button>
             <div id="sidebar-port-toggle-collapsed" aria-label="Portfolio selector">
                 <button id="btn-port1-c" class="collapsed-port-btn" onclick="switchPortfolio('port1')" title="Core Port" aria-label="Core Port"></button>
                 <button id="btn-port2-c" class="collapsed-port-btn" onclick="switchPortfolio('port2')" title="Satellite Port" aria-label="Satellite Port"></button>
+                <button id="btn-port3-c" class="collapsed-port-btn" onclick="switchPortfolio('port3')" title="Cashflow Planner" aria-label="Cashflow Planner"></button>
             </div>
         </div>
 
@@ -904,9 +1127,10 @@
             <button onclick="switchTab('settings')" id="btn-settings" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-700">
                 <i class="fa-solid fa-sliders"></i> <span class="nav-label">Setting</span>
             </button>
-            <div class="port-toggle bg-slate-800/80 p-1 rounded-lg flex space-x-1 border border-slate-700" style="display:none;">
+            <div class="port-toggle bg-slate-800/80 p-1 rounded-lg flex space-x-1 border border-slate-700">
                 <button id="btn-port1-m" onclick="switchPortfolio('port1')" class="flex-1 py-1 text-[10px] font-bold rounded-md bg-blue-600 text-white shadow transition-all">Core</button>
                 <button id="btn-port2-m" onclick="switchPortfolio('port2')" class="flex-1 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:bg-slate-700/50 transition-all">Sat.</button>
+                <button id="btn-port3-m" onclick="switchPortfolio('port3')" class="flex-1 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:bg-slate-700/50 transition-all">Cash</button>
             </div>
         </nav>
     </aside>
@@ -943,13 +1167,13 @@
                 <button id="refresh-btn" onclick="doFullRefresh()"
                     class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 border border-slate-700 hover:border-blue-500 hover:text-blue-400 transition-colors"
                     title="Refresh data from Google Sheets">
-                    <i class="fa-solid fa-arrows-rotate text-[10px]" id="refresh-icon"></i> Refresh
+                    <i class="fa-solid fa-arrows-rotate text-[10px]" id="refresh-icon"></i><span class="header-btn-label">Refresh</span>
                 </button>
                 <!-- Unified Sync / Settings button -->
                 <button id="sync-btn" onclick="openSyncModal()"
                     class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 border border-slate-700 hover:border-emerald-500 hover:text-emerald-400 transition-colors"
                     title="Google Sheets sync settings">
-                    <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Sync
+                    <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i><span class="header-btn-label">Sync</span>
                 </button>
             </div>
         </header>
@@ -1252,11 +1476,11 @@
                                 <h4 class="sat-panel-title">Holdings</h4>
                             </div>
                             <div class="sat-actions">
-                                <select id="sat-holdings-filter" class="sat-select" style="width:auto" onchange="satRenderHoldings()">
-                                    <option value="open">Open</option>
-                                    <option value="closed">Closed</option>
-                                    <option value="all">All</option>
-                                </select>
+                                <div id="sat-holdings-filter" class="sat-segment" aria-label="Holdings filter">
+                                    <button type="button" data-status="open" class="active" onclick="satSetHoldingsFilter('open')">Open</button>
+                                    <button type="button" data-status="closed" onclick="satSetHoldingsFilter('closed')">Closed</button>
+                                    <button type="button" data-status="all" onclick="satSetHoldingsFilter('all')">All</button>
+                                </div>
                                 <button class="sat-btn primary" onclick="satOpenPositionModal()"><i class="fa-solid fa-plus"></i> Add</button>
                             </div>
                         </div>
@@ -1264,6 +1488,7 @@
                             <table class="sat-table">
                                 <thead><tr><th>Ticker</th><th>Name / Side</th><th>Qty</th><th>Avg Cost</th><th>Current / Exit</th><th>Cost</th><th>Market Value</th><th>Unrealized P/L</th><th>Realized P/L</th><th title="Share of cash plus open current market value">Portfolio Weight</th><th>Days Held</th><th></th></tr></thead>
                                 <tbody id="sat-holdings-tbody"></tbody>
+                                <tfoot id="sat-holdings-tfoot"></tfoot>
                             </table>
                         </div>
                         <div id="sat-holdings-empty" class="sat-empty hidden">No positions in this view.</div>
@@ -1314,6 +1539,113 @@
                             <div id="sat-dashboard-trades-empty" class="sat-empty hidden">No trade records yet.</div>
                         </section>
                     </div>
+                </div>
+
+                <!-- ══════════ PERSONAL CASHFLOW PLANNER ══════════ -->
+                <div id="cf-dashboard-view" class="cf-workspace hidden space-y-4">
+                    <div class="cf-toolbar">
+                        <div>
+                            <div class="cf-kicker">Personal Cashflow</div>
+                            <h3 class="text-xl font-bold text-white mt-1">Debt Float & Free Cash Planner</h3>
+                        </div>
+                        <div class="cf-toolbar-controls">
+                            <label class="cf-label mb-0">Tracking month
+                                <input id="cf-active-month" class="cf-input mt-1" type="month" onchange="cfSetActiveMonth(this.value)">
+                            </label>
+                            <button class="cf-btn" type="button" onclick="cfPullFromSheets()"><i class="fa-solid fa-cloud-arrow-down"></i> Pull</button>
+                            <button class="cf-btn primary" type="button" onclick="cfPushToSheets()"><i class="fa-solid fa-cloud-arrow-up"></i> Save</button>
+                        </div>
+                    </div>
+
+                    <div class="cf-stats">
+                        <div class="cf-stat"><span class="cf-stat-label">Bank Cash</span><strong id="cf-bank-cash" class="cf-stat-value">฿0</strong></div>
+                        <div class="cf-stat"><span class="cf-stat-label">Wallet Cash</span><strong id="cf-wallet-cash" class="cf-stat-value">฿0</strong></div>
+                        <div class="cf-stat"><span class="cf-stat-label">All Card Debt</span><strong id="cf-card-debt" class="cf-stat-value cf-negative">฿0</strong></div>
+                        <div class="cf-stat"><span class="cf-stat-label">Required Debt Reserve</span><strong id="cf-debt-reserve" class="cf-stat-value cf-warning">฿0</strong></div>
+                        <div class="cf-stat"><span class="cf-stat-label">True Free Cash</span><strong id="cf-true-free-cash" class="cf-stat-value">฿0</strong></div>
+                    </div>
+
+                    <div class="cf-overview-grid">
+                        <section class="cf-panel">
+                            <div class="cf-panel-head">
+                                <div><h4 class="cf-title">Cash Snapshot & Monthly Plan</h4></div>
+                            </div>
+                            <form id="cf-settings-form" class="cf-snapshot-form" onsubmit="cfSaveSettings(event)">
+                                <div class="cf-snapshot-primary"><label class="cf-label">Bank cash</label><input id="cf-setting-bank" class="cf-input cf-money-input" type="text" inputmode="decimal"></div>
+                                <div><label class="cf-label">Monthly income</label><input id="cf-setting-income" class="cf-input cf-money-input" type="text" inputmode="decimal"></div>
+                                <div><label class="cf-label">Monthly spending reserve</label><input id="cf-setting-spending" class="cf-input cf-money-input" type="text" inputmode="decimal"></div>
+                                <div class="cf-actions-cell"><button class="cf-btn primary" type="submit"><i class="fa-solid fa-check"></i> Apply</button></div>
+                            </form>
+                        </section>
+
+                        <section class="cf-panel">
+                            <div class="cf-panel-head"><div><h4 class="cf-title">Debt Float Position</h4></div></div>
+                            <div class="cf-grid-2">
+                                <div class="cf-stat"><span class="cf-stat-label">Easybills Top-up</span><strong id="cf-rollover-debt" class="cf-stat-value">฿0</strong></div>
+                                <div class="cf-stat"><span class="cf-stat-label">Monthly Surplus</span><strong id="cf-monthly-surplus" class="cf-stat-value">฿0</strong></div>
+                                <div class="cf-stat"><span class="cf-stat-label">Debt Coverage</span><strong id="cf-debt-coverage" class="cf-stat-value">—</strong></div>
+                                <div class="cf-stat"><span class="cf-stat-label">Cycle Completion</span><strong id="cf-cycle-progress-total" class="cf-stat-value">0%</strong><span id="cf-cycle-progress-meta" class="cf-stat-meta">Current tracking month</span></div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div class="cf-section-label">Easybills+ · cash rotation</div>
+                    <section class="cf-panel">
+                        <div class="cf-panel-head">
+                            <div><h4 class="cf-title">Easybills Wallet Progress</h4></div>
+                        </div>
+                        <div id="cf-wallet-grid" class="cf-wallet-grid"></div>
+                    </section>
+
+                    <div class="cf-grid-2">
+                        <section class="cf-panel">
+                            <div class="cf-panel-head"><div><h4 class="cf-title">Easybills Top-up</h4></div></div>
+                            <form id="cf-topup-form" class="cf-form-grid" onsubmit="cfAddTopup(event)">
+                                <div><label class="cf-label">Date</label><input id="cf-topup-date" class="cf-input" type="date" required></div>
+                                <div><label class="cf-label">Credit card</label><select id="cf-topup-card" class="cf-select" required></select></div>
+                                <div><label class="cf-label">Wallet</label><select id="cf-topup-wallet" class="cf-select" required></select></div>
+                                <div><label class="cf-label">Wallet amount</label><input id="cf-topup-amount" class="cf-input cf-money-input" type="text" inputmode="decimal" value="10,000" required></div>
+                                <div class="span-4 flex justify-end"><button class="cf-btn primary" type="submit"><i class="fa-solid fa-plus"></i> Record Top-up</button></div>
+                            </form>
+                        </section>
+
+                        <section class="cf-panel">
+                            <div class="cf-panel-head"><div><h4 class="cf-title">Cash Movement</h4></div></div>
+                            <form id="cf-cash-form" class="cf-form-grid" onsubmit="cfAddCashMovement(event)">
+                                <div><label class="cf-label">Date</label><input id="cf-cash-date" class="cf-input" type="date" required></div>
+                                <div><label class="cf-label">Type</label><select id="cf-cash-type" class="cf-select"><option value="income">Income</option><option value="expense">Expense</option></select></div>
+                                <div><label class="cf-label">Amount</label><input id="cf-cash-amount" class="cf-input cf-money-input" type="text" inputmode="decimal" required></div>
+                                <div><label class="cf-label">Note</label><input id="cf-cash-note" class="cf-input"></div>
+                                <div class="span-4 flex justify-end"><button class="cf-btn" type="submit">Record Cash Movement</button></div>
+                            </form>
+                        </section>
+                    </div>
+
+                    <div class="cf-section-label">Credit cards · statement & payment timeline</div>
+                    <section class="cf-panel">
+                        <div class="cf-panel-head">
+                            <div><h4 class="cf-title">Credit Card Timeline</h4></div>
+                            <div class="cf-calendar-legend">
+                                <span><i class="cf-calendar-dot"></i> STATE</span>
+                                <span><i class="cf-calendar-dot due"></i> PAY</span>
+                                <span>Line = billing range · drag to change day</span>
+                                <button id="cf-toggle-all-banks" class="cf-calendar-toggle" type="button" onclick="cfToggleAllTimelineBanks()"></button>
+                            </div>
+                        </div>
+                        <div class="cf-calendar-wrap">
+                            <div id="cf-card-timeline" class="cf-calendar"></div>
+                        </div>
+                    </section>
+
+                    <section class="cf-panel">
+                        <div class="cf-panel-head">
+                            <div><h4 class="cf-title">Cashflow Activity</h4></div>
+                        </div>
+                        <div class="cf-table-wrap cf-cycle-log">
+                            <table class="cf-table"><thead><tr><th>Date</th><th>Type</th><th>Card / Wallet</th><th class="num">Cash change</th><th class="num">Debt change</th><th>Note</th><th></th></tr></thead><tbody id="cf-event-tbody"></tbody></table>
+                        </div>
+                        <div id="cf-event-empty" class="cf-empty">No cashflow activity yet.</div>
+                    </section>
                 </div>
             </div>
 
@@ -1600,17 +1932,18 @@
                 </div>
                 <div class="bg-card p-6 rounded-xl border border-slate-700 border-l-4 border-l-emerald-500">
                     <h4 class="text-white font-bold mb-2">Google Sheets Integration</h4>
-                    <p class="text-xs text-slate-400 mb-4">Core Portfolio, Satellite Trading and Wheel Strategy share the same Apps Script URL — set it here once.</p>
+                    <p class="text-xs text-slate-400 mb-4">Core, Satellite, Cashflow and Wheel share the same Apps Script URL — set it here once.</p>
                     <div class="space-y-4">
                         <div>
-                            <label class="text-[10px] text-slate-500 uppercase block mb-1">Apps Script Web App URL (Single URL for both)</label>
+                            <label class="text-[10px] text-slate-500 uppercase block mb-1">Apps Script Web App URL</label>
                             <input type="text" id="unified-gs-url" class="w-full bg-slate-800 border border-slate-700 text-white rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" placeholder="https://script.google.com/macros/s/.../exec">
-                            <p class="text-[10px] text-slate-500 mt-1">Core uses Activities + Setting_data, Satellite uses Satellite_positions + Satellite_trades, and Wheel uses its three Wheel tabs.</p>
+                            <p class="text-[10px] text-slate-500 mt-1">Cashflow uses four private tabs: settings, cards, wallets and events.</p>
                         </div>
                         <div class="flex gap-3 flex-wrap">
-                            <button onclick="saveUnifiedUrl()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Save & Connect Both</button>
+                            <button onclick="saveUnifiedUrl()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Save URL</button>
                             <button onclick="testInvConnection()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Test Investment Sync</button>
                             <button onclick="testSatelliteConnection()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Test Satellite Sync</button>
+                            <button onclick="testCashflowConnection()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Test Cashflow Sync</button>
                             <button onclick="testWheelConnection()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Test Wheel Sync</button>
                         </div>
                         <div id="gs-status-msg" class="text-xs text-slate-500 hidden"></div>
@@ -1700,7 +2033,7 @@
             <!-- URL input -->
             <div style="margin-bottom:14px">
                 <div class="wheel-input-group">
-                    <span class="wheel-label">Apps Script Web App URL <span style="color:#475569">(shared by both Investment & Wheel)</span></span>
+                    <span class="wheel-label">Apps Script Web App URL <span style="color:#475569">(shared by all dashboard workspaces)</span></span>
                     <input type="text" class="wheel-input" id="modal_gs_url"
                         placeholder="https://script.google.com/macros/s/.../exec"
                         style="font-size:11px">
@@ -1854,15 +2187,33 @@
             tradeLogMode: 'pair',
             focusedTradeTicker: '',
             expandedPairNotes: {},
+            holdingsFilter: 'open',
             journalStatus: 'open',
             selectedPositionId: null
+        },
+        cashflow: {
+            settings: {
+                bankCash: 0,
+                monthlyIncome: 0,
+                monthlySpending: 0,
+                otherReserved: 0,
+                revolvingTarget: 200000,
+                walletCapacity: 50000,
+                feeFixed: 10,
+                feePercent: 0.15
+            },
+            cards: [],
+            wallets: [],
+            events: [],
+            activeMonth: localStorage.getItem('cashflow_active_month_v1') || new Date().toISOString().slice(0, 7)
         },
         computed: { stocks: {}, bonds: {}, crypto: {}, gold: {}, portfolio: {} },
         ui: { expandedQuarters: { q1: false, q2: false, q3: false, q4: false } }
     };
 
-    const pState = () => state.portfolios[state.currentPort];
+    const pState = () => state.portfolios[state.currentPort] || state.portfolios.port1;
     const satState = () => state.satellite;
+    const cfState = () => state.cashflow;
     const charts = { alloc: null, perf: null, satPerformance: null, satAllocation: null };
     const THEME_KEY = 'investment_dashboard_theme';
     const SIDEBAR_COLLAPSED_KEY = 'investment_dashboard_sidebar_collapsed';
@@ -1896,7 +2247,7 @@
     let satPerformanceRenderToken = 0;
 
     function satNumber(value) {
-        const n = Number(value);
+        const n = Number(typeof value === 'string' ? value.replace(/,/g, '').trim() : value);
         return Number.isFinite(n) ? n : 0;
     }
 
@@ -2911,10 +3262,18 @@
         target.innerHTML = rows.map(row => `<div class="sat-insight-row"><i class="fa-solid ${row[0]} sat-insight-icon"></i><div><div class="sat-insight-label">${satEsc(row[1])}</div><div class="sat-insight-value">${satEsc(row[2])}</div></div></div>`).join('');
     }
 
+    function satSetHoldingsFilter(status) {
+        satState().holdingsFilter = ['open','closed','all'].includes(status) ? status : 'open';
+        satRenderHoldings();
+    }
+
     function satRenderHoldings() {
         const tbody = document.getElementById('sat-holdings-tbody');
         if (!tbody) return;
-        const filter = document.getElementById('sat-holdings-filter')?.value || 'open';
+        const filter = satState().holdingsFilter || 'open';
+        document.querySelectorAll('#sat-holdings-filter button').forEach(button => {
+            button.classList.toggle('active', button.dataset.status === filter);
+        });
         const rows = satState().positions.filter(p => filter === 'all' || p.status === filter);
         const totalOpenValue = satState().positions.filter(p => p.status === 'open').reduce((sum,p) => sum + Math.abs(satPositionStats(p).value), 0);
         const portfolioAllocationValue = Math.max(0, satMetrics().cash) + totalOpenValue;
@@ -2937,6 +3296,31 @@
                 <td><div class="flex justify-end gap-1"><button class="sat-btn" style="min-height:28px;padding:4px 8px" onclick="satOpenTradeEntry('${satEsc(p.id)}')" title="Record trade"><i class="fa-solid fa-arrow-right-arrow-left"></i></button><button class="sat-btn" style="min-height:28px;padding:4px 8px" onclick="satOpenPositionModal('${satEsc(p.id)}')" title="Edit position"><i class="fa-solid fa-pen"></i></button></div></td>
             </tr>`;
         }).join('');
+        const totals = rows.reduce((sum, position) => {
+            const stats = satPositionStats(position);
+            sum.cost += stats.cost;
+            sum.value += Math.abs(stats.value);
+            sum.unrealized += position.status === 'open' ? stats.unrealized : 0;
+            sum.realized += stats.realizedNet;
+            if (position.status === 'open' && portfolioAllocationValue > 0) sum.weight += Math.abs(stats.value) / portfolioAllocationValue * 100;
+            return sum;
+        }, { cost:0, value:0, unrealized:0, realized:0, weight:0 });
+        const tfoot = document.getElementById('sat-holdings-tfoot');
+        if (tfoot) {
+            tfoot.innerHTML = rows.length ? `<tr>
+                <td colspan="2">Total<span class="sat-total-meta">${rows.length} position${rows.length === 1 ? '' : 's'}</span></td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>${satDisplayValue(totals.cost)}</td>
+                <td>${satDisplayValue(totals.value)}</td>
+                <td class="${totals.unrealized >= 0 ? 'sat-positive' : 'sat-negative'}">${filter === 'closed' ? '—' : satSignedDisplayValue(totals.unrealized)}</td>
+                <td class="${totals.realized >= 0 ? 'sat-positive' : 'sat-negative'}">${satSignedDisplayValue(totals.realized)}</td>
+                <td>${filter === 'closed' ? '—' : `${totals.weight.toFixed(1)}%`}</td>
+                <td>—</td>
+                <td></td>
+            </tr>` : '';
+        }
         document.getElementById('sat-holdings-empty')?.classList.toggle('hidden', rows.length > 0);
     }
 
@@ -3179,17 +3563,22 @@
 
     function satApplyWorkspace() {
         const isSatellite = state.currentPort === 'port2';
-        document.getElementById('core-dashboard-view')?.classList.toggle('hidden', isSatellite);
+        const isCashflow = state.currentPort === 'port3';
+        document.getElementById('core-dashboard-view')?.classList.toggle('hidden', isSatellite || isCashflow);
         document.getElementById('sat-dashboard-view')?.classList.toggle('hidden', !isSatellite);
-        document.getElementById('core-transactions-view')?.classList.toggle('hidden', isSatellite);
+        document.getElementById('cf-dashboard-view')?.classList.toggle('hidden', !isCashflow);
+        document.getElementById('core-transactions-view')?.classList.toggle('hidden', isSatellite || isCashflow);
         document.getElementById('sat-transactions-view')?.classList.toggle('hidden', !isSatellite);
         const activeTab = document.querySelector('.tab-content.active')?.id?.replace('tab-','') || 'dashboard';
-        const titles = isSatellite
-            ? { dashboard: 'Satellite Trading Dashboard', transactions: 'Satellite Trade Ledger', wheel: 'Wheel Strategy', settings: 'Settings' }
-            : { dashboard: 'Portfolio Overview', transactions: 'Transaction Ledger', wheel: 'Wheel Strategy', settings: 'Settings' };
+        const titles = isCashflow
+            ? { dashboard: 'Personal Cashflow Planner' }
+            : isSatellite
+                ? { dashboard: 'Satellite Trading Dashboard', transactions: 'Satellite Trade Ledger', wheel: 'Wheel Strategy', settings: 'Settings' }
+                : { dashboard: 'Portfolio Overview', transactions: 'Transaction Ledger', wheel: 'Wheel Strategy', settings: 'Settings' };
         const title = document.getElementById('page-title');
         if (title) title.textContent = titles[activeTab] || '';
         if (isSatellite) requestAnimationFrame(satRenderAll);
+        if (isCashflow) requestAnimationFrame(cfRenderAll);
     }
 
     async function satExecutionFx(date, currency, saved={}) {
@@ -3546,6 +3935,786 @@
         }
     }
 
+    // ════════════════════════════════════════════════════
+    //   CASHFLOW PLANNER — Debt Float & Easybills
+    // ════════════════════════════════════════════════════
+    const CF_SETTINGS_KEY = 'cashflow_settings_v1';
+    const CF_CARDS_KEY = 'cashflow_cards_v1';
+    const CF_WALLETS_KEY = 'cashflow_wallets_v1';
+    const CF_EVENTS_KEY = 'cashflow_events_v1';
+    const CF_COLLAPSED_BANKS_KEY = 'cashflow_collapsed_banks_v1';
+    let cfTimelineEditor = null;
+    let cfPushTimer = null;
+
+    function cfId(prefix) {
+        return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function cfDefaultWallets() {
+        return [1,2,3,4].map(index => ({
+            id: `wallet_${index}`,
+            name: `Wallet ${index}`,
+            balance: 0,
+            capacity: 50000,
+            active: true,
+            updatedAt: ''
+        }));
+    }
+
+    function cfNormalizeSettings(raw={}) {
+        const valueOr = (value, fallback) => value === '' || value === null || value === undefined ? fallback : satNumber(value);
+        return {
+            bankCash: Math.max(0, satNumber(raw.bankCash)),
+            monthlyIncome: Math.max(0, satNumber(raw.monthlyIncome)),
+            monthlySpending: Math.max(0, satNumber(raw.monthlySpending)),
+            otherReserved: Math.max(0, satNumber(raw.otherReserved)),
+            revolvingTarget: Math.max(0, valueOr(raw.revolvingTarget, 200000)),
+            walletCapacity: Math.max(0, valueOr(raw.walletCapacity, 50000)),
+            feeFixed: 10,
+            feePercent: 0.15
+        };
+    }
+
+    function cfNormalizeCard(raw={}) {
+        return {
+            id: String(raw.id || cfId('card')),
+            issuer: String(raw.issuer || ''),
+            name: String(raw.name || ''),
+            limitGroup: String(raw.limitGroup || raw.id || ''),
+            sortOrder: Math.max(0, Math.round(satNumber(raw.sortOrder))),
+            statementDay: Math.min(31, Math.max(1, Math.round(satNumber(raw.statementDay) || 1))),
+            dueDay: Math.min(31, Math.max(1, Math.round(satNumber(raw.dueDay) || 1))),
+            creditLimit: Math.max(0, satNumber(raw.creditLimit)),
+            outstanding: Math.max(0, satNumber(raw.outstanding)),
+            rollover: raw.rollover === true || String(raw.rollover).toLowerCase() === 'true',
+            active: raw.active === false || String(raw.active).toLowerCase() === 'false' ? false : true,
+            updatedAt: String(raw.updatedAt || '')
+        };
+    }
+
+    function cfMergeLocalCardCatalog() {
+        const catalog = window.CASHFLOW_LOCAL_SEED?.cards;
+        if (!Array.isArray(catalog) || !catalog.length) return false;
+        const retiredIds = new Set(window.CASHFLOW_LOCAL_SEED?.retiredCardIds || []);
+        const retiredNames = new Set(['YCA', 'YCA-A', 'CASHPLUS', 'KAST', 'ETHER']);
+        const beforeRetireCount = cfState().cards.length;
+        cfState().cards = cfState().cards.filter(card =>
+            !retiredIds.has(card.id) && !retiredNames.has(String(card.name || '').trim().toUpperCase())
+        );
+        const catalogVersion = Math.max(0, Math.round(satNumber(window.CASHFLOW_LOCAL_SEED?.catalogVersion)));
+        const appliedVersion = Math.max(0, Math.round(satNumber(localStorage.getItem('cashflow_card_catalog_version'))));
+        const refreshMetadata = catalogVersion > appliedVersion;
+        const existingMap = new Map(cfState().cards.map(card => [card.id, card]));
+        let changed = cfState().cards.length !== beforeRetireCount;
+        catalog.forEach(raw => {
+            const card = cfNormalizeCard(raw);
+            const existing = existingMap.get(card.id);
+            if (existing) {
+                if (!refreshMetadata) return;
+                Object.assign(existing, {
+                    issuer:card.issuer, name:card.name, limitGroup:card.limitGroup,
+                    sortOrder:card.sortOrder, statementDay:card.statementDay,
+                    dueDay:card.dueDay, creditLimit:card.creditLimit
+                });
+                changed = true;
+            } else {
+                cfState().cards.push(card);
+                existingMap.set(card.id, card);
+                changed = true;
+            }
+        });
+        if (catalogVersion) localStorage.setItem('cashflow_card_catalog_version', String(catalogVersion));
+        return changed;
+    }
+
+    function cfNormalizeWallet(raw={}, index=0) {
+        const transferredMonths = Array.isArray(raw.transferredMonths)
+            ? raw.transferredMonths
+            : String(raw.transferredMonths || '').split(',').map(value => value.trim()).filter(Boolean);
+        return {
+            id: String(raw.id || `wallet_${index + 1}`),
+            name: String(raw.name || `Wallet ${index + 1}`),
+            balance: Math.max(0, satNumber(raw.balance)),
+            capacity: Math.max(0, satNumber(raw.capacity) || cfState().settings.walletCapacity || 50000),
+            transferredMonths: [...new Set(transferredMonths.filter(value => /^\d{4}-\d{2}$/.test(value)))],
+            transferTrackingInitialized: raw.transferTrackingInitialized === true || String(raw.transferTrackingInitialized).toLowerCase() === 'true',
+            active: raw.active === false || String(raw.active).toLowerCase() === 'false' ? false : true,
+            updatedAt: String(raw.updatedAt || '')
+        };
+    }
+
+    function cfNormalizeEvent(raw={}) {
+        return {
+            id: String(raw.id || cfId('event')),
+            date: toIsoDashboardDate(raw.date) || satToday(),
+            type: String(raw.type || '').toLowerCase(),
+            cardId: String(raw.cardId || ''),
+            walletId: String(raw.walletId || ''),
+            amount: satNumber(raw.amount),
+            fee: satNumber(raw.fee),
+            chargedAmount: satNumber(raw.chargedAmount),
+            transferAmount: satNumber(raw.transferAmount),
+            cashDelta: satNumber(raw.cashDelta),
+            debtDelta: satNumber(raw.debtDelta),
+            walletDelta: satNumber(raw.walletDelta),
+            note: String(raw.note || ''),
+            createdAt: String(raw.createdAt || new Date().toISOString())
+        };
+    }
+
+    function cfMoney(value, digits=0) {
+        return '฿' + satNumber(value).toLocaleString('en-US', {
+            minimumFractionDigits: digits,
+            maximumFractionDigits: digits
+        });
+    }
+
+    function cfNumberText(value, digits=2) {
+        const number = satNumber(value);
+        return number.toLocaleString('en-US', {
+            minimumFractionDigits: Number.isInteger(number) ? 0 : digits,
+            maximumFractionDigits: digits
+        });
+    }
+
+    function cfPrepareMoneyInputs() {
+        document.querySelectorAll('#cf-dashboard-view .cf-money-input').forEach(input => {
+            input.onfocus = () => { input.value = input.value.replace(/,/g, ''); input.select(); };
+            input.onblur = () => { input.value = cfNumberText(input.value); };
+            input.onkeydown = event => {
+                if (event.key === 'Enter' && input.form?.id !== 'cf-settings-form') {
+                    event.preventDefault();
+                    input.blur();
+                }
+            };
+            if (document.activeElement !== input) input.value = cfNumberText(input.value);
+        });
+    }
+
+    function cfPreviousMonth(month=cfState().activeMonth) {
+        const [year, monthNumber] = String(month).split('-').map(Number);
+        if (!year || !monthNumber) return '';
+        const date = new Date(year, monthNumber - 2, 1);
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function cfMonthLabel(month) {
+        const [year, monthNumber] = String(month).split('-').map(Number);
+        return new Date(year, monthNumber - 1, 1).toLocaleDateString('en-US', { month:'short', year:'numeric' });
+    }
+
+    function cfMigrateWalletTransferTracking() {
+        const activeMonth = cfState().activeMonth;
+        const previousMonth = cfPreviousMonth(activeMonth);
+        cfState().wallets.forEach(wallet => {
+            if (wallet.transferTrackingInitialized) return;
+            const transferred = new Set(wallet.transferredMonths || []);
+            if (cfWalletMonthTopup(wallet.id, previousMonth) > 0) transferred.add(previousMonth);
+            const activeTopup = cfWalletMonthTopup(wallet.id, activeMonth);
+            if (activeTopup > 0 && satNumber(wallet.balance) <= 0) transferred.add(activeMonth);
+            wallet.transferredMonths = [...transferred];
+            wallet.transferTrackingInitialized = true;
+        });
+    }
+
+    function cfSaveLocal() {
+        localStorage.setItem(CF_SETTINGS_KEY, JSON.stringify(cfState().settings));
+        localStorage.setItem(CF_CARDS_KEY, JSON.stringify(cfState().cards));
+        localStorage.setItem(CF_WALLETS_KEY, JSON.stringify(cfState().wallets));
+        localStorage.setItem(CF_EVENTS_KEY, JSON.stringify(cfState().events));
+        localStorage.setItem('cashflow_active_month_v1', cfState().activeMonth);
+    }
+
+    function cfLoadLocal() {
+        try {
+            cfState().settings = cfNormalizeSettings(JSON.parse(localStorage.getItem(CF_SETTINGS_KEY) || '{}'));
+            cfState().cards = (JSON.parse(localStorage.getItem(CF_CARDS_KEY) || '[]') || []).map(cfNormalizeCard).filter(card => card.name);
+            const savedWallets = JSON.parse(localStorage.getItem(CF_WALLETS_KEY) || '[]');
+            cfState().wallets = (Array.isArray(savedWallets) && savedWallets.length ? savedWallets : cfDefaultWallets()).map(cfNormalizeWallet);
+            cfState().events = (JSON.parse(localStorage.getItem(CF_EVENTS_KEY) || '[]') || []).map(cfNormalizeEvent);
+            const seed = window.CASHFLOW_LOCAL_SEED;
+            if (seed && !cfState().cards.length && !cfState().events.length) {
+                cfState().settings = cfNormalizeSettings(seed.settings || {});
+                cfState().cards = (seed.cards || []).map(cfNormalizeCard).filter(card => card.name);
+                cfState().wallets = ((seed.wallets || []).length ? seed.wallets : cfDefaultWallets()).map(cfNormalizeWallet);
+                cfState().events = (seed.events || []).map(cfNormalizeEvent);
+                if (/^\d{4}-\d{2}$/.test(seed.activeMonth || '')) cfState().activeMonth = seed.activeMonth;
+            }
+            cfMergeLocalCardCatalog();
+            cfMigrateWalletTransferTracking();
+            cfSaveLocal();
+        } catch (error) {
+            console.warn('Cashflow local data reset:', error.message);
+            cfState().settings = cfNormalizeSettings({});
+            cfState().cards = [];
+            cfState().wallets = cfDefaultWallets();
+            cfState().events = [];
+        }
+    }
+
+    function cfTotals() {
+        const bankCash = satNumber(cfState().settings.bankCash);
+        const trackedMonths = [cfState().activeMonth, cfPreviousMonth()];
+        const walletCash = cfState().wallets.filter(wallet => wallet.active).reduce((sum, wallet) => {
+            return sum + trackedMonths.reduce((monthSum, month) => {
+                return monthSum + (wallet.transferredMonths.includes(month) ? 0 : cfWalletMonthTopup(wallet.id, month));
+            }, 0);
+        }, 0);
+        const cardDebt = cfState().cards.filter(card => card.active).reduce((sum, card) => sum + satNumber(card.outstanding), 0);
+        const rolloverDebt = cfMonthEvents('topup').reduce((sum, event) => sum + satNumber(event.amount), 0);
+        const requiredReserve = Math.max(0, cardDebt - walletCash);
+        const monthlySpending = satNumber(cfState().settings.monthlySpending);
+        const trueFreeCash = bankCash - requiredReserve - monthlySpending;
+        const monthlySurplus = satNumber(cfState().settings.monthlyIncome) - monthlySpending;
+        const coverage = cardDebt > 0 ? (bankCash + walletCash) / cardDebt * 100 : null;
+        return { bankCash, walletCash, cardDebt, rolloverDebt, requiredReserve, trueFreeCash, monthlySurplus, coverage };
+    }
+
+    function cfMonthEvents(type='', month=cfState().activeMonth) {
+        const prefix = month;
+        return cfState().events.filter(event => event.date.startsWith(prefix) && (!type || event.type === type));
+    }
+
+    function cfWalletMonthTopup(walletId, month=cfState().activeMonth) {
+        return cfMonthEvents('topup', month).filter(event => event.walletId === walletId).reduce((sum, event) => sum + satNumber(event.amount), 0);
+    }
+
+    function cfRenderSummary() {
+        const totals = cfTotals();
+        const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+        set('cf-bank-cash', cfMoney(totals.bankCash));
+        set('cf-wallet-cash', cfMoney(totals.walletCash));
+        set('cf-card-debt', cfMoney(totals.cardDebt));
+        set('cf-debt-reserve', cfMoney(totals.requiredReserve));
+        set('cf-true-free-cash', cfMoney(totals.trueFreeCash));
+        set('cf-rollover-debt', cfMoney(totals.rolloverDebt));
+        set('cf-monthly-surplus', cfMoney(totals.monthlySurplus));
+        set('cf-debt-coverage', totals.coverage === null ? 'No debt' : `${totals.coverage.toFixed(1)}%`);
+        const freeEl = document.getElementById('cf-true-free-cash');
+        freeEl?.classList.toggle('cf-positive', totals.trueFreeCash >= 0);
+        freeEl?.classList.toggle('cf-negative', totals.trueFreeCash < 0);
+        const surplusEl = document.getElementById('cf-monthly-surplus');
+        surplusEl?.classList.toggle('cf-positive', totals.monthlySurplus >= 0);
+        surplusEl?.classList.toggle('cf-negative', totals.monthlySurplus < 0);
+        const totalCapacity = cfState().wallets.filter(wallet => wallet.active).reduce((sum, wallet) => sum + satNumber(wallet.capacity), 0);
+        const topped = cfState().wallets.filter(wallet => wallet.active).reduce((sum, wallet) => sum + Math.min(cfWalletMonthTopup(wallet.id), satNumber(wallet.capacity)), 0);
+        const progress = totalCapacity > 0 ? topped / totalCapacity * 100 : 0;
+        set('cf-cycle-progress-total', `${progress.toFixed(1)}%`);
+        set('cf-cycle-progress-meta', `${cfMoney(topped)} of ${cfMoney(totalCapacity)} in ${cfState().activeMonth}`);
+    }
+
+    function cfRenderSettings() {
+        const values = {
+            'cf-setting-bank': cfState().settings.bankCash,
+            'cf-setting-income': cfState().settings.monthlyIncome,
+            'cf-setting-spending': cfState().settings.monthlySpending
+        };
+        Object.entries(values).forEach(([id, value]) => {
+            const input = document.getElementById(id);
+            if (input && document.activeElement !== input) input.value = cfNumberText(value);
+        });
+        const month = document.getElementById('cf-active-month');
+        if (month) month.value = cfState().activeMonth;
+    }
+
+    function cfRenderWallets() {
+        const grid = document.getElementById('cf-wallet-grid');
+        if (!grid) return;
+        grid.innerHTML = cfState().wallets.filter(wallet => wallet.active).map(wallet => {
+            const topup = cfWalletMonthTopup(wallet.id);
+            const capacity = satNumber(wallet.capacity);
+            const pct = capacity > 0 ? Math.min(100, topup / capacity * 100) : 0;
+            const previousMonth = cfPreviousMonth();
+            const currentTransferred = wallet.transferredMonths.includes(cfState().activeMonth);
+            const previousTransferred = wallet.transferredMonths.includes(previousMonth);
+            const pending = (currentTransferred ? 0 : topup) + (previousTransferred ? 0 : cfWalletMonthTopup(wallet.id, previousMonth));
+            return `<div class="cf-wallet">
+                <div class="cf-wallet-top">
+                    <input class="cf-input" style="min-height:30px;padding:5px 7px" value="${satEsc(wallet.name)}" onchange="cfUpdateWallet('${satEsc(wallet.id)}','name',this.value)">
+                    <span class="cf-wallet-amount">${pct.toFixed(0)}%</span>
+                </div>
+                <div class="cf-progress mb-2"><span style="width:${pct}%"></span></div>
+                <div class="cf-subtle mt-2">Top-up ${cfMoney(topup)} / ${cfMoney(capacity)}</div>
+                <div class="cf-wallet-amount mt-1">Still in wallet: <strong>${cfMoney(pending)}</strong></div>
+                <div class="cf-wallet-checks">
+                    <label class="cf-wallet-check"><input type="checkbox" ${currentTransferred ? 'checked' : ''} onchange="cfToggleWalletTransferred('${satEsc(wallet.id)}','${cfState().activeMonth}',this.checked)"> <span>${cfMonthLabel(cfState().activeMonth)}<br>Transferred</span></label>
+                    <label class="cf-wallet-check"><input type="checkbox" ${previousTransferred ? 'checked' : ''} onchange="cfToggleWalletTransferred('${satEsc(wallet.id)}','${previousMonth}',this.checked)"> <span>${cfMonthLabel(previousMonth)}<br>Transferred</span></label>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function cfCardLabel(card) {
+        return [card.issuer, card.name].filter(Boolean).join(' · ');
+    }
+
+    function cfRenderOptions() {
+        const cardOptions = cfState().cards.filter(card => card.active).map(card => `<option value="${satEsc(card.id)}">${satEsc(cfCardLabel(card))}</option>`).join('');
+        ['cf-topup-card'].forEach(id => {
+            const select = document.getElementById(id);
+            if (!select) return;
+            const value = select.value;
+            select.innerHTML = `<option value="">Select card</option>${cardOptions}`;
+            if ([...select.options].some(option => option.value === value)) select.value = value;
+        });
+        const walletSelect = document.getElementById('cf-topup-wallet');
+        if (walletSelect) {
+            const value = walletSelect.value;
+            walletSelect.innerHTML = `<option value="">Select wallet</option>` + cfState().wallets.filter(wallet => wallet.active).map(wallet => `<option value="${satEsc(wallet.id)}">${satEsc(wallet.name)}</option>`).join('');
+            if ([...walletSelect.options].some(option => option.value === value)) walletSelect.value = value;
+        }
+    }
+
+    function cfCollapsedBanks() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(CF_COLLAPSED_BANKS_KEY) || '[]');
+            return new Set(Array.isArray(saved) ? saved : []);
+        } catch (_) {
+            return new Set();
+        }
+    }
+
+    function cfToggleTimelineBank(encodedIssuer) {
+        const issuer = decodeURIComponent(encodedIssuer);
+        const collapsed = cfCollapsedBanks();
+        if (collapsed.has(issuer)) collapsed.delete(issuer);
+        else collapsed.add(issuer);
+        localStorage.setItem(CF_COLLAPSED_BANKS_KEY, JSON.stringify([...collapsed]));
+        if (cfTimelineEditor && cfState().cards.find(card => card.id === cfTimelineEditor.cardId)?.issuer === issuer) cfTimelineEditor = null;
+        cfRenderTimeline();
+    }
+
+    function cfToggleAllTimelineBanks() {
+        const issuers = [...new Set(cfState().cards.filter(card => card.active).map(card => card.issuer))];
+        const collapsed = cfCollapsedBanks();
+        const allCollapsed = issuers.length > 0 && issuers.every(issuer => collapsed.has(issuer));
+        localStorage.setItem(CF_COLLAPSED_BANKS_KEY, JSON.stringify(allCollapsed ? [] : issuers));
+        cfTimelineEditor = null;
+        cfRenderTimeline();
+    }
+
+    function cfTimelineDate(day) {
+        const [year, month] = String(cfState().activeMonth || satToday().slice(0, 7)).split('-').map(Number);
+        const lastDay = new Date(year, month, 0).getDate();
+        return `${year}-${String(month).padStart(2, '0')}-${String(Math.min(day, lastDay)).padStart(2, '0')}`;
+    }
+
+    function cfOpenTimelineEditor(cardId, marker) {
+        cfTimelineEditor = cfTimelineEditor?.cardId === cardId && cfTimelineEditor?.marker === marker ? null : { cardId, marker };
+        cfRenderTimeline();
+        requestAnimationFrame(() => document.getElementById('cf-timeline-amount')?.focus());
+    }
+
+    function cfCloseTimelineEditor() {
+        cfTimelineEditor = null;
+        cfRenderTimeline();
+    }
+
+    function cfTimelineEditorHtml(card) {
+        if (!cfTimelineEditor || cfTimelineEditor.cardId !== card.id) return '';
+        const isPayment = cfTimelineEditor.marker === 'due';
+        const day = isPayment ? card.dueDay : card.statementDay;
+        const amount = card.outstanding > 0 ? cfNumberText(card.outstanding) : '';
+        return `<form class="cf-timeline-editor" style="--group-rgb:${cfTimelineColor(card.issuer)}" onsubmit="cfSaveTimelineAmount(event,'${satEsc(card.id)}','${isPayment ? 'due' : 'statement'}')">
+            <div class="cf-timeline-editor-title"><strong>${satEsc(cfCardLabel(card))}</strong><span>${isPayment ? 'Record card payment' : 'Set statement balance'}</span></div>
+            <label class="cf-label">Date<input id="cf-timeline-date" class="cf-input mt-1" type="date" value="${cfTimelineDate(day)}" required></label>
+            <label class="cf-label">Amount<input id="cf-timeline-amount" class="cf-input cf-money-input mt-1" type="text" inputmode="decimal" value="${amount}" required></label>
+            <button class="cf-btn primary" type="submit">${isPayment ? 'Pay' : 'Update'}</button>
+            <button class="cf-btn" type="button" onclick="cfCloseTimelineEditor()">Cancel</button>
+        </form>`;
+    }
+
+    function cfSaveTimelineAmount(event, cardId, marker) {
+        event.preventDefault();
+        const card = cfState().cards.find(item => item.id === cardId);
+        const amount = satNumber(document.getElementById('cf-timeline-amount')?.value);
+        const date = document.getElementById('cf-timeline-date')?.value;
+        if (!card || !date || amount < 0) return;
+        if (marker === 'due') {
+            if (amount <= 0) return;
+            if (amount > card.outstanding) { alert('Payment exceeds the current outstanding balance.'); return; }
+            if (amount > cfState().settings.bankCash) { alert('Payment exceeds current bank cash. Update the cash snapshot first if needed.'); return; }
+        }
+        const debtDelta = marker === 'due' ? -amount : amount - satNumber(card.outstanding);
+        if (Math.abs(debtDelta) > 0.001 || marker === 'due') {
+            const row = cfNormalizeEvent({
+                id:cfId('event'), date, type:marker === 'due' ? 'card_payment' : 'statement_balance',
+                cardId, amount, cashDelta:marker === 'due' ? -amount : 0, debtDelta, walletDelta:0,
+                note:marker === 'due' ? 'Card payment' : 'Statement balance update', createdAt:new Date().toISOString()
+            });
+            cfApplyEvent(row, 1);
+            cfState().events.push(row);
+        }
+        cfTimelineEditor = null;
+        cfCommitChanges();
+    }
+
+    function cfTimelineDragStart(event, cardId, marker) {
+        event.stopPropagation();
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', JSON.stringify({ cardId, marker }));
+    }
+
+    function cfTimelineDragOver(event) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        event.currentTarget.classList.add('drop-target');
+    }
+
+    function cfTimelineDragLeave(event) {
+        event.currentTarget.classList.remove('drop-target');
+    }
+
+    function cfTimelineDrop(event, day) {
+        event.preventDefault();
+        event.currentTarget.classList.remove('drop-target');
+        try {
+            const payload = JSON.parse(event.dataTransfer.getData('text/plain'));
+            const card = cfState().cards.find(item => item.id === payload.cardId);
+            if (!card || !['statement','due'].includes(payload.marker)) return;
+            if (payload.marker === 'statement') card.statementDay = day;
+            else card.dueDay = day;
+            card.updatedAt = new Date().toISOString();
+            cfTimelineEditor = { cardId: card.id, marker: payload.marker };
+            cfCommitChanges();
+        } catch (_) {}
+    }
+
+    function cfTimelineColor(issuer) {
+        return {
+            'CARD X':'139,92,246', KTC:'192,132,252', AEON:'239,68,68',
+            BBL:'34,197,94', UOB:'59,130,246', BAY:'234,179,8', TTB:'96,165,250'
+        }[issuer] || '20,184,166';
+    }
+
+    function cfCardLimitKey(card) {
+        const issuer = String(card.issuer || '').trim().toUpperCase();
+        return issuer === 'BAY' ? `card:${card.id}` : `bank:${issuer || card.limitGroup || card.id}`;
+    }
+
+    function cfCardLimitGroups(cards) {
+        return cards.reduce((groups, card) => {
+            const key = cfCardLimitKey(card);
+            if (!groups.has(key)) groups.set(key, { debt:0, limit:0, count:0, shared:false });
+            const group = groups.get(key);
+            group.debt += satNumber(card.outstanding);
+            group.limit = Math.max(group.limit, satNumber(card.creditLimit));
+            group.count += 1;
+            group.shared = !key.startsWith('card:') && group.count > 1;
+            return groups;
+        }, new Map());
+    }
+
+    function cfRenderTimeline() {
+        const container = document.getElementById('cf-card-timeline');
+        if (!container) return;
+        const cards = cfState().cards.filter(card => card.active).slice().sort((a,b) =>
+            satNumber(a.sortOrder) - satNumber(b.sortOrder)
+            || a.issuer.localeCompare(b.issuer)
+            || a.name.localeCompare(b.name)
+        );
+        const majorDays = new Set([1,5,10,15,20,25,30,31]);
+        const dayCells = (card=null) => Array.from({length:31}, (_,index) => {
+            const day = index + 1;
+            const statementDay = card ? satNumber(card.statementDay) : 0;
+            const dueDay = card ? satNumber(card.dueDay) : 0;
+            const wrapsMonth = statementDay > dueDay;
+            const inRange = !!card && (wrapsMonth
+                ? day >= statementDay || day <= dueDay
+                : day >= statementDay && day <= dueDay);
+            const rangeClasses = inRange
+                ? ` range${day === statementDay ? ' range-start' : ''}${day === dueDay ? ' range-end' : ''}`
+                : '';
+            const markers = !card ? [] : [
+                day === statementDay ? 'statement' : '',
+                day === dueDay ? 'due' : ''
+            ].filter(Boolean);
+            const markerButtons = markers.map(marker => `<button class="cf-calendar-marker ${marker}" type="button" draggable="true"
+                ondragstart="cfTimelineDragStart(event,'${satEsc(card.id)}','${marker}')"
+                onclick="event.stopPropagation();cfOpenTimelineEditor('${satEsc(card.id)}','${marker}')">${marker === 'statement' ? 'STATE' : 'PAY'}</button>`).join('');
+            const content = markerButtons ? `<div class="cf-calendar-markers">${markerButtons}</div>` : (!card && majorDays.has(day) ? day : '');
+            return `<div class="cf-calendar-cell day${majorDays.has(day) ? ' major' : ''}${rangeClasses}" ondragover="cfTimelineDragOver(event)" ondragleave="cfTimelineDragLeave(event)" ondrop="cfTimelineDrop(event,${day})">${content}</div>`;
+        }).join('');
+        const header = `<div class="cf-calendar-row header">
+            <div class="cf-calendar-cell issuer">BANK</div>
+            <div class="cf-calendar-cell card-name">CARD</div>
+            ${dayCells()}
+            <div class="cf-calendar-cell limit">DEBT / LIMIT</div>
+        </div>`;
+        const collapsed = cfCollapsedBanks();
+        const groups = cards.reduce((map, card) => {
+            if (!map.has(card.issuer)) map.set(card.issuer, []);
+            map.get(card.issuer).push(card);
+            return map;
+        }, new Map());
+        const limitGroups = cfCardLimitGroups(cards);
+        const toggleAllButton = document.getElementById('cf-toggle-all-banks');
+        if (toggleAllButton) {
+            const allCollapsed = groups.size > 0 && [...groups.keys()].every(issuer => collapsed.has(issuer));
+            toggleAllButton.innerHTML = `<i class="fa-solid fa-angles-${allCollapsed ? 'down' : 'up'}"></i>${allCollapsed ? 'Expand all' : 'Collapse all'}`;
+            toggleAllButton.classList.toggle('hidden', groups.size === 0);
+        }
+        const body = [...groups.entries()].map(([issuer, bankCards]) => {
+            const rgb = cfTimelineColor(issuer);
+            const isCollapsed = collapsed.has(issuer);
+            const bankTotal = bankCards.reduce((sum, card) => sum + satNumber(card.outstanding), 0);
+            const bankHeader = `<button type="button" class="cf-calendar-bank${isCollapsed ? ' collapsed' : ''}" style="--group-rgb:${rgb}" onclick="cfToggleTimelineBank('${encodeURIComponent(issuer)}')">
+                <strong><i class="fa-solid fa-chevron-down"></i>${satEsc(issuer || 'Other')}</strong>
+                <span>${bankCards.length} card${bankCards.length === 1 ? '' : 's'} · ${cfMoney(bankTotal)} outstanding</span>
+            </button>`;
+            if (isCollapsed) return bankHeader;
+            return bankHeader + bankCards.map(card => {
+                const limitGroup = limitGroups.get(cfCardLimitKey(card));
+                return `<div class="cf-calendar-row card-row" style="--group-rgb:${rgb}">
+                <div class="cf-calendar-cell issuer"></div>
+                <div class="cf-calendar-cell card-name">${satEsc(card.name)}</div>
+                ${dayCells(card)}
+                <div class="cf-calendar-cell limit" title="${limitGroup?.shared ? 'Shared bank debt / shared bank limit' : 'Card debt / card limit'}">
+                    <span class="cf-calendar-limit-stack">
+                        <span>${cfMoney(limitGroup?.debt || 0)} / ${limitGroup?.limit > 0 ? cfMoney(limitGroup.limit) : '—'}</span>
+                        ${limitGroup?.shared ? '<span class="cf-calendar-limit-meta">shared</span>' : ''}
+                    </span>
+                </div>
+                ${cfTimelineEditorHtml(card)}
+            </div>`;
+            }).join('');
+        }).join('');
+        const totalLimit = [...limitGroups.values()].reduce((sum, group) => sum + group.limit, 0);
+        const totalDebt = cards.reduce((sum, card) => sum + satNumber(card.outstanding), 0);
+        const footer = `<div class="cf-calendar-row header">
+            <div class="cf-calendar-cell issuer"></div>
+            <div class="cf-calendar-cell card-name">TOTAL DEBT / LIMIT</div>
+            ${dayCells()}
+            <div class="cf-calendar-cell limit">${cfMoney(totalDebt)} / ${cfMoney(totalLimit)}</div>
+        </div>`;
+        container.innerHTML = cards.length ? header + body + footer : '<div class="cf-empty">Add credit cards to build the timeline.</div>';
+    }
+
+    function cfEventTypeLabel(event) {
+        return {
+            topup: 'Easybills Top-up',
+            card_payment: 'Card Payment',
+            statement_balance: 'Statement Balance',
+            income: 'Income',
+            expense: 'Expense'
+        }[event.type] || event.type;
+    }
+
+    function cfRenderEvents() {
+        const tbody = document.getElementById('cf-event-tbody');
+        if (!tbody) return;
+        const cardMap = Object.fromEntries(cfState().cards.map(card => [card.id, cfCardLabel(card)]));
+        const walletMap = Object.fromEntries(cfState().wallets.map(wallet => [wallet.id, wallet.name]));
+        const rows = cfState().events.slice().sort((a,b) => String(b.date).localeCompare(String(a.date)) || String(b.createdAt).localeCompare(String(a.createdAt)));
+        tbody.innerHTML = rows.map(event => `<tr>
+            <td>${satEsc(event.date)}</td><td>${satEsc(cfEventTypeLabel(event))}</td>
+            <td>${satEsc([cardMap[event.cardId], walletMap[event.walletId]].filter(Boolean).join(' / ') || 'Bank cash')}</td>
+            <td class="num ${event.cashDelta >= 0 ? 'cf-positive' : 'cf-negative'}">${event.cashDelta >= 0 ? '+' : ''}${cfMoney(event.cashDelta)}</td>
+            <td class="num ${event.debtDelta <= 0 ? 'cf-positive' : 'cf-negative'}">${event.debtDelta >= 0 ? '+' : ''}${cfMoney(event.debtDelta)}</td>
+            <td>${satEsc(event.note || (event.type === 'topup' ? `Fee ${cfMoney(event.fee, 2)}` : ''))}</td>
+            <td class="num"><button class="cf-btn danger" type="button" onclick="cfDeleteEvent('${satEsc(event.id)}')" title="Delete and reverse"><i class="fa-solid fa-xmark"></i></button></td>
+        </tr>`).join('');
+        document.getElementById('cf-event-empty')?.classList.toggle('hidden', rows.length > 0);
+    }
+
+    function cfRenderAll() {
+        cfRenderSettings();
+        cfRenderSummary();
+        cfRenderWallets();
+        cfRenderTimeline();
+        cfRenderEvents();
+        cfRenderOptions();
+        cfPrepareMoneyInputs();
+        const today = satToday();
+        ['cf-topup-date','cf-cash-date'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input && !input.value) input.value = today;
+        });
+    }
+
+    function cfCommitChanges() {
+        cfSaveLocal();
+        cfRenderAll();
+        clearTimeout(cfPushTimer);
+        cfPushTimer = setTimeout(() => cfPushToSheets(true).catch(() => {}), 700);
+    }
+
+    function cfSetActiveMonth(value) {
+        if (/^\d{4}-\d{2}$/.test(value)) cfState().activeMonth = value;
+        cfCommitChanges();
+    }
+
+    function cfSaveSettings(event) {
+        event.preventDefault();
+        cfState().settings = cfNormalizeSettings({
+            ...cfState().settings,
+            bankCash: document.getElementById('cf-setting-bank').value,
+            monthlyIncome: document.getElementById('cf-setting-income').value,
+            monthlySpending: document.getElementById('cf-setting-spending').value,
+            otherReserved: 0,
+            feeFixed: 10,
+            feePercent: 0.15
+        });
+        document.activeElement?.blur();
+        cfCommitChanges();
+    }
+
+    function cfUpdateWallet(id, field, value) {
+        const wallet = cfState().wallets.find(item => item.id === id);
+        if (!wallet) return;
+        if (field === 'name') wallet.name = String(value || wallet.name);
+        else wallet[field] = Math.max(0, satNumber(value));
+        wallet.updatedAt = new Date().toISOString();
+        document.activeElement?.blur();
+        cfCommitChanges();
+    }
+
+    function cfToggleWalletTransferred(id, month, checked) {
+        const wallet = cfState().wallets.find(item => item.id === id);
+        if (!wallet || !/^\d{4}-\d{2}$/.test(month)) return;
+        const months = new Set(wallet.transferredMonths || []);
+        if (checked) months.add(month);
+        else months.delete(month);
+        wallet.transferredMonths = [...months].sort();
+        wallet.transferTrackingInitialized = true;
+        wallet.updatedAt = new Date().toISOString();
+        document.activeElement?.blur();
+        cfCommitChanges();
+    }
+
+    function cfApplyEvent(event, direction=1) {
+        cfState().settings.bankCash = Math.max(0, satNumber(cfState().settings.bankCash) + satNumber(event.cashDelta) * direction);
+        if (event.cardId) {
+            const card = cfState().cards.find(item => item.id === event.cardId);
+            if (card) card.outstanding = Math.max(0, satNumber(card.outstanding) + satNumber(event.debtDelta) * direction);
+        }
+    }
+
+    function cfAddTopup(event) {
+        event.preventDefault();
+        const date = document.getElementById('cf-topup-date').value;
+        const cardId = document.getElementById('cf-topup-card').value;
+        const walletId = document.getElementById('cf-topup-wallet').value;
+        const amount = satNumber(document.getElementById('cf-topup-amount').value);
+        const card = cfState().cards.find(item => item.id === cardId);
+        const wallet = cfState().wallets.find(item => item.id === walletId);
+        if (!card || !wallet || !date || amount <= 0) return;
+        if (amount > 10000) { alert('Easybills top-up cannot exceed ฿10,000 per transaction.'); return; }
+        const sameDayCardCount = cfState().events.filter(item => item.type === 'topup' && item.date === date && item.cardId === cardId).length;
+        if (sameDayCardCount >= 2) { alert('This card already has 2 Easybills top-ups on this date.'); return; }
+        const monthTopup = cfState().events.filter(item => item.type === 'topup' && item.walletId === walletId && item.date.slice(0,7) === date.slice(0,7)).reduce((sum,item) => sum + satNumber(item.amount), 0);
+        if (monthTopup + amount > satNumber(wallet.capacity)) { alert(`${wallet.name} would exceed its monthly capacity.`); return; }
+        const fee = satNumber(cfState().settings.feeFixed) + amount * satNumber(cfState().settings.feePercent) / 100;
+        const chargedAmount = amount + fee;
+        if (card.creditLimit > 0 && card.outstanding + chargedAmount > card.creditLimit) { alert('This top-up would exceed the card credit limit.'); return; }
+        const row = cfNormalizeEvent({
+            id: cfId('event'), date, type:'topup', cardId, walletId, amount, fee, chargedAmount,
+            transferAmount:0, cashDelta:0, debtDelta:chargedAmount, walletDelta:amount,
+            note:'',
+            createdAt:new Date().toISOString()
+        });
+        wallet.transferredMonths = (wallet.transferredMonths || []).filter(month => month !== date.slice(0, 7));
+        cfApplyEvent(row, 1);
+        cfState().events.push(row);
+        document.getElementById('cf-topup-form').reset();
+        document.getElementById('cf-topup-date').value = satToday();
+        document.getElementById('cf-topup-amount').value = '10,000';
+        cfCommitChanges();
+    }
+
+    function cfAddCashMovement(event) {
+        event.preventDefault();
+        const type = document.getElementById('cf-cash-type').value;
+        const amount = satNumber(document.getElementById('cf-cash-amount').value);
+        if (amount <= 0) return;
+        if (type === 'expense' && amount > cfState().settings.bankCash) { alert('Expense exceeds current bank cash.'); return; }
+        const row = cfNormalizeEvent({
+            id:cfId('event'), date:document.getElementById('cf-cash-date').value, type, amount,
+            cashDelta:type === 'income' ? amount : -amount, debtDelta:0, walletDelta:0,
+            note:document.getElementById('cf-cash-note').value, createdAt:new Date().toISOString()
+        });
+        cfApplyEvent(row, 1);
+        cfState().events.push(row);
+        document.getElementById('cf-cash-form').reset();
+        document.getElementById('cf-cash-date').value = satToday();
+        cfCommitChanges();
+    }
+
+    function cfDeleteEvent(id) {
+        const row = cfState().events.find(event => event.id === id);
+        if (!row) return;
+        const card = row.cardId ? cfState().cards.find(item => item.id === row.cardId) : null;
+        if (card && satNumber(card.outstanding) - satNumber(row.debtDelta) < -0.001) {
+            alert('Delete newer linked card activity first; this deletion would make card debt negative.');
+            return;
+        }
+        cfApplyEvent(row, -1);
+        cfState().events = cfState().events.filter(event => event.id !== id);
+        cfCommitChanges();
+    }
+
+    async function cfPullFromSheets(silent=false) {
+        const url = getGsUrl();
+        if (!url) { if (!silent) openSyncModal(); return false; }
+        try {
+            const data = await fetchGsAction('cashflow_read');
+            if (!data || data.error) throw new Error(data?.error || 'Invalid Cashflow data');
+            if (data.initialized === false) {
+                if (cfState().cards.length || cfState().events.length) await cfPushToSheets(true);
+                return true;
+            }
+            const settingsRow = Array.isArray(data.settings) ? data.settings[0] : data.settings;
+            const remoteEmpty = !settingsRow
+                && !(data.cards || []).length
+                && !(data.wallets || []).length
+                && !(data.events || []).length;
+            if (remoteEmpty && (cfState().cards.length || cfState().events.length)) {
+                await cfPushToSheets(true);
+                return true;
+            }
+            cfState().settings = cfNormalizeSettings(settingsRow || {});
+            cfState().cards = (data.cards || []).map(cfNormalizeCard).filter(card => card.name);
+            cfState().wallets = ((data.wallets || []).length ? data.wallets : cfDefaultWallets()).map(cfNormalizeWallet);
+            cfState().events = (data.events || []).map(cfNormalizeEvent);
+            cfMergeLocalCardCatalog();
+            cfMigrateWalletTransferTracking();
+            cfSaveLocal();
+            cfRenderAll();
+            if (!silent) setSyncPill('ok', 'Cashflow synced');
+            return true;
+        } catch (error) {
+            if (!silent) setSyncPill('err', 'Cashflow pull failed');
+            console.warn('Cashflow pull error:', error);
+            return false;
+        }
+    }
+
+    async function cfPushToSheets(silent=false) {
+        const url = getGsUrl();
+        if (!url) { if (!silent) openSyncModal(); return false; }
+        try {
+            const payload = {
+                action:'cashflow_write',
+                settings:[cfState().settings],
+                cards:cfState().cards,
+                wallets:cfState().wallets.map(wallet => ({
+                    ...wallet,
+                    transferredMonths:(wallet.transferredMonths || []).join(',')
+                })),
+                events:cfState().events
+            };
+            const response = await fetch(url, { method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload) });
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+            if (!silent) setSyncPill('ok', 'Cashflow saved');
+            return true;
+        } catch (error) {
+            if (!silent) setSyncPill('err', 'Cashflow sync failed');
+            throw error;
+        }
+    }
+
     function parseDashboardDate(value) {
         if (!value) return null;
         if (value instanceof Date && !isNaN(value.getTime())) return new Date(value.getFullYear(), value.getMonth(), value.getDate());
@@ -3825,52 +4994,76 @@
 
     function updatePortfolioControls() {
         const isSatellite = state.currentPort === 'port2';
+        const isCashflow = state.currentPort === 'port3';
         const btn1 = document.getElementById('btn-port1');
         const btn2 = document.getElementById('btn-port2');
+        const btn3 = document.getElementById('btn-port3');
         const mBtn1 = document.getElementById('btn-port1-m');
         const mBtn2 = document.getElementById('btn-port2-m');
+        const mBtn3 = document.getElementById('btn-port3-m');
         const cBtn1 = document.getElementById('btn-port1-c');
         const cBtn2 = document.getElementById('btn-port2-c');
+        const cBtn3 = document.getElementById('btn-port3-c');
 
         document.body.classList.toggle('theme-port2', isSatellite);
-        if (btn1) btn1.className = isSatellite
+        document.body.classList.toggle('theme-port3', isCashflow);
+        if (btn1) btn1.className = state.currentPort !== 'port1'
             ? "flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all"
             : "flex-1 py-1.5 text-xs font-bold rounded-md bg-blue-600 text-white shadow transition-all";
         if (btn2) btn2.className = isSatellite
             ? "flex-1 py-1.5 text-xs font-bold rounded-md bg-slate-600 text-white shadow transition-all"
             : "flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all";
-        if (mBtn1) mBtn1.className = isSatellite
+        if (btn3) btn3.className = isCashflow
+            ? "mt-2 w-full py-1.5 text-xs font-bold rounded-md border border-teal-500 bg-teal-500/15 text-teal-300 shadow transition-all"
+            : "mt-2 w-full py-1.5 text-xs font-bold rounded-md border border-slate-700 text-slate-400 hover:text-white hover:border-teal-500/60 hover:bg-teal-500/10 transition-all";
+        if (mBtn1) mBtn1.className = state.currentPort !== 'port1'
             ? "flex-1 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:bg-slate-700/50 transition-all"
             : "flex-1 py-1 text-[10px] font-bold rounded-md bg-blue-600 text-white shadow transition-all";
         if (mBtn2) mBtn2.className = isSatellite
             ? "flex-1 py-1 text-[10px] font-bold rounded-md bg-slate-600 text-white shadow transition-all"
             : "flex-1 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:bg-slate-700/50 transition-all";
+        if (mBtn3) mBtn3.className = isCashflow
+            ? "flex-1 py-1 text-[10px] font-bold rounded-md bg-teal-600 text-white shadow transition-all"
+            : "flex-1 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:bg-slate-700/50 transition-all";
         if (cBtn1) {
-            cBtn1.classList.toggle('active-core', !isSatellite);
-            cBtn1.setAttribute('aria-pressed', String(!isSatellite));
+            cBtn1.classList.toggle('active-core', state.currentPort === 'port1');
+            cBtn1.setAttribute('aria-pressed', String(state.currentPort === 'port1'));
         }
         if (cBtn2) {
             cBtn2.classList.toggle('active-satellite', isSatellite);
             cBtn2.setAttribute('aria-pressed', String(isSatellite));
         }
+        if (cBtn3) {
+            cBtn3.classList.toggle('active-cashflow', isCashflow);
+            cBtn3.setAttribute('aria-pressed', String(isCashflow));
+        }
 
         ['btn-wheel', 'btn-settings'].forEach(buttonId => {
-            document.getElementById(buttonId)?.classList.toggle('hidden', isSatellite);
+            document.getElementById(buttonId)?.classList.toggle('hidden', isSatellite || isCashflow);
         });
+        document.getElementById('btn-transactions')?.classList.toggle('hidden', isCashflow);
     }
 
     function switchPortfolio(id) {
-        state.currentPort = id === 'port2' ? 'port2' : 'port1';
+        state.currentPort = ['port1','port2','port3'].includes(id) ? id : 'port1';
         updatePortfolioControls();
         const activeTab = document.querySelector('.tab-content.active')?.id?.replace('tab-', '') || 'dashboard';
-        if (state.currentPort === 'port2' && (activeTab === 'wheel' || activeTab === 'settings')) {
+        if (state.currentPort === 'port3' && activeTab !== 'dashboard') {
+            switchTab('dashboard');
+        } else if (state.currentPort === 'port2' && (activeTab === 'wheel' || activeTab === 'settings')) {
             switchTab('dashboard');
         } else if (activeTab === 'settings') {
             initSettings();
         }
         satApplyWorkspace();
-        updateDashboard(); renderMonthlyTiers();
-        if (state.currentPort === 'port2') satRenderAll();
+        if (state.currentPort === 'port1') {
+            updateDashboard();
+            renderMonthlyTiers();
+        } else if (state.currentPort === 'port2') {
+            satRenderAll();
+        } else {
+            cfRenderAll();
+        }
     }
 
     function computeData() {
@@ -4158,6 +5351,7 @@
     function clearLedger() { if(confirm("Clear all?")) { pState().flows = []; saveFlows(); updateDashboard(); } }
 
     function switchTab(id) {
+        if (state.currentPort === 'port3' && id !== 'dashboard') id = 'dashboard';
         if (state.currentPort === 'port2' && (id === 'wheel' || id === 'settings')) id = 'dashboard';
         const tab = document.getElementById('tab-'+id);
         const btn = document.getElementById('btn-'+id);
@@ -4166,9 +5360,11 @@
         document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('bg-blue-600/20', 'text-blue-400'); b.classList.add('text-slate-400', 'hover:bg-slate-700'); });
         tab.classList.add('active');
         btn.classList.remove('text-slate-400', 'hover:bg-slate-700'); btn.classList.add('bg-blue-600/20', 'text-blue-400');
-        const titles = state.currentPort === 'port2'
-            ? { dashboard: 'Satellite Trading Dashboard', transactions: 'Satellite Trade Ledger', wheel: 'Wheel Strategy', settings: 'Settings' }
-            : { dashboard: 'Portfolio Overview', transactions: 'Transaction Ledger', wheel: 'Wheel Strategy', settings: 'Settings' };
+        const titles = state.currentPort === 'port3'
+            ? { dashboard: 'Personal Cashflow Planner' }
+            : state.currentPort === 'port2'
+                ? { dashboard: 'Satellite Trading Dashboard', transactions: 'Satellite Trade Ledger', wheel: 'Wheel Strategy', settings: 'Settings' }
+                : { dashboard: 'Portfolio Overview', transactions: 'Transaction Ledger', wheel: 'Wheel Strategy', settings: 'Settings' };
         document.getElementById('page-title').innerText = titles[id] || '';
         // Show BTC price chip only on Wheel tab
         const btcChip = document.getElementById('wheel-header-btc');
@@ -4176,6 +5372,7 @@
         if(id === 'settings') initSettings();
         else if(id !== 'wheel') {
             if (state.currentPort === 'port2') satRenderAll();
+            else if (state.currentPort === 'port3') cfRenderAll();
             else { updateDashboard(); applyBalanceMask(); }
         }
         if (id === 'dashboard' && state.currentPort === 'port1') fetchFearGreedIndexes();
@@ -4279,7 +5476,7 @@
     }
 
     // ════════════════════════════════════════════════════
-    //   UNIFIED SYNC — Single URL for Investment + Wheel
+    //   UNIFIED SYNC — Single URL for all workspaces
     // ════════════════════════════════════════════════════
 
     const GS_URL_KEY = 'unified_gs_url';
@@ -4320,13 +5517,13 @@
         icon.style.animation = on ? 'wspin .7s linear infinite' : 'none';
     }
 
-    // ── Full refresh — pulls Investment + Wheel ─────────
+    // ── Full refresh — pulls all workspaces ─────────
     async function doFullRefresh() {
         const url = getGsUrl();
         if (!url) { openSyncModal(); return; }
         setSyncPill('loading', 'Syncing…');
         setRefreshSpin(true);
-        let invOk = false, wheelOk = false, satelliteOk = false;
+        let invOk = false, wheelOk = false, satelliteOk = false, cashflowOk = false;
         try {
             invOk = await loadFromGSheet();
             if (invOk) { updateDashboard(); renderMonthlyTiers(); }
@@ -4337,10 +5534,13 @@
         try {
             satelliteOk = await satPullFromSheets(true, { forcePrices: true });
         } catch(e) {}
+        try {
+            cashflowOk = await cfPullFromSheets(true);
+        } catch(e) {}
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-        if (invOk && wheelOk && satelliteOk) setSyncPill('ok', 'Synced ' + now);
-        else if (invOk || wheelOk || satelliteOk) setSyncPill('ok', 'Partial sync ' + now);
+        if (invOk && wheelOk && satelliteOk && cashflowOk) setSyncPill('ok', 'Synced ' + now);
+        else if (invOk || wheelOk || satelliteOk || cashflowOk) setSyncPill('ok', 'Partial sync ' + now);
         else setSyncPill('err', 'Sync failed');
     }
 
@@ -4384,13 +5584,14 @@
         setSyncPill('loading', 'Connecting…');
         setRefreshSpin(true);
         // Try both
-        let invOk = false, wheelOk = false, satelliteOk = false;
+        let invOk = false, wheelOk = false, satelliteOk = false, cashflowOk = false;
         try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
         try { wheelOk = await wPullFromSheets(true); } catch(e) {}
         try { satelliteOk = await satPullFromSheets(true, { forcePrices: true }); } catch(e) {}
+        try { cashflowOk = await cfPullFromSheets(true); } catch(e) {}
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-        if (invOk || wheelOk || satelliteOk) {
+        if (invOk || wheelOk || satelliteOk || cashflowOk) {
             setSyncPill('ok', 'Synced ' + now);
             const last = document.getElementById('modal-last-sync');
             if (last) last.textContent = 'Last synced: ' + new Date().toLocaleString();
@@ -4407,15 +5608,16 @@
         if (!url) { alert('No URL saved. Please enter the Apps Script URL first.'); return; }
         setSyncPill('loading', 'Pulling…');
         setRefreshSpin(true);
-        let invOk = false, wheelOk = false, satelliteOk = false;
+        let invOk = false, wheelOk = false, satelliteOk = false, cashflowOk = false;
         try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
         try { wheelOk = await wPullFromSheets(true); } catch(e) {}
         try { satelliteOk = await satPullFromSheets(true, { forcePrices: true }); } catch(e) {}
+        try { cashflowOk = await cfPullFromSheets(true); } catch(e) {}
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-        setSyncPill(invOk || wheelOk || satelliteOk ? 'ok' : 'err', invOk || wheelOk || satelliteOk ? 'Synced ' + now : 'Pull failed');
+        setSyncPill(invOk || wheelOk || satelliteOk || cashflowOk ? 'ok' : 'err', invOk || wheelOk || satelliteOk || cashflowOk ? 'Synced ' + now : 'Pull failed');
         const last = document.getElementById('modal-last-sync');
-        if (last) last.textContent = (invOk || wheelOk || satelliteOk) ? 'Last pulled: ' + new Date().toLocaleString() : '✗ Pull failed — check connection';
+        if (last) last.textContent = (invOk || wheelOk || satelliteOk || cashflowOk) ? 'Last pulled: ' + new Date().toLocaleString() : '✗ Pull failed — check connection';
     }
 
     async function modalPushWheel() {
@@ -4549,7 +5751,7 @@
         localStorage.setItem(GS_URL_KEY, url);
         localStorage.setItem('wheel_gs_url', url);
         const msg = document.getElementById('gs-status-msg');
-        if (msg) { msg.classList.remove('hidden'); msg.textContent = '✓ URL saved for both Investment & Wheel Strategy'; msg.style.color = '#34D399'; }
+        if (msg) { msg.classList.remove('hidden'); msg.textContent = '✓ URL saved for all dashboard workspaces'; msg.style.color = '#34D399'; }
     }
 
     async function testInvConnection() {
@@ -4563,6 +5765,12 @@
         const msg = document.getElementById('gs-status-msg'); if(msg) { msg.classList.remove('hidden'); msg.textContent = 'Testing Satellite...'; msg.style.color = '#F59E0B'; }
         const ok = await satPullFromSheets(true, { forcePrices: true });
         if(msg) { msg.textContent = ok ? '✓ Satellite sync OK' : '✗ Satellite sync failed — deploy the updated Apps Script first'; msg.style.color = ok ? '#34D399' : '#FCA5A5'; }
+    }
+
+    async function testCashflowConnection() {
+        const msg = document.getElementById('gs-status-msg'); if(msg) { msg.classList.remove('hidden'); msg.textContent = 'Testing Cashflow...'; msg.style.color = '#F59E0B'; }
+        const ok = await cfPullFromSheets(true);
+        if(msg) { msg.textContent = ok ? '✓ Cashflow sync OK' : '✗ Cashflow sync failed — deploy the updated Apps Script first'; msg.style.color = ok ? '#34D399' : '#FCA5A5'; }
     }
 
     async function testWheelConnection() {
@@ -5194,6 +6402,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     window.onload = async () => {
         clearCachedFinancialSettings();
         satLoadLocal();
+        cfLoadLocal();
         applyColorTheme(localStorage.getItem(THEME_KEY) || 'dark');
         applySidebarState();
         updatePortfolioControls();
@@ -5207,7 +6416,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         saveGoals();
 
         satApplyWorkspace();
-        updateDashboard(); renderMonthlyTiers(); satRenderAll();
+        updateDashboard(); renderMonthlyTiers(); satRenderAll(); cfRenderAll();
         satWarmFxRates().catch(error => console.warn('Satellite FX warm-up failed:', error));
         setTimeout(satAutoRefreshBenchmarks, 2500);
         fetchFearGreedIndexes();
@@ -5223,16 +6432,17 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             showSkeleton();
             setSyncPill('loading', 'Connecting…');
             setRefreshSpin(true);
-            let invOk = false, wheelOk = false, satelliteOk = false;
+            let invOk = false, wheelOk = false, satelliteOk = false, cashflowOk = false;
             try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
             try { wheelOk = await wPullFromSheets(true); } catch(e) {}
             try { satelliteOk = await satPullFromSheets(true, { forcePrices: true }); } catch(e) {}
+            try { cashflowOk = await cfPullFromSheets(true); } catch(e) {}
             if (satelliteOk) satRefreshMarketPrices(false).catch(error => console.warn('Market price refresh failed:', error.message));
             // updateDashboard() above already replaced skeleton content with real values
             if (!invOk) { updateDashboard(); } // ensure skeleton is cleared even on failure
             setRefreshSpin(false);
             const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-            if (invOk || wheelOk || satelliteOk) setSyncPill('ok', 'Synced ' + now);
+            if (invOk || wheelOk || satelliteOk || cashflowOk) setSyncPill('ok', 'Synced ' + now);
             else setSyncPill('err', 'Sync failed');
         } else {
             setSyncPill('idle', 'Not connected');

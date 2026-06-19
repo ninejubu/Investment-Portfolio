@@ -7,8 +7,10 @@
 //  GET  ?action=satellite_read  → satelliteRead
 //  GET  ?action=satellite_benchmark → satelliteBenchmark
 //  GET  ?action=satellite_refresh_prices → satelliteRefreshPrices
+//  GET  ?action=cashflow_read   → cashflowRead
 //  POST action=wheel_write      → wheelWrite
 //  POST action=satellite_write  → satelliteWrite
+//  POST action=cashflow_write   → cashflowWrite
 // ============================================================
 
 var SPREADSHEET_ID  = SpreadsheetApp.getActiveSpreadsheet().getId();
@@ -19,6 +21,10 @@ var TAB_WHL_LOTS    = "Wheel_lots";
 var TAB_WHL_HISTORY = "Wheel_history";
 var TAB_SAT_POSITIONS = "Satellite_positions";
 var TAB_SAT_TRADES    = "Satellite_trades";
+var TAB_CF_SETTINGS   = "Cashflow_settings";
+var TAB_CF_CARDS      = "Cashflow_cards";
+var TAB_CF_WALLETS    = "Cashflow_wallets";
+var TAB_CF_EVENTS     = "Cashflow_events";
 
 function doGet(e) {
   var p = (e && e.parameter) ? e.parameter : {};
@@ -28,6 +34,7 @@ function doGet(e) {
   if (p.action === 'satellite_read')   return satelliteRead(p);
   if (p.action === 'satellite_benchmark') return satelliteBenchmark(p);
   if (p.action === 'satellite_refresh_prices') return satelliteRefreshPrices(p);
+  if (p.action === 'cashflow_read')      return cashflowRead();
   return investRead();
 }
 
@@ -37,6 +44,7 @@ function doPost(e) {
   catch (err) { return jsonOut({ error: 'Invalid JSON: ' + err.message }); }
   if (data.action === 'wheel_write') return wheelWrite(data);
   if (data.action === 'satellite_write') return satelliteWrite(data);
+  if (data.action === 'cashflow_write') return cashflowWrite(data);
   return jsonOut({ error: 'Unknown action: ' + data.action });
 }
 
@@ -690,6 +698,61 @@ function writeStructuredSheet(ss, tabName, headers, dataArray) {
   });
   sheet.getRange(4, 1, rows.length, headers.length).setValues(rows);
   sheet.setFrozenRows(3);
+}
+
+// ============================================================
+//  Personal Cashflow Planner
+//  Private values are stored only in these Google Sheet tabs.
+// ============================================================
+var CF_SETTING_HEADERS = [
+  'bankCash','monthlyIncome','monthlySpending','otherReserved',
+  'revolvingTarget','walletCapacity','feeFixed','feePercent'
+];
+
+var CF_CARD_HEADERS = [
+  'id','issuer','name','limitGroup','sortOrder','statementDay','dueDay','creditLimit',
+  'outstanding','rollover','active','updatedAt'
+];
+
+var CF_WALLET_HEADERS = [
+  'id','name','balance','capacity','transferredMonths','transferTrackingInitialized','active','updatedAt'
+];
+
+var CF_EVENT_HEADERS = [
+  'id','date','type','cardId','walletId','amount','fee','chargedAmount',
+  'transferAmount','cashDelta','debtDelta','walletDelta','note','createdAt'
+];
+
+function cashflowRead() {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    var settingsSheet = ss.getSheetByName(TAB_CF_SETTINGS);
+    var cardsSheet = ss.getSheetByName(TAB_CF_CARDS);
+    var walletsSheet = ss.getSheetByName(TAB_CF_WALLETS);
+    var eventsSheet = ss.getSheetByName(TAB_CF_EVENTS);
+    return jsonOut({
+      initialized: !!settingsSheet && !!cardsSheet && !!walletsSheet && !!eventsSheet,
+      settings: structuredSheetToJson(settingsSheet, CF_SETTING_HEADERS),
+      cards: structuredSheetToJson(cardsSheet, CF_CARD_HEADERS),
+      wallets: structuredSheetToJson(walletsSheet, CF_WALLET_HEADERS),
+      events: structuredSheetToJson(eventsSheet, CF_EVENT_HEADERS)
+    });
+  } catch (err) {
+    return jsonOut({ error: err.message });
+  }
+}
+
+function cashflowWrite(data) {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    writeStructuredSheet(ss, TAB_CF_SETTINGS, CF_SETTING_HEADERS, data.settings || []);
+    writeStructuredSheet(ss, TAB_CF_CARDS, CF_CARD_HEADERS, data.cards || []);
+    writeStructuredSheet(ss, TAB_CF_WALLETS, CF_WALLET_HEADERS, data.wallets || []);
+    writeStructuredSheet(ss, TAB_CF_EVENTS, CF_EVENT_HEADERS, data.events || []);
+    return jsonOut({ ok: true, timestamp: new Date().toISOString() });
+  } catch (err) {
+    return jsonOut({ error: err.message });
+  }
 }
 
 // ============================================================
