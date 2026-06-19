@@ -3943,8 +3943,11 @@
     const CF_WALLETS_KEY = 'cashflow_wallets_v1';
     const CF_EVENTS_KEY = 'cashflow_events_v1';
     const CF_COLLAPSED_BANKS_KEY = 'cashflow_collapsed_banks_v1';
+    const CF_SEED_RECOVERY_KEY = 'cashflow_seed_recovery_v2';
+    const CF_SEED_RECOVERY_VERSION = '2026-06-19';
     let cfTimelineEditor = null;
     let cfPushTimer = null;
+    let cfSeedRecoveryPending = false;
 
     function cfId(prefix) {
         return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -4125,6 +4128,26 @@
         localStorage.setItem('cashflow_active_month_v1', cfState().activeMonth);
     }
 
+    function cfLooksWiped(settings, cards, wallets, events) {
+        const bankCash = satNumber(settings?.bankCash);
+        const cardDebt = (cards || []).reduce((sum, card) => sum + satNumber(card.outstanding), 0);
+        const walletValue = (wallets || []).reduce((sum, wallet) => sum + satNumber(wallet.balance), 0);
+        return !(events || []).length && bankCash <= 0 && cardDebt <= 0 && walletValue <= 0;
+    }
+
+    function cfRestoreSeedData() {
+        const seed = window.CASHFLOW_LOCAL_SEED;
+        if (!seed) return false;
+        cfState().settings = cfNormalizeSettings(seed.settings || {});
+        cfState().cards = (seed.cards || []).map(cfNormalizeCard).filter(card => card.name);
+        cfState().wallets = ((seed.wallets || []).length ? seed.wallets : cfDefaultWallets()).map(cfNormalizeWallet);
+        cfState().events = (seed.events || []).map(cfNormalizeEvent);
+        if (/^\d{4}-\d{2}$/.test(seed.activeMonth || '')) cfState().activeMonth = seed.activeMonth;
+        cfMigrateWalletTransferTracking();
+        cfSaveLocal();
+        return true;
+    }
+
     function cfLoadLocal() {
         try {
             cfState().settings = cfNormalizeSettings(JSON.parse(localStorage.getItem(CF_SETTINGS_KEY) || '{}'));
@@ -4133,12 +4156,15 @@
             cfState().wallets = (Array.isArray(savedWallets) && savedWallets.length ? savedWallets : cfDefaultWallets()).map(cfNormalizeWallet);
             cfState().events = (JSON.parse(localStorage.getItem(CF_EVENTS_KEY) || '[]') || []).map(cfNormalizeEvent);
             const seed = window.CASHFLOW_LOCAL_SEED;
-            if (seed && !cfState().cards.length && !cfState().events.length) {
-                cfState().settings = cfNormalizeSettings(seed.settings || {});
-                cfState().cards = (seed.cards || []).map(cfNormalizeCard).filter(card => card.name);
-                cfState().wallets = ((seed.wallets || []).length ? seed.wallets : cfDefaultWallets()).map(cfNormalizeWallet);
-                cfState().events = (seed.events || []).map(cfNormalizeEvent);
-                if (/^\d{4}-\d{2}$/.test(seed.activeMonth || '')) cfState().activeMonth = seed.activeMonth;
+            if (seed && localStorage.getItem(CF_SEED_RECOVERY_KEY) !== CF_SEED_RECOVERY_VERSION) {
+                cfRestoreSeedData();
+                cfSeedRecoveryPending = true;
+            } else if (seed && !cfState().cards.length && !cfState().events.length) {
+                cfRestoreSeedData();
+            } else if (seed
+                && localStorage.getItem(CF_SEED_RECOVERY_KEY) !== CF_SEED_RECOVERY_VERSION
+                && cfLooksWiped(cfState().settings, cfState().cards, cfState().wallets, cfState().events)) {
+                cfRestoreSeedData();
             }
             cfMergeLocalCardCatalog();
             cfMigrateWalletTransferTracking();
@@ -4657,6 +4683,15 @@
         const url = getGsUrl();
         if (!url) { if (!silent) openSyncModal(); return false; }
         try {
+            if (cfSeedRecoveryPending) {
+                await cfPushToSheets(true);
+                localStorage.setItem(CF_SEED_RECOVERY_KEY, CF_SEED_RECOVERY_VERSION);
+                cfSeedRecoveryPending = false;
+                cfSaveLocal();
+                cfRenderAll();
+                if (!silent) setSyncPill('ok', 'Cashflow restored');
+                return true;
+            }
             const data = await fetchGsAction('cashflow_read');
             if (!data || data.error) throw new Error(data?.error || 'Invalid Cashflow data');
             if (data.initialized === false) {
@@ -4670,12 +4705,26 @@
                 && !(data.events || []).length;
             if (remoteEmpty && (cfState().cards.length || cfState().events.length)) {
                 await cfPushToSheets(true);
+                localStorage.setItem(CF_SEED_RECOVERY_KEY, CF_SEED_RECOVERY_VERSION);
+                return true;
+            }
+            const remoteCards = (data.cards || []).map(cfNormalizeCard).filter(card => card.name);
+            const remoteWallets = ((data.wallets || []).length ? data.wallets : cfDefaultWallets()).map(cfNormalizeWallet);
+            const remoteEvents = (data.events || []).map(cfNormalizeEvent);
+            if (window.CASHFLOW_LOCAL_SEED
+                && localStorage.getItem(CF_SEED_RECOVERY_KEY) !== CF_SEED_RECOVERY_VERSION
+                && cfLooksWiped(cfNormalizeSettings(settingsRow || {}), remoteCards, remoteWallets, remoteEvents)) {
+                cfRestoreSeedData();
+                await cfPushToSheets(true);
+                localStorage.setItem(CF_SEED_RECOVERY_KEY, CF_SEED_RECOVERY_VERSION);
+                cfRenderAll();
+                if (!silent) setSyncPill('ok', 'Cashflow restored');
                 return true;
             }
             cfState().settings = cfNormalizeSettings(settingsRow || {});
-            cfState().cards = (data.cards || []).map(cfNormalizeCard).filter(card => card.name);
-            cfState().wallets = ((data.wallets || []).length ? data.wallets : cfDefaultWallets()).map(cfNormalizeWallet);
-            cfState().events = (data.events || []).map(cfNormalizeEvent);
+            cfState().cards = remoteCards;
+            cfState().wallets = remoteWallets;
+            cfState().events = remoteEvents;
             cfMergeLocalCardCatalog();
             cfMigrateWalletTransferTracking();
             cfSaveLocal();
