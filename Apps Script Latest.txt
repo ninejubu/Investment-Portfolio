@@ -803,10 +803,14 @@ function sheetToJson(sheet) {
 
 function writeSheet(ss, tabName, dataArray) {
   var sheet = ss.getSheetByName(tabName);
-  if (!sheet || !dataArray || !dataArray.length) return;
-  var headers = Object.keys(dataArray[0]);
+  if (!sheet || !dataArray) return;
   var lastRow  = sheet.getLastRow();
   if (lastRow >= 4) sheet.getRange(4, 1, lastRow - 3, sheet.getLastColumn()).clearContent();
+  if (!dataArray.length) return;
+  var headers = Object.keys(dataArray[0]);
+  var headerWidth = Math.max(sheet.getLastColumn(), headers.length);
+  sheet.getRange(3, 1, 1, headerWidth).clearContent();
+  sheet.getRange(3, 1, 1, headers.length).setValues([headers]);
   var rowData = dataArray.map(function(obj) {
     return headers.map(function(h) { var v = obj[h]; return v == null ? '' : v; });
   });

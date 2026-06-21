@@ -437,7 +437,7 @@
         .pb.green { background: rgba(16,185,129,.1); color: #6EE7B7; }
 
         /* Lots table */
-        .lots-table { width: 100%; border-collapse: collapse; }
+        .lots-table { width: 100%; min-width: 1160px; border-collapse: collapse; table-layout: fixed; }
         .lots-table th { font-size: 9px; color: #475569; text-transform: uppercase; letter-spacing: .06em; padding: 6px 10px; text-align: right; border-bottom: 1px solid #334155; white-space: nowrap; font-weight: 600; }
         .lots-table th:first-child, .lots-table th:last-child { text-align: left; }
         .lots-table td { padding: 8px 10px; font-size: 12px; border-bottom: 1px solid #334155; text-align: right; white-space: nowrap;  }
@@ -453,10 +453,34 @@
 
         /* Orders table */
         .orders-wrap { overflow-x: auto; }
-        .orders-table { width: 100%; border-collapse: collapse; min-width: 860px; }
+        .orders-table { width: 100%; border-collapse: collapse; min-width: 1200px; table-layout: fixed; }
         .orders-table th { font-size: 9px; color: #475569; text-transform: uppercase; letter-spacing: .06em; padding: 8px 10px; text-align: left; border-bottom: 1px solid #334155; white-space: nowrap; font-weight: 600; background: #1E293B; }
         .orders-table td { padding: 8px 10px; font-size: 12px; border-bottom: 1px solid #334155; white-space: nowrap; }
         .orders-table tr:hover td { background: rgba(255,255,255,.012); }
+        .wheel-tag {
+            display:inline-flex; align-items:center; justify-content:center; min-width:34px;
+            padding:3px 7px; border-radius:999px; background:rgba(155,92,246,.14);
+            border:1px solid rgba(155,92,246,.28); color:#C4B5FD; font-size:10px; font-weight:800;
+        }
+        .wheel-tag-picker { position:relative; }
+        .wheel-tag-picker summary {
+            min-height:28px; padding:4px 7px; border:1px solid #334155; border-radius:5px;
+            display:flex; align-items:center; justify-content:space-between; gap:5px;
+            background:#0F172A; color:#C4B5FD; font-size:10px; font-weight:750; cursor:pointer;
+            list-style:none; overflow:hidden;
+        }
+        .wheel-tag-picker summary::-webkit-details-marker { display:none; }
+        .wheel-tag-picker summary::after { content:'⌄'; color:#A78BFA; flex-shrink:0; }
+        .wheel-tag-picker[open] summary { border-color:#9B5CF6; }
+        .wheel-tag-menu {
+            position:absolute; z-index:30; top:calc(100% + 4px); left:0; width:112px;
+            max-height:190px; overflow:auto; padding:5px; border:1px solid #475569; border-radius:6px;
+            background:#0F172A; box-shadow:0 12px 28px rgba(0,0,0,.4);
+        }
+        .wheel-tag-menu label { display:flex; align-items:center; gap:7px; padding:5px 6px; border-radius:4px; color:#CBD5E1; font-size:10px; cursor:pointer; }
+        .wheel-tag-menu label:hover { background:#1E293B; }
+        .wheel-tag-menu input { accent-color:#8B5CF6; }
+        .wheel-order-actions { display:flex; align-items:center; justify-content:flex-start; gap:4px; }
 
         /* Filters */
         .wheel-filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
@@ -1186,7 +1210,7 @@
                     <div class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-2 flex flex-col justify-center">
                         <p class="text-slate-400 mb-1 font-medium flex items-center gap-2">Total Net Worth
                             <button id="bal-toggle-btn" onclick="toggleBalanceVisibility()" title="Show/Hide balances" style="background:transparent;border:none;cursor:pointer;color:#64748b;padding:2px 4px;border-radius:4px;transition:color .15s" onmouseover="this.style.color='#F8FAFC'" onmouseout="this.style.color='#64748b'">
-                                <i class="fa-solid fa-eye" id="bal-toggle-icon" style="font-size:13px"></i>
+                                <i class="fa-solid fa-eye-slash" id="bal-toggle-icon" style="font-size:13px"></i>
                             </button>
                         </p>
                         <h3 class="text-4xl font-bold text-white mb-2" id="total-net-worth">฿ 0.00</h3>
@@ -1846,7 +1870,11 @@
                         </div>
                         <div class="orders-wrap">
                             <table class="lots-table">
-                                <thead><tr><th>Lot</th><th>Buy Price</th><th>Amount</th><th>Cost</th><th>Target (Strike)</th><th>P/L vs Now</th><th>Acc. Realized P/L</th><th>Net P/L</th><th>Coverage</th><th>Actions</th></tr></thead>
+                                <colgroup>
+                                    <col style="width:190px"><col style="width:58px"><col style="width:118px"><col style="width:108px"><col style="width:104px">
+                                    <col style="width:126px"><col style="width:116px"><col style="width:128px"><col style="width:108px"><col style="width:118px"><col style="width:82px">
+                                </colgroup>
+                                <thead><tr><th>Lot</th><th>Tag</th><th>Buy Price</th><th>Amount</th><th>Cost</th><th>Target (Strike)</th><th>P/L vs Now</th><th>Acc. Realized P/L</th><th>Net P/L</th><th>Coverage</th><th>Actions</th></tr></thead>
                                 <tbody id="lotsBody"></tbody>
                                 <tfoot id="lotsFoot"></tfoot>
                             </table>
@@ -1866,7 +1894,12 @@
                         </div>
                         <div class="orders-wrap">
                             <table class="orders-table">
-                                <thead><tr><th>CEX</th><th>Product</th><th>Open Date</th><th>Expiry</th><th>Strike</th><th>% Gap</th><th>Contracts</th><th>APY</th><th>Premium/Ct</th><th>Total P&L</th><th>Status</th><th>Note</th><th></th></tr></thead>
+                                <colgroup>
+                                    <col style="width:94px"><col style="width:92px"><col style="width:122px"><col style="width:88px">
+                                    <col style="width:62px"><col style="width:72px"><col style="width:66px"><col style="width:88px"><col style="width:88px">
+                                    <col style="width:92px"><col style="width:116px"><col style="width:154px"><col style="width:82px">
+                                </colgroup>
+                                <thead><tr><th>Product</th><th>Open Date</th><th>Expiry</th><th>Strike</th><th>% Gap</th><th>Contracts</th><th>APY</th><th>Premium/Ct</th><th>Total P&L</th><th>Status</th><th>Tag</th><th>Note</th><th></th></tr></thead>
                                 <tbody id="ordersBody"></tbody>
                             </table>
                         </div>
@@ -3944,7 +3977,7 @@
     const CF_EVENTS_KEY = 'cashflow_events_v1';
     const CF_COLLAPSED_BANKS_KEY = 'cashflow_collapsed_banks_v1';
     const CF_SEED_RECOVERY_KEY = 'cashflow_seed_recovery_v2';
-    const CF_SEED_RECOVERY_VERSION = '2026-06-19';
+    const CF_SEED_RECOVERY_VERSION = '2026-06-20';
     let cfTimelineEditor = null;
     let cfPushTimer = null;
     let cfSeedRecoveryPending = false;
@@ -4274,6 +4307,13 @@
         return [card.issuer, card.name].filter(Boolean).join(' · ');
     }
 
+    function cfDefaultTopupCardId() {
+        return cfState().cards.find(card =>
+            card.active
+            && String(card.name || '').trim().toUpperCase() === 'FAMILY PLUS'
+        )?.id || '';
+    }
+
     function cfRenderOptions() {
         const cardOptions = cfState().cards.filter(card => card.active).map(card => `<option value="${satEsc(card.id)}">${satEsc(cfCardLabel(card))}</option>`).join('');
         ['cf-topup-card'].forEach(id => {
@@ -4282,6 +4322,7 @@
             const value = select.value;
             select.innerHTML = `<option value="">Select card</option>${cardOptions}`;
             if ([...select.options].some(option => option.value === value)) select.value = value;
+            else if (id === 'cf-topup-card') select.value = cfDefaultTopupCardId();
         });
         const walletSelect = document.getElementById('cf-topup-wallet');
         if (walletSelect) {
@@ -4645,6 +4686,7 @@
         document.getElementById('cf-topup-form').reset();
         document.getElementById('cf-topup-date').value = satToday();
         document.getElementById('cf-topup-amount').value = '10,000';
+        document.getElementById('cf-topup-card').value = cfDefaultTopupCardId();
         cfCommitChanges();
     }
 
@@ -5947,13 +5989,110 @@
     }
     function wRenderPivots(){wRenderOnePivot('putPivot','Short Put');wRenderOnePivot('callPivot','Short Call')}
 
+    function wNormalizeLotTag(value) {
+        const match = String(value || '').trim().toUpperCase().match(/\bL\d+\s*$/);
+        return match ? match[0].trim() : '';
+    }
+
+    function wLotTag(lot) {
+        return wNormalizeLotTag(lot?.tag || lot?.name);
+    }
+
+    function wLotTags() {
+        return [...new Set(wLots.map(wLotTag).filter(Boolean))].sort((a,b) =>
+            (parseInt(a.slice(1),10) || 0) - (parseInt(b.slice(1),10) || 0)
+        );
+    }
+
+    function wFindLotByTag(tag) {
+        const normalized = wNormalizeLotTag(tag);
+        return normalized ? wLots.find(lot => wLotTag(lot) === normalized) : null;
+    }
+
+    function wParseOrderTags(value) {
+        const raw = Array.isArray(value) ? value.join(',') : String(value || '');
+        const found = [];
+        raw.toUpperCase().split(/[,&\s]+/).filter(Boolean).forEach(part => {
+            const range = part.match(/^L(\d+)-L?(\d+)$/);
+            if (range) {
+                const start = parseInt(range[1],10), end = parseInt(range[2],10);
+                const step = start <= end ? 1 : -1;
+                for (let number=start; number !== end + step; number += step) found.push(`L${number}`);
+            } else {
+                const tag = wNormalizeLotTag(part);
+                if (tag) found.push(tag);
+            }
+        });
+        return [...new Set(found)].sort((a,b) => (parseInt(a.slice(1),10)||0) - (parseInt(b.slice(1),10)||0));
+    }
+
+    function wOrderTags(order) {
+        return wParseOrderTags(order?.tags || order?.tag || '');
+    }
+
+    function wFormatTagSelection(tags) {
+        const values = wParseOrderTags(tags);
+        if (!values.length) return '—';
+        const numbers = values.map(tag => parseInt(tag.slice(1),10));
+        const consecutive = numbers.every((number,index) => index === 0 || number === numbers[index-1] + 1);
+        return consecutive && values.length > 2 ? `${values[0]}–${values[values.length-1]}` : values.join(', ');
+    }
+
+    function wOrderTagPicker(order) {
+        const selected = new Set(wOrderTags(order));
+        const options = wLotTags().map(tag => `<label><input type="checkbox" ${selected.has(tag) ? 'checked' : ''} onchange="wToggleOrderTag(${order.id},'${satEsc(tag)}',this.checked,this)"> <span>${satEsc(tag)}</span></label>`).join('');
+        return `<details class="wheel-tag-picker"><summary><span class="wheel-tag-summary">${satEsc(wFormatTagSelection([...selected]))}</span></summary><div class="wheel-tag-menu">${options || '<span style="display:block;padding:6px;color:#64748B;font-size:10px">No lot tags</span>'}</div></details>`;
+    }
+
+    function wToggleOrderTag(id, tag, checked, input) {
+        const order = wOrders.find(item => item.id === id);
+        if (!order) return;
+        const tags = new Set(wOrderTags(order));
+        if (checked) tags.add(wNormalizeLotTag(tag));
+        else tags.delete(wNormalizeLotTag(tag));
+        order.tags = [...tags].filter(Boolean).sort((a,b) => (parseInt(a.slice(1),10)||0) - (parseInt(b.slice(1),10)||0)).join(',');
+        order.tag = '';
+        const summary = input?.closest('details')?.querySelector('.wheel-tag-summary');
+        if (summary) summary.textContent = wFormatTagSelection(order.tags);
+        wAutoPush();
+    }
+
+    function wApplyLotCredit(item, direction=1) {
+        if (!item || item.product !== 'Short Call' || item.status !== 'closed') return 0;
+        let allocations = {};
+        if (item.lotCredits) {
+            try { allocations = typeof item.lotCredits === 'string' ? JSON.parse(item.lotCredits) : item.lotCredits; } catch (_) {}
+        }
+        if (!Object.keys(allocations).length) {
+            const lots = wOrderTags(item).map(wFindLotByTag).filter(Boolean);
+            const totalAmount = lots.reduce((sum,lot) => sum + Math.max(0,wpn(lot.amount)),0);
+            const totalCredit = Object.prototype.hasOwnProperty.call(item,'lotCreditPL')
+                ? wpn(item.lotCreditPL)
+                : wpn(item.premium) * wpn(item.contracts);
+            let allocated = 0;
+            lots.forEach((lot,index) => {
+                const value = index === lots.length - 1
+                    ? totalCredit - allocated
+                    : totalAmount > 0 ? totalCredit * wpn(lot.amount) / totalAmount : totalCredit / Math.max(1,lots.length);
+                allocations[wLotTag(lot)] = value;
+                allocated += value;
+            });
+        }
+        Object.entries(allocations).forEach(([tag,value]) => {
+            const lot = wFindLotByTag(tag);
+            if (lot) lot.accRealPL = wpn(lot.accRealPL) + wpn(value) * direction;
+        });
+        return JSON.stringify(allocations);
+    }
+
     function wRenderLots() {
         const body = document.getElementById('lotsBody'); const foot = document.getElementById('lotsFoot'); body.innerHTML='';
         let tC=0,tPL=0,tA=0,tN=0;
         wLots.forEach(lot=>{ const cost = lot.price*lot.amount; const pl = lot.price>0 ? (lot.price-lot.target)*lot.amount + btcPrice*lot.amount - cost : 0; const net = pl+lot.accRealPL; tC+=cost; tPL+=pl; tA+=lot.accRealPL; tN+=net; const covOK = btcPrice>=lot.target; const tr = document.createElement('tr'); if(lot.problem) tr.style.background='rgba(239,68,68,.025)';
-            tr.innerHTML=`<td><div class="lot-name"><div class="lot-dot" style="background:${lot.problem?'#EF4444':'#9B5CF6'}"></div>${lot.name}${lot.problem?'<span class="tag-r">NO BTC</span>':''}</div></td><td>${lot.price>0?wusd(lot.price,2):'—'}</td><td>${lot.amount} BTC</td><td>${lot.price>0?wusd(cost):'—'}</td><td>${wusd(lot.target)}</td><td class="${pl>=0?'p-pos':'p-neg'}">${lot.price>0?(pl>=0?'+':'')+wusd(pl):'—'}</td><td class="p-pos">${wusd(lot.accRealPL,2)}</td><td class="${net>=0?'p-pos':'p-neg'}">${lot.price>0?(net>=0?'+':'')+wusd(net):'—'}</td><td>${covOK?'<span class="fcov">Fully Cover</span>':`<span style="font-size:11px;color:#FCA5A5;font-family:'Inter',sans-serif">${wusd((lot.target-btcPrice)*lot.amount)} short</span>`}</td><td style="text-align:left;white-space:nowrap"><button class="w-btn-icon" onclick="openWheelLotModal(${lot.id})" title="Edit">✎</button><button class="w-btn-icon w-btn-danger" onclick="wDelLot(${lot.id})" title="Delete" style="margin-left:4px">✕</button></td>`;
+            const tag = wLotTag(lot);
+            tr.innerHTML=`<td><div class="lot-name"><div class="lot-dot" style="background:${lot.problem?'#EF4444':'#9B5CF6'}"></div>${lot.name}${lot.problem?'<span class="tag-r">NO BTC</span>':''}</div></td><td>${tag ? `<span class="wheel-tag">${satEsc(tag)}</span>` : '—'}</td><td>${lot.price>0?wusd(lot.price,2):'—'}</td><td>${lot.amount} BTC</td><td>${lot.price>0?wusd(cost):'—'}</td><td>${wusd(lot.target)}</td><td class="${pl>=0?'p-pos':'p-neg'}">${lot.price>0?(pl>=0?'+':'')+wusd(pl):'—'}</td><td class="p-pos">${wusd(lot.accRealPL,2)}</td><td class="${net>=0?'p-pos':'p-neg'}">${lot.price>0?(net>=0?'+':'')+wusd(net):'—'}</td><td>${covOK?'<span class="fcov">Fully Cover</span>':`<span style="font-size:11px;color:#FCA5A5;font-family:'Inter',sans-serif">${wusd((lot.target-btcPrice)*lot.amount)} short</span>`}</td><td style="text-align:left;white-space:nowrap"><button class="w-btn-icon" onclick="openWheelLotModal(${lot.id})" title="Edit">✎</button><button class="w-btn-icon w-btn-danger" onclick="wDelLot(${lot.id})" title="Delete" style="margin-left:4px">✕</button></td>`;
             body.appendChild(tr); });
-        foot.innerHTML=`<tr class="tr-tot"><td>TOTAL</td><td></td><td>${wLots.reduce((s,l)=>s+l.amount,0).toFixed(4)} BTC</td><td>${wusd(tC)}</td><td></td><td class="${tPL>=0?'p-pos':'p-neg'}">${(tPL>=0?'+':'')+wusd(tPL)}</td><td class="p-pos">${wusd(tA,2)}</td><td class="${tN>=0?'p-pos':'p-neg'}">${(tN>=0?'+':'')+wusd(tN)}</td><td></td><td></td></tr>`;
+        foot.innerHTML=`<tr class="tr-tot"><td>TOTAL</td><td></td><td></td><td>${wLots.reduce((s,l)=>s+l.amount,0).toFixed(4)} BTC</td><td>${wusd(tC)}</td><td></td><td class="${tPL>=0?'p-pos':'p-neg'}">${(tPL>=0?'+':'')+wusd(tPL)}</td><td class="p-pos">${wusd(tA,2)}</td><td class="${tN>=0?'p-pos':'p-neg'}">${(tN>=0?'+':'')+wusd(tN)}</td><td></td><td></td></tr>`;
     }
     function wDelLot(id){if(!confirm('Delete this lot?'))return;wLots=wLots.filter(l=>l.id!==id);wCalcAll();wAutoPush();}
 
@@ -5970,13 +6109,13 @@
                 : isSoon
                 ? `<td style="font-family:'Inter',sans-serif;color:#FDE68A">${o.expiryDate}<span style="font-size:9px;color:#92400E;background:rgba(253,230,138,0.15);border-radius:4px;padding:1px 5px;margin-left:5px"> (${dte}d)</span></td>`
                 : `<td style="font-family:'Inter',sans-serif;color:#64748b">${o.expiryDate}<span style="font-size:9px;color:#334155"> (${dte}d)</span></td>`;
-            tr.innerHTML=`<td style="font-size:10px;font-weight:600;color:#64748b">${o.cex}</td><td><span class="badge ${o.product==='Short Put'?'put':'call'}">${o.product}</span></td><td style="color:#64748b;font-family:'Inter',sans-serif">${o.openDate}</td>${expiryCell}<td style="font-family:'Inter',sans-serif;font-weight:500">${wusd(o.strike)}</td><td style="color:${gc};font-family:'Inter',sans-serif;font-weight:500">${gapPct}%</td><td style="font-family:'Inter',sans-serif">${o.contracts}</td><td><span class="apy-chip">${apy.toFixed(2)}%</span></td><td style="color:#10B981;font-family:'Inter',sans-serif">${wusd(o.premium)}</td><td style="color:#10B981;font-family:'Inter',sans-serif;font-weight:500">${wusd(tot,2)}</td><td><select class="ss-sel badge ${o.status}" onchange="wChangeStatus(${o.id},this.value)"><option value="open" ${o.status==='open'?'selected':''}>Open</option><option value="closed" ${o.status==='closed'?'selected':''}>Closed</option><option value="exercised" ${o.status==='exercised'?'selected':''}>Exercised</option></select></td><td style="color:#334155;font-size:11px">${o.note||'—'}</td><td style="white-space:nowrap"><button class="w-btn-icon" onclick="openWheelOrderModal(${o.id})" title="Edit">✎</button><button class="w-btn-icon w-btn-danger" onclick="wDelOrder(${o.id})" title="Delete" style="margin-left:3px">✕</button></td>`;
+            tr.innerHTML=`<td><span class="badge ${o.product==='Short Put'?'put':'call'}">${o.product}</span></td><td style="color:#64748b;font-family:'Inter',sans-serif">${o.openDate}</td>${expiryCell}<td style="font-family:'Inter',sans-serif;font-weight:500">${wusd(o.strike)}</td><td style="color:${gc};font-family:'Inter',sans-serif;font-weight:500">${gapPct}%</td><td style="font-family:'Inter',sans-serif">${o.contracts}</td><td><span class="apy-chip">${apy.toFixed(2)}%</span></td><td style="color:#10B981;font-family:'Inter',sans-serif">${wusd(o.premium)}</td><td style="color:#10B981;font-family:'Inter',sans-serif;font-weight:500">${wusd(tot,2)}</td><td style="padding-right:14px"><select class="ss-sel badge ${o.status}" onchange="wChangeStatus(${o.id},this.value)"><option value="open" ${o.status==='open'?'selected':''}>Open</option><option value="closed" ${o.status==='closed'?'selected':''}>Closed</option><option value="exercised" ${o.status==='exercised'?'selected':''}>Exercised</option></select></td><td style="padding-left:14px;padding-right:14px">${wOrderTagPicker(o)}</td><td style="padding-left:14px;color:#64748b;font-size:11px;overflow:hidden;text-overflow:ellipsis" title="${satEsc(o.note||'')}">${o.note||'—'}</td><td><div class="wheel-order-actions"><button class="w-btn-icon" onclick="openWheelOrderModal(${o.id})" title="Edit">✎</button><button class="w-btn-icon w-btn-danger" onclick="wDelOrder(${o.id})" title="Delete">✕</button></div></td>`;
             body.appendChild(tr); });
     }
     function wFilterOrders(f,btn){ wOrderFilter=f; document.querySelectorAll('#wFilters .filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); wRenderOrders(); }
     function wChangeStatus(id,val){
         const idx=wOrders.findIndex(o=>o.id===id); if(idx<0)return; const o=wOrders[idx];
-        if(val==='closed'||val==='exercised'){ wClosed.push({...o,status:val,exercisePL:val==='exercised'?wExercisePL(o):0}); if(o.product==='Short Call'&&val==='closed'){ const profit=o.premium*o.contracts; const parts=o.note?o.note.split(/[-&,\s:]+/).map(s=>s.trim()).filter(Boolean):[]; if(parts.length){ wLots.forEach(l=>{ const matches=parts.filter(p=>l.name.toLowerCase().includes(p.toLowerCase())); if(matches.length) l.accRealPL+=profit/matches.length; }); } } wOrders.splice(idx,1); } else { o.status=val; }
+        if(val==='closed'||val==='exercised'){ const historyItem={...o,status:val,exercisePL:val==='exercised'?wExercisePL(o):0}; if(o.product==='Short Call'&&val==='closed'){ historyItem.lotCredits=wApplyLotCredit(historyItem,1); historyItem.lotCreditPL=Object.values(JSON.parse(historyItem.lotCredits||'{}')).reduce((sum,value)=>sum+wpn(value),0); } else { historyItem.lotCreditPL=0; historyItem.lotCredits=''; } wClosed.push(historyItem); wOrders.splice(idx,1); } else { o.status=val; }
         wCalcAll(); wAutoPush();
     }
     function wDelOrder(id){if(!confirm('Delete?'))return;wOrders=wOrders.filter(o=>o.id!==id);wCalcAll();wAutoPush();}
@@ -6009,8 +6148,8 @@
             cont.appendChild(div); });
     }
 
-    function wReOpenByIndex(index){ const item=wClosed[index]; if(!item)return; const newO={...item,id:wNextId++,status:'open'}; wOrders.push(newO); if(item.product==='Short Call'&&item.status==='closed'){ const profit=item.premium*item.contracts; const parts=item.note?item.note.split(/[-&,\s:]+/).map(s=>s.trim()).filter(Boolean):[]; wLots.forEach(l=>{if(parts.some(p=>l.name.toLowerCase().includes(p.toLowerCase()))) l.accRealPL-=profit/Math.max(1,parts.length)}); } wClosed.splice(index,1); document.querySelector('.wheel-subtab[data-wtab="w-dashboard"]').click(); wCalcAll(); wAutoPush(); }
-    function wDelHistByIndex(index){ if(!confirm('Remove?'))return; if(index>=0&&index<wClosed.length) wClosed.splice(index,1); wCalcAll(); wAutoPush(); }
+    function wReOpenByIndex(index){ const item=wClosed[index]; if(!item)return; wApplyLotCredit(item,-1); const newO={...item,id:wNextId++,status:'open',lotCreditPL:0,lotCredits:''}; wOrders.push(newO); wClosed.splice(index,1); document.querySelector('.wheel-subtab[data-wtab="w-dashboard"]').click(); wCalcAll(); wAutoPush(); }
+    function wDelHistByIndex(index){ if(!confirm('Remove?'))return; if(index>=0&&index<wClosed.length){wApplyLotCredit(wClosed[index],-1);wClosed.splice(index,1);} wCalcAll(); wAutoPush(); }
     function wReOpen(i,month){ const byM={}; wClosed.forEach(o=>{const k=(o.expiryDate||'unknown').slice(0,7);if(!byM[k])byM[k]=[];byM[k].push(o)}); const item=byM[month][i]; const gi=wClosed.indexOf(item); if(gi>=0) wReOpenByIndex(gi); }
     function wDelHist(i,month){ const byM={}; wClosed.forEach(o=>{const k=(o.expiryDate||'unknown').slice(0,7);if(!byM[k])byM[k]=[];byM[k].push(o)}); const item=byM[month][i]; const gi=wClosed.indexOf(item); if(gi>=0) wDelHistByIndex(gi); }
 
@@ -6249,29 +6388,29 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     function closeWheelModal(id){document.getElementById(id).classList.remove('open')}
 
     function openWheelOrderModal(id){ wEditOrderId=id; const o=id?wOrders.find(x=>x.id===id):null; document.getElementById('mWheelOrderTitle').textContent=o?'Edit Order':'New Order'; document.getElementById('mo_cex').value=o?o.cex:'BINANCE'; document.getElementById('mo_product').value=o?o.product:'Short Put'; document.getElementById('mo_open').value=o?o.openDate:new Date().toISOString().split('T')[0]; document.getElementById('mo_expiry').value=o?o.expiryDate:''; document.getElementById('mo_strike').value=o?o.strike.toLocaleString('en-US'):''; document.getElementById('mo_contracts').value=o?o.contracts:'0.04'; document.getElementById('mo_prem').value=o?o.premium.toLocaleString('en-US'):''; document.getElementById('mo_curr').value=o?o.currency:'Contracts'; document.getElementById('mo_note').value=o?o.note:''; openWheelModal('mWheelOrder'); }
-    function wSubmitOrder(){ const o={id:wEditOrderId||wNextId++,cex:document.getElementById('mo_cex').value,product:document.getElementById('mo_product').value,openDate:document.getElementById('mo_open').value,expiryDate:document.getElementById('mo_expiry').value,strike:wpn(document.getElementById('mo_strike').value),contracts:wpn(document.getElementById('mo_contracts').value),premium:wpn(document.getElementById('mo_prem').value),currency:document.getElementById('mo_curr').value,status:'open',note:document.getElementById('mo_note').value}; if(wEditOrderId){const i=wOrders.findIndex(x=>x.id===wEditOrderId);if(i>=0)wOrders[i]=o} else wOrders.push(o); closeWheelModal('mWheelOrder');wCalcAll();wAutoPush(); }
+    function wSubmitOrder(){ const existing=wEditOrderId?wOrders.find(x=>x.id===wEditOrderId):null; const o={id:wEditOrderId||wNextId++,cex:document.getElementById('mo_cex').value,product:document.getElementById('mo_product').value,openDate:document.getElementById('mo_open').value,expiryDate:document.getElementById('mo_expiry').value,strike:wpn(document.getElementById('mo_strike').value),contracts:wpn(document.getElementById('mo_contracts').value),premium:wpn(document.getElementById('mo_prem').value),currency:document.getElementById('mo_curr').value,status:'open',tags:wOrderTags(existing).join(','),tag:'',note:document.getElementById('mo_note').value}; if(wEditOrderId){const i=wOrders.findIndex(x=>x.id===wEditOrderId);if(i>=0)wOrders[i]=o} else wOrders.push(o); closeWheelModal('mWheelOrder');wCalcAll();wAutoPush(); }
 
     function openWheelLotModal(id){ wEditLotId=id; const l=id?wLots.find(x=>x.id===id):null; document.getElementById('mWheelLotTitle').textContent=l?'Edit Lot':'Add BTC Lot'; document.getElementById('ml_name').value=l?l.name:''; document.getElementById('ml_price').value=l&&l.price?l.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):''; document.getElementById('ml_amt').value=l?l.amount:''; document.getElementById('ml_target').value=l?l.target.toLocaleString('en-US'):''; document.getElementById('ml_acc').value=l?l.accRealPL.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'0.00'; openWheelModal('mWheelLot'); }
     function wSubmitLot(){ const price=wpn(document.getElementById('ml_price').value); const l={id:wEditLotId||(wLots.length?Math.max(...wLots.map(x=>x.id))+1:1),name:document.getElementById('ml_name').value,price,amount:wpn(document.getElementById('ml_amt').value),target:wpn(document.getElementById('ml_target').value),accRealPL:wpn(document.getElementById('ml_acc').value),problem:price===0}; if(wEditLotId){const i=wLots.findIndex(x=>x.id===wEditLotId);if(i>=0)wLots[i]=l} else wLots.push(l); closeWheelModal('mWheelLot');wCalcAll();wAutoPush(); }
 
     function openWheelHistModal(){ document.getElementById('mh_open').value=''; document.getElementById('mh_close').value=new Date().toISOString().split('T')[0]; document.getElementById('mh_strike').value=''; document.getElementById('mh_contracts').value='0.04'; document.getElementById('mh_prem').value=''; document.getElementById('mh_exercise_pl').value=''; document.getElementById('mh_note').value=''; openWheelModal('mWheelHist'); }
-    function wSubmitHist(){ const status=document.getElementById('mh_status').value; wClosed.push({id:wNextId++,cex:document.getElementById('mh_cex').value,product:document.getElementById('mh_product').value,openDate:document.getElementById('mh_open').value,expiryDate:document.getElementById('mh_close').value,strike:wpn(document.getElementById('mh_strike').value),contracts:wpn(document.getElementById('mh_contracts').value),premium:wpn(document.getElementById('mh_prem').value),currency:'Contracts',status,note:document.getElementById('mh_note').value,exercisePL:status==='exercised'?wpn(document.getElementById('mh_exercise_pl').value):0}); closeWheelModal('mWheelHist');wCalcAll();wAutoPush(); }
+    function wSubmitHist(){ const status=document.getElementById('mh_status').value; wClosed.push({id:wNextId++,cex:document.getElementById('mh_cex').value,product:document.getElementById('mh_product').value,openDate:document.getElementById('mh_open').value,expiryDate:document.getElementById('mh_close').value,strike:wpn(document.getElementById('mh_strike').value),contracts:wpn(document.getElementById('mh_contracts').value),premium:wpn(document.getElementById('mh_prem').value),currency:'Contracts',status,tags:'',tag:'',lotCreditPL:0,lotCredits:'',note:document.getElementById('mh_note').value,exercisePL:status==='exercised'?wpn(document.getElementById('mh_exercise_pl').value):0}); closeWheelModal('mWheelHist');wCalcAll();wAutoPush(); }
 
     document.querySelectorAll('.wheel-modal-overlay').forEach(m=>{ m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}); });
 
     // ── XLSX Export / Import for History ──────────────────
     function wExportXlsx() {
-        const headers = ['CEX','Product','Open Date','Expiry Date','Strike','Contracts','Premium/Ct','Premium Total','Exercise P/L','Status','Note'];
+        const headers = ['CEX','Product','Open Date','Expiry Date','Strike','Contracts','Premium/Ct','Premium Total','Exercise P/L','Status','Tag','Lot Credit P/L','Note'];
         const rows = wClosed.map(o => [
             o.cex, o.product, o.openDate, o.expiryDate,
             o.strike, o.contracts, o.premium,
             +(o.premium * o.contracts).toFixed(2),
             o.status === 'exercised' ? +wExercisePL(o).toFixed(2) : '',
-            o.status, o.note || ''
+            o.status, wOrderTags(o).join(','), o.lotCreditPL || 0, o.note || ''
         ]);
         const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
         // column widths
-        ws['!cols'] = [10,12,12,12,12,10,13,13,13,10,18].map(w=>({wch:w}));
+        ws['!cols'] = [10,12,12,12,12,10,13,13,13,10,8,14,18].map(w=>({wch:w}));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Wheel_History');
         XLSX.writeFile(wb, 'wheel-history-' + new Date().toISOString().slice(0,10) + '.xlsx');
@@ -6297,6 +6436,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                     const premium  = parseXlsxNum(get('Premium/Ct','Premium','Returned','premium','Prem/Ct'));
                     const status   = String(get('Position/Curr.','Status','status') || 'closed').toLowerCase().includes('exercis') ? 'exercised' : 'closed';
                     const exercisePL = parseXlsxNum(get('Exercise P/L','Ex. P/L','exercisePL','realizedPL','P/L','Profit/Loss'));
+                    const tag      = wNormalizeLotTag(get('Tag','tag'));
                     const note     = String(get('Note','note') || '');
                     const cex      = String(get('CEX','cex') || 'BINANCE');
                     if (!openDate || strike <= 0) return;
@@ -6306,7 +6446,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                         expiryDate: expDate || openDate,
                         
                         strike, contracts, premium,
-                        currency: 'Contracts', status, note,
+                        currency: 'Contracts', status, tags:tag, tag:'', lotCreditPL:0, lotCredits:'', note,
                         exercisePL: status === 'exercised' ? exercisePL : 0
                     });
                     added++;
@@ -6356,9 +6496,9 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             const isValidOrder = o => o && +o.id > 0 && o.product;
             const isValidLot = l => l && +l.id > 0 && l.name;
             const isValidHist = o => o && +o.id > 0 && o.product;
-            if (Array.isArray(data.orders) && data.orders.length) { wOrders = data.orders.filter(isValidOrder).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'open'),note:String(o.note||'')})); wNextId = Math.max(...wOrders.map(o=>o.id), wNextId) + 1; }
-            if (Array.isArray(data.lots) && data.lots.length) { wLots = data.lots.filter(isValidLot).map(l => ({id:+l.id,name:String(l.name||''),price:+l.price,amount:+l.amount,target:+l.target,accRealPL:+l.accRealPL,problem:l.problem==='true'||l.problem===true||l.problem==='TRUE'})); }
-            if (Array.isArray(data.history) && data.history.length) { wClosed = data.history.filter(isValidHist).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'closed'),note:String(o.note||''),exercisePL:wpn(o.exercisePL ?? o.realizedPL ?? o.pnl ?? o.pl ?? 0)})); }
+            if (Array.isArray(data.orders) && data.orders.length) { wOrders = data.orders.filter(isValidOrder).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'open'),tags:wParseOrderTags(o.tags||o.tag).join(','),tag:'',note:String(o.note||'')})); wNextId = Math.max(...wOrders.map(o=>o.id), wNextId) + 1; }
+            if (Array.isArray(data.lots) && data.lots.length) { wLots = data.lots.filter(isValidLot).map(l => ({id:+l.id,name:String(l.name||''),tag:wNormalizeLotTag(l.tag||l.name),price:+l.price,amount:+l.amount,target:+l.target,accRealPL:+l.accRealPL,problem:l.problem==='true'||l.problem===true||l.problem==='TRUE'})); }
+            if (Array.isArray(data.history) && data.history.length) { wClosed = data.history.filter(isValidHist).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'closed'),tags:wParseOrderTags(o.tags||o.tag).join(','),tag:'',lotCreditPL:wpn(o.lotCreditPL),lotCredits:String(o.lotCredits||''),note:String(o.note||''),exercisePL:wpn(o.exercisePL ?? o.realizedPL ?? o.pnl ?? o.pl ?? 0)})); }
             wCalcAll(); return true;
         } catch(e) { console.error('Wheel pull error:', e); return false; }
     }
@@ -6382,7 +6522,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     // ════════════════════════════════════════════════════
     //   BALANCE VISIBILITY TOGGLE
     // ════════════════════════════════════════════════════
-    let balancesHidden = false;
+    let balancesHidden = true;
     const BALANCE_IDS = ['total-net-worth','stock-bal','bond-bal','crypto-bal','gold-bal'];
 
     function applyBalanceMask() {

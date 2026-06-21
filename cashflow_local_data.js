@@ -1,4 +1,10 @@
 (() => {
+    const easybillsUpdateKey = 'cashflow_easybills_update_2026_06_20';
+    if (localStorage.getItem(easybillsUpdateKey) !== 'applied') {
+        localStorage.removeItem('cashflow_seed_recovery_v2');
+        localStorage.setItem(easybillsUpdateKey, 'applied');
+    }
+
     const cardId = 'family_plus';
     const createdAt = date => `${date}T12:00:00.000Z`;
     const card = (id, issuer, name, statementDay, dueDay, creditLimit, limitGroup, sortOrder, extra={}) => ({
@@ -40,20 +46,20 @@
         type: 'card_payment',
         cardId,
         walletId: '',
-        amount: 184500.75,
+        amount: 199500.75,
         fee: 0,
         chargedAmount: 0,
         transferAmount: 0,
         cashDelta: 0,
         debtDelta: 0,
         walletDelta: 0,
-        note: 'May opening history: paid 184,500.75; remaining 15,000',
+        note: 'May opening history: payment completed',
         createdAt: createdAt('2026-05-31')
     });
 
-    addSeries('2026-06', 'wallet_nine', [10000, 10000, 9500.75], 'June opening progress: 2 top-ups remaining', 1);
+    addSeries('2026-06', 'wallet_nine', [10000, 10000, 9500.75, 10000, 10000], 'June opening progress: completed', 1);
     addSeries('2026-06', 'wallet_new', [10000, 10000, 10000, 10000, 10000], 'June opening progress: completed', 4);
-    addSeries('2026-06', 'wallet_dad', [10000, 10000, 10000, 10000], 'June opening progress: 1 top-up remaining', 9);
+    addSeries('2026-06', 'wallet_dad', [10000, 10000, 10000, 10000, 10000], 'June opening progress: completed', 9);
     addSeries('2026-06', 'wallet_mom', [10000, 10000, 10000, 10000, 10000], 'June opening progress: completed', 13);
 
     window.CASHFLOW_LOCAL_SEED = {
@@ -95,10 +101,10 @@
             card('ttb_so_smart', 'TTB', 'SO SMART', 26, 16, 264000, 'ttb_so_smart', 25)
         ],
         wallets: [
-            { id: 'wallet_nine', name: 'Nine', balance: 29500.75, capacity: 49500.75, active: true },
-            { id: 'wallet_new', name: 'New', balance: 0, capacity: 50000, active: true },
-            { id: 'wallet_dad', name: 'Dad', balance: 40000, capacity: 50000, active: true },
-            { id: 'wallet_mom', name: 'Mom', balance: 0, capacity: 50000, active: true }
+            { id: 'wallet_nine', name: 'Nine', balance: 0, capacity: 49500.75, transferredMonths: ['2026-05','2026-06'], transferTrackingInitialized: true, active: true },
+            { id: 'wallet_new', name: 'New', balance: 0, capacity: 50000, transferredMonths: ['2026-05','2026-06'], transferTrackingInitialized: true, active: true },
+            { id: 'wallet_dad', name: 'Dad', balance: 0, capacity: 50000, transferredMonths: ['2026-05','2026-06'], transferTrackingInitialized: true, active: true },
+            { id: 'wallet_mom', name: 'Mom', balance: 50000, capacity: 50000, transferredMonths: ['2026-05'], transferTrackingInitialized: true, active: true }
         ],
         events
     };
