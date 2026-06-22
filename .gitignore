@@ -1,1 +1,17 @@
 apps_script.txt
+.DS_Store
+*.swp
+*.swo
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+secrets*.json
+portfolio_export*
+cashflow_export*
+wheel-*.json
+satellite-trades-*.csv

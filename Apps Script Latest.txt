@@ -1,16 +1,20 @@
 // ============================================================
 //  UNIFIED APPS SCRIPT — Investment Dashboard + Wheel Strategy
 //  GET  (no param)              → investRead
-//  GET  ?action=activities_write → activitiesWrite via params
 //  GET  ?action=settings_read   → settingsRead
 //  GET  ?action=wheel_read      → wheelRead
 //  GET  ?action=satellite_read  → satelliteRead
 //  GET  ?action=satellite_benchmark → satelliteBenchmark
-//  GET  ?action=satellite_refresh_prices → satelliteRefreshPrices
 //  GET  ?action=cashflow_read   → cashflowRead
 //  POST action=wheel_write      → wheelWrite
 //  POST action=satellite_write  → satelliteWrite
+//  POST action=satellite_refresh_prices → satelliteRefreshPrices
 //  POST action=cashflow_write   → cashflowWrite
+//  POST action=activities_write → activitiesWrite
+//
+//  Security setup:
+//  Apps Script → Project Settings → Script Properties
+//  Add WRITE_TOKEN with a long random value, then redeploy the web app.
 // ============================================================
 
 var SPREADSHEET_ID  = SpreadsheetApp.getActiveSpreadsheet().getId();
@@ -28,12 +32,14 @@ var TAB_CF_EVENTS     = "Cashflow_events";
 
 function doGet(e) {
   var p = (e && e.parameter) ? e.parameter : {};
-  if (p.action === 'activities_write') return activitiesWriteFromParams(p);
+  if (p.action === 'activities_write')
+    return jsonOut({ error: 'Write actions require POST authentication' });
   if (p.action === 'settings_read')    return settingsRead();
   if (p.action === 'wheel_read')       return wheelRead();
   if (p.action === 'satellite_read')   return satelliteRead(p);
   if (p.action === 'satellite_benchmark') return satelliteBenchmark(p);
-  if (p.action === 'satellite_refresh_prices') return satelliteRefreshPrices(p);
+  if (p.action === 'satellite_refresh_prices')
+    return jsonOut({ error: 'Price refresh requires POST authentication' });
   if (p.action === 'cashflow_read')      return cashflowRead();
   return investRead();
 }
@@ -42,29 +48,50 @@ function doPost(e) {
   var data;
   try { data = JSON.parse(e.postData.contents); }
   catch (err) { return jsonOut({ error: 'Invalid JSON: ' + err.message }); }
-  if (data.action === 'wheel_write') return wheelWrite(data);
-  if (data.action === 'satellite_write') return satelliteWrite(data);
-  if (data.action === 'cashflow_write') return cashflowWrite(data);
-  return jsonOut({ error: 'Unknown action: ' + data.action });
+  if (!isAuthorizedWrite_(data))
+    return jsonOut({ error: 'Unauthorized write request' });
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000))
+    return jsonOut({ error: 'Another write is in progress; please retry' });
+  try {
+    if (data.action === 'activities_write') return activitiesWrite(data);
+    if (data.action === 'wheel_write') return wheelWrite(data);
+    if (data.action === 'satellite_write') return satelliteWrite(data);
+    if (data.action === 'satellite_refresh_prices') return satelliteRefreshPrices(data);
+    if (data.action === 'cashflow_write') return cashflowWrite(data);
+    return jsonOut({ error: 'Unknown action: ' + data.action });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function isAuthorizedWrite_(data) {
+  var expected = PropertiesService.getScriptProperties().getProperty('WRITE_TOKEN') || '';
+  var supplied = data && data.writeToken ? String(data.writeToken) : '';
+  if (!expected) return false;
+  if (expected.length !== supplied.length) return false;
+  var mismatch = 0;
+  for (var i = 0; i < expected.length; i++)
+    mismatch |= expected.charCodeAt(i) ^ supplied.charCodeAt(i);
+  return mismatch === 0;
 }
 
 // ============================================================
-//  activitiesWriteFromParams
-//  Reads flat GET params: date, stocks, bonds, crypto, gold, currency, note
+//  activitiesWrite
 // ============================================================
-function activitiesWriteFromParams(p) {
+function activitiesWrite(data) {
   try {
     var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
     var sheet = ss.getSheetByName(TAB_ACTIVITIES);
     if (!sheet) return jsonOut({ error: "Sheet '" + TAB_ACTIVITIES + "' not found" });
 
-    var dateStr  = p.date     || '';
-    var stocks   = p.stocks   !== '' && p.stocks   !== undefined ? parseFloat(p.stocks)  : null;
-    var bonds    = p.bonds    !== '' && p.bonds    !== undefined ? parseFloat(p.bonds)   : null;
-    var crypto   = p.crypto   !== '' && p.crypto   !== undefined ? parseFloat(p.crypto)  : null;
-    var gold     = p.gold     !== '' && p.gold     !== undefined ? parseFloat(p.gold)    : null;
-    var currency = p.currency || 'THB';
-    var note     = p.note     || '';
+    var dateStr  = data.date     || '';
+    var stocks   = data.stocks   !== '' && data.stocks   !== undefined ? parseFloat(data.stocks)  : null;
+    var bonds    = data.bonds    !== '' && data.bonds    !== undefined ? parseFloat(data.bonds)   : null;
+    var crypto   = data.crypto   !== '' && data.crypto   !== undefined ? parseFloat(data.crypto)  : null;
+    var gold     = data.gold     !== '' && data.gold     !== undefined ? parseFloat(data.gold)    : null;
+    var currency = data.currency || 'THB';
+    var note     = data.note     || '';
 
     if (!dateStr) return jsonOut({ error: 'Missing date' });
 
@@ -406,22 +433,10 @@ function satelliteRead(p) {
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     var positionSheet = ss.getSheetByName(TAB_SAT_POSITIONS);
     var tradeSheet = ss.getSheetByName(TAB_SAT_TRADES);
-    var positions = structuredSheetToJson(positionSheet, SAT_POSITION_HEADERS);
-    var priceRefresh = { updated: 0 };
-    try {
-      priceRefresh = satelliteRefreshPositionPrices_(ss, positions, {
-        end: p && p.end,
-        force: p && String(p.forcePrices || p.refreshPrices || '') === '1'
-      });
-      positions = priceRefresh.positions || positions;
-    } catch (priceErr) {
-      priceRefresh = { updated: 0, error: priceErr.message };
-    }
     return jsonOut({
       initialized: !!positionSheet && !!tradeSheet,
-      positions: positions,
-      trades: structuredSheetToJson(tradeSheet, SAT_TRADE_HEADERS),
-      priceRefresh: priceRefresh
+      positions: structuredSheetToJson(positionSheet, SAT_POSITION_HEADERS),
+      trades: structuredSheetToJson(tradeSheet, SAT_TRADE_HEADERS)
     });
   } catch (err) {
     return jsonOut({ error: err.message });
@@ -531,15 +546,15 @@ function satelliteRefreshPositionPrices_(ss, positions, options) {
   return { ok: true, updated: updated, expectedDate: expectedDate, quotes: quotes, positions: positions, fetchedAt: new Date().toISOString() };
 }
 
-function satelliteRefreshPrices(p) {
+function satelliteRefreshPrices(data) {
   try {
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     var positionSheet = ss.getSheetByName(TAB_SAT_POSITIONS);
     if (!positionSheet) return jsonOut({ error: "Sheet '" + TAB_SAT_POSITIONS + "' not found" });
     var positions = structuredSheetToJson(positionSheet, SAT_POSITION_HEADERS);
     return jsonOut(satelliteRefreshPositionPrices_(ss, positions, {
-      end: p && p.end,
-      force: String((p && p.force) || '') === '1'
+      end: data && data.end,
+      force: String((data && data.force) || '') === '1'
     }));
   } catch (err) {
     return jsonOut({ error: 'Price refresh error: ' + err.message });

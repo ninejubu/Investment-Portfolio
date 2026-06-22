@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="referrer" content="no-referrer">
     <title>Investment Portfolio Pro 2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1972,6 +1973,11 @@
                             <input type="text" id="unified-gs-url" class="w-full bg-slate-800 border border-slate-700 text-white rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" placeholder="https://script.google.com/macros/s/.../exec">
                             <p class="text-[10px] text-slate-500 mt-1">Cashflow uses four private tabs: settings, cards, wallets and events.</p>
                         </div>
+                        <div>
+                            <label class="text-[10px] text-slate-500 uppercase block mb-1">Write Token</label>
+                            <input type="password" id="unified-write-token" autocomplete="off" class="w-full bg-slate-800 border border-slate-700 text-white rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" placeholder="Stored only in this browser">
+                            <p class="text-[10px] text-slate-500 mt-1">Must match the Apps Script <code>WRITE_TOKEN</code> Script Property. Read-only sync does not use it.</p>
+                        </div>
                         <div class="flex gap-3 flex-wrap">
                             <button onclick="saveUnifiedUrl()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Save URL</button>
                             <button onclick="testInvConnection()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">Test Investment Sync</button>
@@ -2069,6 +2075,12 @@
                     <span class="wheel-label">Apps Script Web App URL <span style="color:#475569">(shared by all dashboard workspaces)</span></span>
                     <input type="text" class="wheel-input" id="modal_gs_url"
                         placeholder="https://script.google.com/macros/s/.../exec"
+                        style="font-size:11px">
+                </div>
+                <div class="wheel-input-group" style="margin-top:10px">
+                    <span class="wheel-label">Write Token <span style="color:#475569">(stored only in this browser)</span></span>
+                    <input type="password" class="wheel-input" id="modal_write_token"
+                        autocomplete="off" placeholder="Apps Script WRITE_TOKEN"
                         style="font-size:11px">
                 </div>
                 <div style="font-size:10px;color:#475569;margin-top:6px;line-height:1.7">
@@ -3084,14 +3096,11 @@
         const url = getGsUrl();
         if (!url) return false;
         try {
-            const requestUrl = gsActionUrl(url, 'satellite_refresh_prices')
-                + `&end=${encodeURIComponent(satToday())}`
-                + `&force=${force ? '1' : '0'}`
-                + `&t=${Date.now()}`;
-            const response = await fetch(requestUrl);
-            if (!response.ok) throw new Error('Price refresh HTTP ' + response.status);
-            const payload = await response.json();
-            if (payload.error) throw new Error(payload.error);
+            const payload = await postGsWrite({
+                action: 'satellite_refresh_prices',
+                end: satToday(),
+                force: force ? '1' : '0'
+            });
             if (Array.isArray(payload.positions)) {
                 satState().positions = payload.positions.map(satNormalizePosition).filter(p => p.ticker);
                 satSaveLocal();
@@ -3932,7 +3941,12 @@
         const url = getGsUrl();
         if (!url) return false;
         try {
-            const data = await fetchGsAction('satellite_read', options.forcePrices ? { forcePrices: '1' } : {});
+            if (options.forcePrices && getGsWriteToken()) {
+                await postGsWrite({ action:'satellite_refresh_prices', force:'1' }).catch(error => {
+                    console.warn('Backend price refresh failed:', error.message);
+                });
+            }
+            const data = await fetchGsAction('satellite_read');
             if (!data || !Array.isArray(data.positions) || !Array.isArray(data.trades)) throw new Error('Invalid Satellite data');
             if (data.initialized === false) {
                 if (satState().positions.length || satState().trades.length) await satPushToSheets(true);
@@ -3955,11 +3969,7 @@
         const url = getGsUrl();
         if (!url) return false;
         try {
-            const payload = { action: 'satellite_write', positions: satState().positions, trades: satState().trades };
-            const response = await fetch(url, { method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload) });
-            if (!response.ok) throw new Error('HTTP ' + response.status);
-            const data = await response.json();
-            if (data.error) throw new Error(data.error);
+            await postGsWrite({ action: 'satellite_write', positions: satState().positions, trades: satState().trades });
             if (!silent) setSyncPill('ok', 'Satellite synced');
             return true;
         } catch (e) {
@@ -4794,10 +4804,7 @@
                 })),
                 events:cfState().events
             };
-            const response = await fetch(url, { method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload) });
-            if (!response.ok) throw new Error('HTTP ' + response.status);
-            const data = await response.json();
-            if (data.error) throw new Error(data.error);
+            await postGsWrite(payload);
             if (!silent) setSyncPill('ok', 'Cashflow saved');
             return true;
         } catch (error) {
@@ -5398,8 +5405,7 @@
             const sign = f.type === 'withdraw' ? -1 : 1;
             const amt  = (f.amount || 0) * sign;
 
-            // Send as separate URL params to survive Apps Script redirect
-            const params = new URLSearchParams({
+            const payload = {
                 action:   'activities_write',
                 date:     f.date || '',
                 stocks:   f.asset === 'stocks' ? amt : '',
@@ -5408,16 +5414,8 @@
                 gold:     f.asset === 'gold'   ? amt : '',
                 currency: f.currency || 'THB',
                 note:     f.memo || ''
-            });
-
-            const getUrl = url + '?' + params.toString();
-            console.log('pushFlowsToSheet: sending', getUrl.substring(0, 100) + '...');
-
-            const r = await fetch(getUrl);
-            const text = await r.text();
-            console.log('pushFlowsToSheet: response', text.substring(0, 200));
-            const data = JSON.parse(text);
-            if (data.error) throw new Error(data.error);
+            };
+            await postGsWrite(payload);
             const now = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
             setSyncPill('ok', 'Synced ' + now);
         } catch(e) {
@@ -5523,6 +5521,8 @@
         const savedUrl = getGsUrl();
         const ugsEl = document.getElementById('unified-gs-url');
         if (ugsEl) ugsEl.value = savedUrl;
+        const writeTokenEl = document.getElementById('unified-write-token');
+        if (writeTokenEl) writeTokenEl.value = getGsWriteToken();
     }
 
     function showSkeleton() {
@@ -5571,7 +5571,27 @@
     // ════════════════════════════════════════════════════
 
     const GS_URL_KEY = 'unified_gs_url';
+    const GS_WRITE_TOKEN_KEY = 'unified_gs_write_token';
     function getGsUrl() { return localStorage.getItem(GS_URL_KEY) || ''; }
+    function getGsWriteToken() { return localStorage.getItem(GS_WRITE_TOKEN_KEY) || ''; }
+    function withWriteToken(payload) {
+        const writeToken = getGsWriteToken();
+        if (!writeToken) throw new Error('Write token is not configured');
+        return Object.assign({}, payload, { writeToken });
+    }
+    async function postGsWrite(payload) {
+        const url = getGsUrl();
+        if (!url) throw new Error('Apps Script URL is not configured');
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(withWriteToken(payload))
+        });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        if (data && data.error) throw new Error(data.error);
+        return data;
+    }
 
     // ── Header status pill ──────────────────────────────
     function setSyncPill(state, msg) {
@@ -5639,6 +5659,7 @@
     function openSyncModal() {
         const url = getGsUrl();
         document.getElementById('modal_gs_url').value = url;
+        document.getElementById('modal_write_token').value = getGsWriteToken();
         updateModalStatus();
         openWheelModal('mSyncModal');
     }
@@ -5667,8 +5688,11 @@
 
     async function modalSaveAndConnect() {
         const url = document.getElementById('modal_gs_url').value.trim();
+        const writeToken = document.getElementById('modal_write_token').value.trim();
         if (!url) { alert('Please paste the Apps Script Web App URL'); return; }
         localStorage.setItem(GS_URL_KEY, url);
+        if (writeToken) localStorage.setItem(GS_WRITE_TOKEN_KEY, writeToken);
+        else localStorage.removeItem(GS_WRITE_TOKEN_KEY);
         // Update wheel url key too
         localStorage.setItem('wheel_gs_url', url);
         updateModalStatus();
@@ -5730,6 +5754,7 @@
         if (!confirm('Disconnect Google Sheets? Local data will be kept.')) return;
         localStorage.removeItem(GS_URL_KEY);
         localStorage.removeItem('wheel_gs_url');
+        localStorage.removeItem(GS_WRITE_TOKEN_KEY);
         setSyncPill('idle', 'Not connected');
         updateModalStatus();
     }
@@ -5838,9 +5863,12 @@
 
     function saveUnifiedUrl() {
         const url = document.getElementById('unified-gs-url').value.trim();
+        const writeToken = document.getElementById('unified-write-token').value.trim();
         if (!url) { alert('Please enter the Apps Script Web App URL'); return; }
         localStorage.setItem(GS_URL_KEY, url);
         localStorage.setItem('wheel_gs_url', url);
+        if (writeToken) localStorage.setItem(GS_WRITE_TOKEN_KEY, writeToken);
+        else localStorage.removeItem(GS_WRITE_TOKEN_KEY);
         const msg = document.getElementById('gs-status-msg');
         if (msg) { msg.classList.remove('hidden'); msg.textContent = '✓ URL saved for all dashboard workspaces'; msg.style.color = '#34D399'; }
     }
@@ -6506,10 +6534,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     async function wPushToSheets(silent=false) {
         const url = wGetSheetsUrl(); if (!url) return;
         try {
-            const payload = { action: 'wheel_write', orders: wOrders, lots: wLots.map(l => ({...l, problem: l.problem ? 'true' : 'false'})), history: wClosed };
-            const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
-            if (!r.ok) throw new Error('HTTP ' + r.status);
-            const data = await r.json(); if (data.error) throw new Error(data.error);
+            await postGsWrite({ action: 'wheel_write', orders: wOrders, lots: wLots.map(l => ({...l, problem: l.problem ? 'true' : 'false'})), history: wClosed });
         } catch(e) { console.error('Wheel push error:', e); throw e; }
     }
 
