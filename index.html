@@ -481,6 +481,15 @@
         .wheel-tag-menu label { display:flex; align-items:center; gap:7px; padding:5px 6px; border-radius:4px; color:#CBD5E1; font-size:10px; cursor:pointer; }
         .wheel-tag-menu label:hover { background:#1E293B; }
         .wheel-tag-menu input { accent-color:#8B5CF6; }
+        .wheel-order-insights { display:flex; gap:8px; flex-wrap:wrap; margin:-2px 0 12px; }
+        .wheel-order-metric {
+            display:flex; align-items:center; gap:7px; padding:7px 10px; border:1px solid #334155; border-radius:8px;
+            background:rgba(15,23,42,.62); color:#CBD5E1; font-size:11px; font-family:'Inter',sans-serif;
+        }
+        .wheel-order-metric strong { color:#F8FAFC; font-weight:800; }
+        .wheel-order-metric .muted { color:#64748B; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+        .wheel-order-metric.warn { border-color:rgba(245,158,11,.35); background:rgba(245,158,11,.08); color:#FDE68A; }
+        .wheel-order-metric.ok { border-color:rgba(16,185,129,.28); background:rgba(16,185,129,.08); color:#A7F3D0; }
         .wheel-order-actions { display:flex; align-items:center; justify-content:flex-start; gap:4px; }
 
         /* Filters */
@@ -1067,6 +1076,10 @@
         body.theme-light .w-btn-icon { background: #F8FAFC; border-color: #CBD5E1; }
         body.theme-light .filter-btn.active,
         body.theme-light .filter-btn:hover { background: #EAF2FF; color: #1D4ED8; }
+        body.theme-light .wheel-order-metric { background: #F8FAFC; border-color: #CBD5E1; color: #334155; }
+        body.theme-light .wheel-order-metric strong { color: #0F172A; }
+        body.theme-light .wheel-order-metric.warn { background: #FFF7ED; border-color: #FDBA74; color: #9A3412; }
+        body.theme-light .wheel-order-metric.ok { background: #ECFDF5; border-color: #86EFAC; color: #166534; }
         body.theme-light .orders-table th { background: #F1F5F9; }
         body.theme-light .pivot-table th,
         body.theme-light .pivot-table td,
@@ -1888,6 +1901,7 @@
                             <span class="ctl">Open Orders</span>
                             <button class="w-btn w-btn-primary w-btn-sm" onclick="openWheelOrderModal(null)">+ New Order</button>
                         </div>
+                        <div class="wheel-order-insights" id="orderInsights"></div>
                         <div class="wheel-filters" id="wFilters">
                             <button class="filter-btn active" onclick="wFilterOrders('all',this)">All</button>
                             <button class="filter-btn" onclick="wFilterOrders('Short Put',this)">Short Put</button>
@@ -6072,6 +6086,23 @@
         return `<details class="wheel-tag-picker"><summary><span class="wheel-tag-summary">${satEsc(wFormatTagSelection([...selected]))}</span></summary><div class="wheel-tag-menu">${options || '<span style="display:block;padding:6px;color:#64748B;font-size:10px">No lot tags</span>'}</div></details>`;
     }
 
+    function wRenderOrderInsights() {
+        const el = document.getElementById('orderInsights');
+        if (!el) return;
+        const open = wOrders.filter(o => o.status === 'open');
+        const totalBtc = open.reduce((sum,o) => sum + wpn(o.contracts), 0);
+        const putBtc = open.filter(o => o.product === 'Short Put').reduce((sum,o) => sum + wpn(o.contracts), 0);
+        const callBtc = open.filter(o => o.product === 'Short Call').reduce((sum,o) => sum + wpn(o.contracts), 0);
+        const orderTags = new Set(open.flatMap(wOrderTags));
+        const missingTags = wLotTags().filter(tag => !orderTags.has(tag));
+        const missingClass = missingTags.length ? 'warn' : 'ok';
+        const missingText = missingTags.length ? satEsc(wFormatTagSelection(missingTags)) : 'All lot tags are linked';
+        el.innerHTML = `
+            <div class="wheel-order-metric"><span class="muted">Open BTC</span><strong>${totalBtc.toFixed(4)} BTC</strong><span style="color:#64748B">Put ${putBtc.toFixed(4)} · Call ${callBtc.toFixed(4)}</span></div>
+            <div class="wheel-order-metric ${missingClass}"><span class="muted">Lots not in Open orders</span><strong>${missingText}</strong></div>
+        `;
+    }
+
     function wToggleOrderTag(id, tag, checked, input) {
         const order = wOrders.find(item => item.id === id);
         if (!order) return;
@@ -6082,6 +6113,7 @@
         order.tag = '';
         const summary = input?.closest('details')?.querySelector('.wheel-tag-summary');
         if (summary) summary.textContent = wFormatTagSelection(order.tags);
+        wRenderOrderInsights();
         wAutoPush();
     }
 
@@ -6126,6 +6158,7 @@
 
     function wRenderOrders() {
         const body = document.getElementById('ordersBody'); body.innerHTML='';
+        wRenderOrderInsights();
         let list = wOrders.filter(o=>{ if(wOrderFilter==='Short Put') return o.product==='Short Put'; if(wOrderFilter==='Short Call') return o.product==='Short Call'; return true; });
         list.sort((a,b)=>{ if(a.product!==b.product) return a.product==='Short Put'?-1:1; return (a.expiryDate||'').localeCompare(b.expiryDate||''); });
         const todayStr = new Date().toISOString().slice(0,10);
@@ -6424,6 +6457,11 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     function openWheelHistModal(){ document.getElementById('mh_open').value=''; document.getElementById('mh_close').value=new Date().toISOString().split('T')[0]; document.getElementById('mh_strike').value=''; document.getElementById('mh_contracts').value='0.04'; document.getElementById('mh_prem').value=''; document.getElementById('mh_exercise_pl').value=''; document.getElementById('mh_note').value=''; openWheelModal('mWheelHist'); }
     function wSubmitHist(){ const status=document.getElementById('mh_status').value; wClosed.push({id:wNextId++,cex:document.getElementById('mh_cex').value,product:document.getElementById('mh_product').value,openDate:document.getElementById('mh_open').value,expiryDate:document.getElementById('mh_close').value,strike:wpn(document.getElementById('mh_strike').value),contracts:wpn(document.getElementById('mh_contracts').value),premium:wpn(document.getElementById('mh_prem').value),currency:'Contracts',status,tags:'',tag:'',lotCreditPL:0,lotCredits:'',note:document.getElementById('mh_note').value,exercisePL:status==='exercised'?wpn(document.getElementById('mh_exercise_pl').value):0}); closeWheelModal('mWheelHist');wCalcAll();wAutoPush(); }
 
+    document.addEventListener('pointerdown', e => {
+        document.querySelectorAll('.wheel-tag-picker[open]').forEach(picker => {
+            if (!picker.contains(e.target)) picker.removeAttribute('open');
+        });
+    });
     document.querySelectorAll('.wheel-modal-overlay').forEach(m=>{ m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}); });
 
     // ── XLSX Export / Import for History ──────────────────
