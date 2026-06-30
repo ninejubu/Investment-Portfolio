@@ -6116,11 +6116,11 @@
     function wRenderLots() {
         const body = document.getElementById('lotsBody'); const foot = document.getElementById('lotsFoot'); body.innerHTML='';
         let tC=0,tPL=0,tA=0,tN=0;
-        wLots.forEach(lot=>{ const cost = lot.price*lot.amount; const pl = lot.price>0 ? (lot.price-lot.target)*lot.amount + btcPrice*lot.amount - cost : 0; const net = pl+lot.accRealPL; tC+=cost; tPL+=pl; tA+=lot.accRealPL; tN+=net; const covOK = btcPrice>=lot.target; const tr = document.createElement('tr'); if(lot.problem) tr.style.background='rgba(239,68,68,.025)';
+        wLots.forEach(lot=>{ const price=wpn(lot.price), amount=wpn(lot.amount), target=wpn(lot.target), accRealPL=wpn(lot.accRealPL); const cost = price*amount; const pl = price>0 ? (btcPrice-target)*amount : 0; const net = pl+accRealPL; tC+=cost; tPL+=pl; tA+=accRealPL; tN+=net; const covOK = btcPrice>=target; const tr = document.createElement('tr'); if(lot.problem) tr.style.background='rgba(239,68,68,.025)';
             const tag = wLotTag(lot);
-            tr.innerHTML=`<td><div class="lot-name"><div class="lot-dot" style="background:${lot.problem?'#EF4444':'#9B5CF6'}"></div>${lot.name}${lot.problem?'<span class="tag-r">NO BTC</span>':''}</div></td><td>${tag ? `<span class="wheel-tag">${satEsc(tag)}</span>` : '—'}</td><td>${lot.price>0?wusd(lot.price,2):'—'}</td><td>${lot.amount} BTC</td><td>${lot.price>0?wusd(cost):'—'}</td><td>${wusd(lot.target)}</td><td class="${pl>=0?'p-pos':'p-neg'}">${lot.price>0?(pl>=0?'+':'')+wusd(pl):'—'}</td><td class="p-pos">${wusd(lot.accRealPL,2)}</td><td class="${net>=0?'p-pos':'p-neg'}">${lot.price>0?(net>=0?'+':'')+wusd(net):'—'}</td><td>${covOK?'<span class="fcov">Fully Cover</span>':`<span style="font-size:11px;color:#FCA5A5;font-family:'Inter',sans-serif">${wusd((lot.target-btcPrice)*lot.amount)} short</span>`}</td><td style="text-align:left;white-space:nowrap"><button class="w-btn-icon" onclick="openWheelLotModal(${lot.id})" title="Edit">✎</button><button class="w-btn-icon w-btn-danger" onclick="wDelLot(${lot.id})" title="Delete" style="margin-left:4px">✕</button></td>`;
+            tr.innerHTML=`<td><div class="lot-name"><div class="lot-dot" style="background:${lot.problem?'#EF4444':'#9B5CF6'}"></div>${lot.name}${lot.problem?'<span class="tag-r">NO BTC</span>':''}</div></td><td>${tag ? `<span class="wheel-tag">${satEsc(tag)}</span>` : '—'}</td><td>${price>0?wusd(price,2):'—'}</td><td>${amount.toFixed(4)} BTC</td><td>${price>0?wusd(cost):'—'}</td><td>${target>0?wusd(target):'—'}</td><td class="${pl>=0?'p-pos':'p-neg'}">${price>0?(pl>=0?'+':'')+wusd(pl):'—'}</td><td class="p-pos">${wusd(accRealPL,2)}</td><td class="${net>=0?'p-pos':'p-neg'}">${price>0?(net>=0?'+':'')+wusd(net):'—'}</td><td>${target>0 ? (covOK?'<span class="fcov">Fully Cover</span>':`<span style="font-size:11px;color:#FCA5A5;font-family:'Inter',sans-serif">${wusd((target-btcPrice)*amount)} short</span>`) : '—'}</td><td style="text-align:left;white-space:nowrap"><button class="w-btn-icon" onclick="openWheelLotModal(${lot.id})" title="Edit">✎</button><button class="w-btn-icon w-btn-danger" onclick="wDelLot(${lot.id})" title="Delete" style="margin-left:4px">✕</button></td>`;
             body.appendChild(tr); });
-        foot.innerHTML=`<tr class="tr-tot"><td>TOTAL</td><td></td><td></td><td>${wLots.reduce((s,l)=>s+l.amount,0).toFixed(4)} BTC</td><td>${wusd(tC)}</td><td></td><td class="${tPL>=0?'p-pos':'p-neg'}">${(tPL>=0?'+':'')+wusd(tPL)}</td><td class="p-pos">${wusd(tA,2)}</td><td class="${tN>=0?'p-pos':'p-neg'}">${(tN>=0?'+':'')+wusd(tN)}</td><td></td><td></td></tr>`;
+        foot.innerHTML=`<tr class="tr-tot"><td>TOTAL</td><td></td><td></td><td>${wLots.reduce((s,l)=>s+wpn(l.amount),0).toFixed(4)} BTC</td><td>${wusd(tC)}</td><td></td><td class="${tPL>=0?'p-pos':'p-neg'}">${(tPL>=0?'+':'')+wusd(tPL)}</td><td class="p-pos">${wusd(tA,2)}</td><td class="${tN>=0?'p-pos':'p-neg'}">${(tN>=0?'+':'')+wusd(tN)}</td><td></td><td></td></tr>`;
     }
     function wDelLot(id){if(!confirm('Delete this lot?'))return;wLots=wLots.filter(l=>l.id!==id);wCalcAll();wAutoPush();}
 
@@ -6514,6 +6514,40 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     const WHEEL_LS_KEY = GS_URL_KEY;
     function wGetSheetsUrl() { return getGsUrl(); }
 
+    function wField(obj, ...keys) {
+        for (const key of keys) {
+            if (!obj || !Object.prototype.hasOwnProperty.call(obj, key)) continue;
+            const value = obj[key];
+            if (value !== '' && value !== null && value !== undefined) return value;
+        }
+        return '';
+    }
+
+    function wNormalizeSheetLot(l) {
+        const rawPrice = wField(l, 'price', 'buyPrice', 'buy_price', 'Buy Price', 'Buy Price ($)');
+        const rawAmount = wField(l, 'amount', 'btcAmount', 'amountBtc', 'Amount', 'Amount (BTC)', 'BTC');
+        const rawTarget = wField(l, 'target', 'targetStrike', 'strike', 'Target', 'Target Strike', 'Target Strike ($)');
+        const rawAcc = wField(l, 'accRealPL', 'accRealizedPL', 'realizedPL', 'Acc. Realized P/L', 'Acc Realized PL');
+        const rawProblem = wField(l, 'problem', 'Problem', 'noBtc', 'NO BTC');
+        const shiftedLegacy = wNormalizeLotTag(rawPrice) && wpn(rawAmount) > 1000 && wpn(rawTarget) > 0 && wpn(rawTarget) < 10;
+        const tag = shiftedLegacy ? wNormalizeLotTag(rawPrice) : wNormalizeLotTag(wField(l, 'tag', 'Tag') || l.name);
+        const price = shiftedLegacy ? wpn(rawAmount) : wpn(rawPrice);
+        const amount = shiftedLegacy ? wpn(rawTarget) : wpn(rawAmount);
+        const target = shiftedLegacy ? wpn(rawAcc) : wpn(rawTarget);
+        const accRealPL = shiftedLegacy ? wpn(rawProblem) : wpn(rawAcc);
+        const problemValue = shiftedLegacy ? wField(l, 'note', 'Note') : rawProblem;
+        return {
+            id: wpn(wField(l, 'id', 'ID')),
+            name: String(wField(l, 'name', 'Name', 'lot', 'Lot') || ''),
+            tag,
+            price,
+            amount,
+            target,
+            accRealPL,
+            problem: problemValue === true || String(problemValue).toLowerCase() === 'true' || price === 0
+        };
+    }
+
     async function wPullFromSheets(silent=false) {
         const url = wGetSheetsUrl(); if (!url) return false;
         try {
@@ -6525,7 +6559,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             const isValidLot = l => l && +l.id > 0 && l.name;
             const isValidHist = o => o && +o.id > 0 && o.product;
             if (Array.isArray(data.orders) && data.orders.length) { wOrders = data.orders.filter(isValidOrder).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'open'),tags:wParseOrderTags(o.tags||o.tag).join(','),tag:'',note:String(o.note||'')})); wNextId = Math.max(...wOrders.map(o=>o.id), wNextId) + 1; }
-            if (Array.isArray(data.lots) && data.lots.length) { wLots = data.lots.filter(isValidLot).map(l => ({id:+l.id,name:String(l.name||''),tag:wNormalizeLotTag(l.tag||l.name),price:+l.price,amount:+l.amount,target:+l.target,accRealPL:+l.accRealPL,problem:l.problem==='true'||l.problem===true||l.problem==='TRUE'})); }
+            if (Array.isArray(data.lots) && data.lots.length) { wLots = data.lots.filter(isValidLot).map(wNormalizeSheetLot); }
             if (Array.isArray(data.history) && data.history.length) { wClosed = data.history.filter(isValidHist).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'closed'),tags:wParseOrderTags(o.tags||o.tag).join(','),tag:'',lotCreditPL:wpn(o.lotCreditPL),lotCredits:String(o.lotCredits||''),note:String(o.note||''),exercisePL:wpn(o.exercisePL ?? o.realizedPL ?? o.pnl ?? o.pl ?? 0)})); }
             wCalcAll(); return true;
         } catch(e) { console.error('Wheel pull error:', e); return false; }
