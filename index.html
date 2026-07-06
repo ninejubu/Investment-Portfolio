@@ -4158,6 +4158,15 @@
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     }
 
+    function cfLatestEventMonth() {
+        let latest = '';
+        (cfState().events || []).forEach(event => {
+            const m = String(event.date || '').slice(0, 7);
+            if (/^\d{4}-\d{2}$/.test(m) && m > latest) latest = m;
+        });
+        return latest;
+    }
+
     function cfMonthLabel(month) {
         const [year, monthNumber] = String(month).split('-').map(Number);
         return new Date(year, monthNumber - 1, 1).toLocaleDateString('en-US', { month:'short', year:'numeric' });
@@ -4796,6 +4805,8 @@
             cfState().cards = remoteCards;
             cfState().wallets = remoteWallets;
             cfState().events = remoteEvents;
+            const latestMonth = cfLatestEventMonth();
+            if (latestMonth && latestMonth > cfState().activeMonth) cfState().activeMonth = latestMonth;
             cfMergeLocalCardCatalog();
             cfMigrateWalletTransferTracking();
             cfSaveLocal();
