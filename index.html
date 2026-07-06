@@ -4705,6 +4705,8 @@
             createdAt:new Date().toISOString()
         });
         wallet.transferredMonths = (wallet.transferredMonths || []).filter(month => month !== date.slice(0, 7));
+        const topupMonth = date.slice(0, 7);
+        if (/^\d{4}-\d{2}$/.test(topupMonth) && topupMonth > cfState().activeMonth) cfState().activeMonth = topupMonth;
         cfApplyEvent(row, 1);
         cfState().events.push(row);
         document.getElementById('cf-topup-form').reset();
@@ -4720,11 +4722,14 @@
         const amount = satNumber(document.getElementById('cf-cash-amount').value);
         if (amount <= 0) return;
         if (type === 'expense' && amount > cfState().settings.bankCash) { alert('Expense exceeds current bank cash.'); return; }
+        const cashDate = document.getElementById('cf-cash-date').value;
         const row = cfNormalizeEvent({
-            id:cfId('event'), date:document.getElementById('cf-cash-date').value, type, amount,
+            id:cfId('event'), date:cashDate, type, amount,
             cashDelta:type === 'income' ? amount : -amount, debtDelta:0, walletDelta:0,
             note:document.getElementById('cf-cash-note').value, createdAt:new Date().toISOString()
         });
+        const cashMonth = String(cashDate || '').slice(0, 7);
+        if (/^\d{4}-\d{2}$/.test(cashMonth) && cashMonth > cfState().activeMonth) cfState().activeMonth = cashMonth;
         cfApplyEvent(row, 1);
         cfState().events.push(row);
         document.getElementById('cf-cash-form').reset();
