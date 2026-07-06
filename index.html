@@ -5296,7 +5296,7 @@
         }
         if(charts.perf) charts.perf.destroy();
         const theme = chartTheme();
-        charts.perf = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: theme.axis, callback: v => parseFloat(v.toFixed(2)) + '%' }, grid: { color: theme.grid } }, x: { ticks: { color: theme.axis }, grid: { display: false } } }, plugins: { legend: { labels: { color: theme.label, boxWidth: 10, font: { size: 9 } } }, datalabels: { color: theme.dataLabel, anchor: 'end', align: 'top', offset: 2, formatter: (v) => (v !== null && v !== undefined && v !== 0) ? v.toFixed(1) + '%' : null, font: { size: assetKey === 'all-sep' ? 8 : 10 }, padding: 2, clip: false } } } });
+        charts.perf = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 24 } }, scales: { y: { ticks: { color: theme.axis, callback: v => parseFloat(v.toFixed(2)) + '%' }, grid: { color: theme.grid } }, x: { ticks: { color: theme.axis }, grid: { display: false } } }, plugins: { legend: { position: 'bottom', labels: { color: theme.label, boxWidth: 10, font: { size: 9 }, padding: 12 } }, datalabels: { color: theme.dataLabel, anchor: 'end', align: (ctx) => ctx.dataset.data[ctx.dataIndex] >= 0 ? 'end' : 'start', offset: 4, formatter: (v) => (v !== null && v !== undefined && v !== 0) ? v.toFixed(1) + '%' : null, font: { size: assetKey === 'all-sep' ? 8 : 10 }, padding: 2, clip: false } } } });
     }
 
     function renderAllocationChart(data) {
