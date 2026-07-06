@@ -935,6 +935,15 @@
         .cf-calendar-cell.day.range-start::before { left:0; border-radius:5px 0 0 5px; }
         .cf-calendar-cell.day.range-end::before { right:0; border-radius:0 5px 5px 0; }
         .cf-calendar-cell.day.range-start.range-end::before { left:0; right:0; border-radius:5px; }
+        .cf-calendar-cell.day.today { position:relative; }
+        .cf-calendar-cell.day.today::after {
+            content:''; position:absolute; top:0; bottom:0; left:50%; width:0;
+            border-left:2px dashed #F59E0B; z-index:6; pointer-events:none;
+        }
+        .cf-calendar-row.header .cf-calendar-cell.day.today::before {
+            content:''; position:absolute; top:3px; left:50%; transform:translateX(-50%);
+            width:6px; height:6px; border-radius:50%; background:#F59E0B; z-index:7; pointer-events:none;
+        }
         .cf-calendar-marker {
             width:100%; min-width:0; height:28px; border:0; border-radius:0; overflow:hidden;
             position:relative; z-index:1; display:flex; align-items:center; justify-content:center; color:#FFFFFF;
@@ -4514,6 +4523,9 @@
             || a.name.localeCompare(b.name)
         );
         const majorDays = new Set([1,5,10,15,20,25,30,31]);
+        const [todayYear, todayMonthNum, todayDayNum] = satToday().split('-').map(Number);
+        const isCurrentMonth = cfState().activeMonth === `${todayYear}-${String(todayMonthNum).padStart(2, '0')}`;
+        const todayDay = isCurrentMonth ? todayDayNum : 0;
         const dayCells = (card=null) => Array.from({length:31}, (_,index) => {
             const day = index + 1;
             const statementDay = card ? satNumber(card.statementDay) : 0;
@@ -4533,7 +4545,7 @@
                 ondragstart="cfTimelineDragStart(event,'${satEsc(card.id)}','${marker}')"
                 onclick="event.stopPropagation();cfOpenTimelineEditor('${satEsc(card.id)}','${marker}')">${marker === 'statement' ? 'STATE' : 'PAY'}</button>`).join('');
             const content = markerButtons ? `<div class="cf-calendar-markers">${markerButtons}</div>` : (!card && majorDays.has(day) ? day : '');
-            return `<div class="cf-calendar-cell day${majorDays.has(day) ? ' major' : ''}${rangeClasses}" ondragover="cfTimelineDragOver(event)" ondragleave="cfTimelineDragLeave(event)" ondrop="cfTimelineDrop(event,${day})">${content}</div>`;
+            return `<div class="cf-calendar-cell day${majorDays.has(day) ? ' major' : ''}${rangeClasses}${day === todayDay ? ' today' : ''}" ondragover="cfTimelineDragOver(event)" ondragleave="cfTimelineDragLeave(event)" ondrop="cfTimelineDrop(event,${day})">${content}</div>`;
         }).join('');
         const header = `<div class="cf-calendar-row header">
             <div class="cf-calendar-cell issuer">BANK</div>
