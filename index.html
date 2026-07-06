@@ -1362,7 +1362,7 @@
                     <div id="panel-alloc" class="bg-card rounded-xl border border-slate-700 flex flex-col" style="min-width:0;padding:24px;overflow:hidden;box-sizing:border-box">
                         <h4 class="text-white font-bold mb-4">Asset Allocation (%)</h4>
                         <div class="flex-1 flex flex-col justify-between">
-                            <div style="height:300px;position:relative;margin-bottom:16px;cursor:pointer" title="Click a segment to drill down">
+                            <div style="height:300px;position:relative;margin-bottom:16px;cursor:pointer" title="Click a theme to drill down">
                                 <canvas id="allocChart"></canvas>
                             </div>
                             <div class="overflow-x-auto">
@@ -1391,6 +1391,10 @@
                         <div class="flex items-center justify-between mb-4 holdings-panel-header" onclick="expandHoldingsPanel()">
                             <h4 class="text-white font-bold">Holdings Breakdown</h4>
                             <div class="holdings-panel-controls">
+                                <div id="hb-view-toggle" style="display:inline-flex;border:1px solid #334155;border-radius:6px;overflow:hidden;margin-right:4px">
+                                    <button id="hb-view-ticker" onclick="hbSetView('ticker',event)" style="background:#1E293B;border:none;color:#F8FAFC;font-size:10px;padding:4px 8px;cursor:pointer;transition:background .15s">By Ticker</button>
+                                    <button id="hb-view-segment" onclick="hbSetView('segment',event)" style="background:transparent;border:none;color:#94A3B8;font-size:10px;padding:4px 8px;cursor:pointer;transition:background .15s">By Theme</button>
+                                </div>
                                 <select id="hb-asset" onchange="renderHoldingsBreakdown()" style="background:#0F172A;border:1px solid #334155;color:#F8FAFC;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">
                                     <option value="stocks">Stocks</option>
                                     <option value="bonds">Bonds</option>
@@ -1413,7 +1417,7 @@
                             <!-- Holdings list -->
                             <div id="hb-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;max-height:180px"></div>
                             <div style="margin-top:10px;padding-top:8px;border-top:1px solid #1E293B;display:flex;justify-content:space-between;font-size:10px;color:#64748b">
-                                <span>Click row to edit</span>
+                                <span id="hb-hint">Click row to edit</span>
                                 <span id="hb-total" style="color:#F8FAFC;font-weight:600"></span>
                             </div>
                         </div>
@@ -5853,6 +5857,7 @@
             grouped[ddKey(asset, period)].push({
                 name: String(row.ticker || row.name || '').trim(),
                 platform: String(row.name || '').trim(),
+                segment: String(row.theme || '').trim(),
                 amount
             });
         });
@@ -6890,44 +6895,89 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         applyHoldingsPanelState();
     }
 
+    // ── Holdings Breakdown view state ───────────────────
+    let hbView = 'ticker';
+    let hbSegmentDrill = null;
+
+    function hbSetView(view, event) {
+        if (event) event.stopPropagation();
+        hbView = view;
+        hbSegmentDrill = null;
+        const tickerBtn  = document.getElementById('hb-view-ticker');
+        const segmentBtn = document.getElementById('hb-view-segment');
+        if (tickerBtn)  { tickerBtn.style.background  = view === 'ticker'  ? '#1E293B' : 'transparent'; tickerBtn.style.color  = view === 'ticker'  ? '#F8FAFC' : '#94A3B8'; }
+        if (segmentBtn) { segmentBtn.style.background = view === 'segment' ? '#1E293B' : 'transparent'; segmentBtn.style.color = view === 'segment' ? '#F8FAFC' : '#94A3B8'; }
+        renderHoldingsBreakdown();
+    }
+
     function renderHoldingsBreakdown() {
-        const asset   = document.getElementById('hb-asset')?.value   || 'stocks';
+        const asset     = document.getElementById('hb-asset')?.value || 'stocks';
         const quarterEl = document.getElementById('hb-quarter');
-        const quarter = quarterEl?.value || getLatestClosedPeriod();
+        const quarter   = quarterEl?.value || getLatestClosedPeriod();
         if (quarterEl && !quarterEl.value) quarterEl.value = quarter;
-        const color   = DD_COLORS[asset];
-        const rows    = ddLoad(asset, quarter);
-        const assetBal = ddGetAssetBalForPeriod(asset, quarter);
+        const color     = DD_COLORS[asset];
+        const rawRows   = ddLoad(asset, quarter);
+        const assetBal  = ddGetAssetBalForPeriod(asset, quarter);
 
-        let totalAssigned = rows.reduce((s,r)=>s+(r.amount||0),0);
-        const untracked   = Math.max(0, assetBal - totalAssigned);
+        // Merge raw rows by ticker, preserving platforms and segment
+        const tickerMap = new Map();
+        rawRows.forEach(r => {
+            const key = (r.name || '—').trim().toUpperCase();
+            if (tickerMap.has(key)) {
+                const e = tickerMap.get(key);
+                e.amount += (r.amount || 0);
+                e.platforms.push({ platform: r.platform || '', amount: r.amount || 0 });
+            } else {
+                tickerMap.set(key, {
+                    name: (r.name || '—').trim(),
+                    segment: (r.theme || '').trim(),
+                    amount: r.amount || 0,
+                    platforms: [{ platform: r.platform || '', amount: r.amount || 0 }]
+                });
+            }
+        });
+        const mergedRows = Array.from(tickerMap.values());
 
-        // Build chart data including Untracked
-        const labels = [...rows.map(r=>r.name||'—'), ...(untracked > 1 ? ['Untracked'] : [])];
-        const amounts = [...rows.map(r=>r.amount||0), ...(untracked > 1 ? [untracked] : [])];
-        const colors  = rows.map((_,i) => {
+        const hintEl  = document.getElementById('hb-hint');
+        const totalEl = document.getElementById('hb-total');
+        if (hbView === 'segment') {
+            hbRenderSegmentView(mergedRows, assetBal, color, asset, quarter, hintEl, totalEl);
+        } else {
+            hbRenderTickerView(mergedRows, assetBal, color, asset, quarter, hintEl, totalEl);
+        }
+    }
+
+    function hbMakeColors(rows, asset) {
+        return rows.map((_,i) => {
             const hue = (i * 47 + (asset==='stocks'?160:asset==='bonds'?38:asset==='crypto'?220:48)) % 360;
             return `hsl(${hue},65%,55%)`;
         });
-        if (untracked > 1) colors.push('#334155');
+    }
 
-        // Mini donut
+    function hbDrawDonut(labels, amounts, colors, assetBal, asset, quarter) {
         const ctx2 = document.getElementById('hbChart');
-        if (ctx2) {
-            if (hbChartInst) hbChartInst.destroy();
-            if (amounts.some(v=>v>0)) {
-                hbChartInst = new Chart(ctx2.getContext('2d'), {
-                    type: 'doughnut',
-                    data: { labels, datasets: [{ data: amounts, backgroundColor: colors, borderWidth: 0, hoverOffset: 6 }] },
-                    options: { responsive: true, maintainAspectRatio: false, cutout: '65%',
-                        onClick: (e, els) => { if (els.length && labels[els[0].index] !== 'Untracked') { openDrillDown(asset, quarter); } },
-                        plugins: { legend: { display: false }, datalabels: { display: false },
-                            tooltip: { callbacks: { label: (c) => ` ${c.label}: ฿${c.raw.toLocaleString('en-US',{maximumFractionDigits:0})} (${assetBal>0?(c.raw/assetBal*100).toFixed(1):0}%)` } } } }
-                });
-            }
+        if (!ctx2) return;
+        if (hbChartInst) hbChartInst.destroy();
+        if (amounts.some(v => v > 0)) {
+            hbChartInst = new Chart(ctx2.getContext('2d'), {
+                type: 'doughnut',
+                data: { labels, datasets: [{ data: amounts, backgroundColor: colors, borderWidth: 0, hoverOffset: 6 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '65%',
+                    onClick: (e, els) => { if (els.length && labels[els[0].index] !== 'Untracked') openDrillDown(asset, quarter); },
+                    plugins: { legend: { display: false }, datalabels: { display: false },
+                        tooltip: { callbacks: { label: (c) => ` ${c.label}: ฿${c.raw.toLocaleString('en-US',{maximumFractionDigits:0})} (${assetBal>0?(c.raw/assetBal*100).toFixed(1):0}%)` } } } }
+            });
         }
+    }
 
-        // List
+    function hbRenderTickerView(rows, assetBal, color, asset, quarter, hintEl, totalEl) {
+        const untracked = Math.max(0, assetBal - rows.reduce((s,r)=>s+r.amount,0));
+        const colors    = hbMakeColors(rows, asset);
+        const labels    = [...rows.map(r=>r.name), ...(untracked>1?['Untracked']:[])];
+        const amounts   = [...rows.map(r=>r.amount), ...(untracked>1?[untracked]:[])];
+        const allColors = [...colors, ...(untracked>1?['#334155']:[])];
+        hbDrawDonut(labels, amounts, allColors, assetBal, asset, quarter);
+
         const listEl = document.getElementById('hb-list');
         if (!listEl) return;
         listEl.innerHTML = '';
@@ -6935,24 +6985,151 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         if (rows.length === 0 && assetBal === 0) {
             listEl.innerHTML = `<div style="color:#475569;font-size:11px;text-align:center;padding:16px">No data for ${asset} ${quarter}.<br>Click the balance card to add holdings.</div>`;
         } else {
-            [...rows.map((r,i)=>({...r,_color:colors[i]})), ...(untracked>1?[{name:'Untracked',amount:untracked,_color:'#334155'}]:[])].forEach((r,i) => {
-                const pct  = assetBal>0 ? (r.amount/assetBal*100) : 0;
-                const isUT = r.name === 'Untracked';
-                const el   = document.createElement('div');
-                el.style.cssText = `display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;background:#0F172A;cursor:${isUT?'default':'pointer'};transition:background .15s`;
-                el.onmouseenter = () => { if(!isUT) el.style.background = '#1E293B'; };
-                el.onmouseleave = () => { el.style.background = '#0F172A'; };
-                if (!isUT) el.onclick = () => openDrillDown(asset, quarter);
-                el.innerHTML = `
+            [...rows.map((r,i)=>({...r,_color:colors[i]})), ...(untracked>1?[{name:'Untracked',amount:untracked,_color:'#334155',platforms:[],theme:''}]:[])].forEach(r => {
+                const isUT  = r.name === 'Untracked';
+                const pct   = assetBal > 0 ? (r.amount/assetBal*100) : 0;
+                const multi = !isUT && r.platforms && r.platforms.length > 1;
+                const el    = document.createElement('div');
+                el.style.cssText = 'background:#0F172A;border-radius:6px;overflow:hidden';
+
+                const mainRow = document.createElement('div');
+                mainRow.style.cssText = `display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:${isUT?'default':'pointer'};transition:background .15s`;
+                mainRow.onmouseenter = () => { if (!isUT) mainRow.style.background = '#1E293B'; };
+                mainRow.onmouseleave = () => { mainRow.style.background = 'transparent'; };
+                mainRow.innerHTML = `
                     <div style="width:8px;height:8px;border-radius:50%;background:${r._color};flex-shrink:0"></div>
-                    <div style="flex:1;font-size:11px;color:${isUT?'#475569':'#F8FAFC'};font-style:${isUT?'italic':'normal'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name||'—'}</div>
+                    <div style="flex:1;font-size:11px;color:${isUT?'#475569':'#F8FAFC'};font-style:${isUT?'italic':'normal'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
+                    ${r.theme ? `<div style="font-size:9px;color:#64748b;background:#1E293B;padding:1px 5px;border-radius:3px;white-space:nowrap">${r.theme}</div>` : ''}
                     <div style="font-size:11px;font-weight:600;color:${isUT?'#475569':color};white-space:nowrap">${pct.toFixed(1)}%</div>
-                    <div style="font-size:10px;color:#64748b;white-space:nowrap">฿${(r.amount||0).toLocaleString('en-US',{maximumFractionDigits:0})}</div>`;
+                    <div style="font-size:10px;color:#64748b;white-space:nowrap">฿${(r.amount||0).toLocaleString('en-US',{maximumFractionDigits:0})}</div>
+                    <div style="font-size:9px;color:#64748b;width:9px">${multi?'▸':''}</div>`;
+                el.appendChild(mainRow);
+
+                if (multi) {
+                    const subList = document.createElement('div');
+                    subList.style.cssText = 'display:none;background:#0A1628;padding:0 8px 6px 24px';
+                    r.platforms.forEach(p => {
+                        const subPct = r.amount > 0 ? (p.amount/r.amount*100) : 0;
+                        const sub    = document.createElement('div');
+                        sub.style.cssText = 'display:flex;align-items:center;gap:8px;padding:3px 0;border-top:1px solid #1E293B';
+                        sub.innerHTML = `
+                            <div style="flex:1;font-size:10px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.platform||'—'}</div>
+                            <div style="font-size:10px;color:#64748b">${subPct.toFixed(1)}%</div>
+                            <div style="font-size:10px;color:#64748b">฿${p.amount.toLocaleString('en-US',{maximumFractionDigits:0})}</div>`;
+                        subList.appendChild(sub);
+                    });
+                    el.appendChild(subList);
+                    mainRow.onclick = () => {
+                        const open  = subList.style.display !== 'none';
+                        subList.style.display = open ? 'none' : 'block';
+                        const chev  = mainRow.querySelector('.hb-chev');
+                        if (chev) chev.textContent = open ? '▸' : '▾';
+                    };
+                    mainRow.querySelector('div:last-child').classList.add('hb-chev');
+                } else if (!isUT) {
+                    mainRow.onclick = () => openDrillDown(asset, quarter);
+                }
                 listEl.appendChild(el);
             });
         }
+        if (hintEl)  hintEl.textContent  = 'Tap ticker to expand platforms';
+        if (totalEl) totalEl.textContent = `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+    }
 
-        const totalEl = document.getElementById('hb-total');
+    function hbRenderSegmentView(mergedRows, assetBal, color, asset, quarter, hintEl, totalEl) {
+        const listEl = document.getElementById('hb-list');
+        if (!listEl) return;
+        listEl.innerHTML = '';
+
+        if (hbSegmentDrill !== null) {
+            // Drill-down: tickers within one segment
+            const inSeg    = mergedRows.filter(r => (r.theme||'').trim().toUpperCase() === hbSegmentDrill.toUpperCase());
+            const segTotal = inSeg.reduce((s,r)=>s+r.amount,0);
+            const colors   = hbMakeColors(inSeg, asset);
+            hbDrawDonut(inSeg.map(r=>r.name), inSeg.map(r=>r.amount), colors, segTotal, asset, quarter);
+
+            const backEl = document.createElement('div');
+            backEl.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 0 8px;cursor:pointer';
+            backEl.innerHTML = `<span style="font-size:11px;color:#64748b">←</span><span style="font-size:11px;color:#94A3B8">Back</span><span style="font-size:11px;color:#F8FAFC;font-weight:600;margin-left:4px">${hbSegmentDrill}</span>`;
+            backEl.onclick = () => { hbSegmentDrill = null; renderHoldingsBreakdown(); };
+            listEl.appendChild(backEl);
+
+            inSeg.forEach((r, i) => {
+                const pct = segTotal > 0 ? (r.amount/segTotal*100) : 0;
+                const el  = document.createElement('div');
+                el.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;background:#0F172A;cursor:pointer;transition:background .15s';
+                el.onmouseenter = () => el.style.background = '#1E293B';
+                el.onmouseleave = () => el.style.background = '#0F172A';
+                el.onclick = () => openDrillDown(asset, quarter);
+                el.innerHTML = `
+                    <div style="width:8px;height:8px;border-radius:50%;background:${colors[i]};flex-shrink:0"></div>
+                    <div style="flex:1;font-size:11px;color:#F8FAFC;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
+                    <div style="font-size:11px;font-weight:600;color:${color}">${pct.toFixed(1)}%</div>
+                    <div style="font-size:10px;color:#64748b">฿${r.amount.toLocaleString('en-US',{maximumFractionDigits:0})}</div>`;
+                listEl.appendChild(el);
+            });
+            if (hintEl)  hintEl.textContent  = hbSegmentDrill;
+            if (totalEl) totalEl.textContent = `฿${segTotal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+            return;
+        }
+
+        // Top-level segment summary
+        const segMap = new Map();
+        mergedRows.forEach(r => {
+            const seg = (r.theme||'').trim() || '—';
+            if (segMap.has(seg)) { const e = segMap.get(seg); e.amount += r.amount; e.count++; }
+            else segMap.set(seg, { segment: seg, amount: r.amount, count: 1 });
+        });
+        const segments  = Array.from(segMap.values()).sort((a,b)=>b.amount-a.amount);
+        const untracked = Math.max(0, assetBal - mergedRows.reduce((s,r)=>s+r.amount,0));
+        const segColors = segments.map((_,i) => {
+            const hue = (i*53 + (asset==='stocks'?200:asset==='bonds'?38:asset==='crypto'?220:48)) % 360;
+            return `hsl(${hue},60%,52%)`;
+        });
+        hbDrawDonut(
+            [...segments.map(s=>s.theme), ...(untracked>1?['Untracked']:[])],
+            [...segments.map(s=>s.amount),  ...(untracked>1?[untracked]:[])],
+            [...segColors,                  ...(untracked>1?['#334155']:[])],
+            assetBal, asset, quarter
+        );
+
+        if (segments.length === 0 && assetBal === 0) {
+            listEl.innerHTML = `<div style="color:#475569;font-size:11px;text-align:center;padding:16px">No theme data.<br>Add a Theme column after Ticker in Settings_data sheet.</div>`;
+        } else {
+            segments.forEach((s, i) => {
+                const pct   = assetBal > 0 ? (s.amount/assetBal*100) : 0;
+                const label = s.count === 1 ? '1 ticker' : `${s.count} tickers`;
+                const el    = document.createElement('div');
+                el.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;background:#0F172A;cursor:pointer;transition:background .15s';
+                el.onmouseenter = () => el.style.background = '#1E293B';
+                el.onmouseleave = () => el.style.background = '#0F172A';
+                el.onclick = () => { hbSegmentDrill = s.theme; renderHoldingsBreakdown(); };
+                el.innerHTML = `
+                    <div style="width:8px;height:8px;border-radius:50%;background:${segColors[i]};flex-shrink:0"></div>
+                    <div style="flex:1;min-width:0">
+                        <div style="font-size:11px;color:#F8FAFC;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.theme}</div>
+                        <div style="font-size:9px;color:#64748b">${label}</div>
+                    </div>
+                    <div style="text-align:right">
+                        <div style="font-size:11px;font-weight:600;color:${color}">${pct.toFixed(1)}%</div>
+                        <div style="font-size:10px;color:#64748b">฿${s.amount.toLocaleString('en-US',{maximumFractionDigits:0})}</div>
+                    </div>
+                    <div style="font-size:9px;color:#64748b">▸</div>`;
+                listEl.appendChild(el);
+            });
+            if (untracked > 1) {
+                const utPct = assetBal > 0 ? (untracked/assetBal*100) : 0;
+                const el    = document.createElement('div');
+                el.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;background:rgba(71,85,105,.08);border:1px dashed #334155;opacity:.8';
+                el.innerHTML = `
+                    <div style="width:8px;height:8px;border-radius:50%;background:#334155;flex-shrink:0"></div>
+                    <div style="flex:1;font-size:11px;color:#475569;font-style:italic">Untracked</div>
+                    <div style="font-size:11px;font-weight:600;color:#475569">${utPct.toFixed(1)}%</div>
+                    <div style="font-size:10px;color:#64748b">฿${untracked.toLocaleString('en-US',{maximumFractionDigits:0})}</div>`;
+                listEl.appendChild(el);
+            }
+        }
+        if (hintEl)  hintEl.textContent  = 'Tap theme to see tickers';
         if (totalEl) totalEl.textContent = `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
     }
 
