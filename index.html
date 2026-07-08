@@ -2182,27 +2182,40 @@
             </div>
             <form id="sat-position-form" class="sat-form-grid" onsubmit="satSubmitPosition(event)">
                 <input id="sat-pos-id" type="hidden">
+                <!-- Row 1: Ticker, Side, Status, Open Date -->
                 <div><label class="sat-form-label">Ticker</label><input id="sat-pos-ticker" class="sat-input" maxlength="16" required placeholder="NVDA"></div>
-                <div><label class="sat-form-label">Position Name</label><input id="sat-pos-name" class="sat-input" placeholder="NVIDIA Corporation"></div>
                 <div><label class="sat-form-label">Side</label><select id="sat-pos-side" class="sat-select"><option value="long">Long</option><option value="short">Short</option></select></div>
                 <div><label class="sat-form-label">Status</label><select id="sat-pos-status" class="sat-select"><option value="open">Open</option><option value="closed">Closed</option></select></div>
                 <div><label class="sat-form-label">Open Date</label><input id="sat-pos-open-date" type="date" class="sat-input" required onchange="satUpdatePositionFxPreview()"></div>
-                <div><label class="sat-form-label">Close Date</label><input id="sat-pos-close-date" type="date" class="sat-input"></div>
+                <!-- Row 2: Qty, Avg Cost, Currency, Platform -->
                 <div><label class="sat-form-label">Quantity</label><input id="sat-pos-qty" type="number" step="any" min="0" class="sat-input" value="0"></div>
                 <div><label class="sat-form-label">Average Cost</label><input id="sat-pos-avg-cost" type="number" step="any" min="0" class="sat-input" value="0"></div>
-                <div><label class="sat-form-label">Current Price</label><input id="sat-pos-current-price" type="number" step="any" min="0" class="sat-input" value="0"></div>
-                <div><label class="sat-form-label">Exit Price</label><input id="sat-pos-exit-price" type="number" step="any" min="0" class="sat-input" value="0"></div>
-                <div><label class="sat-form-label">Realized P/L</label><input id="sat-pos-realized" type="number" step="any" class="sat-input" value="0"></div>
-                <div><label class="sat-form-label">Dividends</label><input id="sat-pos-dividends" type="number" step="any" class="sat-input" value="0"></div>
                 <div><label class="sat-form-label">Currency</label><select id="sat-pos-currency" class="sat-select" onchange="satUpdatePositionFxPreview()"><option value="USD">USD</option><option value="THB">THB</option></select></div>
-                <div><label class="sat-form-label">Entry FX (Auto)</label><div id="sat-pos-fx-info" class="sat-fx-readonly">Select open date and currency</div></div>
                 <div><label class="sat-form-label">Platform</label><input id="sat-pos-platform" class="sat-input" placeholder="IBKR / Binance / ..."></div>
-                <div><label class="sat-form-label">Take Profit</label><input id="sat-pos-tp" type="number" step="any" min="0" class="sat-input"></div>
-                <div><label class="sat-form-label">Stop Loss</label><input id="sat-pos-sl" type="number" step="any" min="0" class="sat-input"></div>
-                <div><label class="sat-form-label">Fees (position total)</label><input id="sat-pos-fees" type="number" step="any" min="0" class="sat-input" value="0"></div>
-                <div><label class="sat-form-label">Tags</label><input id="sat-pos-tags" class="sat-input" placeholder="swing, earnings, momentum"></div>
-                <div class="span-4"><label class="sat-form-label">Entry Thesis / Why Buy or Short</label><textarea id="sat-pos-thesis" class="sat-textarea" placeholder="Setup, catalyst, invalidation and what must be true..."></textarea></div>
-                <div class="span-4"><label class="sat-form-label">Review Note</label><textarea id="sat-pos-review" class="sat-textarea" placeholder="Post-trade review, lessons, adjustment plan..."></textarea></div>
+                <!-- Advanced toggle -->
+                <div class="span-4" style="margin-top:2px;margin-bottom:-4px">
+                    <button type="button" onclick="satTogglePosAdvanced()" id="sat-pos-adv-toggle" style="background:none;border:none;color:#94A3B8;font-size:11px;cursor:pointer;padding:0;display:flex;align-items:center;gap:5px">
+                        <span id="sat-pos-adv-chevron" style="font-size:9px">▸</span> More options
+                    </button>
+                </div>
+                <!-- Advanced section (hidden by default) -->
+                <div id="sat-pos-advanced" class="span-4" style="display:none">
+                    <div class="sat-form-grid" style="padding:0;border:none;gap:12px">
+                        <div><label class="sat-form-label">Position Name</label><input id="sat-pos-name" class="sat-input" placeholder="NVIDIA Corporation"></div>
+                        <div><label class="sat-form-label">Close Date</label><input id="sat-pos-close-date" type="date" class="sat-input"></div>
+                        <div><label class="sat-form-label">Current Price</label><input id="sat-pos-current-price" type="number" step="any" min="0" class="sat-input" value="0"></div>
+                        <div><label class="sat-form-label">Exit Price</label><input id="sat-pos-exit-price" type="number" step="any" min="0" class="sat-input" value="0"></div>
+                        <div><label class="sat-form-label">Realized P/L</label><input id="sat-pos-realized" type="number" step="any" class="sat-input" value="0"></div>
+                        <div><label class="sat-form-label">Dividends</label><input id="sat-pos-dividends" type="number" step="any" class="sat-input" value="0"></div>
+                        <div><label class="sat-form-label">Take Profit</label><input id="sat-pos-tp" type="number" step="any" min="0" class="sat-input"></div>
+                        <div><label class="sat-form-label">Stop Loss</label><input id="sat-pos-sl" type="number" step="any" min="0" class="sat-input"></div>
+                        <div><label class="sat-form-label">Fees (position total)</label><input id="sat-pos-fees" type="number" step="any" min="0" class="sat-input" value="0"></div>
+                        <div><label class="sat-form-label">Tags</label><input id="sat-pos-tags" class="sat-input" placeholder="swing, earnings, momentum"></div>
+                        <div><label class="sat-form-label">Entry FX (Auto)</label><div id="sat-pos-fx-info" class="sat-fx-readonly">Select open date and currency</div></div>
+                        <div class="span-4"><label class="sat-form-label">Entry Thesis / Why Buy or Short</label><textarea id="sat-pos-thesis" class="sat-textarea" placeholder="Setup, catalyst, invalidation and what must be true..."></textarea></div>
+                        <div class="span-4"><label class="sat-form-label">Review Note</label><textarea id="sat-pos-review" class="sat-textarea" placeholder="Post-trade review, lessons, adjustment plan..."></textarea></div>
+                    </div>
+                </div>
                 <div class="span-4 flex justify-between gap-2">
                     <button id="sat-position-delete-btn" type="button" class="sat-btn danger hidden" onclick="satDeletePositionFromModal()"><i class="fa-solid fa-trash-can"></i> Remove Position</button>
                     <div class="flex gap-2 ml-auto">
@@ -3698,6 +3711,16 @@
         target.classList.toggle('warning', fx.fallback);
     }
 
+    function satTogglePosAdvanced(forceOpen) {
+        const adv  = document.getElementById('sat-pos-advanced');
+        const chev = document.getElementById('sat-pos-adv-chevron');
+        const btn  = document.getElementById('sat-pos-adv-toggle');
+        const open = forceOpen !== undefined ? !forceOpen : adv.style.display !== 'none';
+        adv.style.display = open ? 'none' : 'block';
+        chev.textContent  = open ? '▸' : '▾';
+        btn.style.color   = open ? '#94A3B8' : '#F8FAFC';
+    }
+
     function satOpenPositionModal(id='') {
         const p = id ? satState().positions.find(item => item.id === id) : null;
         const value = (key, fallback='') => p ? (p[key] ?? fallback) : fallback;
@@ -3724,6 +3747,10 @@
         document.getElementById('sat-pos-thesis').value = value('thesis');
         document.getElementById('sat-pos-review').value = value('review');
         document.getElementById('sat-position-delete-btn').classList.toggle('hidden', !p);
+        // Auto-expand advanced section if editing a position that has advanced fields filled
+        const hasAdvanced = p && (p.name || p.closeDate || p.exitPrice || p.realizedPL || p.dividends ||
+            p.takeProfit || p.stopLoss || p.fees || p.tags || p.thesis || p.review);
+        satTogglePosAdvanced(!!hasAdvanced);
         document.getElementById('sat-position-modal').classList.add('open');
         satUpdatePositionFxPreview(p || {});
     }
