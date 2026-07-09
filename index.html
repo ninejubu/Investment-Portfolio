@@ -4817,7 +4817,6 @@
         if (monthTopup + amount > satNumber(wallet.capacity)) { alert(`${wallet.name} would exceed its monthly capacity.`); return; }
         const fee = satNumber(cfState().settings.feeFixed) + amount * satNumber(cfState().settings.feePercent) / 100;
         const chargedAmount = amount + fee;
-        if (card.creditLimit > 0 && card.outstanding + chargedAmount > card.creditLimit) { alert('This top-up would exceed the card credit limit.'); return; }
         const row = cfNormalizeEvent({
             id: cfId('event'), date, type:'topup', cardId, walletId, amount, fee, chargedAmount,
             transferAmount:0, cashDelta:0, debtDelta:chargedAmount, walletDelta:amount,
