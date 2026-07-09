@@ -868,6 +868,27 @@
         .cf-snapshot-form .cf-snapshot-primary { grid-column:1/-1; }
         .cf-snapshot-form .cf-actions-cell { grid-column:1/-1; display:flex; justify-content:flex-end; }
         .cf-snapshot-form .cf-btn { min-width:120px; min-height:36px; padding-inline:16px; }
+
+        /* ── Net Position Hero ── */
+        .cf-net-hero { display:grid; grid-template-columns:1fr 1fr; gap:0; background:var(--cf-panel,#111827); border:1px solid #1E293B; border-radius:14px; overflow:hidden; }
+        .cf-net-hero-main { padding:28px 28px 24px; display:flex; flex-direction:column; justify-content:center; gap:6px; border-right:1px solid #1E293B; }
+        .cf-net-hero-label { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#64748B; }
+        .cf-net-hero-value { font-size:38px; font-weight:800; line-height:1.1; color:#F8FAFC; }
+        .cf-net-hero-verdict { font-size:12px; font-weight:600; margin-top:2px; }
+        .cf-net-hero-breakdown { padding:20px 24px; display:flex; flex-direction:column; justify-content:center; gap:10px; }
+        .cf-net-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+        .cf-net-row-label { font-size:12px; color:#94A3B8; }
+        .cf-net-row-value { font-size:13px; font-weight:600; color:#F8FAFC; white-space:nowrap; }
+        .cf-net-row-right { display:flex; align-items:center; gap:6px; }
+        .cf-net-cash-input { background:#0F172A; border:1px solid #334155; color:#F8FAFC; font-size:14px; font-weight:700; padding:5px 10px; border-radius:7px; width:130px; text-align:right; }
+        .cf-net-cash-input:focus { outline:none; border-color:#6366F1; }
+        .cf-net-apply { background:#1E293B; border:1px solid #334155; color:#94A3B8; border-radius:6px; padding:5px 9px; cursor:pointer; font-size:11px; }
+        .cf-net-apply:hover { background:#334155; color:#F8FAFC; }
+        .cf-net-divider { border-top:1px solid #1E293B; padding-top:10px; margin-top:0; }
+        .cf-net-sub .cf-net-row-label { font-size:11px; }
+        .cf-net-sub .cf-net-row-value { font-size:11px; font-weight:500; }
+        .cf-subtle { color:#475569 !important; }
+        @media (max-width:640px) { .cf-net-hero { grid-template-columns:1fr; } .cf-net-hero-main { border-right:none; border-bottom:1px solid #1E293B; } }
         .cf-grid-3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
         .cf-form-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
         .cf-form-grid .span-2 { grid-column:span 2; }
@@ -1597,7 +1618,7 @@
                     <div class="cf-toolbar">
                         <div>
                             <div class="cf-kicker">Personal Cashflow</div>
-                            <h3 class="text-xl font-bold text-white mt-1">Debt Float & Free Cash Planner</h3>
+                            <h3 class="text-xl font-bold text-white mt-1">Easybills Float Tracker</h3>
                         </div>
                         <div class="cf-toolbar-controls">
                             <label class="cf-label mb-0">Tracking month
@@ -1608,38 +1629,43 @@
                         </div>
                     </div>
 
-                    <div class="cf-stats">
-                        <div class="cf-stat"><span class="cf-stat-label">Bank Cash</span><strong id="cf-bank-cash" class="cf-stat-value">฿0</strong></div>
-                        <div class="cf-stat"><span class="cf-stat-label">Wallet Cash</span><strong id="cf-wallet-cash" class="cf-stat-value">฿0</strong></div>
-                        <div class="cf-stat"><span class="cf-stat-label">All Card Debt</span><strong id="cf-card-debt" class="cf-stat-value cf-negative">฿0</strong></div>
-                        <div class="cf-stat"><span class="cf-stat-label">Required Debt Reserve</span><strong id="cf-debt-reserve" class="cf-stat-value cf-warning">฿0</strong></div>
-                        <div class="cf-stat"><span class="cf-stat-label">True Free Cash</span><strong id="cf-true-free-cash" class="cf-stat-value">฿0</strong></div>
+                    <!-- ── Net Position Hero ───────────────────────── -->
+                    <div class="cf-net-hero">
+                        <div class="cf-net-hero-main">
+                            <div class="cf-net-hero-label">If you paid off all debt right now</div>
+                            <div id="cf-net-position" class="cf-net-hero-value">฿0</div>
+                            <div id="cf-net-verdict" class="cf-net-hero-verdict"></div>
+                        </div>
+                        <div class="cf-net-hero-breakdown">
+                            <div class="cf-net-row">
+                                <span class="cf-net-row-label">Cash on hand</span>
+                                <div class="cf-net-row-right">
+                                    <input id="cf-setting-bank" class="cf-net-cash-input cf-money-input" type="text" inputmode="decimal" onchange="cfSaveBankCash(this.value)" placeholder="0">
+                                    <button class="cf-net-apply" type="button" onclick="cfSaveBankCash(document.getElementById('cf-setting-bank').value)"><i class="fa-solid fa-check"></i></button>
+                                </div>
+                            </div>
+                            <div class="cf-net-row cf-net-divider">
+                                <span class="cf-net-row-label">Total credit card debt</span>
+                                <span id="cf-card-debt" class="cf-net-row-value cf-negative">฿0</span>
+                            </div>
+                            <div class="cf-net-row cf-net-sub">
+                                <span class="cf-net-row-label cf-subtle">· Other credit cards (manual)</span>
+                                <div class="cf-net-row-right">
+                                    <input id="cf-setting-other-debt" class="cf-net-cash-input cf-money-input" style="width:100px;font-size:12px;padding:3px 8px" type="text" inputmode="decimal" onchange="cfSaveOtherDebt(this.value)" placeholder="0">
+                                </div>
+                            </div>
+                            <div class="cf-net-row cf-net-sub">
+                                <span class="cf-net-row-label cf-subtle">· Cash still sitting in wallets</span>
+                                <span id="cf-wallet-cash" class="cf-net-row-value cf-subtle">฿0</span>
+                            </div>
+                            <div class="cf-net-row cf-net-sub">
+                                <span class="cf-net-row-label cf-subtle">· Cycle completed this month</span>
+                                <span id="cf-cycle-progress-total" class="cf-net-row-value cf-subtle">0%</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="cf-overview-grid">
-                        <section class="cf-panel">
-                            <div class="cf-panel-head">
-                                <div><h4 class="cf-title">Cash Snapshot & Monthly Plan</h4></div>
-                            </div>
-                            <form id="cf-settings-form" class="cf-snapshot-form" onsubmit="cfSaveSettings(event)">
-                                <div class="cf-snapshot-primary"><label class="cf-label">Bank cash</label><input id="cf-setting-bank" class="cf-input cf-money-input" type="text" inputmode="decimal"></div>
-                                <div><label class="cf-label">Monthly income</label><input id="cf-setting-income" class="cf-input cf-money-input" type="text" inputmode="decimal"></div>
-                                <div><label class="cf-label">Monthly spending reserve</label><input id="cf-setting-spending" class="cf-input cf-money-input" type="text" inputmode="decimal"></div>
-                                <div class="cf-actions-cell"><button class="cf-btn primary" type="submit"><i class="fa-solid fa-check"></i> Apply</button></div>
-                            </form>
-                        </section>
-
-                        <section class="cf-panel">
-                            <div class="cf-panel-head"><div><h4 class="cf-title">Debt Float Position</h4></div></div>
-                            <div class="cf-grid-2">
-                                <div class="cf-stat"><span class="cf-stat-label">Easybills Top-up</span><strong id="cf-rollover-debt" class="cf-stat-value">฿0</strong></div>
-                                <div class="cf-stat"><span class="cf-stat-label">Monthly Surplus</span><strong id="cf-monthly-surplus" class="cf-stat-value">฿0</strong></div>
-                                <div class="cf-stat"><span class="cf-stat-label">Debt Coverage</span><strong id="cf-debt-coverage" class="cf-stat-value">—</strong></div>
-                                <div class="cf-stat"><span class="cf-stat-label">Cycle Completion</span><strong id="cf-cycle-progress-total" class="cf-stat-value">0%</strong><span id="cf-cycle-progress-meta" class="cf-stat-meta">Current tracking month</span></div>
-                            </div>
-                        </section>
-                    </div>
-
+                    <!-- ── Easybills Wallet Progress ──────────────── -->
                     <div class="cf-section-label">Easybills+ · cash rotation</div>
                     <section class="cf-panel">
                         <div class="cf-panel-head">
@@ -1648,9 +1674,10 @@
                         <div id="cf-wallet-grid" class="cf-wallet-grid"></div>
                     </section>
 
+                    <!-- ── Record Top-up / Pay Down Debt ──────────── -->
                     <div class="cf-grid-2">
                         <section class="cf-panel">
-                            <div class="cf-panel-head"><div><h4 class="cf-title">Easybills Top-up</h4></div></div>
+                            <div class="cf-panel-head"><div><h4 class="cf-title">Record Top-up</h4></div></div>
                             <form id="cf-topup-form" class="cf-form-grid" onsubmit="cfAddTopup(event)">
                                 <div><label class="cf-label">Date</label><input id="cf-topup-date" class="cf-input" type="date" required></div>
                                 <div><label class="cf-label">Credit card</label><select id="cf-topup-card" class="cf-select" required></select></div>
@@ -1661,17 +1688,18 @@
                         </section>
 
                         <section class="cf-panel">
-                            <div class="cf-panel-head"><div><h4 class="cf-title">Cash Movement</h4></div></div>
-                            <form id="cf-cash-form" class="cf-form-grid" onsubmit="cfAddCashMovement(event)">
-                                <div><label class="cf-label">Date</label><input id="cf-cash-date" class="cf-input" type="date" required></div>
-                                <div><label class="cf-label">Type</label><select id="cf-cash-type" class="cf-select"><option value="income">Income</option><option value="expense">Expense</option></select></div>
-                                <div><label class="cf-label">Amount</label><input id="cf-cash-amount" class="cf-input cf-money-input" type="text" inputmode="decimal" required></div>
-                                <div><label class="cf-label">Note</label><input id="cf-cash-note" class="cf-input"></div>
-                                <div class="span-4 flex justify-end"><button class="cf-btn" type="submit">Record Cash Movement</button></div>
+                            <div class="cf-panel-head"><div><h4 class="cf-title">Pay Down Easybills Debt</h4></div></div>
+                            <form id="cf-payment-form" class="cf-form-grid" onsubmit="cfAddPayment(event)">
+                                <div><label class="cf-label">Date</label><input id="cf-payment-date" class="cf-input" type="date" required></div>
+                                <div><label class="cf-label">Credit card</label><select id="cf-payment-card" class="cf-select" required onchange="cfUpdatePaymentCardMeta()"></select></div>
+                                <div class="span-2"><label class="cf-label">Amount</label><input id="cf-payment-amount" class="cf-input cf-money-input" type="text" inputmode="decimal" required></div>
+                                <div class="span-4"><span id="cf-payment-outstanding" class="cf-subtle" style="font-size:11px"></span></div>
+                                <div class="span-4 flex justify-end"><button class="cf-btn primary" type="submit"><i class="fa-solid fa-money-bill-transfer"></i> Record Payment</button></div>
                             </form>
                         </section>
                     </div>
 
+                    <!-- ── Credit Card Timeline ───────────────────── -->
                     <div class="cf-section-label">Credit cards · statement & payment timeline</div>
                     <section class="cf-panel">
                         <div class="cf-panel-head">
@@ -1688,14 +1716,20 @@
                         </div>
                     </section>
 
+                    <!-- ── Activity log (collapsible) ─────────────── -->
                     <section class="cf-panel">
                         <div class="cf-panel-head">
                             <div><h4 class="cf-title">Cashflow Activity</h4></div>
+                            <button type="button" class="cf-btn" style="font-size:10px;padding:4px 10px" onclick="cfToggleActivity()">
+                                <span id="cf-activity-toggle-label">Show</span>
+                            </button>
                         </div>
-                        <div class="cf-table-wrap cf-cycle-log">
-                            <table class="cf-table"><thead><tr><th>Date</th><th>Type</th><th>Card / Wallet</th><th class="num">Cash change</th><th class="num">Debt change</th><th>Note</th><th></th></tr></thead><tbody id="cf-event-tbody"></tbody></table>
+                        <div id="cf-activity-body" style="display:none">
+                            <div class="cf-table-wrap cf-cycle-log">
+                                <table class="cf-table"><thead><tr><th>Date</th><th>Type</th><th>Card / Wallet</th><th class="num">Cash change</th><th class="num">Debt change</th><th>Note</th><th></th></tr></thead><tbody id="cf-event-tbody"></tbody></table>
+                            </div>
+                            <div id="cf-event-empty" class="cf-empty">No cashflow activity yet.</div>
                         </div>
-                        <div id="cf-event-empty" class="cf-empty">No cashflow activity yet.</div>
                     </section>
                 </div>
             </div>
@@ -4067,7 +4101,7 @@
             bankCash: Math.max(0, satNumber(raw.bankCash)),
             monthlyIncome: Math.max(0, satNumber(raw.monthlyIncome)),
             monthlySpending: Math.max(0, satNumber(raw.monthlySpending)),
-            otherReserved: Math.max(0, satNumber(raw.otherReserved)),
+            otherReserved: Math.max(0, satNumber(raw.otherReserved)), // other credit card debt not tracked via Easybills cards
             revolvingTarget: Math.max(0, valueOr(raw.revolvingTarget, 200000)),
             walletCapacity: Math.max(0, valueOr(raw.walletCapacity, 50000)),
             feeFixed: 10,
@@ -4292,7 +4326,8 @@
                 return monthSum + (wallet.transferredMonths.includes(month) ? 0 : cfWalletMonthTopup(wallet.id, month));
             }, 0);
         }, 0);
-        const cardDebt = cfState().cards.filter(card => card.active).reduce((sum, card) => sum + satNumber(card.outstanding), 0);
+        const cardDebt = cfState().cards.filter(card => card.active).reduce((sum, card) => sum + satNumber(card.outstanding), 0)
+            + satNumber(cfState().settings.otherReserved);
         const rolloverDebt = cfMonthEvents('topup').reduce((sum, event) => sum + satNumber(event.amount), 0);
         const requiredReserve = Math.max(0, cardDebt - walletCash);
         const monthlySpending = satNumber(cfState().settings.monthlySpending);
@@ -4314,37 +4349,69 @@
     function cfRenderSummary() {
         const totals = cfTotals();
         const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
-        set('cf-bank-cash', cfMoney(totals.bankCash));
+
+        // Net position = bankCash + walletCash - cardDebt
+        const netPos = totals.bankCash + totals.walletCash - totals.cardDebt;
+        const netEl  = document.getElementById('cf-net-position');
+        const verdictEl = document.getElementById('cf-net-verdict');
+        if (netEl) {
+            netEl.textContent = cfMoney(netPos);
+            netEl.classList.toggle('cf-positive', netPos >= 0);
+            netEl.classList.toggle('cf-negative', netPos < 0);
+        }
+        if (verdictEl) {
+            if (netPos >= 0) {
+                verdictEl.textContent = `✓ You'd have ${cfMoney(netPos)} left over`;
+                verdictEl.style.color = '#10B981';
+            } else {
+                verdictEl.textContent = `⚠ You'd be short by ${cfMoney(Math.abs(netPos))}`;
+                verdictEl.style.color = '#F59E0B';
+            }
+        }
+
+        set('cf-card-debt',  cfMoney(totals.cardDebt));
         set('cf-wallet-cash', cfMoney(totals.walletCash));
-        set('cf-card-debt', cfMoney(totals.cardDebt));
-        set('cf-debt-reserve', cfMoney(totals.requiredReserve));
-        set('cf-true-free-cash', cfMoney(totals.trueFreeCash));
-        set('cf-rollover-debt', cfMoney(totals.rolloverDebt));
-        set('cf-monthly-surplus', cfMoney(totals.monthlySurplus));
-        set('cf-debt-coverage', totals.coverage === null ? 'No debt' : `${totals.coverage.toFixed(1)}%`);
-        const freeEl = document.getElementById('cf-true-free-cash');
-        freeEl?.classList.toggle('cf-positive', totals.trueFreeCash >= 0);
-        freeEl?.classList.toggle('cf-negative', totals.trueFreeCash < 0);
-        const surplusEl = document.getElementById('cf-monthly-surplus');
-        surplusEl?.classList.toggle('cf-positive', totals.monthlySurplus >= 0);
-        surplusEl?.classList.toggle('cf-negative', totals.monthlySurplus < 0);
-        const totalCapacity = cfState().wallets.filter(wallet => wallet.active).reduce((sum, wallet) => sum + satNumber(wallet.capacity), 0);
-        const topped = cfState().wallets.filter(wallet => wallet.active).reduce((sum, wallet) => sum + Math.min(cfWalletMonthTopup(wallet.id), satNumber(wallet.capacity)), 0);
+
+        const totalCapacity = cfState().wallets.filter(w => w.active).reduce((s,w) => s + satNumber(w.capacity), 0);
+        const topped = cfState().wallets.filter(w => w.active).reduce((s,w) => s + Math.min(cfWalletMonthTopup(w.id), satNumber(w.capacity)), 0);
         const progress = totalCapacity > 0 ? topped / totalCapacity * 100 : 0;
-        set('cf-cycle-progress-total', `${progress.toFixed(1)}%`);
-        set('cf-cycle-progress-meta', `${cfMoney(topped)} of ${cfMoney(totalCapacity)} in ${cfState().activeMonth}`);
+        set('cf-cycle-progress-total', `${cfMoney(topped)} / ${cfMoney(totalCapacity)} (${progress.toFixed(0)}%)`);
+    }
+
+    function cfSaveBankCash(raw) {
+        const val = satNumber(String(raw).replace(/,/g, ''));
+        if (!Number.isFinite(val) || val < 0) return;
+        cfState().settings.bankCash = val;
+        cfSaveLocal();
+        cfRenderSummary();
+    }
+
+    function cfSaveOtherDebt(raw) {
+        const val = satNumber(String(raw).replace(/,/g, ''));
+        if (!Number.isFinite(val) || val < 0) return;
+        cfState().settings.otherReserved = val;
+        cfSaveLocal();
+        cfRenderSummary();
+    }
+
+    function cfToggleActivity() {
+        const body  = document.getElementById('cf-activity-body');
+        const label = document.getElementById('cf-activity-toggle-label');
+        if (!body) return;
+        const open = body.style.display !== 'none';
+        body.style.display  = open ? 'none' : 'block';
+        if (label) label.textContent = open ? 'Show' : 'Hide';
     }
 
     function cfRenderSettings() {
-        const values = {
-            'cf-setting-bank': cfState().settings.bankCash,
-            'cf-setting-income': cfState().settings.monthlyIncome,
-            'cf-setting-spending': cfState().settings.monthlySpending
-        };
-        Object.entries(values).forEach(([id, value]) => {
-            const input = document.getElementById(id);
-            if (input && document.activeElement !== input) input.value = cfNumberText(value);
-        });
+        const bankInput = document.getElementById('cf-setting-bank');
+        if (bankInput && document.activeElement !== bankInput) {
+            bankInput.value = cfNumberText(cfState().settings.bankCash);
+        }
+        const otherDebtInput = document.getElementById('cf-setting-other-debt');
+        if (otherDebtInput && document.activeElement !== otherDebtInput) {
+            otherDebtInput.value = cfNumberText(cfState().settings.otherReserved);
+        }
         const month = document.getElementById('cf-active-month');
         if (month) month.value = cfState().activeMonth;
     }
@@ -4389,13 +4456,13 @@
 
     function cfRenderOptions() {
         const cardOptions = cfState().cards.filter(card => card.active).map(card => `<option value="${satEsc(card.id)}">${satEsc(cfCardLabel(card))}</option>`).join('');
-        ['cf-topup-card'].forEach(id => {
+        ['cf-topup-card', 'cf-payment-card'].forEach(id => {
             const select = document.getElementById(id);
             if (!select) return;
             const value = select.value;
             select.innerHTML = `<option value="">Select card</option>${cardOptions}`;
             if ([...select.options].some(option => option.value === value)) select.value = value;
-            else if (id === 'cf-topup-card') select.value = cfDefaultTopupCardId();
+            else select.value = cfDefaultTopupCardId();
         });
         const walletSelect = document.getElementById('cf-topup-wallet');
         if (walletSelect) {
@@ -4669,10 +4736,11 @@
         cfRenderOptions();
         cfPrepareMoneyInputs();
         const today = satToday();
-        ['cf-topup-date','cf-cash-date'].forEach(id => {
+        ['cf-topup-date','cf-payment-date'].forEach(id => {
             const input = document.getElementById(id);
             if (input && !input.value) input.value = today;
         });
+        cfUpdatePaymentCardMeta();
     }
 
     function cfCommitChanges() {
@@ -4765,6 +4833,38 @@
         document.getElementById('cf-topup-date').value = satToday();
         document.getElementById('cf-topup-amount').value = '10,000';
         document.getElementById('cf-topup-card').value = cfDefaultTopupCardId();
+        cfCommitChanges();
+    }
+
+    function cfUpdatePaymentCardMeta() {
+        const cardId = document.getElementById('cf-payment-card')?.value;
+        const card = cfState().cards.find(item => item.id === cardId);
+        const meta = document.getElementById('cf-payment-outstanding');
+        if (meta) meta.textContent = card ? `Outstanding on ${cfCardLabel(card)}: ${cfMoney(card.outstanding)}` : '';
+    }
+
+    function cfAddPayment(event) {
+        event.preventDefault();
+        const date = document.getElementById('cf-payment-date').value;
+        const cardId = document.getElementById('cf-payment-card').value;
+        const amount = satNumber(document.getElementById('cf-payment-amount').value);
+        const card = cfState().cards.find(item => item.id === cardId);
+        if (!card || !date || amount <= 0) return;
+        if (amount > card.outstanding) { alert('Payment exceeds the current outstanding balance.'); return; }
+        if (amount > cfState().settings.bankCash) { alert('Payment exceeds current cash on hand.'); return; }
+        const row = cfNormalizeEvent({
+            id:cfId('event'), date, type:'card_payment', cardId, amount,
+            cashDelta:-amount, debtDelta:-amount, walletDelta:0,
+            note:'Card payment', createdAt:new Date().toISOString()
+        });
+        const paymentMonth = date.slice(0, 7);
+        if (/^\d{4}-\d{2}$/.test(paymentMonth) && paymentMonth > cfState().activeMonth) cfState().activeMonth = paymentMonth;
+        cfApplyEvent(row, 1);
+        cfState().events.push(row);
+        document.getElementById('cf-payment-form').reset();
+        document.getElementById('cf-payment-date').value = satToday();
+        document.getElementById('cf-payment-card').value = cfDefaultTopupCardId();
+        cfUpdatePaymentCardMeta();
         cfCommitChanges();
     }
 
