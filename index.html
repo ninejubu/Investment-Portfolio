@@ -6430,14 +6430,12 @@
         wRenderCalc();
     }
 
-    // Helper: get next Friday on or after a given date
+    // Helper: get next Friday after today (never today itself)
     function nextFriday(fromDate) {
-        const d = new Date(fromDate);
-        const day = d.getDay(); // 0=Sun,5=Fri
-        const diff = (5 - day + 7) % 7 || 7; // days until next Friday (if today is Fri, next Fri)
-        // if today IS Friday, diff=7 → next Friday; we treat today's Friday as "this week"
+        const day = fromDate.getDay(); // 0=Sun, 5=Fri
+        const daysUntilFri = day === 5 ? 7 : (5 - day + 7) % 7; // if today IS Friday, skip to next week
         const thisFri = new Date(fromDate);
-        thisFri.setDate(fromDate.getDate() + ((5 - day + 7) % 7));
+        thisFri.setDate(fromDate.getDate() + daysUntilFri);
         const nextFri = new Date(thisFri);
         nextFri.setDate(thisFri.getDate() + 7);
         return [thisFri, nextFri];
