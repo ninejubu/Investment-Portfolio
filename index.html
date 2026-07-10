@@ -6031,6 +6031,13 @@
     function applySheetSettings(data) {
         const settings = data && (data.settings || data);
         if (!settings || typeof settings !== 'object') return false;
+        // DEBUG: log raw holdings to console so we can see exact field names
+        if (settings.holdings && settings.holdings.length > 0) {
+            console.log('[Holdings Debug] First 2 rows from Apps Script:', JSON.stringify(settings.holdings.slice(0,2), null, 2));
+            console.log('[Holdings Debug] Keys in first row:', Object.keys(settings.holdings[0]));
+        } else {
+            console.warn('[Holdings Debug] settings.holdings is empty or missing. Full settings keys:', Object.keys(settings));
+        }
         const target = state.portfolios.port1;
         if (settings.begBalances) target.begBalances = Object.assign(getEmptyBegBalances(), settings.begBalances);
         if (settings.endBalances) target.endBalances = Object.assign(getEmptyEndBalances(), settings.endBalances);
