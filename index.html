@@ -5990,24 +5990,39 @@
         PLATFORM_ASSETS.forEach(asset => periods.forEach(period => grouped[ddKey(asset, period)] = []));
 
         holdings.forEach(row => {
-            const asset = normalizeSheetAsset(row.asset || row.class);
-            const period = normalizeSheetPeriod(row.period);
-            const amount = Number(row.amount);
-            if (!asset || !period || !Number.isFinite(amount)) return;
-            grouped[ddKey(asset, period)].push({
-                name: String(row.ticker || row.name || '').trim(),
-                platform: String(row.name || '').trim(),
-                segment: String(row.theme || '').trim(),
-                amount
-            });
+            const asset = normalizeSheetAsset(row.asset || row.class || row.Class);
+            if (!asset) return;
+
+            // Determine ticker name and platform
+            // Sheet columns: L=Name(platform), M=Ticker, N=Theme
+            const ticker   = String(row.ticker || row.Ticker || row.name || row.Name || '').trim();
+            const platform = String(row.name || row.Name || row.platform || '').trim();
+            const theme    = String(row.theme || row.Theme || '').trim();
+
+            // Support both wide-format (separate period columns) and pivoted (row.period)
+            const hasPeriodField = row.period || row.Period;
+            if (hasPeriodField) {
+                const period = normalizeSheetPeriod(row.period || row.Period);
+                const amount = Number(row.amount ?? row.Amount ?? 0);
+                if (!period || !Number.isFinite(amount) || amount === 0) return;
+                grouped[ddKey(asset, period)].push({ name: ticker, platform, theme, amount });
+            } else {
+                // Wide format: columns beg/q1/q2/q3/q4 or Beg/Q1/Q2/Q3/Q4
+                const periodKeys = { Beg: ['beg','Beg','beginning','Beginning'], Q1: ['q1','Q1'], Q2: ['q2','Q2'], Q3: ['q3','Q3'], Q4: ['q4','Q4'] };
+                Object.entries(periodKeys).forEach(([period, keys]) => {
+                    let amount = null;
+                    for (const k of keys) { if (row[k] !== undefined && row[k] !== '' && row[k] !== null) { amount = Number(String(row[k]).replace(/,/g,'')); break; } }
+                    if (amount === null || !Number.isFinite(amount) || amount === 0) return;
+                    grouped[ddKey(asset, period)].push({ name: ticker, platform, theme, amount });
+                });
+            }
         });
 
         Object.entries(grouped).forEach(([key, rows]) => localStorage.setItem(key, JSON.stringify(rows)));
 
         PLATFORM_ASSETS.forEach(asset => {
             const platforms = [...new Set(holdings
-                .filter(row => normalizeSheetAsset(row.asset || row.class) === asset)
-                .map(row => String(row.name || '').trim())
+                .map(row => String(row.name || row.Name || row.platform || '').trim())
                 .filter(Boolean))];
             if (platforms.length) localStorage.setItem(`platforms_${asset}`, JSON.stringify(platforms));
         });
@@ -6791,13 +6806,13 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     //   BALANCE VISIBILITY TOGGLE
     // ════════════════════════════════════════════════════
     let balancesHidden = true;
-    const BALANCE_IDS = ['total-net-worth','stock-bal','bond-bal','crypto-bal','gold-bal'];
+    const BALANCE_IDS = ['total-net-worth','stock-bal','bond-bal','crypto-bal','gold-bal','hb-total'];
 
     function applyBalanceMask() {
         if (!balancesHidden) return;
         BALANCE_IDS.forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.innerText = '฿ ••••••';
+            if (el) el.innerText = id === 'hb-total' ? '฿ ••••••' : '฿ ••••••';
         });
         // Re-render quarterly table so fmtQ picks up balancesHidden=true
         if (typeof renderQuarterlyTable === 'function') renderQuarterlyTable();
@@ -7068,7 +7083,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             } else {
                 tickerMap.set(key, {
                     name: (r.name || '—').trim(),
-                    segment: (r.theme || '').trim(),
+                    theme: (r.theme || r.segment || '').trim(),
                     amount: r.amount || 0,
                     platforms: [{ platform: r.platform || '', amount: r.amount || 0 }]
                 });
@@ -7171,7 +7186,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             });
         }
         if (hintEl)  hintEl.textContent  = 'Tap ticker to expand platforms';
-        if (totalEl) totalEl.textContent = `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+        if (totalEl) totalEl.textContent = balancesHidden ? '฿ ••••••' : `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
     }
 
     function hbRenderSegmentView(mergedRows, assetBal, color, asset, quarter, hintEl, totalEl) {
@@ -7268,7 +7283,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             }
         }
         if (hintEl)  hintEl.textContent  = 'Tap theme to see tickers';
-        if (totalEl) totalEl.textContent = `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+        if (totalEl) totalEl.textContent = balancesHidden ? '฿ ••••••' : `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
     }
 
     // Re-render breakdown after drill-down closes
