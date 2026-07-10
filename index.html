@@ -975,6 +975,8 @@
         .cf-calendar-marker:active { cursor:grabbing; }
         .cf-calendar-marker.statement { background:rgb(var(--group-rgb)); border-radius:5px 0 0 5px; }
         .cf-calendar-marker.due { background:rgb(var(--group-rgb)); border-radius:0 5px 5px 0; box-shadow:none; }
+        .cf-calendar-markers.same-day { flex-direction:column; gap:1px; }
+        .cf-calendar-markers.same-day .cf-calendar-marker { border-radius:3px; height:13px; font-size:6px; flex:none; width:100%; }
         .cf-calendar-row.header { min-height:34px; background:#111827; }
         .cf-calendar-row.header .cf-calendar-cell { color:#64748B; font-size:8px; font-weight:800; }
         .cf-calendar-bank {
@@ -1647,6 +1649,10 @@
                             <div class="cf-net-row cf-net-divider">
                                 <span class="cf-net-row-label">Total credit card debt</span>
                                 <span id="cf-card-debt" class="cf-net-row-value cf-negative">฿0</span>
+                            </div>
+                            <div class="cf-net-row cf-net-sub">
+                                <span class="cf-net-row-label cf-subtle">· Easybills (Family Plus + JCB)</span>
+                                <span id="cf-easybills-debt" class="cf-net-row-value cf-subtle">฿0</span>
                             </div>
                             <div class="cf-net-row cf-net-sub">
                                 <span class="cf-net-row-label cf-subtle">· Other credit cards (manual)</span>
@@ -4372,6 +4378,12 @@
         set('cf-card-debt',  cfMoney(totals.cardDebt));
         set('cf-wallet-cash', cfMoney(totals.walletCash));
 
+        // Easybills-linked cards = CARD X group (Family Plus + JCB)
+        const easybillsDebt = cfState().cards
+            .filter(c => c.active && (c.limitGroup || '').toLowerCase().startsWith('cardx'))
+            .reduce((s, c) => s + satNumber(c.outstanding), 0);
+        set('cf-easybills-debt', cfMoney(easybillsDebt));
+
         const totalCapacity = cfState().wallets.filter(w => w.active).reduce((s,w) => s + satNumber(w.capacity), 0);
         const topped = cfState().wallets.filter(w => w.active).reduce((s,w) => s + Math.min(cfWalletMonthTopup(w.id), satNumber(w.capacity)), 0);
         const progress = totalCapacity > 0 ? topped / totalCapacity * 100 : 0;
@@ -4639,10 +4651,12 @@
                 day === statementDay ? 'statement' : '',
                 day === dueDay ? 'due' : ''
             ].filter(Boolean);
-            const markerButtons = markers.map(marker => `<button class="cf-calendar-marker ${marker}" type="button" draggable="true"
+            const sameDay = markers.length === 2;
+            const markerButtons = markers.map(marker => `<button class="cf-calendar-marker ${marker}${sameDay ? ' same-day' : ''}" type="button" draggable="true"
                 ondragstart="cfTimelineDragStart(event,'${satEsc(card.id)}','${marker}')"
-                onclick="event.stopPropagation();cfOpenTimelineEditor('${satEsc(card.id)}','${marker}')">${marker === 'statement' ? 'STATE' : 'PAY'}</button>`).join('');
-            const content = markerButtons ? `<div class="cf-calendar-markers">${markerButtons}</div>` : (!card && majorDays.has(day) ? day : '');
+                onclick="event.stopPropagation();cfOpenTimelineEditor('${satEsc(card.id)}','${marker}')">${marker === 'statement' ? 'S' : 'P'}</button>`).join('');
+            const markersContainer = markerButtons ? `<div class="cf-calendar-markers${sameDay ? ' same-day' : ''}">${markerButtons}</div>` : '';
+            const content = markersContainer || (!card && majorDays.has(day) ? day : '');
             return `<div class="cf-calendar-cell day${majorDays.has(day) ? ' major' : ''}${rangeClasses}${day === todayDay ? ' today' : ''}" ondragover="cfTimelineDragOver(event)" ondragleave="cfTimelineDragLeave(event)" ondrop="cfTimelineDrop(event,${day})">${content}</div>`;
         }).join('');
         const header = `<div class="cf-calendar-row header">
