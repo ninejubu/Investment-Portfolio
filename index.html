@@ -109,20 +109,17 @@
             align-items: stretch;
         }
         .dashboard-lower-row {
-            display: grid;
-            grid-template-columns: minmax(280px, 0.42fr) minmax(0, 1fr);
+            display: flex;
+            flex-direction: column;
             gap: 24px;
-            align-items: stretch;
-        }
-        .dashboard-lower-row.holdings-collapsed {
-            grid-template-columns: minmax(0, 1fr) 64px;
         }
         .quarterly-panel {
             min-width: 0;
             overflow: hidden;
         }
         .quarterly-table {
-            min-width: 780px;
+            min-width: 0;
+            width: 100%;
             table-layout: fixed;
         }
         .quarterly-table th,
@@ -134,37 +131,11 @@
             white-space: normal;
         }
         #panel-holdings.is-collapsed {
-            min-height: 360px;
-            height: 100%;
-            padding: 12px !important;
-            align-items: center;
-            cursor: pointer;
-        }
-        #panel-holdings.is-collapsed #toggle-holdings-panel {
-            cursor: pointer;
+            padding: 14px 20px !important;
         }
         #panel-holdings.is-collapsed .holdings-panel-header {
-            width: 100%;
-            height: 100%;
             margin-bottom: 0;
-            flex-direction: column;
-            flex-wrap: nowrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
         }
-        #panel-holdings.is-collapsed .holdings-panel-header h4 {
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
-            white-space: nowrap;
-            text-align: center;
-        }
-        #panel-holdings.is-collapsed .holdings-panel-controls {
-            display: flex !important;
-            width: auto;
-            justify-content: center;
-        }
-        #panel-holdings.is-collapsed .holdings-panel-controls select,
         #panel-holdings.is-collapsed #holdings-panel-body {
             display: none !important;
         }
@@ -193,30 +164,40 @@
         .holdings-panel-controls select {
             max-width: 100%;
         }
+        .hb-body-layout {
+            display: flex;
+            gap: 28px;
+            align-items: flex-start;
+        }
+        .hb-chart-col {
+            flex: 0 0 220px;
+            position: relative;
+            height: 220px;
+        }
+        .hb-list-col {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
         @media (max-width: 1280px) {
             .holdings-panel-controls {
                 width: 100%;
                 justify-content: flex-start;
             }
-            .dashboard-lower-row {
-                grid-template-columns: minmax(300px, 0.65fr) minmax(0, 1.35fr);
-            }
         }
 
         @media (max-width: 1023px) {
-            .dashboard-top-row,
-            .dashboard-lower-row,
-            .dashboard-lower-row.holdings-collapsed {
+            .dashboard-top-row {
                 grid-template-columns: 1fr;
             }
-            #panel-holdings.is-collapsed {
-                min-height: auto;
+            .hb-body-layout {
+                flex-direction: column;
             }
-            #panel-holdings.is-collapsed .holdings-panel-header {
-                margin-bottom: 0;
-            }
-            .quarterly-table {
-                min-width: 720px;
+            .hb-chart-col {
+                flex: none;
+                width: 100%;
+                height: 180px;
             }
         }
 
@@ -1434,14 +1415,16 @@
                                 <button id="toggle-holdings-panel" onclick="toggleHoldingsPanel(event)" title="Collapse holdings breakdown" class="bg-slate-800 border-none text-[10px] text-slate-300 rounded px-2 py-1 hover:text-white hover:bg-slate-700 transition-colors"><i class="fa-solid fa-chevron-up"></i></button>
                             </div>
                         </div>
-                        <div id="holdings-panel-body" class="flex flex-col flex-1">
-                            <!-- Mini donut -->
-                            <div style="height:150px;position:relative;margin-bottom:10px"><canvas id="hbChart"></canvas></div>
+                        <div id="holdings-panel-body" class="hb-body-layout">
+                            <!-- Donut chart -->
+                            <div class="hb-chart-col"><canvas id="hbChart"></canvas></div>
                             <!-- Holdings list -->
-                            <div id="hb-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;max-height:320px"></div>
-                            <div style="margin-top:10px;padding-top:8px;border-top:1px solid #1E293B;display:flex;justify-content:space-between;font-size:10px;color:#64748b">
-                                <span id="hb-hint">Click row to edit</span>
-                                <span id="hb-total" style="color:#F8FAFC;font-weight:600"></span>
+                            <div class="hb-list-col">
+                                <div id="hb-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;max-height:340px"></div>
+                                <div style="margin-top:10px;padding-top:8px;border-top:1px solid #1E293B;display:flex;justify-content:space-between;font-size:10px;color:#64748b">
+                                    <span id="hb-hint">Click row to edit</span>
+                                    <span id="hb-total" style="color:#F8FAFC;font-weight:600"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
