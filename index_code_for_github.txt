@@ -109,20 +109,17 @@
             align-items: stretch;
         }
         .dashboard-lower-row {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(320px, 0.42fr);
+            display: flex;
+            flex-direction: column;
             gap: 24px;
-            align-items: stretch;
-        }
-        .dashboard-lower-row.holdings-collapsed {
-            grid-template-columns: minmax(0, 1fr) 64px;
         }
         .quarterly-panel {
             min-width: 0;
             overflow: hidden;
         }
         .quarterly-table {
-            min-width: 780px;
+            min-width: 0;
+            width: 100%;
             table-layout: fixed;
         }
         .quarterly-table th,
@@ -134,37 +131,11 @@
             white-space: normal;
         }
         #panel-holdings.is-collapsed {
-            min-height: 360px;
-            height: 100%;
-            padding: 12px !important;
-            align-items: center;
-            cursor: pointer;
-        }
-        #panel-holdings.is-collapsed #toggle-holdings-panel {
-            cursor: pointer;
+            padding: 14px 20px !important;
         }
         #panel-holdings.is-collapsed .holdings-panel-header {
-            width: 100%;
-            height: 100%;
             margin-bottom: 0;
-            flex-direction: column;
-            flex-wrap: nowrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
         }
-        #panel-holdings.is-collapsed .holdings-panel-header h4 {
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
-            white-space: nowrap;
-            text-align: center;
-        }
-        #panel-holdings.is-collapsed .holdings-panel-controls {
-            display: flex !important;
-            width: auto;
-            justify-content: center;
-        }
-        #panel-holdings.is-collapsed .holdings-panel-controls select,
         #panel-holdings.is-collapsed #holdings-panel-body {
             display: none !important;
         }
@@ -193,30 +164,40 @@
         .holdings-panel-controls select {
             max-width: 100%;
         }
+        .hb-body-layout {
+            display: flex;
+            gap: 28px;
+            align-items: flex-start;
+        }
+        .hb-chart-col {
+            flex: 0 0 220px;
+            position: relative;
+            height: 220px;
+        }
+        .hb-list-col {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
         @media (max-width: 1280px) {
             .holdings-panel-controls {
                 width: 100%;
                 justify-content: flex-start;
             }
-            .dashboard-lower-row {
-                grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
-            }
         }
 
         @media (max-width: 1023px) {
-            .dashboard-top-row,
-            .dashboard-lower-row,
-            .dashboard-lower-row.holdings-collapsed {
+            .dashboard-top-row {
                 grid-template-columns: 1fr;
             }
-            #panel-holdings.is-collapsed {
-                min-height: auto;
+            .hb-body-layout {
+                flex-direction: column;
             }
-            #panel-holdings.is-collapsed .holdings-panel-header {
-                margin-bottom: 0;
-            }
-            .quarterly-table {
-                min-width: 720px;
+            .hb-chart-col {
+                flex: none;
+                width: 100%;
+                height: 180px;
             }
         }
 
@@ -868,6 +849,27 @@
         .cf-snapshot-form .cf-snapshot-primary { grid-column:1/-1; }
         .cf-snapshot-form .cf-actions-cell { grid-column:1/-1; display:flex; justify-content:flex-end; }
         .cf-snapshot-form .cf-btn { min-width:120px; min-height:36px; padding-inline:16px; }
+
+        /* ── Net Position Hero ── */
+        .cf-net-hero { display:grid; grid-template-columns:1fr 1fr; gap:0; background:var(--cf-panel,#111827); border:1px solid #1E293B; border-radius:14px; overflow:hidden; }
+        .cf-net-hero-main { padding:28px 28px 24px; display:flex; flex-direction:column; justify-content:center; gap:6px; border-right:1px solid #1E293B; }
+        .cf-net-hero-label { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#64748B; }
+        .cf-net-hero-value { font-size:38px; font-weight:800; line-height:1.1; color:#F8FAFC; }
+        .cf-net-hero-verdict { font-size:12px; font-weight:600; margin-top:2px; }
+        .cf-net-hero-breakdown { padding:20px 24px; display:flex; flex-direction:column; justify-content:center; gap:10px; }
+        .cf-net-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+        .cf-net-row-label { font-size:12px; color:#94A3B8; }
+        .cf-net-row-value { font-size:13px; font-weight:600; color:#F8FAFC; white-space:nowrap; }
+        .cf-net-row-right { display:flex; align-items:center; gap:6px; }
+        .cf-net-cash-input { background:#0F172A; border:1px solid #334155; color:#F8FAFC; font-size:14px; font-weight:700; padding:5px 10px; border-radius:7px; width:130px; text-align:right; }
+        .cf-net-cash-input:focus { outline:none; border-color:#6366F1; }
+        .cf-net-apply { background:#1E293B; border:1px solid #334155; color:#94A3B8; border-radius:6px; padding:5px 9px; cursor:pointer; font-size:11px; }
+        .cf-net-apply:hover { background:#334155; color:#F8FAFC; }
+        .cf-net-divider { border-top:1px solid #1E293B; padding-top:10px; margin-top:0; }
+        .cf-net-sub .cf-net-row-label { font-size:11px; }
+        .cf-net-sub .cf-net-row-value { font-size:11px; font-weight:500; }
+        .cf-subtle { color:#475569 !important; }
+        @media (max-width:640px) { .cf-net-hero { grid-template-columns:1fr; } .cf-net-hero-main { border-right:none; border-bottom:1px solid #1E293B; } }
         .cf-grid-3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
         .cf-form-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
         .cf-form-grid .span-2 { grid-column:span 2; }
@@ -954,6 +956,8 @@
         .cf-calendar-marker:active { cursor:grabbing; }
         .cf-calendar-marker.statement { background:rgb(var(--group-rgb)); border-radius:5px 0 0 5px; }
         .cf-calendar-marker.due { background:rgb(var(--group-rgb)); border-radius:0 5px 5px 0; box-shadow:none; }
+        .cf-calendar-markers.same-day { flex-direction:column; gap:1px; }
+        .cf-calendar-markers.same-day .cf-calendar-marker { border-radius:3px; height:13px; font-size:6px; flex:none; width:100%; }
         .cf-calendar-row.header { min-height:34px; background:#111827; }
         .cf-calendar-row.header .cf-calendar-cell { color:#64748B; font-size:8px; font-weight:800; }
         .cf-calendar-bank {
@@ -1411,14 +1415,16 @@
                                 <button id="toggle-holdings-panel" onclick="toggleHoldingsPanel(event)" title="Collapse holdings breakdown" class="bg-slate-800 border-none text-[10px] text-slate-300 rounded px-2 py-1 hover:text-white hover:bg-slate-700 transition-colors"><i class="fa-solid fa-chevron-up"></i></button>
                             </div>
                         </div>
-                        <div id="holdings-panel-body" class="flex flex-col flex-1">
-                            <!-- Mini donut -->
-                            <div style="height:150px;position:relative;margin-bottom:10px"><canvas id="hbChart"></canvas></div>
+                        <div id="holdings-panel-body" class="hb-body-layout">
+                            <!-- Donut chart -->
+                            <div class="hb-chart-col"><canvas id="hbChart"></canvas></div>
                             <!-- Holdings list -->
-                            <div id="hb-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;max-height:180px"></div>
-                            <div style="margin-top:10px;padding-top:8px;border-top:1px solid #1E293B;display:flex;justify-content:space-between;font-size:10px;color:#64748b">
-                                <span id="hb-hint">Click row to edit</span>
-                                <span id="hb-total" style="color:#F8FAFC;font-weight:600"></span>
+                            <div class="hb-list-col">
+                                <div id="hb-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;max-height:340px"></div>
+                                <div style="margin-top:10px;padding-top:8px;border-top:1px solid #1E293B;display:flex;justify-content:space-between;font-size:10px;color:#64748b">
+                                    <span id="hb-hint">Click row to edit</span>
+                                    <span id="hb-total" style="color:#F8FAFC;font-weight:600"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1597,7 +1603,7 @@
                     <div class="cf-toolbar">
                         <div>
                             <div class="cf-kicker">Personal Cashflow</div>
-                            <h3 class="text-xl font-bold text-white mt-1">Debt Float & Free Cash Planner</h3>
+                            <h3 class="text-xl font-bold text-white mt-1">Easybills Float Tracker</h3>
                         </div>
                         <div class="cf-toolbar-controls">
                             <label class="cf-label mb-0">Tracking month
@@ -1608,38 +1614,47 @@
                         </div>
                     </div>
 
-                    <div class="cf-stats">
-                        <div class="cf-stat"><span class="cf-stat-label">Bank Cash</span><strong id="cf-bank-cash" class="cf-stat-value">฿0</strong></div>
-                        <div class="cf-stat"><span class="cf-stat-label">Wallet Cash</span><strong id="cf-wallet-cash" class="cf-stat-value">฿0</strong></div>
-                        <div class="cf-stat"><span class="cf-stat-label">All Card Debt</span><strong id="cf-card-debt" class="cf-stat-value cf-negative">฿0</strong></div>
-                        <div class="cf-stat"><span class="cf-stat-label">Required Debt Reserve</span><strong id="cf-debt-reserve" class="cf-stat-value cf-warning">฿0</strong></div>
-                        <div class="cf-stat"><span class="cf-stat-label">True Free Cash</span><strong id="cf-true-free-cash" class="cf-stat-value">฿0</strong></div>
+                    <!-- ── Net Position Hero ───────────────────────── -->
+                    <div class="cf-net-hero">
+                        <div class="cf-net-hero-main">
+                            <div class="cf-net-hero-label">If you paid off all debt right now</div>
+                            <div id="cf-net-position" class="cf-net-hero-value">฿0</div>
+                            <div id="cf-net-verdict" class="cf-net-hero-verdict"></div>
+                        </div>
+                        <div class="cf-net-hero-breakdown">
+                            <div class="cf-net-row">
+                                <span class="cf-net-row-label">Cash on hand</span>
+                                <div class="cf-net-row-right">
+                                    <input id="cf-setting-bank" class="cf-net-cash-input cf-money-input" type="text" inputmode="decimal" onchange="cfSaveBankCash(this.value)" placeholder="0">
+                                    <button class="cf-net-apply" type="button" onclick="cfSaveBankCash(document.getElementById('cf-setting-bank').value)"><i class="fa-solid fa-check"></i></button>
+                                </div>
+                            </div>
+                            <div class="cf-net-row cf-net-divider">
+                                <span class="cf-net-row-label">Total credit card debt</span>
+                                <span id="cf-card-debt" class="cf-net-row-value cf-negative">฿0</span>
+                            </div>
+                            <div class="cf-net-row cf-net-sub">
+                                <span class="cf-net-row-label cf-subtle">· Easybills (Family Plus + JCB)</span>
+                                <span id="cf-easybills-debt" class="cf-net-row-value cf-subtle">฿0</span>
+                            </div>
+                            <div class="cf-net-row cf-net-sub">
+                                <span class="cf-net-row-label cf-subtle">· Other credit cards (manual)</span>
+                                <div class="cf-net-row-right">
+                                    <input id="cf-setting-other-debt" class="cf-net-cash-input cf-money-input" style="width:100px;font-size:12px;padding:3px 8px" type="text" inputmode="decimal" onchange="cfSaveOtherDebt(this.value)" placeholder="0">
+                                </div>
+                            </div>
+                            <div class="cf-net-row cf-net-sub">
+                                <span class="cf-net-row-label cf-subtle">· Cash still sitting in wallets</span>
+                                <span id="cf-wallet-cash" class="cf-net-row-value cf-subtle">฿0</span>
+                            </div>
+                            <div class="cf-net-row cf-net-sub">
+                                <span class="cf-net-row-label cf-subtle">· Cycle completed this month</span>
+                                <span id="cf-cycle-progress-total" class="cf-net-row-value cf-subtle">0%</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="cf-overview-grid">
-                        <section class="cf-panel">
-                            <div class="cf-panel-head">
-                                <div><h4 class="cf-title">Cash Snapshot & Monthly Plan</h4></div>
-                            </div>
-                            <form id="cf-settings-form" class="cf-snapshot-form" onsubmit="cfSaveSettings(event)">
-                                <div class="cf-snapshot-primary"><label class="cf-label">Bank cash</label><input id="cf-setting-bank" class="cf-input cf-money-input" type="text" inputmode="decimal"></div>
-                                <div><label class="cf-label">Monthly income</label><input id="cf-setting-income" class="cf-input cf-money-input" type="text" inputmode="decimal"></div>
-                                <div><label class="cf-label">Monthly spending reserve</label><input id="cf-setting-spending" class="cf-input cf-money-input" type="text" inputmode="decimal"></div>
-                                <div class="cf-actions-cell"><button class="cf-btn primary" type="submit"><i class="fa-solid fa-check"></i> Apply</button></div>
-                            </form>
-                        </section>
-
-                        <section class="cf-panel">
-                            <div class="cf-panel-head"><div><h4 class="cf-title">Debt Float Position</h4></div></div>
-                            <div class="cf-grid-2">
-                                <div class="cf-stat"><span class="cf-stat-label">Easybills Top-up</span><strong id="cf-rollover-debt" class="cf-stat-value">฿0</strong></div>
-                                <div class="cf-stat"><span class="cf-stat-label">Monthly Surplus</span><strong id="cf-monthly-surplus" class="cf-stat-value">฿0</strong></div>
-                                <div class="cf-stat"><span class="cf-stat-label">Debt Coverage</span><strong id="cf-debt-coverage" class="cf-stat-value">—</strong></div>
-                                <div class="cf-stat"><span class="cf-stat-label">Cycle Completion</span><strong id="cf-cycle-progress-total" class="cf-stat-value">0%</strong><span id="cf-cycle-progress-meta" class="cf-stat-meta">Current tracking month</span></div>
-                            </div>
-                        </section>
-                    </div>
-
+                    <!-- ── Easybills Wallet Progress ──────────────── -->
                     <div class="cf-section-label">Easybills+ · cash rotation</div>
                     <section class="cf-panel">
                         <div class="cf-panel-head">
@@ -1648,9 +1663,10 @@
                         <div id="cf-wallet-grid" class="cf-wallet-grid"></div>
                     </section>
 
+                    <!-- ── Record Top-up / Pay Down Debt ──────────── -->
                     <div class="cf-grid-2">
                         <section class="cf-panel">
-                            <div class="cf-panel-head"><div><h4 class="cf-title">Easybills Top-up</h4></div></div>
+                            <div class="cf-panel-head"><div><h4 class="cf-title">Record Top-up</h4></div></div>
                             <form id="cf-topup-form" class="cf-form-grid" onsubmit="cfAddTopup(event)">
                                 <div><label class="cf-label">Date</label><input id="cf-topup-date" class="cf-input" type="date" required></div>
                                 <div><label class="cf-label">Credit card</label><select id="cf-topup-card" class="cf-select" required></select></div>
@@ -1661,17 +1677,18 @@
                         </section>
 
                         <section class="cf-panel">
-                            <div class="cf-panel-head"><div><h4 class="cf-title">Cash Movement</h4></div></div>
-                            <form id="cf-cash-form" class="cf-form-grid" onsubmit="cfAddCashMovement(event)">
-                                <div><label class="cf-label">Date</label><input id="cf-cash-date" class="cf-input" type="date" required></div>
-                                <div><label class="cf-label">Type</label><select id="cf-cash-type" class="cf-select"><option value="income">Income</option><option value="expense">Expense</option></select></div>
-                                <div><label class="cf-label">Amount</label><input id="cf-cash-amount" class="cf-input cf-money-input" type="text" inputmode="decimal" required></div>
-                                <div><label class="cf-label">Note</label><input id="cf-cash-note" class="cf-input"></div>
-                                <div class="span-4 flex justify-end"><button class="cf-btn" type="submit">Record Cash Movement</button></div>
+                            <div class="cf-panel-head"><div><h4 class="cf-title">Pay Down Easybills Debt</h4></div></div>
+                            <form id="cf-payment-form" class="cf-form-grid" onsubmit="cfAddPayment(event)">
+                                <div><label class="cf-label">Date</label><input id="cf-payment-date" class="cf-input" type="date" required></div>
+                                <div><label class="cf-label">Credit card</label><select id="cf-payment-card" class="cf-select" required onchange="cfUpdatePaymentCardMeta()"></select></div>
+                                <div class="span-2"><label class="cf-label">Amount</label><input id="cf-payment-amount" class="cf-input cf-money-input" type="text" inputmode="decimal" required></div>
+                                <div class="span-4"><span id="cf-payment-outstanding" class="cf-subtle" style="font-size:11px"></span></div>
+                                <div class="span-4 flex justify-end"><button class="cf-btn primary" type="submit"><i class="fa-solid fa-money-bill-transfer"></i> Record Payment</button></div>
                             </form>
                         </section>
                     </div>
 
+                    <!-- ── Credit Card Timeline ───────────────────── -->
                     <div class="cf-section-label">Credit cards · statement & payment timeline</div>
                     <section class="cf-panel">
                         <div class="cf-panel-head">
@@ -1688,14 +1705,20 @@
                         </div>
                     </section>
 
+                    <!-- ── Activity log (collapsible) ─────────────── -->
                     <section class="cf-panel">
                         <div class="cf-panel-head">
                             <div><h4 class="cf-title">Cashflow Activity</h4></div>
+                            <button type="button" class="cf-btn" style="font-size:10px;padding:4px 10px" onclick="cfToggleActivity()">
+                                <span id="cf-activity-toggle-label">Show</span>
+                            </button>
                         </div>
-                        <div class="cf-table-wrap cf-cycle-log">
-                            <table class="cf-table"><thead><tr><th>Date</th><th>Type</th><th>Card / Wallet</th><th class="num">Cash change</th><th class="num">Debt change</th><th>Note</th><th></th></tr></thead><tbody id="cf-event-tbody"></tbody></table>
+                        <div id="cf-activity-body" style="display:none">
+                            <div class="cf-table-wrap cf-cycle-log">
+                                <table class="cf-table"><thead><tr><th>Date</th><th>Type</th><th>Card / Wallet</th><th class="num">Cash change</th><th class="num">Debt change</th><th>Note</th><th></th></tr></thead><tbody id="cf-event-tbody"></tbody></table>
+                            </div>
+                            <div id="cf-event-empty" class="cf-empty">No cashflow activity yet.</div>
                         </div>
-                        <div id="cf-event-empty" class="cf-empty">No cashflow activity yet.</div>
                     </section>
                 </div>
             </div>
@@ -2182,27 +2205,40 @@
             </div>
             <form id="sat-position-form" class="sat-form-grid" onsubmit="satSubmitPosition(event)">
                 <input id="sat-pos-id" type="hidden">
+                <!-- Row 1: Ticker, Side, Status, Open Date -->
                 <div><label class="sat-form-label">Ticker</label><input id="sat-pos-ticker" class="sat-input" maxlength="16" required placeholder="NVDA"></div>
-                <div><label class="sat-form-label">Position Name</label><input id="sat-pos-name" class="sat-input" placeholder="NVIDIA Corporation"></div>
                 <div><label class="sat-form-label">Side</label><select id="sat-pos-side" class="sat-select"><option value="long">Long</option><option value="short">Short</option></select></div>
                 <div><label class="sat-form-label">Status</label><select id="sat-pos-status" class="sat-select"><option value="open">Open</option><option value="closed">Closed</option></select></div>
                 <div><label class="sat-form-label">Open Date</label><input id="sat-pos-open-date" type="date" class="sat-input" required onchange="satUpdatePositionFxPreview()"></div>
-                <div><label class="sat-form-label">Close Date</label><input id="sat-pos-close-date" type="date" class="sat-input"></div>
+                <!-- Row 2: Qty, Avg Cost, Currency, Platform -->
                 <div><label class="sat-form-label">Quantity</label><input id="sat-pos-qty" type="number" step="any" min="0" class="sat-input" value="0"></div>
                 <div><label class="sat-form-label">Average Cost</label><input id="sat-pos-avg-cost" type="number" step="any" min="0" class="sat-input" value="0"></div>
-                <div><label class="sat-form-label">Current Price</label><input id="sat-pos-current-price" type="number" step="any" min="0" class="sat-input" value="0"></div>
-                <div><label class="sat-form-label">Exit Price</label><input id="sat-pos-exit-price" type="number" step="any" min="0" class="sat-input" value="0"></div>
-                <div><label class="sat-form-label">Realized P/L</label><input id="sat-pos-realized" type="number" step="any" class="sat-input" value="0"></div>
-                <div><label class="sat-form-label">Dividends</label><input id="sat-pos-dividends" type="number" step="any" class="sat-input" value="0"></div>
                 <div><label class="sat-form-label">Currency</label><select id="sat-pos-currency" class="sat-select" onchange="satUpdatePositionFxPreview()"><option value="USD">USD</option><option value="THB">THB</option></select></div>
-                <div><label class="sat-form-label">Entry FX (Auto)</label><div id="sat-pos-fx-info" class="sat-fx-readonly">Select open date and currency</div></div>
                 <div><label class="sat-form-label">Platform</label><input id="sat-pos-platform" class="sat-input" placeholder="IBKR / Binance / ..."></div>
-                <div><label class="sat-form-label">Take Profit</label><input id="sat-pos-tp" type="number" step="any" min="0" class="sat-input"></div>
-                <div><label class="sat-form-label">Stop Loss</label><input id="sat-pos-sl" type="number" step="any" min="0" class="sat-input"></div>
-                <div><label class="sat-form-label">Fees (position total)</label><input id="sat-pos-fees" type="number" step="any" min="0" class="sat-input" value="0"></div>
-                <div><label class="sat-form-label">Tags</label><input id="sat-pos-tags" class="sat-input" placeholder="swing, earnings, momentum"></div>
-                <div class="span-4"><label class="sat-form-label">Entry Thesis / Why Buy or Short</label><textarea id="sat-pos-thesis" class="sat-textarea" placeholder="Setup, catalyst, invalidation and what must be true..."></textarea></div>
-                <div class="span-4"><label class="sat-form-label">Review Note</label><textarea id="sat-pos-review" class="sat-textarea" placeholder="Post-trade review, lessons, adjustment plan..."></textarea></div>
+                <!-- Advanced toggle -->
+                <div class="span-4" style="margin-top:2px;margin-bottom:-4px">
+                    <button type="button" onclick="satTogglePosAdvanced()" id="sat-pos-adv-toggle" style="background:none;border:none;color:#94A3B8;font-size:11px;cursor:pointer;padding:0;display:flex;align-items:center;gap:5px">
+                        <span id="sat-pos-adv-chevron" style="font-size:9px">▸</span> More options
+                    </button>
+                </div>
+                <!-- Advanced section (hidden by default) -->
+                <div id="sat-pos-advanced" class="span-4" style="display:none">
+                    <div class="sat-form-grid" style="padding:0;border:none;gap:12px">
+                        <div><label class="sat-form-label">Position Name</label><input id="sat-pos-name" class="sat-input" placeholder="NVIDIA Corporation"></div>
+                        <div><label class="sat-form-label">Close Date</label><input id="sat-pos-close-date" type="date" class="sat-input"></div>
+                        <div><label class="sat-form-label">Current Price</label><input id="sat-pos-current-price" type="number" step="any" min="0" class="sat-input" value="0"></div>
+                        <div><label class="sat-form-label">Exit Price</label><input id="sat-pos-exit-price" type="number" step="any" min="0" class="sat-input" value="0"></div>
+                        <div><label class="sat-form-label">Realized P/L</label><input id="sat-pos-realized" type="number" step="any" class="sat-input" value="0"></div>
+                        <div><label class="sat-form-label">Dividends</label><input id="sat-pos-dividends" type="number" step="any" class="sat-input" value="0"></div>
+                        <div><label class="sat-form-label">Take Profit</label><input id="sat-pos-tp" type="number" step="any" min="0" class="sat-input"></div>
+                        <div><label class="sat-form-label">Stop Loss</label><input id="sat-pos-sl" type="number" step="any" min="0" class="sat-input"></div>
+                        <div><label class="sat-form-label">Fees (position total)</label><input id="sat-pos-fees" type="number" step="any" min="0" class="sat-input" value="0"></div>
+                        <div><label class="sat-form-label">Tags</label><input id="sat-pos-tags" class="sat-input" placeholder="swing, earnings, momentum"></div>
+                        <div><label class="sat-form-label">Entry FX (Auto)</label><div id="sat-pos-fx-info" class="sat-fx-readonly">Select open date and currency</div></div>
+                        <div class="span-4"><label class="sat-form-label">Entry Thesis / Why Buy or Short</label><textarea id="sat-pos-thesis" class="sat-textarea" placeholder="Setup, catalyst, invalidation and what must be true..."></textarea></div>
+                        <div class="span-4"><label class="sat-form-label">Review Note</label><textarea id="sat-pos-review" class="sat-textarea" placeholder="Post-trade review, lessons, adjustment plan..."></textarea></div>
+                    </div>
+                </div>
                 <div class="span-4 flex justify-between gap-2">
                     <button id="sat-position-delete-btn" type="button" class="sat-btn danger hidden" onclick="satDeletePositionFromModal()"><i class="fa-solid fa-trash-can"></i> Remove Position</button>
                     <div class="flex gap-2 ml-auto">
@@ -3698,6 +3734,16 @@
         target.classList.toggle('warning', fx.fallback);
     }
 
+    function satTogglePosAdvanced(forceOpen) {
+        const adv  = document.getElementById('sat-pos-advanced');
+        const chev = document.getElementById('sat-pos-adv-chevron');
+        const btn  = document.getElementById('sat-pos-adv-toggle');
+        const open = forceOpen !== undefined ? !forceOpen : adv.style.display !== 'none';
+        adv.style.display = open ? 'none' : 'block';
+        chev.textContent  = open ? '▸' : '▾';
+        btn.style.color   = open ? '#94A3B8' : '#F8FAFC';
+    }
+
     function satOpenPositionModal(id='') {
         const p = id ? satState().positions.find(item => item.id === id) : null;
         const value = (key, fallback='') => p ? (p[key] ?? fallback) : fallback;
@@ -3724,6 +3770,10 @@
         document.getElementById('sat-pos-thesis').value = value('thesis');
         document.getElementById('sat-pos-review').value = value('review');
         document.getElementById('sat-position-delete-btn').classList.toggle('hidden', !p);
+        // Auto-expand advanced section if editing a position that has advanced fields filled
+        const hasAdvanced = p && (p.name || p.closeDate || p.exitPrice || p.realizedPL || p.dividends ||
+            p.takeProfit || p.stopLoss || p.fees || p.tags || p.thesis || p.review);
+        satTogglePosAdvanced(!!hasAdvanced);
         document.getElementById('sat-position-modal').classList.add('open');
         satUpdatePositionFxPreview(p || {});
     }
@@ -4040,7 +4090,7 @@
             bankCash: Math.max(0, satNumber(raw.bankCash)),
             monthlyIncome: Math.max(0, satNumber(raw.monthlyIncome)),
             monthlySpending: Math.max(0, satNumber(raw.monthlySpending)),
-            otherReserved: Math.max(0, satNumber(raw.otherReserved)),
+            otherReserved: Math.max(0, satNumber(raw.otherReserved)), // other credit card debt not tracked via Easybills cards
             revolvingTarget: Math.max(0, valueOr(raw.revolvingTarget, 200000)),
             walletCapacity: Math.max(0, valueOr(raw.walletCapacity, 50000)),
             feeFixed: 10,
@@ -4265,7 +4315,8 @@
                 return monthSum + (wallet.transferredMonths.includes(month) ? 0 : cfWalletMonthTopup(wallet.id, month));
             }, 0);
         }, 0);
-        const cardDebt = cfState().cards.filter(card => card.active).reduce((sum, card) => sum + satNumber(card.outstanding), 0);
+        const cardDebt = cfState().cards.filter(card => card.active).reduce((sum, card) => sum + satNumber(card.outstanding), 0)
+            + satNumber(cfState().settings.otherReserved);
         const rolloverDebt = cfMonthEvents('topup').reduce((sum, event) => sum + satNumber(event.amount), 0);
         const requiredReserve = Math.max(0, cardDebt - walletCash);
         const monthlySpending = satNumber(cfState().settings.monthlySpending);
@@ -4287,37 +4338,75 @@
     function cfRenderSummary() {
         const totals = cfTotals();
         const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
-        set('cf-bank-cash', cfMoney(totals.bankCash));
+
+        // Net position = bankCash + walletCash - cardDebt
+        const netPos = totals.bankCash + totals.walletCash - totals.cardDebt;
+        const netEl  = document.getElementById('cf-net-position');
+        const verdictEl = document.getElementById('cf-net-verdict');
+        if (netEl) {
+            netEl.textContent = cfMoney(netPos);
+            netEl.classList.toggle('cf-positive', netPos >= 0);
+            netEl.classList.toggle('cf-negative', netPos < 0);
+        }
+        if (verdictEl) {
+            if (netPos >= 0) {
+                verdictEl.textContent = `✓ You'd have ${cfMoney(netPos)} left over`;
+                verdictEl.style.color = '#10B981';
+            } else {
+                verdictEl.textContent = `⚠ You'd be short by ${cfMoney(Math.abs(netPos))}`;
+                verdictEl.style.color = '#F59E0B';
+            }
+        }
+
+        set('cf-card-debt',  cfMoney(totals.cardDebt));
         set('cf-wallet-cash', cfMoney(totals.walletCash));
-        set('cf-card-debt', cfMoney(totals.cardDebt));
-        set('cf-debt-reserve', cfMoney(totals.requiredReserve));
-        set('cf-true-free-cash', cfMoney(totals.trueFreeCash));
-        set('cf-rollover-debt', cfMoney(totals.rolloverDebt));
-        set('cf-monthly-surplus', cfMoney(totals.monthlySurplus));
-        set('cf-debt-coverage', totals.coverage === null ? 'No debt' : `${totals.coverage.toFixed(1)}%`);
-        const freeEl = document.getElementById('cf-true-free-cash');
-        freeEl?.classList.toggle('cf-positive', totals.trueFreeCash >= 0);
-        freeEl?.classList.toggle('cf-negative', totals.trueFreeCash < 0);
-        const surplusEl = document.getElementById('cf-monthly-surplus');
-        surplusEl?.classList.toggle('cf-positive', totals.monthlySurplus >= 0);
-        surplusEl?.classList.toggle('cf-negative', totals.monthlySurplus < 0);
-        const totalCapacity = cfState().wallets.filter(wallet => wallet.active).reduce((sum, wallet) => sum + satNumber(wallet.capacity), 0);
-        const topped = cfState().wallets.filter(wallet => wallet.active).reduce((sum, wallet) => sum + Math.min(cfWalletMonthTopup(wallet.id), satNumber(wallet.capacity)), 0);
+
+        // Easybills-linked cards = CARD X group (Family Plus + JCB)
+        const easybillsDebt = cfState().cards
+            .filter(c => c.active && (c.limitGroup || '').toLowerCase().startsWith('cardx'))
+            .reduce((s, c) => s + satNumber(c.outstanding), 0);
+        set('cf-easybills-debt', cfMoney(easybillsDebt));
+
+        const totalCapacity = cfState().wallets.filter(w => w.active).reduce((s,w) => s + satNumber(w.capacity), 0);
+        const topped = cfState().wallets.filter(w => w.active).reduce((s,w) => s + Math.min(cfWalletMonthTopup(w.id), satNumber(w.capacity)), 0);
         const progress = totalCapacity > 0 ? topped / totalCapacity * 100 : 0;
-        set('cf-cycle-progress-total', `${progress.toFixed(1)}%`);
-        set('cf-cycle-progress-meta', `${cfMoney(topped)} of ${cfMoney(totalCapacity)} in ${cfState().activeMonth}`);
+        set('cf-cycle-progress-total', `${cfMoney(topped)} / ${cfMoney(totalCapacity)} (${progress.toFixed(0)}%)`);
+    }
+
+    function cfSaveBankCash(raw) {
+        const val = satNumber(String(raw).replace(/,/g, ''));
+        if (!Number.isFinite(val) || val < 0) return;
+        cfState().settings.bankCash = val;
+        cfSaveLocal();
+        cfRenderSummary();
+    }
+
+    function cfSaveOtherDebt(raw) {
+        const val = satNumber(String(raw).replace(/,/g, ''));
+        if (!Number.isFinite(val) || val < 0) return;
+        cfState().settings.otherReserved = val;
+        cfSaveLocal();
+        cfRenderSummary();
+    }
+
+    function cfToggleActivity() {
+        const body  = document.getElementById('cf-activity-body');
+        const label = document.getElementById('cf-activity-toggle-label');
+        if (!body) return;
+        const open = body.style.display !== 'none';
+        body.style.display  = open ? 'none' : 'block';
+        if (label) label.textContent = open ? 'Show' : 'Hide';
     }
 
     function cfRenderSettings() {
-        const values = {
-            'cf-setting-bank': cfState().settings.bankCash,
-            'cf-setting-income': cfState().settings.monthlyIncome,
-            'cf-setting-spending': cfState().settings.monthlySpending
-        };
-        Object.entries(values).forEach(([id, value]) => {
-            const input = document.getElementById(id);
-            if (input && document.activeElement !== input) input.value = cfNumberText(value);
-        });
+        const bankInput = document.getElementById('cf-setting-bank');
+        if (bankInput && document.activeElement !== bankInput) {
+            bankInput.value = cfNumberText(cfState().settings.bankCash);
+        }
+        const otherDebtInput = document.getElementById('cf-setting-other-debt');
+        if (otherDebtInput && document.activeElement !== otherDebtInput) {
+            otherDebtInput.value = cfNumberText(cfState().settings.otherReserved);
+        }
         const month = document.getElementById('cf-active-month');
         if (month) month.value = cfState().activeMonth;
     }
@@ -4362,13 +4451,13 @@
 
     function cfRenderOptions() {
         const cardOptions = cfState().cards.filter(card => card.active).map(card => `<option value="${satEsc(card.id)}">${satEsc(cfCardLabel(card))}</option>`).join('');
-        ['cf-topup-card'].forEach(id => {
+        ['cf-topup-card', 'cf-payment-card'].forEach(id => {
             const select = document.getElementById(id);
             if (!select) return;
             const value = select.value;
             select.innerHTML = `<option value="">Select card</option>${cardOptions}`;
             if ([...select.options].some(option => option.value === value)) select.value = value;
-            else if (id === 'cf-topup-card') select.value = cfDefaultTopupCardId();
+            else select.value = cfDefaultTopupCardId();
         });
         const walletSelect = document.getElementById('cf-topup-wallet');
         if (walletSelect) {
@@ -4545,10 +4634,12 @@
                 day === statementDay ? 'statement' : '',
                 day === dueDay ? 'due' : ''
             ].filter(Boolean);
-            const markerButtons = markers.map(marker => `<button class="cf-calendar-marker ${marker}" type="button" draggable="true"
+            const sameDay = markers.length === 2;
+            const markerButtons = markers.map(marker => `<button class="cf-calendar-marker ${marker}${sameDay ? ' same-day' : ''}" type="button" draggable="true"
                 ondragstart="cfTimelineDragStart(event,'${satEsc(card.id)}','${marker}')"
-                onclick="event.stopPropagation();cfOpenTimelineEditor('${satEsc(card.id)}','${marker}')">${marker === 'statement' ? 'STATE' : 'PAY'}</button>`).join('');
-            const content = markerButtons ? `<div class="cf-calendar-markers">${markerButtons}</div>` : (!card && majorDays.has(day) ? day : '');
+                onclick="event.stopPropagation();cfOpenTimelineEditor('${satEsc(card.id)}','${marker}')">${marker === 'statement' ? 'S' : 'P'}</button>`).join('');
+            const markersContainer = markerButtons ? `<div class="cf-calendar-markers${sameDay ? ' same-day' : ''}">${markerButtons}</div>` : '';
+            const content = markersContainer || (!card && majorDays.has(day) ? day : '');
             return `<div class="cf-calendar-cell day${majorDays.has(day) ? ' major' : ''}${rangeClasses}${day === todayDay ? ' today' : ''}" ondragover="cfTimelineDragOver(event)" ondragleave="cfTimelineDragLeave(event)" ondrop="cfTimelineDrop(event,${day})">${content}</div>`;
         }).join('');
         const header = `<div class="cf-calendar-row header">
@@ -4642,10 +4733,11 @@
         cfRenderOptions();
         cfPrepareMoneyInputs();
         const today = satToday();
-        ['cf-topup-date','cf-cash-date'].forEach(id => {
+        ['cf-topup-date','cf-payment-date'].forEach(id => {
             const input = document.getElementById(id);
             if (input && !input.value) input.value = today;
         });
+        cfUpdatePaymentCardMeta();
     }
 
     function cfCommitChanges() {
@@ -4722,7 +4814,6 @@
         if (monthTopup + amount > satNumber(wallet.capacity)) { alert(`${wallet.name} would exceed its monthly capacity.`); return; }
         const fee = satNumber(cfState().settings.feeFixed) + amount * satNumber(cfState().settings.feePercent) / 100;
         const chargedAmount = amount + fee;
-        if (card.creditLimit > 0 && card.outstanding + chargedAmount > card.creditLimit) { alert('This top-up would exceed the card credit limit.'); return; }
         const row = cfNormalizeEvent({
             id: cfId('event'), date, type:'topup', cardId, walletId, amount, fee, chargedAmount,
             transferAmount:0, cashDelta:0, debtDelta:chargedAmount, walletDelta:amount,
@@ -4738,6 +4829,38 @@
         document.getElementById('cf-topup-date').value = satToday();
         document.getElementById('cf-topup-amount').value = '10,000';
         document.getElementById('cf-topup-card').value = cfDefaultTopupCardId();
+        cfCommitChanges();
+    }
+
+    function cfUpdatePaymentCardMeta() {
+        const cardId = document.getElementById('cf-payment-card')?.value;
+        const card = cfState().cards.find(item => item.id === cardId);
+        const meta = document.getElementById('cf-payment-outstanding');
+        if (meta) meta.textContent = card ? `Outstanding on ${cfCardLabel(card)}: ${cfMoney(card.outstanding)}` : '';
+    }
+
+    function cfAddPayment(event) {
+        event.preventDefault();
+        const date = document.getElementById('cf-payment-date').value;
+        const cardId = document.getElementById('cf-payment-card').value;
+        const amount = satNumber(document.getElementById('cf-payment-amount').value);
+        const card = cfState().cards.find(item => item.id === cardId);
+        if (!card || !date || amount <= 0) return;
+        if (amount > card.outstanding) { alert('Payment exceeds the current outstanding balance.'); return; }
+        if (amount > cfState().settings.bankCash) { alert('Payment exceeds current cash on hand.'); return; }
+        const row = cfNormalizeEvent({
+            id:cfId('event'), date, type:'card_payment', cardId, amount,
+            cashDelta:-amount, debtDelta:-amount, walletDelta:0,
+            note:'Card payment', createdAt:new Date().toISOString()
+        });
+        const paymentMonth = date.slice(0, 7);
+        if (/^\d{4}-\d{2}$/.test(paymentMonth) && paymentMonth > cfState().activeMonth) cfState().activeMonth = paymentMonth;
+        cfApplyEvent(row, 1);
+        cfState().events.push(row);
+        document.getElementById('cf-payment-form').reset();
+        document.getElementById('cf-payment-date').value = satToday();
+        document.getElementById('cf-payment-card').value = cfDefaultTopupCardId();
+        cfUpdatePaymentCardMeta();
         cfCommitChanges();
     }
 
@@ -5296,7 +5419,7 @@
         }
         if(charts.perf) charts.perf.destroy();
         const theme = chartTheme();
-        charts.perf = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: theme.axis, callback: v => parseFloat(v.toFixed(2)) + '%' }, grid: { color: theme.grid } }, x: { ticks: { color: theme.axis }, grid: { display: false } } }, plugins: { legend: { labels: { color: theme.label, boxWidth: 10, font: { size: 9 } } }, datalabels: { color: theme.dataLabel, anchor: 'end', align: 'top', offset: 2, formatter: (v) => (v !== null && v !== undefined && v !== 0) ? v.toFixed(1) + '%' : null, font: { size: assetKey === 'all-sep' ? 8 : 10 }, padding: 2, clip: false } } } });
+        charts.perf = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 24 } }, scales: { y: { ticks: { color: theme.axis, callback: v => parseFloat(v.toFixed(2)) + '%' }, grid: { color: theme.grid } }, x: { ticks: { color: theme.axis }, grid: { display: false } } }, plugins: { legend: { position: 'bottom', labels: { color: theme.label, boxWidth: 10, font: { size: 9 }, padding: 12 } }, datalabels: { color: theme.dataLabel, anchor: 'end', align: (ctx) => ctx.dataset.data[ctx.dataIndex] >= 0 ? 'end' : 'start', offset: 4, formatter: (v) => (v !== null && v !== undefined && v !== 0) ? v.toFixed(1) + '%' : null, font: { size: assetKey === 'all-sep' ? 8 : 10 }, padding: 2, clip: false } } } });
     }
 
     function renderAllocationChart(data) {
@@ -5850,14 +5973,14 @@
         PLATFORM_ASSETS.forEach(asset => periods.forEach(period => grouped[ddKey(asset, period)] = []));
 
         holdings.forEach(row => {
-            const asset = normalizeSheetAsset(row.asset || row.class);
-            const period = normalizeSheetPeriod(row.period);
-            const amount = Number(row.amount);
-            if (!asset || !period || !Number.isFinite(amount)) return;
+            const asset  = normalizeSheetAsset(row.asset  || row.class  || row.Class);
+            const period = normalizeSheetPeriod(row.period || row.Period);
+            const amount = Number(row.amount ?? row.Amount ?? 0);
+            if (!asset || !period || !Number.isFinite(amount) || amount === 0) return;
             grouped[ddKey(asset, period)].push({
-                name: String(row.ticker || row.name || '').trim(),
-                platform: String(row.name || '').trim(),
-                segment: String(row.theme || '').trim(),
+                name:     String(row.ticker || row.Ticker || '').trim(),   // M = Ticker → display name
+                platform: String(row.name   || row.Name   || '').trim(),   // L = Name   → platform
+                theme:    String(row.theme  || row.Theme  || '').trim(),   // N = Theme  → theme
                 amount
             });
         });
@@ -5867,7 +5990,7 @@
         PLATFORM_ASSETS.forEach(asset => {
             const platforms = [...new Set(holdings
                 .filter(row => normalizeSheetAsset(row.asset || row.class) === asset)
-                .map(row => String(row.name || '').trim())
+                .map(row => String(row.name || row.Name || '').trim())
                 .filter(Boolean))];
             if (platforms.length) localStorage.setItem(`platforms_${asset}`, JSON.stringify(platforms));
         });
@@ -6290,14 +6413,12 @@
         wRenderCalc();
     }
 
-    // Helper: get next Friday on or after a given date
+    // Helper: get next Friday after today (never today itself)
     function nextFriday(fromDate) {
-        const d = new Date(fromDate);
-        const day = d.getDay(); // 0=Sun,5=Fri
-        const diff = (5 - day + 7) % 7 || 7; // days until next Friday (if today is Fri, next Fri)
-        // if today IS Friday, diff=7 → next Friday; we treat today's Friday as "this week"
+        const day = fromDate.getDay(); // 0=Sun, 5=Fri
+        const daysUntilFri = day === 5 ? 7 : (5 - day + 7) % 7; // if today IS Friday, skip to next week
         const thisFri = new Date(fromDate);
-        thisFri.setDate(fromDate.getDate() + ((5 - day + 7) % 7));
+        thisFri.setDate(fromDate.getDate() + daysUntilFri);
         const nextFri = new Date(thisFri);
         nextFri.setDate(thisFri.getDate() + 7);
         return [thisFri, nextFri];
@@ -6653,13 +6774,13 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     //   BALANCE VISIBILITY TOGGLE
     // ════════════════════════════════════════════════════
     let balancesHidden = true;
-    const BALANCE_IDS = ['total-net-worth','stock-bal','bond-bal','crypto-bal','gold-bal'];
+    const BALANCE_IDS = ['total-net-worth','stock-bal','bond-bal','crypto-bal','gold-bal','hb-total'];
 
     function applyBalanceMask() {
         if (!balancesHidden) return;
         BALANCE_IDS.forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.innerText = '฿ ••••••';
+            if (el) el.innerText = id === 'hb-total' ? '฿ ••••••' : '฿ ••••••';
         });
         // Re-render quarterly table so fmtQ picks up balancesHidden=true
         if (typeof renderQuarterlyTable === 'function') renderQuarterlyTable();
@@ -6911,6 +7032,16 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     }
 
     function renderHoldingsBreakdown() {
+        try {
+            renderHoldingsBreakdownInner();
+        } catch (err) {
+            console.error('[Holdings Breakdown] render error:', err);
+            const listEl = document.getElementById('hb-list');
+            if (listEl) listEl.innerHTML = `<div style="color:#EF4444;font-size:11px;text-align:center;padding:16px">Render error — check console for details.</div>`;
+        }
+    }
+
+    function renderHoldingsBreakdownInner() {
         const asset     = document.getElementById('hb-asset')?.value || 'stocks';
         const quarterEl = document.getElementById('hb-quarter');
         const quarter   = quarterEl?.value || getLatestClosedPeriod();
@@ -6930,7 +7061,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             } else {
                 tickerMap.set(key, {
                     name: (r.name || '—').trim(),
-                    segment: (r.theme || '').trim(),
+                    theme: (r.theme || r.segment || '').trim(),
                     amount: r.amount || 0,
                     platforms: [{ platform: r.platform || '', amount: r.amount || 0 }]
                 });
@@ -7033,7 +7164,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             });
         }
         if (hintEl)  hintEl.textContent  = 'Tap ticker to expand platforms';
-        if (totalEl) totalEl.textContent = `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+        if (totalEl) totalEl.textContent = balancesHidden ? '฿ ••••••' : `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
     }
 
     function hbRenderSegmentView(mergedRows, assetBal, color, asset, quarter, hintEl, totalEl) {
@@ -7041,9 +7172,9 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         if (!listEl) return;
         listEl.innerHTML = '';
 
-        if (hbSegmentDrill !== null) {
+        if (hbSegmentDrill !== null && hbSegmentDrill !== undefined) {
             // Drill-down: tickers within one segment
-            const inSeg    = mergedRows.filter(r => (r.theme||'').trim().toUpperCase() === hbSegmentDrill.toUpperCase());
+            const inSeg    = mergedRows.filter(r => (r.theme||'').trim().toUpperCase() === String(hbSegmentDrill).toUpperCase());
             const segTotal = inSeg.reduce((s,r)=>s+r.amount,0);
             const colors   = hbMakeColors(inSeg, asset);
             hbDrawDonut(inSeg.map(r=>r.name), inSeg.map(r=>r.amount), colors, segTotal, asset, quarter);
@@ -7078,7 +7209,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         mergedRows.forEach(r => {
             const seg = (r.theme||'').trim() || '—';
             if (segMap.has(seg)) { const e = segMap.get(seg); e.amount += r.amount; e.count++; }
-            else segMap.set(seg, { segment: seg, amount: r.amount, count: 1 });
+            else segMap.set(seg, { theme: seg, amount: r.amount, count: 1 });
         });
         const segments  = Array.from(segMap.values()).sort((a,b)=>b.amount-a.amount);
         const untracked = Math.max(0, assetBal - mergedRows.reduce((s,r)=>s+r.amount,0));
@@ -7130,7 +7261,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             }
         }
         if (hintEl)  hintEl.textContent  = 'Tap theme to see tickers';
-        if (totalEl) totalEl.textContent = `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+        if (totalEl) totalEl.textContent = balancesHidden ? '฿ ••••••' : `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
     }
 
     // Re-render breakdown after drill-down closes
