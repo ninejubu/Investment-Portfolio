@@ -110,7 +110,7 @@
         }
         .dashboard-lower-row {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(320px, 0.42fr);
+            grid-template-columns: minmax(280px, 0.42fr) minmax(0, 1fr);
             gap: 24px;
             align-items: stretch;
         }
@@ -199,7 +199,7 @@
                 justify-content: flex-start;
             }
             .dashboard-lower-row {
-                grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
+                grid-template-columns: minmax(300px, 0.65fr) minmax(0, 1.35fr);
             }
         }
 
@@ -1438,7 +1438,7 @@
                             <!-- Mini donut -->
                             <div style="height:150px;position:relative;margin-bottom:10px"><canvas id="hbChart"></canvas></div>
                             <!-- Holdings list -->
-                            <div id="hb-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;max-height:180px"></div>
+                            <div id="hb-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;max-height:320px"></div>
                             <div style="margin-top:10px;padding-top:8px;border-top:1px solid #1E293B;display:flex;justify-content:space-between;font-size:10px;color:#64748b">
                                 <span id="hb-hint">Click row to edit</span>
                                 <span id="hb-total" style="color:#F8FAFC;font-weight:600"></span>
