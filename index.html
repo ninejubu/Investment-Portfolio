@@ -7049,6 +7049,16 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     }
 
     function renderHoldingsBreakdown() {
+        try {
+            renderHoldingsBreakdownInner();
+        } catch (err) {
+            console.error('[Holdings Breakdown] render error:', err);
+            const listEl = document.getElementById('hb-list');
+            if (listEl) listEl.innerHTML = `<div style="color:#EF4444;font-size:11px;text-align:center;padding:16px">Render error — check console for details.</div>`;
+        }
+    }
+
+    function renderHoldingsBreakdownInner() {
         const asset     = document.getElementById('hb-asset')?.value || 'stocks';
         const quarterEl = document.getElementById('hb-quarter');
         const quarter   = quarterEl?.value || getLatestClosedPeriod();
@@ -7179,9 +7189,9 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         if (!listEl) return;
         listEl.innerHTML = '';
 
-        if (hbSegmentDrill !== null) {
+        if (hbSegmentDrill !== null && hbSegmentDrill !== undefined) {
             // Drill-down: tickers within one segment
-            const inSeg    = mergedRows.filter(r => (r.theme||'').trim().toUpperCase() === hbSegmentDrill.toUpperCase());
+            const inSeg    = mergedRows.filter(r => (r.theme||'').trim().toUpperCase() === String(hbSegmentDrill).toUpperCase());
             const segTotal = inSeg.reduce((s,r)=>s+r.amount,0);
             const colors   = hbMakeColors(inSeg, asset);
             hbDrawDonut(inSeg.map(r=>r.name), inSeg.map(r=>r.amount), colors, segTotal, asset, quarter);
@@ -7216,7 +7226,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         mergedRows.forEach(r => {
             const seg = (r.theme||'').trim() || '—';
             if (segMap.has(seg)) { const e = segMap.get(seg); e.amount += r.amount; e.count++; }
-            else segMap.set(seg, { segment: seg, amount: r.amount, count: 1 });
+            else segMap.set(seg, { theme: seg, amount: r.amount, count: 1 });
         });
         const segments  = Array.from(segMap.values()).sort((a,b)=>b.amount-a.amount);
         const untracked = Math.max(0, assetBal - mergedRows.reduce((s,r)=>s+r.amount,0));
