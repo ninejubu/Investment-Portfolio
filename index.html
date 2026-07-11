@@ -195,9 +195,12 @@
             border-color: #3B82F6;
             color: #F8FAFC;
         }
+        .hb-btn-period.is-active {
+            border-color: #A855F7;
+        }
         @media (max-width: 640px) {
             .hb-btn-grid-period {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(2, 1fr);
             }
         }
         .hb-body-layout {
@@ -1452,22 +1455,21 @@
                                     <button type="button" class="hb-btn" data-value="gold" onclick="hbSelectOption('hb-asset','gold',this,event)">Gold</button>
                                 </div>
                                 <select id="hb-quarter" onchange="renderHoldingsBreakdown()" style="display:none">
-                                    <option value="Beg">Beg</option>
                                     <option value="Q1">Q1</option>
                                     <option value="Q2">Q2</option>
                                     <option value="Q3">Q3</option>
                                     <option value="Q4">Q4</option>
                                 </select>
-                                <div id="hb-quarter-buttons" class="hb-btn-grid hb-btn-grid-period">
-                                    <button type="button" class="hb-btn" data-value="Beg" onclick="hbSelectOption('hb-quarter','Beg',this,event)">Beg</button>
-                                    <button type="button" class="hb-btn" data-value="Q1" onclick="hbSelectOption('hb-quarter','Q1',this,event)">Q1</button>
-                                    <button type="button" class="hb-btn" data-value="Q2" onclick="hbSelectOption('hb-quarter','Q2',this,event)">Q2</button>
-                                    <button type="button" class="hb-btn" data-value="Q3" onclick="hbSelectOption('hb-quarter','Q3',this,event)">Q3</button>
-                                    <button type="button" class="hb-btn" data-value="Q4" onclick="hbSelectOption('hb-quarter','Q4',this,event)">Q4</button>
+                                <div id="hb-quarter-buttons" class="hb-btn-grid hb-btn-grid-2x2 hb-btn-grid-period">
+                                    <button type="button" class="hb-btn hb-btn-period" data-value="Q1" onclick="hbSelectOption('hb-quarter','Q1',this,event)">Q1</button>
+                                    <button type="button" class="hb-btn hb-btn-period" data-value="Q2" onclick="hbSelectOption('hb-quarter','Q2',this,event)">Q2</button>
+                                    <button type="button" class="hb-btn hb-btn-period" data-value="Q3" onclick="hbSelectOption('hb-quarter','Q3',this,event)">Q3</button>
+                                    <button type="button" class="hb-btn hb-btn-period" data-value="Q4" onclick="hbSelectOption('hb-quarter','Q4',this,event)">Q4</button>
                                 </div>
                                 <button id="toggle-holdings-panel" onclick="toggleHoldingsPanel(event)" title="Collapse holdings breakdown" class="bg-slate-800 border-none text-[10px] text-slate-300 rounded px-2 py-1 hover:text-white hover:bg-slate-700 transition-colors"><i class="fa-solid fa-chevron-up"></i></button>
                             </div>
                         </div>
+                        <div id="hb-ticker-slicer" style="display:none;width:100%;justify-content:flex-end;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px"></div>
                         <div id="holdings-panel-body" class="hb-body-layout">
                             <!-- Donut chart -->
                             <div class="hb-chart-col"><canvas id="hbChart"></canvas></div>
@@ -7046,7 +7048,10 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
 
     function initHoldingsBreakdownDefaultPeriod() {
         const quarterEl = document.getElementById('hb-quarter');
-        if (quarterEl) quarterEl.value = getLatestClosedPeriod();
+        if (quarterEl) {
+            const latest = getLatestClosedPeriod();
+            quarterEl.value = latest === 'Beg' ? 'Q1' : latest;
+        }
         hbSyncButtonGroup('hb-asset-buttons', document.getElementById('hb-asset')?.value);
         hbSyncButtonGroup('hb-quarter-buttons', quarterEl?.value);
     }
@@ -7205,11 +7210,68 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     }
 
     function hbRenderTickerView(rows, assetBal, color, asset, quarter, hintEl, totalEl) {
-        const untracked = Math.max(0, assetBal - rows.reduce((s,r)=>s+r.amount,0));
-        const colors    = hbMakeColors(rows, asset);
-        const labels    = [...rows.map(r=>r.name), ...(untracked>1?['Untracked']:[])];
-        const amounts   = [...rows.map(r=>r.amount), ...(untracked>1?[untracked]:[])];
-        const allColors = [...colors, ...(untracked>1?['#334155']:[])];
+        const colors = hbMakeColors(rows, asset); // index-aligned with `rows`
+
+        // ── Slicer: filter tickers by theme (multi-select) ──
+        const uniqueThemes  = Array.from(new Set(rows.map(r => (r.theme||'').trim()).filter(Boolean)));
+        const hasThemeless  = rows.some(r => !(r.theme||'').trim());
+        const themeColorMap = new Map(uniqueThemes.map((t,i) => [t, `hsl(${(i*53+200)%360},60%,52%)`]));
+
+        const validNames = new Set([...uniqueThemes, ...(hasThemeless?['No theme']:[])]);
+        Array.from(hbThemeFilter).forEach(t => { if (!validNames.has(t)) hbThemeFilter.delete(t); });
+        const filterActive = hbThemeFilter.size > 0;
+
+        const slicerEl = document.getElementById('hb-ticker-slicer');
+        if (slicerEl) {
+            slicerEl.innerHTML = '';
+            if (uniqueThemes.length > 1 || (uniqueThemes.length >= 1 && hasThemeless)) {
+                slicerEl.style.display = 'flex';
+                const label = document.createElement('span');
+                label.style.cssText = 'font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-right:2px';
+                label.textContent = 'Filter theme:';
+                slicerEl.appendChild(label);
+
+                const makeChip = (theme, chipColor) => {
+                    const active = hbThemeFilter.has(theme);
+                    const chip = document.createElement('button');
+                    chip.type = 'button';
+                    chip.style.cssText = `display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:4px 9px;border-radius:999px;cursor:pointer;transition:background .15s,border-color .15s;background:${active?'#1E293B':'#0F172A'};border:1px solid ${active?chipColor:'#334155'};color:${active?'#F8FAFC':'#94A3B8'}`;
+                    chip.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:${chipColor};flex-shrink:0"></span>${theme}`;
+                    chip.onclick = (e) => {
+                        e.stopPropagation();
+                        if (hbThemeFilter.has(theme)) hbThemeFilter.delete(theme); else hbThemeFilter.add(theme);
+                        renderHoldingsBreakdown();
+                    };
+                    return chip;
+                };
+
+                uniqueThemes.forEach(t => slicerEl.appendChild(makeChip(t, themeColorMap.get(t))));
+                if (hasThemeless) slicerEl.appendChild(makeChip('No theme', '#475569'));
+
+                if (filterActive) {
+                    const clearBtn = document.createElement('button');
+                    clearBtn.type = 'button';
+                    clearBtn.style.cssText = 'font-size:10px;color:#94A3B8;background:transparent;border:none;cursor:pointer;text-decoration:underline;padding:4px 2px';
+                    clearBtn.textContent = 'Clear';
+                    clearBtn.onclick = (e) => { e.stopPropagation(); hbThemeFilter = new Set(); renderHoldingsBreakdown(); };
+                    slicerEl.appendChild(clearBtn);
+                }
+            } else {
+                slicerEl.style.display = 'none';
+            }
+        }
+
+        // Filtered rows (keep colors index-aligned with the original `rows`)
+        const indexedRows   = rows.map((r,i) => ({ r, color: colors[i] }));
+        const visIndexed    = filterActive
+            ? indexedRows.filter(o => hbThemeFilter.has((o.r.theme||'').trim() || 'No theme'))
+            : indexedRows;
+        const untracked     = Math.max(0, assetBal - rows.reduce((s,r)=>s+r.amount,0));
+        const showUntracked = untracked > 1 && !filterActive;
+
+        const labels    = [...visIndexed.map(o=>o.r.name), ...(showUntracked?['Untracked']:[])];
+        const amounts   = [...visIndexed.map(o=>o.r.amount), ...(showUntracked?[untracked]:[])];
+        const allColors = [...visIndexed.map(o=>o.color), ...(showUntracked?['#334155']:[])];
         hbDrawDonut(labels, amounts, allColors, assetBal, asset, quarter);
 
         const listEl = document.getElementById('hb-list');
@@ -7218,8 +7280,10 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
 
         if (rows.length === 0 && assetBal === 0) {
             listEl.innerHTML = `<div style="color:#475569;font-size:11px;text-align:center;padding:16px">No data for ${asset} ${quarter}.<br>Click the balance card to add holdings.</div>`;
+        } else if (visIndexed.length === 0 && !showUntracked) {
+            listEl.innerHTML = `<div style="color:#475569;font-size:11px;text-align:center;padding:16px">No tickers match the current filter.</div>`;
         } else {
-            [...rows.map((r,i)=>({...r,_color:colors[i]})), ...(untracked>1?[{name:'Untracked',amount:untracked,_color:'#334155',platforms:[],theme:''}]:[])].forEach(r => {
+            [...visIndexed.map(o=>({...o.r,_color:o.color})), ...(showUntracked?[{name:'Untracked',amount:untracked,_color:'#334155',platforms:[],theme:''}]:[])].forEach(r => {
                 const isUT  = r.name === 'Untracked';
                 const pct   = assetBal > 0 ? (r.amount/assetBal*100) : 0;
                 const multi = !isUT && r.platforms && r.platforms.length > 1;
@@ -7266,11 +7330,14 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                 listEl.appendChild(el);
             });
         }
-        if (hintEl)  hintEl.textContent  = 'Tap ticker to expand platforms';
-        if (totalEl) totalEl.textContent = balancesHidden ? '฿ ••••••' : `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+        const filteredTotal = visIndexed.reduce((s,o)=>s+o.r.amount,0) + (showUntracked?untracked:0);
+        if (hintEl)  hintEl.textContent  = filterActive ? `${hbThemeFilter.size} theme${hbThemeFilter.size>1?'s':''} selected — tap ticker to expand platforms` : 'Tap ticker to expand platforms';
+        if (totalEl) totalEl.textContent = balancesHidden ? '฿ ••••••' : (filterActive ? `Filtered: ฿${filteredTotal.toLocaleString('en-US',{maximumFractionDigits:0})}` : `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`);
     }
 
     function hbRenderSegmentView(mergedRows, assetBal, color, asset, quarter, hintEl, totalEl) {
+        const tickerSlicerEl = document.getElementById('hb-ticker-slicer');
+        if (tickerSlicerEl) { tickerSlicerEl.style.display = 'none'; tickerSlicerEl.innerHTML = ''; }
         const listEl = document.getElementById('hb-list');
         if (!listEl) return;
         listEl.innerHTML = '';
