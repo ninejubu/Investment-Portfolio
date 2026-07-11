@@ -164,6 +164,42 @@
         .holdings-panel-controls select {
             max-width: 100%;
         }
+        .hb-btn-grid {
+            display: grid;
+            gap: 3px;
+        }
+        .hb-btn-grid-2x2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .hb-btn-grid-period {
+            grid-template-columns: repeat(5, 1fr);
+        }
+        .hb-btn {
+            background: #0F172A;
+            border: 1px solid #334155;
+            color: #94A3B8;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 9px;
+            border-radius: 5px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background .15s, color .15s, border-color .15s;
+        }
+        .hb-btn:hover {
+            background: #1E293B;
+            color: #F8FAFC;
+        }
+        .hb-btn.is-active {
+            background: #1E293B;
+            border-color: #3B82F6;
+            color: #F8FAFC;
+        }
+        @media (max-width: 640px) {
+            .hb-btn-grid-period {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
         .hb-body-layout {
             display: flex;
             flex-direction: column;
@@ -1403,19 +1439,32 @@
                                     <button id="hb-view-ticker" onclick="hbSetView('ticker',event)" style="background:#1E293B;border:none;color:#F8FAFC;font-size:10px;padding:4px 8px;cursor:pointer;transition:background .15s">By Ticker</button>
                                     <button id="hb-view-segment" onclick="hbSetView('segment',event)" style="background:transparent;border:none;color:#94A3B8;font-size:10px;padding:4px 8px;cursor:pointer;transition:background .15s">By Theme</button>
                                 </div>
-                                <select id="hb-asset" onchange="renderHoldingsBreakdown()" style="background:#0F172A;border:1px solid #334155;color:#F8FAFC;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">
+                                <select id="hb-asset" onchange="renderHoldingsBreakdown()" style="display:none">
                                     <option value="stocks">Stocks</option>
                                     <option value="bonds">Bonds</option>
                                     <option value="crypto">Crypto</option>
                                     <option value="gold">Gold</option>
                                 </select>
-                                <select id="hb-quarter" onchange="renderHoldingsBreakdown()" style="background:#0F172A;border:1px solid #334155;color:#F8FAFC;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">
+                                <div id="hb-asset-buttons" class="hb-btn-grid hb-btn-grid-2x2">
+                                    <button type="button" class="hb-btn" data-value="stocks" onclick="hbSelectOption('hb-asset','stocks',this,event)">Stocks</button>
+                                    <button type="button" class="hb-btn" data-value="bonds" onclick="hbSelectOption('hb-asset','bonds',this,event)">Bonds</button>
+                                    <button type="button" class="hb-btn" data-value="crypto" onclick="hbSelectOption('hb-asset','crypto',this,event)">Crypto</button>
+                                    <button type="button" class="hb-btn" data-value="gold" onclick="hbSelectOption('hb-asset','gold',this,event)">Gold</button>
+                                </div>
+                                <select id="hb-quarter" onchange="renderHoldingsBreakdown()" style="display:none">
                                     <option value="Beg">Beg</option>
                                     <option value="Q1">Q1</option>
                                     <option value="Q2">Q2</option>
                                     <option value="Q3">Q3</option>
                                     <option value="Q4">Q4</option>
                                 </select>
+                                <div id="hb-quarter-buttons" class="hb-btn-grid hb-btn-grid-period">
+                                    <button type="button" class="hb-btn" data-value="Beg" onclick="hbSelectOption('hb-quarter','Beg',this,event)">Beg</button>
+                                    <button type="button" class="hb-btn" data-value="Q1" onclick="hbSelectOption('hb-quarter','Q1',this,event)">Q1</button>
+                                    <button type="button" class="hb-btn" data-value="Q2" onclick="hbSelectOption('hb-quarter','Q2',this,event)">Q2</button>
+                                    <button type="button" class="hb-btn" data-value="Q3" onclick="hbSelectOption('hb-quarter','Q3',this,event)">Q3</button>
+                                    <button type="button" class="hb-btn" data-value="Q4" onclick="hbSelectOption('hb-quarter','Q4',this,event)">Q4</button>
+                                </div>
                                 <button id="toggle-holdings-panel" onclick="toggleHoldingsPanel(event)" title="Collapse holdings breakdown" class="bg-slate-800 border-none text-[10px] text-slate-300 rounded px-2 py-1 hover:text-white hover:bg-slate-700 transition-colors"><i class="fa-solid fa-chevron-up"></i></button>
                             </div>
                         </div>
@@ -6998,6 +7047,32 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     function initHoldingsBreakdownDefaultPeriod() {
         const quarterEl = document.getElementById('hb-quarter');
         if (quarterEl) quarterEl.value = getLatestClosedPeriod();
+        hbSyncButtonGroup('hb-asset-buttons', document.getElementById('hb-asset')?.value);
+        hbSyncButtonGroup('hb-quarter-buttons', quarterEl?.value);
+    }
+
+    function hbSyncButtonGroup(groupId, value) {
+        const group = document.getElementById(groupId);
+        if (!group) return;
+        group.querySelectorAll('.hb-btn').forEach(btn => {
+            btn.classList.toggle('is-active', btn.dataset.value === value);
+        });
+    }
+
+    function hbSelectOption(selectId, value, btnEl, event) {
+        if (event) event.stopPropagation();
+        const selectEl = document.getElementById(selectId);
+        if (selectEl) {
+            selectEl.value = value;
+            if (selectId === 'hb-asset' || selectId === 'hb-quarter') {
+                hbThemeFilter = new Set();
+                hbSegmentDrill = null;
+            }
+            selectEl.dispatchEvent(new Event('change'));
+        }
+        if (btnEl && btnEl.parentElement) {
+            hbSyncButtonGroup(btnEl.parentElement.id, value);
+        }
     }
 
     function applyHoldingsPanelState() {
@@ -7033,6 +7108,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     // ── Holdings Breakdown view state ───────────────────
     let hbView = 'ticker';
     let hbSegmentDrill = null;
+    let hbThemeFilter = new Set();
 
     function hbSetView(view, event) {
         if (event) event.stopPropagation();
@@ -7104,12 +7180,25 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         if (!ctx2) return;
         if (hbChartInst) hbChartInst.destroy();
         if (amounts.some(v => v > 0)) {
+            const total = amounts.reduce((s,v) => s + Math.max(v,0), 0);
             hbChartInst = new Chart(ctx2.getContext('2d'), {
                 type: 'doughnut',
                 data: { labels, datasets: [{ data: amounts, backgroundColor: colors, borderWidth: 0, hoverOffset: 6 }] },
                 options: { responsive: true, maintainAspectRatio: false, cutout: '65%',
                     onClick: (e, els) => { if (els.length && labels[els[0].index] !== 'Untracked') openDrillDown(asset, quarter); },
-                    plugins: { legend: { display: false }, datalabels: { display: false },
+                    plugins: { legend: { display: false },
+                        datalabels: {
+                            color: '#fff',
+                            textStrokeColor: 'rgba(15,23,42,.5)',
+                            textStrokeWidth: 2,
+                            font: { weight: '700', size: 11 },
+                            clamp: true,
+                            formatter: (v, c) => {
+                                if (labels[c.dataIndex] === 'Untracked' || total <= 0) return '';
+                                const pct = v / total * 100;
+                                return pct >= 9 ? `${pct.toFixed(0)}%` : '';
+                            }
+                        },
                         tooltip: { callbacks: { label: (c) => ` ${c.label}: ฿${c.raw.toLocaleString('en-US',{maximumFractionDigits:0})} (${assetBal>0?(c.raw/assetBal*100).toFixed(1):0}%)` } } } }
             });
         }
@@ -7227,21 +7316,75 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         });
         const segments  = Array.from(segMap.values()).sort((a,b)=>b.amount-a.amount);
         const untracked = Math.max(0, assetBal - mergedRows.reduce((s,r)=>s+r.amount,0));
+
+        // Prune stale filter entries (themes that no longer exist for this asset/period)
+        const validThemeNames = new Set(segments.map(s=>s.theme).concat(untracked>1?['Untracked']:[]));
+        Array.from(hbThemeFilter).forEach(t => { if (!validThemeNames.has(t)) hbThemeFilter.delete(t); });
+
+        const filterActive   = hbThemeFilter.size > 0;
+        const visSegments    = filterActive ? segments.filter(s => hbThemeFilter.has(s.theme)) : segments;
+        const showUntracked  = untracked > 1 && (!filterActive || hbThemeFilter.has('Untracked'));
+
         const segColors = segments.map((_,i) => {
             const hue = (i*53 + (asset==='stocks'?200:asset==='bonds'?38:asset==='crypto'?220:48)) % 360;
             return `hsl(${hue},60%,52%)`;
         });
+        const colorByTheme = new Map(segments.map((s,i) => [s.theme, segColors[i]]));
+
         hbDrawDonut(
-            [...segments.map(s=>s.theme), ...(untracked>1?['Untracked']:[])],
-            [...segments.map(s=>s.amount),  ...(untracked>1?[untracked]:[])],
-            [...segColors,                  ...(untracked>1?['#334155']:[])],
+            [...visSegments.map(s=>s.theme), ...(showUntracked?['Untracked']:[])],
+            [...visSegments.map(s=>s.amount), ...(showUntracked?[untracked]:[])],
+            [...visSegments.map(s=>colorByTheme.get(s.theme)), ...(showUntracked?['#334155']:[])],
             assetBal, asset, quarter
         );
 
+        // ── Slicer: filter by theme (multi-select, like an Excel pivot slicer) ──
+        if (segments.length > 1 || (segments.length >= 1 && untracked > 1)) {
+            const slicerWrap = document.createElement('div');
+            slicerWrap.style.cssText = 'grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding-bottom:10px;margin-bottom:6px;border-bottom:1px solid #1E293B';
+
+            const slicerLabel = document.createElement('span');
+            slicerLabel.style.cssText = 'font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-right:2px';
+            slicerLabel.textContent = 'Filter theme:';
+            slicerWrap.appendChild(slicerLabel);
+
+            const makeChip = (theme, chipColor) => {
+                const active = hbThemeFilter.has(theme);
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.style.cssText = `display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:4px 9px;border-radius:999px;cursor:pointer;transition:background .15s,border-color .15s;background:${active?'#1E293B':'#0F172A'};border:1px solid ${active?chipColor:'#334155'};color:${active?'#F8FAFC':'#94A3B8'}`;
+                chip.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:${chipColor};flex-shrink:0"></span>${theme}`;
+                chip.onclick = (e) => {
+                    e.stopPropagation();
+                    if (hbThemeFilter.has(theme)) hbThemeFilter.delete(theme); else hbThemeFilter.add(theme);
+                    renderHoldingsBreakdown();
+                };
+                return chip;
+            };
+
+            segments.forEach(s => slicerWrap.appendChild(makeChip(s.theme, colorByTheme.get(s.theme))));
+            if (untracked > 1) slicerWrap.appendChild(makeChip('Untracked', '#334155'));
+
+            if (filterActive) {
+                const clearBtn = document.createElement('button');
+                clearBtn.type = 'button';
+                clearBtn.style.cssText = 'font-size:10px;color:#94A3B8;background:transparent;border:none;cursor:pointer;text-decoration:underline;padding:4px 2px';
+                clearBtn.textContent = 'Clear';
+                clearBtn.onclick = (e) => { e.stopPropagation(); hbThemeFilter = new Set(); renderHoldingsBreakdown(); };
+                slicerWrap.appendChild(clearBtn);
+            }
+            listEl.appendChild(slicerWrap);
+        }
+
         if (segments.length === 0 && assetBal === 0) {
             listEl.innerHTML = `<div style="color:#475569;font-size:11px;text-align:center;padding:16px">No theme data.<br>Add a Theme column after Ticker in Settings_data sheet.</div>`;
+        } else if (visSegments.length === 0 && !showUntracked) {
+            const emptyEl = document.createElement('div');
+            emptyEl.style.cssText = 'grid-column:1 / -1;color:#475569;font-size:11px;text-align:center;padding:16px';
+            emptyEl.textContent = 'No themes match the current filter.';
+            listEl.appendChild(emptyEl);
         } else {
-            segments.forEach((s, i) => {
+            visSegments.forEach((s) => {
                 const pct   = assetBal > 0 ? (s.amount/assetBal*100) : 0;
                 const label = s.count === 1 ? '1 ticker' : `${s.count} tickers`;
                 const el    = document.createElement('div');
@@ -7250,7 +7393,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                 el.onmouseleave = () => el.style.background = '#0F172A';
                 el.onclick = () => { hbSegmentDrill = s.theme; renderHoldingsBreakdown(); };
                 el.innerHTML = `
-                    <div style="width:8px;height:8px;border-radius:50%;background:${segColors[i]};flex-shrink:0"></div>
+                    <div style="width:8px;height:8px;border-radius:50%;background:${colorByTheme.get(s.theme)};flex-shrink:0"></div>
                     <div style="flex:1;min-width:0">
                         <div style="font-size:11px;color:#F8FAFC;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.theme}</div>
                         <div style="font-size:9px;color:#64748b">${label}</div>
@@ -7262,7 +7405,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                     <div style="font-size:9px;color:#64748b">▸</div>`;
                 listEl.appendChild(el);
             });
-            if (untracked > 1) {
+            if (showUntracked) {
                 const utPct = assetBal > 0 ? (untracked/assetBal*100) : 0;
                 const el    = document.createElement('div');
                 el.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;background:rgba(71,85,105,.08);border:1px dashed #334155;opacity:.8';
@@ -7274,8 +7417,9 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                 listEl.appendChild(el);
             }
         }
-        if (hintEl)  hintEl.textContent  = 'Tap theme to see tickers';
-        if (totalEl) totalEl.textContent = balancesHidden ? '฿ ••••••' : `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+        const filteredTotal = visSegments.reduce((s,x)=>s+x.amount,0) + (showUntracked?untracked:0);
+        if (hintEl)  hintEl.textContent  = filterActive ? `${hbThemeFilter.size} theme${hbThemeFilter.size>1?'s':''} selected — tap theme to see tickers` : 'Tap theme to see tickers';
+        if (totalEl) totalEl.textContent = balancesHidden ? '฿ ••••••' : (filterActive ? `Filtered: ฿${filteredTotal.toLocaleString('en-US',{maximumFractionDigits:0})}` : `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`);
     }
 
     // Re-render breakdown after drill-down closes
