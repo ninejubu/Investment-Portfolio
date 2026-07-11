@@ -166,23 +166,25 @@
         }
         .hb-body-layout {
             display: flex;
-            gap: 28px;
-            align-items: flex-start;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
         }
         .hb-chart-col {
-            flex: 0 0 220px;
+            flex: none;
             position: relative;
+            width: 220px;
             height: 220px;
         }
         .hb-list-col {
-            flex: 1;
+            width: 100%;
             min-width: 0;
             display: flex;
             flex-direction: column;
         }
         .hb-list-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 8px 12px;
             align-content: start;
             overflow-y: auto;
@@ -203,12 +205,8 @@
             .dashboard-top-row {
                 grid-template-columns: 1fr;
             }
-            .hb-body-layout {
-                flex-direction: column;
-            }
             .hb-chart-col {
-                flex: none;
-                width: 100%;
+                width: 180px;
                 height: 180px;
             }
             .hb-list-grid {
