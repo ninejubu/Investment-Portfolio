@@ -180,6 +180,18 @@
             display: flex;
             flex-direction: column;
         }
+        .hb-list-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 8px 12px;
+            align-content: start;
+            overflow-y: auto;
+            max-height: 480px;
+            padding-right: 4px;
+        }
+        .hb-list-grid > div {
+            min-width: 0;
+        }
         @media (max-width: 1280px) {
             .holdings-panel-controls {
                 width: 100%;
@@ -198,6 +210,10 @@
                 flex: none;
                 width: 100%;
                 height: 180px;
+            }
+            .hb-list-grid {
+                grid-template-columns: 1fr;
+                max-height: 360px;
             }
         }
 
@@ -1380,16 +1396,6 @@
                 </div>
 
                 <div id="dashboard-lower-row" class="dashboard-lower-row">
-                    <div class="bg-card rounded-xl p-6 border border-slate-700 quarterly-panel">
-                        <h4 class="text-white font-bold mb-4">Quarterly Performance</h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left quarterly-table">
-                                <thead class="text-[10px] uppercase text-slate-500 border-b border-slate-800"><tr><th class="pb-3 w-9"></th><th class="pb-3 w-36">Quarter / Category</th><th class="pb-3 w-32">Balance</th><th class="pb-3 w-32">Net Flow</th><th class="pb-3 w-32">EBalance</th><th class="pb-3 w-32">Profit/Loss</th><th class="pb-3 text-right w-24">Growth %</th></tr></thead>
-                                <tbody id="quarterly-tbody" class="text-[11px]"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
                     <!-- Holdings Breakdown -->
                     <div id="panel-holdings" class="bg-card rounded-xl border border-slate-700 flex flex-col" onclick="expandHoldingsPanel()" style="min-width:0;padding:20px;overflow:hidden;box-sizing:border-box">
                         <div class="flex items-center justify-between mb-4 holdings-panel-header" onclick="expandHoldingsPanel()">
@@ -1420,12 +1426,22 @@
                             <div class="hb-chart-col"><canvas id="hbChart"></canvas></div>
                             <!-- Holdings list -->
                             <div class="hb-list-col">
-                                <div id="hb-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;max-height:340px"></div>
+                                <div id="hb-list" class="hb-list-grid"></div>
                                 <div style="margin-top:10px;padding-top:8px;border-top:1px solid #1E293B;display:flex;justify-content:space-between;font-size:10px;color:#64748b">
                                     <span id="hb-hint">Click row to edit</span>
                                     <span id="hb-total" style="color:#F8FAFC;font-weight:600"></span>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-card rounded-xl p-6 border border-slate-700 quarterly-panel">
+                        <h4 class="text-white font-bold mb-4">Quarterly Performance</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left quarterly-table">
+                                <thead class="text-[10px] uppercase text-slate-500 border-b border-slate-800"><tr><th class="pb-3 w-9"></th><th class="pb-3 w-36">Quarter / Category</th><th class="pb-3 w-32">Balance</th><th class="pb-3 w-32">Net Flow</th><th class="pb-3 w-32">EBalance</th><th class="pb-3 w-32">Profit/Loss</th><th class="pb-3 text-right w-24">Growth %</th></tr></thead>
+                                <tbody id="quarterly-tbody" class="text-[11px]"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -7180,7 +7196,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             hbDrawDonut(inSeg.map(r=>r.name), inSeg.map(r=>r.amount), colors, segTotal, asset, quarter);
 
             const backEl = document.createElement('div');
-            backEl.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 0 8px;cursor:pointer';
+            backEl.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 0 8px;cursor:pointer;grid-column:1 / -1';
             backEl.innerHTML = `<span style="font-size:11px;color:#64748b">←</span><span style="font-size:11px;color:#94A3B8">Back</span><span style="font-size:11px;color:#F8FAFC;font-weight:600;margin-left:4px">${hbSegmentDrill}</span>`;
             backEl.onclick = () => { hbSegmentDrill = null; renderHoldingsBreakdown(); };
             listEl.appendChild(backEl);
