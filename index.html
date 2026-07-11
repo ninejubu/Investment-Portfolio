@@ -7145,11 +7145,11 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                 mainRow.onmouseleave = () => { mainRow.style.background = 'transparent'; };
                 mainRow.innerHTML = `
                     <div style="width:8px;height:8px;border-radius:50%;background:${r._color};flex-shrink:0"></div>
-                    <div style="flex:1;font-size:11px;color:${isUT?'#475569':'#F8FAFC'};font-style:${isUT?'italic':'normal'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
-                    ${r.theme ? `<div style="font-size:9px;color:#64748b;background:#1E293B;padding:1px 5px;border-radius:3px;white-space:nowrap">${r.theme}</div>` : ''}
-                    <div style="font-size:11px;font-weight:600;color:${isUT?'#475569':color};white-space:nowrap">${pct.toFixed(1)}%</div>
-                    <div style="font-size:10px;color:#64748b;white-space:nowrap">฿${(r.amount||0).toLocaleString('en-US',{maximumFractionDigits:0})}</div>
-                    <div style="font-size:9px;color:#64748b;width:9px">${multi?'▸':''}</div>`;
+                    <div style="flex:1;min-width:0;font-size:11px;color:${isUT?'#475569':'#F8FAFC'};font-style:${isUT?'italic':'normal'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
+                    <div style="width:64px;flex-shrink:0;display:flex;justify-content:center">${r.theme ? `<span style="font-size:9px;color:#64748b;background:#1E293B;padding:1px 5px;border-radius:3px;white-space:nowrap">${r.theme}</span>` : ''}</div>
+                    <div style="width:44px;flex-shrink:0;text-align:center;font-size:11px;font-weight:600;color:${isUT?'#475569':color};white-space:nowrap">${pct.toFixed(1)}%</div>
+                    <div style="width:76px;flex-shrink:0;text-align:right;font-size:10px;color:#64748b;white-space:nowrap">฿${(r.amount||0).toLocaleString('en-US',{maximumFractionDigits:0})}</div>
+                    <div style="font-size:9px;color:#64748b;width:9px;flex-shrink:0">${multi?'▸':''}</div>`;
                 el.appendChild(mainRow);
 
                 if (multi) {
@@ -7160,9 +7160,9 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                         const sub    = document.createElement('div');
                         sub.style.cssText = 'display:flex;align-items:center;gap:8px;padding:3px 0;border-top:1px solid #1E293B';
                         sub.innerHTML = `
-                            <div style="flex:1;font-size:10px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.platform||'—'}</div>
-                            <div style="font-size:10px;color:#64748b">${subPct.toFixed(1)}%</div>
-                            <div style="font-size:10px;color:#64748b">฿${p.amount.toLocaleString('en-US',{maximumFractionDigits:0})}</div>`;
+                            <div style="flex:1;min-width:0;font-size:10px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.platform||'—'}</div>
+                            <div style="width:44px;flex-shrink:0;text-align:center;font-size:10px;color:#64748b">${subPct.toFixed(1)}%</div>
+                            <div style="width:76px;flex-shrink:0;text-align:right;font-size:10px;color:#64748b">฿${p.amount.toLocaleString('en-US',{maximumFractionDigits:0})}</div>`;
                         subList.appendChild(sub);
                     });
                     el.appendChild(subList);
@@ -7210,9 +7210,9 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                 el.onclick = () => openDrillDown(asset, quarter);
                 el.innerHTML = `
                     <div style="width:8px;height:8px;border-radius:50%;background:${colors[i]};flex-shrink:0"></div>
-                    <div style="flex:1;font-size:11px;color:#F8FAFC;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
-                    <div style="font-size:11px;font-weight:600;color:${color}">${pct.toFixed(1)}%</div>
-                    <div style="font-size:10px;color:#64748b">฿${r.amount.toLocaleString('en-US',{maximumFractionDigits:0})}</div>`;
+                    <div style="flex:1;min-width:0;font-size:11px;color:#F8FAFC;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
+                    <div style="width:44px;flex-shrink:0;text-align:center;font-size:11px;font-weight:600;color:${color}">${pct.toFixed(1)}%</div>
+                    <div style="width:76px;flex-shrink:0;text-align:right;font-size:10px;color:#64748b">฿${r.amount.toLocaleString('en-US',{maximumFractionDigits:0})}</div>`;
                 listEl.appendChild(el);
             });
             if (hintEl)  hintEl.textContent  = hbSegmentDrill;
