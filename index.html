@@ -2115,23 +2115,61 @@
                     <div class="wheel-card" id="wCallCalcCard">
                         <div class="wheel-card-title">
                             <span class="ctl">Short Call — Weighted Average Strike Calculator</span>
-                            <button class="w-btn w-btn-sm" onclick="wCalcCallReset()" title="Clear all rows">↺ Reset</button>
+                            <div style="display:flex;gap:6px;align-items:center">
+                                <div style="display:flex;border:1px solid #334155;border-radius:6px;overflow:hidden">
+                                    <button id="wccModeForward" onclick="wCallCalcSetMode('forward')"
+                                        style="font-size:10px;font-weight:600;padding:4px 10px;cursor:pointer;border:none;background:#1E293B;color:#F8FAFC;transition:background .15s">
+                                        ⇒ Forward</button>
+                                    <button id="wccModeReverse" onclick="wCallCalcSetMode('reverse')"
+                                        style="font-size:10px;font-weight:600;padding:4px 10px;cursor:pointer;border:none;border-left:1px solid #334155;background:transparent;color:#94A3B8;transition:background .15s">
+                                        ⇐ Reverse</button>
+                                </div>
+                                <button class="w-btn w-btn-sm" onclick="wCalcCallReset()" title="Clear all rows">↺ Reset</button>
+                            </div>
                         </div>
                         <div style="padding:16px 20px;display:flex;flex-direction:column;gap:14px">
-                            <!-- Description -->
-                            <p style="font-size:11px;color:#64748b;margin:0">Select lots and optionally override amounts to calculate the weighted-average strike needed for a combined Short Call order.</p>
 
-                            <!-- Lot selector grid -->
-                            <div id="wCallCalcLots" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px"></div>
+                            <!-- ── FORWARD MODE ── -->
+                            <div id="wccForwardPanel">
+                                <p style="font-size:11px;color:#64748b;margin:0 0 14px">Select lots and optionally override amounts to calculate the weighted-average strike of a combined Short Call order.</p>
+                                <div id="wCallCalcLots" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px"></div>
+                                <div id="wCallCalcManual" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
+                                <button onclick="wCalcCallAddRow()" class="w-btn w-btn-sm" style="align-self:flex-start;margin-top:8px"><i class="fa-solid fa-plus" style="font-size:9px"></i> Add manual leg</button>
+                            </div>
 
-                            <!-- Manual rows (extra legs not tied to lots) -->
-                            <div id="wCallCalcManual" style="display:flex;flex-direction:column;gap:6px"></div>
-                            <button onclick="wCalcCallAddRow()" class="w-btn w-btn-sm" style="align-self:flex-start"><i class="fa-solid fa-plus" style="font-size:9px"></i> Add manual leg</button>
+                            <!-- ── REVERSE MODE ── -->
+                            <div id="wccReversePanel" style="display:none">
+                                <p style="font-size:11px;color:#64748b;margin:0 0 14px">
+                                    Set a <strong style="color:#F8FAFC">target WA strike</strong>. Add known legs (lots or manual). The calculator will solve for the <strong style="color:#C4B5FD">required strike</strong> of the remaining leg.
+                                </p>
 
-                            <!-- Result panel -->
+                                <!-- Target WA + remaining amount row -->
+                                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+                                    <div>
+                                        <div class="wcc-input-label">Target WA Strike ($)</div>
+                                        <input id="wccTargetWA" class="wcc-input" type="text" inputmode="decimal" placeholder="e.g. 85,000" oninput="wCallCalcRecalc()">
+                                    </div>
+                                    <div>
+                                        <div class="wcc-input-label">Remaining leg amount (BTC)</div>
+                                        <input id="wccRemainAmt" class="wcc-input" type="text" inputmode="decimal" placeholder="e.g. 0.0632" oninput="wCallCalcRecalc()">
+                                    </div>
+                                    <div style="display:flex;align-items:flex-end">
+                                        <div id="wccSolvedStrike" style="background:#1E293B;border:1px solid #334155;border-radius:5px;padding:6px 10px;font-size:13px;font-weight:700;color:#C4B5FD;width:100%;text-align:center">
+                                            Required Strike: —
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Known legs (from lots) -->
+                                <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Known legs</div>
+                                <div id="wCallCalcRevLots" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px"></div>
+                                <div id="wCallCalcRevManual" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
+                                <button onclick="wCalcCallAddRevRow()" class="w-btn w-btn-sm" style="align-self:flex-start;margin-top:8px"><i class="fa-solid fa-plus" style="font-size:9px"></i> Add known leg</button>
+                            </div>
+
+                            <!-- Result panel (shared) -->
                             <div id="wCallCalcResult" style="background:#0F172A;border:1px solid #1E293B;border-radius:10px;padding:16px;display:none">
                                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px" id="wCallCalcResultGrid"></div>
-                                <!-- Breakdown table -->
                                 <div style="margin-top:14px;overflow-x:auto">
                                     <table style="width:100%;font-size:11px;border-collapse:collapse">
                                         <thead><tr style="color:#475569;text-transform:uppercase;font-size:9px;letter-spacing:.06em">
@@ -2145,8 +2183,7 @@
                                     </table>
                                 </div>
                             </div>
-
-                            <div id="wCallCalcEmpty" style="font-size:11px;color:#475569;text-align:center;padding:12px">Select at least one lot or add a manual leg to calculate.</div>
+                            <div id="wCallCalcEmpty" style="font-size:11px;color:#475569;text-align:center;padding:12px">Select at least one leg to calculate.</div>
                         </div>
                     </div>
 
@@ -6523,50 +6560,100 @@
     }
 
     // ── Short Call WA Calculator ─────────────────────────
-    let wCallCalcManualRows = [];
-    let wCallCalcManualId = 0;
+    let wCallCalcManualRows   = [];
+    let wCallCalcRevManualRows = [];
+    let wCallCalcManualId     = 0;
+    let wCallCalcMode         = 'forward'; // 'forward' | 'reverse'
+
+    function wCallCalcSetMode(mode) {
+        wCallCalcMode = mode;
+        const fwd = document.getElementById('wccForwardPanel');
+        const rev = document.getElementById('wccReversePanel');
+        const bF  = document.getElementById('wccModeForward');
+        const bR  = document.getElementById('wccModeReverse');
+        if (fwd) fwd.style.display = mode === 'forward' ? '' : 'none';
+        if (rev) rev.style.display = mode === 'reverse' ? '' : 'none';
+        if (bF) { bF.style.background = mode==='forward'?'#1E293B':'transparent'; bF.style.color = mode==='forward'?'#F8FAFC':'#94A3B8'; }
+        if (bR) { bR.style.background = mode==='reverse'?'#1E293B':'transparent'; bR.style.color = mode==='reverse'?'#F8FAFC':'#94A3B8'; }
+        wCallCalcRecalc();
+    }
 
     function wRenderCallCalc() {
+        // ── Forward mode lot cards ──
         const lotsEl = document.getElementById('wCallCalcLots');
-        if (!lotsEl) return;
-        // Rebuild lot cards preserving checked/amount/strike state
-        const existingState = {};
-        lotsEl.querySelectorAll('.wcc-lot-card').forEach(card => {
-            const tag = card.dataset.tag;
-            const chk = card.querySelector('input[type=checkbox]');
-            const amtEl = card.querySelector('.wcc-amt');
-            const stEl  = card.querySelector('.wcc-strike');
-            existingState[tag] = {
-                checked: chk?.checked || false,
-                amount: amtEl?.value || '',
-                strike: stEl?.value  || ''
-            };
-        });
-        lotsEl.innerHTML = '';
-        wLots.forEach(lot => {
-            const tag = wLotTag(lot);
-            const prev = existingState[tag] || {};
-            const defAmount = wpn(lot.amount).toFixed(4);
-            const defStrike = wpn(lot.target) > 0 ? wpn(lot.target).toLocaleString('en-US') : '';
-            const card = document.createElement('div');
-            card.className = 'wcc-lot-card' + (prev.checked ? ' selected' : '');
-            card.dataset.tag = tag;
-            card.innerHTML = `
-                <input type="checkbox" ${prev.checked ? 'checked' : ''} style="margin-top:2px;accent-color:#9B5CF6;cursor:pointer" onchange="wCallCalcToggle(this)">
-                <label>
-                    <span class="wcc-lot-name">${satEsc(lot.name)}${tag ? ` <span class="wheel-tag">${satEsc(tag)}</span>` : ''}</span>
-                    <span class="wcc-lot-meta">Buy: ${wpn(lot.price)>0?wusd(wpn(lot.price),2):'—'} · Default: ${defAmount} BTC · Strike: ${defStrike||'—'}</span>
-                    <div class="wcc-lot-inputs" style="display:${prev.checked?'flex':'none'}">
-                        <div style="flex:1"><div class="wcc-input-label">Amount (BTC)</div>
-                            <input class="wcc-input wcc-amt" type="text" inputmode="decimal" placeholder="${defAmount}" value="${prev.amount||defAmount}" onchange="wCallCalcRecalc()"></div>
-                        <div style="flex:1"><div class="wcc-input-label">Strike ($)</div>
-                            <input class="wcc-input wcc-strike" type="text" inputmode="decimal" placeholder="${defStrike||'target strike'}" value="${prev.strike||defStrike}" onchange="wCallCalcRecalc()"></div>
-                    </div>
-                </label>`;
-            lotsEl.appendChild(card);
-        });
+        if (lotsEl) {
+            const existingState = {};
+            lotsEl.querySelectorAll('.wcc-lot-card').forEach(card => {
+                const tag = card.dataset.tag;
+                existingState[tag] = {
+                    checked: card.querySelector('input[type=checkbox]')?.checked || false,
+                    amount:  card.querySelector('.wcc-amt')?.value    || '',
+                    strike:  card.querySelector('.wcc-strike')?.value || ''
+                };
+            });
+            lotsEl.innerHTML = '';
+            wLots.forEach(lot => {
+                const tag  = wLotTag(lot);
+                const prev = existingState[tag] || {};
+                const defAmount = wpn(lot.amount).toFixed(4);
+                const defStrike = wpn(lot.target) > 0 ? wpn(lot.target).toLocaleString('en-US') : '';
+                const card = document.createElement('div');
+                card.className = 'wcc-lot-card' + (prev.checked ? ' selected' : '');
+                card.dataset.tag = tag;
+                card.innerHTML = `
+                    <input type="checkbox" ${prev.checked?'checked':''} style="margin-top:2px;accent-color:#9B5CF6;cursor:pointer" onchange="wCallCalcToggle(this)">
+                    <label style="cursor:pointer">
+                        <span class="wcc-lot-name">${satEsc(lot.name)}${tag?` <span class="wheel-tag">${satEsc(tag)}</span>`:''}</span>
+                        <span class="wcc-lot-meta">Buy: ${wpn(lot.price)>0?wusd(wpn(lot.price),2):'—'} · ${defAmount} BTC · Strike: ${defStrike||'—'}</span>
+                        <div class="wcc-lot-inputs" style="display:${prev.checked?'flex':'none'}">
+                            <div style="flex:1"><div class="wcc-input-label">Amount (BTC)</div>
+                                <input class="wcc-input wcc-amt" type="text" inputmode="decimal" placeholder="${defAmount}" value="${prev.amount||defAmount}" oninput="wCallCalcRecalc()"></div>
+                            <div style="flex:1"><div class="wcc-input-label">Strike ($)</div>
+                                <input class="wcc-input wcc-strike" type="text" inputmode="decimal" placeholder="${defStrike||'target strike'}" value="${prev.strike||defStrike}" oninput="wCallCalcRecalc()"></div>
+                        </div>
+                    </label>`;
+                lotsEl.appendChild(card);
+            });
+        }
 
-        // Render manual rows
+        // ── Reverse mode lot cards ──
+        const revLotsEl = document.getElementById('wCallCalcRevLots');
+        if (revLotsEl) {
+            const existingRevState = {};
+            revLotsEl.querySelectorAll('.wcc-lot-card').forEach(card => {
+                const tag = card.dataset.tag;
+                existingRevState[tag] = {
+                    checked: card.querySelector('input[type=checkbox]')?.checked || false,
+                    amount:  card.querySelector('.wcc-amt')?.value    || '',
+                    strike:  card.querySelector('.wcc-strike')?.value || ''
+                };
+            });
+            revLotsEl.innerHTML = '';
+            wLots.forEach(lot => {
+                const tag  = wLotTag(lot);
+                const prev = existingRevState[tag] || {};
+                const defAmount = wpn(lot.amount).toFixed(4);
+                const defStrike = wpn(lot.target) > 0 ? wpn(lot.target).toLocaleString('en-US') : '';
+                const card = document.createElement('div');
+                card.className = 'wcc-lot-card' + (prev.checked ? ' selected' : '');
+                card.dataset.tag = tag;
+                card.innerHTML = `
+                    <input type="checkbox" ${prev.checked?'checked':''} style="margin-top:2px;accent-color:#9B5CF6;cursor:pointer" onchange="wCallCalcRevToggle(this)">
+                    <label style="cursor:pointer">
+                        <span class="wcc-lot-name">${satEsc(lot.name)}${tag?` <span class="wheel-tag">${satEsc(tag)}</span>`:''}</span>
+                        <span class="wcc-lot-meta">Buy: ${wpn(lot.price)>0?wusd(wpn(lot.price),2):'—'} · ${defAmount} BTC · Strike: ${defStrike||'—'}</span>
+                        <div class="wcc-lot-inputs" style="display:${prev.checked?'flex':'none'}">
+                            <div style="flex:1"><div class="wcc-input-label">Amount (BTC)</div>
+                                <input class="wcc-input wcc-amt" type="text" inputmode="decimal" placeholder="${defAmount}" value="${prev.amount||defAmount}" oninput="wCallCalcRecalc()"></div>
+                            <div style="flex:1"><div class="wcc-input-label">Strike ($)</div>
+                                <input class="wcc-input wcc-strike" type="text" inputmode="decimal" placeholder="${defStrike||'known strike'}" value="${prev.strike||defStrike}" oninput="wCallCalcRecalc()"></div>
+                        </div>
+                    </label>`;
+                revLotsEl.appendChild(card);
+            });
+        }
+
+        // Forward manual rows
         const manualEl = document.getElementById('wCallCalcManual');
         if (manualEl) {
             manualEl.innerHTML = '';
@@ -6575,131 +6662,260 @@
                 div.className = 'wcc-manual-row';
                 div.innerHTML = `
                     <div style="flex:1"><div class="wcc-input-label">Label</div>
-                        <input class="wcc-input" type="text" placeholder="Custom leg" value="${satEsc(row.label||'')}" onchange="wCallCalcUpdateManual(${row.id},'label',this.value)"></div>
+                        <input class="wcc-input" type="text" placeholder="Custom leg" value="${satEsc(row.label||'')}" oninput="wCallCalcUpdateManual(${row.id},'label',this.value)"></div>
                     <div style="flex:1"><div class="wcc-input-label">Amount (BTC)</div>
-                        <input class="wcc-input" type="text" inputmode="decimal" placeholder="0.0500" value="${row.amount||''}" onchange="wCallCalcUpdateManual(${row.id},'amount',this.value);wCallCalcRecalc()"></div>
+                        <input class="wcc-input" type="text" inputmode="decimal" placeholder="0.0500" value="${row.amount||''}" oninput="wCallCalcUpdateManual(${row.id},'amount',this.value);wCallCalcRecalc()"></div>
                     <div style="flex:1"><div class="wcc-input-label">Strike ($)</div>
-                        <input class="wcc-input" type="text" inputmode="decimal" placeholder="95000" value="${row.strike||''}" onchange="wCallCalcUpdateManual(${row.id},'strike',this.value);wCallCalcRecalc()"></div>
+                        <input class="wcc-input" type="text" inputmode="decimal" placeholder="95000" value="${row.strike||''}" oninput="wCallCalcUpdateManual(${row.id},'strike',this.value);wCallCalcRecalc()"></div>
                     <button onclick="wCallCalcRemoveManual(${row.id})" class="w-btn-icon w-btn-danger" style="margin-top:14px" title="Remove">✕</button>`;
                 manualEl.appendChild(div);
             });
         }
+
+        // Reverse manual rows
+        const revManualEl = document.getElementById('wCallCalcRevManual');
+        if (revManualEl) {
+            revManualEl.innerHTML = '';
+            wCallCalcRevManualRows.forEach(row => {
+                const div = document.createElement('div');
+                div.className = 'wcc-manual-row';
+                div.innerHTML = `
+                    <div style="flex:1"><div class="wcc-input-label">Label</div>
+                        <input class="wcc-input" type="text" placeholder="Known leg" value="${satEsc(row.label||'')}" oninput="wCallCalcUpdateRevManual(${row.id},'label',this.value)"></div>
+                    <div style="flex:1"><div class="wcc-input-label">Amount (BTC)</div>
+                        <input class="wcc-input" type="text" inputmode="decimal" placeholder="0.0300" value="${row.amount||''}" oninput="wCallCalcUpdateRevManual(${row.id},'amount',this.value);wCallCalcRecalc()"></div>
+                    <div style="flex:1"><div class="wcc-input-label">Strike ($)</div>
+                        <input class="wcc-input" type="text" inputmode="decimal" placeholder="93000" value="${row.strike||''}" oninput="wCallCalcUpdateRevManual(${row.id},'strike',this.value);wCallCalcRecalc()"></div>
+                    <button onclick="wCallCalcRemoveRevManual(${row.id})" class="w-btn-icon w-btn-danger" style="margin-top:14px" title="Remove">✕</button>`;
+                revManualEl.appendChild(div);
+            });
+        }
+
         wCallCalcRecalc();
     }
 
     function wCallCalcToggle(chk) {
         const card = chk.closest('.wcc-lot-card');
-        const inputs = card.querySelector('.wcc-lot-inputs');
-        card.classList.toggle('selected', chk.checked);
+        card?.classList.toggle('selected', chk.checked);
+        const inputs = card?.querySelector('.wcc-lot-inputs');
         if (inputs) inputs.style.display = chk.checked ? 'flex' : 'none';
         wCallCalcRecalc();
     }
 
-    function wCallCalcAddRow() {
-        wCallCalcManualRows.push({ id: ++wCallCalcManualId, label: '', amount: '', strike: '' });
-        wRenderCallCalc();
+    function wCallCalcRevToggle(chk) {
+        const card = chk.closest('.wcc-lot-card');
+        card?.classList.toggle('selected', chk.checked);
+        const inputs = card?.querySelector('.wcc-lot-inputs');
+        if (inputs) inputs.style.display = chk.checked ? 'flex' : 'none';
+        wCallCalcRecalc();
     }
 
-    function wCallCalcRemoveManual(id) {
-        wCallCalcManualRows = wCallCalcManualRows.filter(r => r.id !== id);
-        wRenderCallCalc();
-    }
+    function wCalcCallAddRow()    { wCallCalcManualRows.push({ id: ++wCallCalcManualId, label:'', amount:'', strike:'' }); wRenderCallCalc(); }
+    function wCalcCallAddRevRow() { wCallCalcRevManualRows.push({ id: ++wCallCalcManualId, label:'', amount:'', strike:'' }); wRenderCallCalc(); }
+
+    function wCallCalcRemoveManual(id)    { wCallCalcManualRows    = wCallCalcManualRows.filter(r=>r.id!==id);    wRenderCallCalc(); }
+    function wCallCalcRemoveRevManual(id) { wCallCalcRevManualRows = wCallCalcRevManualRows.filter(r=>r.id!==id); wRenderCallCalc(); }
 
     function wCallCalcUpdateManual(id, field, value) {
-        const row = wCallCalcManualRows.find(r => r.id === id);
-        if (row) row[field] = value;
+        const row = wCallCalcManualRows.find(r=>r.id===id); if (row) row[field]=value;
+    }
+    function wCallCalcUpdateRevManual(id, field, value) {
+        const row = wCallCalcRevManualRows.find(r=>r.id===id); if (row) row[field]=value;
     }
 
     function wCallCalcReset() {
-        wCallCalcManualRows = [];
-        wCallCalcManualId = 0;
-        const lotsEl = document.getElementById('wCallCalcLots');
-        if (lotsEl) lotsEl.querySelectorAll('input[type=checkbox]').forEach(chk => {
-            chk.checked = false;
-            const card = chk.closest('.wcc-lot-card');
-            card?.classList.remove('selected');
-            const inputs = card?.querySelector('.wcc-lot-inputs');
-            if (inputs) inputs.style.display = 'none';
+        wCallCalcManualRows    = [];
+        wCallCalcRevManualRows = [];
+        wCallCalcManualId      = 0;
+        ['wCallCalcLots','wCallCalcRevLots'].forEach(id => {
+            document.getElementById(id)?.querySelectorAll('input[type=checkbox]').forEach(chk => {
+                chk.checked = false;
+                const card = chk.closest('.wcc-lot-card');
+                card?.classList.remove('selected');
+                const inp = card?.querySelector('.wcc-lot-inputs');
+                if (inp) inp.style.display = 'none';
+            });
         });
-        const manualEl = document.getElementById('wCallCalcManual');
-        if (manualEl) manualEl.innerHTML = '';
+        const twa = document.getElementById('wccTargetWA'); if (twa) twa.value='';
+        const ramt = document.getElementById('wccRemainAmt'); if (ramt) ramt.value='';
+        const solved = document.getElementById('wccSolvedStrike'); if (solved) solved.textContent='Required Strike: —';
         wCallCalcRecalc();
     }
 
     function wCallCalcRecalc() {
-        const resultEl  = document.getElementById('wCallCalcResult');
-        const emptyEl   = document.getElementById('wCallCalcEmpty');
-        const gridEl    = document.getElementById('wCallCalcResultGrid');
-        const brkEl     = document.getElementById('wCallCalcBreakdown');
+        const resultEl = document.getElementById('wCallCalcResult');
+        const emptyEl  = document.getElementById('wCallCalcEmpty');
+        const gridEl   = document.getElementById('wCallCalcResultGrid');
+        const brkEl    = document.getElementById('wCallCalcBreakdown');
         if (!resultEl || !emptyEl || !gridEl || !brkEl) return;
 
-        // Collect legs from selected lot cards
-        const legs = [];
-        document.querySelectorAll('#wCallCalcLots .wcc-lot-card.selected').forEach(card => {
-            const amt    = wpn(card.querySelector('.wcc-amt')?.value);
-            const strike = wpn(card.querySelector('.wcc-strike')?.value);
-            const name   = card.querySelector('.wcc-lot-name')?.textContent?.trim() || 'Lot';
-            if (amt > 0 && strike > 0) legs.push({ name, amt, strike });
-        });
-        // Collect manual legs
-        wCallCalcManualRows.forEach(row => {
-            const amt    = wpn(row.amount);
-            const strike = wpn(row.strike);
-            if (amt > 0 && strike > 0) legs.push({ name: row.label || 'Manual', amt, strike });
-        });
+        if (wCallCalcMode === 'reverse') {
+            // ── Reverse: solve for remaining leg strike ──
+            const targetWA  = wpn(document.getElementById('wccTargetWA')?.value);
+            const remainAmt = wpn(document.getElementById('wccRemainAmt')?.value);
 
-        if (!legs.length) {
-            resultEl.style.display = 'none';
-            emptyEl.style.display  = 'block';
-            return;
-        }
-        emptyEl.style.display  = 'none';
-        resultEl.style.display = 'block';
+            // Collect known legs
+            const knownLegs = [];
+            document.querySelectorAll('#wCallCalcRevLots .wcc-lot-card.selected').forEach(card => {
+                const amt    = wpn(card.querySelector('.wcc-amt')?.value);
+                const strike = wpn(card.querySelector('.wcc-strike')?.value);
+                const name   = card.querySelector('.wcc-lot-name')?.textContent?.trim() || 'Lot';
+                if (amt > 0 && strike > 0) knownLegs.push({ name, amt, strike, isKnown:true });
+            });
+            wCallCalcRevManualRows.forEach(row => {
+                const amt=wpn(row.amount), strike=wpn(row.strike);
+                if (amt>0&&strike>0) knownLegs.push({ name:row.label||'Known leg', amt, strike, isKnown:true });
+            });
 
-        const totalAmt      = legs.reduce((s,l) => s + l.amt, 0);
-        const totalNotional = legs.reduce((s,l) => s + l.strike * l.amt, 0);
-        const waStrike      = totalNotional / totalAmt;
-        const gapPct        = btcPrice > 0 ? ((waStrike - btcPrice) / btcPrice * 100) : 0;
-        const gapCol        = gapPct >= 0 ? '#6EE7B7' : '#FCA5A5';
+            const solvedEl = document.getElementById('wccSolvedStrike');
 
-        gridEl.innerHTML = `
-            <div class="wcc-result-metric">
-                <span class="wcc-result-label">Wtd Avg Strike</span>
-                <span class="wcc-result-value" style="color:#C4B5FD">${wusd(waStrike)}</span>
-                <span class="wcc-result-sub">across ${legs.length} leg${legs.length>1?'s':''}</span>
-            </div>
-            <div class="wcc-result-metric">
-                <span class="wcc-result-label">Total BTC</span>
-                <span class="wcc-result-value" style="color:#F8FAFC">${totalAmt.toFixed(4)}</span>
-                <span class="wcc-result-sub">combined amount</span>
-            </div>
-            <div class="wcc-result-metric">
-                <span class="wcc-result-label">Total Notional</span>
-                <span class="wcc-result-value" style="color:#F8FAFC">${wusd(totalNotional)}</span>
-                <span class="wcc-result-sub">at weighted strike</span>
-            </div>
-            <div class="wcc-result-metric">
-                <span class="wcc-result-label">Gap vs BTC</span>
-                <span class="wcc-result-value" style="color:${gapCol}">${gapPct>=0?'+':''}${gapPct.toFixed(2)}%</span>
-                <span class="wcc-result-sub">BTC now ${btcPrice>0?wusd(btcPrice):'—'}</span>
-            </div>`;
+            if (!targetWA || !remainAmt || remainAmt <= 0) {
+                resultEl.style.display = 'none';
+                emptyEl.style.display  = 'block';
+                emptyEl.textContent    = 'Enter Target WA Strike and Remaining leg amount above.';
+                if (solvedEl) solvedEl.innerHTML = 'Required Strike: <span style="color:#475569">—</span>';
+                return;
+            }
 
-        brkEl.innerHTML = legs.map(l => {
-            const weight = (l.amt / totalAmt * 100).toFixed(1);
-            return `<tr style="border-top:1px solid #1E293B">
-                <td style="padding:5px 8px">${satEsc(l.name)}</td>
-                <td style="text-align:right;padding:5px 8px">${l.amt.toFixed(4)}</td>
-                <td style="text-align:right;padding:5px 8px;color:#C4B5FD">${wusd(l.strike)}</td>
-                <td style="text-align:right;padding:5px 8px">${wusd(l.strike*l.amt)}</td>
-                <td style="text-align:right;padding:5px 8px;color:#64748b">${weight}%</td>
+            // Formula: targetWA * totalAmt = knownNotional + remainAmt * requiredStrike
+            const knownNotional = knownLegs.reduce((s,l)=>s+l.strike*l.amt, 0);
+            const knownAmt      = knownLegs.reduce((s,l)=>s+l.amt, 0);
+            const totalAmt      = knownAmt + remainAmt;
+            const requiredStrike = (targetWA * totalAmt - knownNotional) / remainAmt;
+            const isValid        = requiredStrike > 0 && isFinite(requiredStrike);
+
+            if (solvedEl) {
+                if (isValid) {
+                    const gapPct = btcPrice>0?((requiredStrike-btcPrice)/btcPrice*100):0;
+                    const gapCol = gapPct>=0?'#6EE7B7':'#FCA5A5';
+                    solvedEl.innerHTML = `Required Strike: <span style="color:#C4B5FD">${wusd(requiredStrike)}</span> <span style="font-size:10px;color:${gapCol}">(${gapPct>=0?'+':''}${gapPct.toFixed(2)}% vs BTC)</span>`;
+                } else {
+                    solvedEl.innerHTML = `Required Strike: <span style="color:#EF4444">No solution</span>`;
+                }
+            }
+
+            if (!isValid && knownLegs.length === 0) {
+                resultEl.style.display='none'; emptyEl.style.display='block';
+                emptyEl.textContent='Add at least one known leg or set target WA and remaining amount.';
+                return;
+            }
+
+            // Build full leg list including solved remaining
+            const allLegs = [...knownLegs];
+            if (isValid) allLegs.push({ name:'Remaining leg (solved)', amt:remainAmt, strike:requiredStrike, isSolved:true });
+            const totalNotional = allLegs.reduce((s,l)=>s+l.strike*l.amt, 0);
+            const waStrike      = totalAmt>0 ? totalNotional/totalAmt : 0;
+            const gapPct        = btcPrice>0?((waStrike-btcPrice)/btcPrice*100):0;
+            const gapCol        = gapPct>=0?'#6EE7B7':'#FCA5A5';
+
+            emptyEl.style.display  = 'none';
+            resultEl.style.display = 'block';
+            gridEl.innerHTML = `
+                <div class="wcc-result-metric">
+                    <span class="wcc-result-label">Required Strike</span>
+                    <span class="wcc-result-value" style="color:${isValid?'#C4B5FD':'#EF4444'}">${isValid?wusd(requiredStrike):'No solution'}</span>
+                    <span class="wcc-result-sub">for ${remainAmt.toFixed(4)} BTC leg</span>
+                </div>
+                <div class="wcc-result-metric">
+                    <span class="wcc-result-label">Target WA Strike</span>
+                    <span class="wcc-result-value" style="color:#F8FAFC">${wusd(targetWA)}</span>
+                    <span class="wcc-result-sub">→ Actual WA: ${isValid?wusd(waStrike):'—'}</span>
+                </div>
+                <div class="wcc-result-metric">
+                    <span class="wcc-result-label">Total BTC</span>
+                    <span class="wcc-result-value" style="color:#F8FAFC">${totalAmt.toFixed(4)}</span>
+                    <span class="wcc-result-sub">known ${knownAmt.toFixed(4)} + remaining ${remainAmt.toFixed(4)}</span>
+                </div>
+                <div class="wcc-result-metric">
+                    <span class="wcc-result-label">Gap vs BTC</span>
+                    <span class="wcc-result-value" style="color:${gapCol}">${gapPct>=0?'+':''}${gapPct.toFixed(2)}%</span>
+                    <span class="wcc-result-sub">BTC now ${btcPrice>0?wusd(btcPrice):'—'}</span>
+                </div>`;
+
+            brkEl.innerHTML = allLegs.map(l => {
+                const wt = totalAmt>0?(l.amt/totalAmt*100).toFixed(1):'—';
+                const color = l.isSolved ? '#C4B5FD' : (l.isKnown ? '#94A3B8' : '#94A3B8');
+                return `<tr style="border-top:1px solid #1E293B">
+                    <td style="padding:5px 8px;color:${color}">${satEsc(l.name)}${l.isSolved?' ✦':''}</td>
+                    <td style="text-align:right;padding:5px 8px">${l.amt.toFixed(4)}</td>
+                    <td style="text-align:right;padding:5px 8px;color:${l.isSolved?'#C4B5FD':'#94A3B8'}">${wusd(l.strike)}</td>
+                    <td style="text-align:right;padding:5px 8px">${wusd(l.strike*l.amt)}</td>
+                    <td style="text-align:right;padding:5px 8px;color:#64748b">${wt}%</td>
+                </tr>`;
+            }).join('') + `<tr style="border-top:1px solid #334155;font-weight:700;color:#F8FAFC">
+                <td style="padding:6px 8px">TOTAL</td>
+                <td style="text-align:right;padding:6px 8px">${totalAmt.toFixed(4)}</td>
+                <td style="text-align:right;padding:6px 8px;color:#C4B5FD">${isValid?wusd(waStrike):'—'}</td>
+                <td style="text-align:right;padding:6px 8px">${isValid?wusd(totalNotional):'—'}</td>
+                <td style="text-align:right;padding:6px 8px">100%</td>
             </tr>`;
-        }).join('') + `<tr style="border-top:1px solid #334155;font-weight:700;color:#F8FAFC">
-            <td style="padding:6px 8px">TOTAL</td>
-            <td style="text-align:right;padding:6px 8px">${totalAmt.toFixed(4)}</td>
-            <td style="text-align:right;padding:6px 8px;color:#C4B5FD">${wusd(waStrike)}</td>
-            <td style="text-align:right;padding:6px 8px">${wusd(totalNotional)}</td>
-            <td style="text-align:right;padding:6px 8px">100%</td>
-        </tr>`;
+
+        } else {
+            // ── Forward: calculate WA from all selected legs ──
+            const legs = [];
+            document.querySelectorAll('#wCallCalcLots .wcc-lot-card.selected').forEach(card => {
+                const amt    = wpn(card.querySelector('.wcc-amt')?.value);
+                const strike = wpn(card.querySelector('.wcc-strike')?.value);
+                const name   = card.querySelector('.wcc-lot-name')?.textContent?.trim() || 'Lot';
+                if (amt>0&&strike>0) legs.push({ name, amt, strike });
+            });
+            wCallCalcManualRows.forEach(row => {
+                const amt=wpn(row.amount), strike=wpn(row.strike);
+                if (amt>0&&strike>0) legs.push({ name:row.label||'Manual', amt, strike });
+            });
+
+            if (!legs.length) {
+                resultEl.style.display='none'; emptyEl.style.display='block';
+                emptyEl.textContent='Select at least one lot or add a manual leg to calculate.';
+                return;
+            }
+            emptyEl.style.display='none'; resultEl.style.display='block';
+
+            const totalAmt      = legs.reduce((s,l)=>s+l.amt,0);
+            const totalNotional = legs.reduce((s,l)=>s+l.strike*l.amt,0);
+            const waStrike      = totalNotional/totalAmt;
+            const gapPct        = btcPrice>0?((waStrike-btcPrice)/btcPrice*100):0;
+            const gapCol        = gapPct>=0?'#6EE7B7':'#FCA5A5';
+
+            gridEl.innerHTML = `
+                <div class="wcc-result-metric">
+                    <span class="wcc-result-label">Wtd Avg Strike</span>
+                    <span class="wcc-result-value" style="color:#C4B5FD">${wusd(waStrike)}</span>
+                    <span class="wcc-result-sub">across ${legs.length} leg${legs.length>1?'s':''}</span>
+                </div>
+                <div class="wcc-result-metric">
+                    <span class="wcc-result-label">Total BTC</span>
+                    <span class="wcc-result-value" style="color:#F8FAFC">${totalAmt.toFixed(4)}</span>
+                    <span class="wcc-result-sub">combined amount</span>
+                </div>
+                <div class="wcc-result-metric">
+                    <span class="wcc-result-label">Total Notional</span>
+                    <span class="wcc-result-value" style="color:#F8FAFC">${wusd(totalNotional)}</span>
+                    <span class="wcc-result-sub">at weighted strike</span>
+                </div>
+                <div class="wcc-result-metric">
+                    <span class="wcc-result-label">Gap vs BTC</span>
+                    <span class="wcc-result-value" style="color:${gapCol}">${gapPct>=0?'+':''}${gapPct.toFixed(2)}%</span>
+                    <span class="wcc-result-sub">BTC now ${btcPrice>0?wusd(btcPrice):'—'}</span>
+                </div>`;
+
+            brkEl.innerHTML = legs.map(l => {
+                const wt = (l.amt/totalAmt*100).toFixed(1);
+                return `<tr style="border-top:1px solid #1E293B">
+                    <td style="padding:5px 8px">${satEsc(l.name)}</td>
+                    <td style="text-align:right;padding:5px 8px">${l.amt.toFixed(4)}</td>
+                    <td style="text-align:right;padding:5px 8px;color:#C4B5FD">${wusd(l.strike)}</td>
+                    <td style="text-align:right;padding:5px 8px">${wusd(l.strike*l.amt)}</td>
+                    <td style="text-align:right;padding:5px 8px;color:#64748b">${wt}%</td>
+                </tr>`;
+            }).join('') + `<tr style="border-top:1px solid #334155;font-weight:700;color:#F8FAFC">
+                <td style="padding:6px 8px">TOTAL</td>
+                <td style="text-align:right;padding:6px 8px">${totalAmt.toFixed(4)}</td>
+                <td style="text-align:right;padding:6px 8px;color:#C4B5FD">${wusd(waStrike)}</td>
+                <td style="text-align:right;padding:6px 8px">${wusd(totalNotional)}</td>
+                <td style="text-align:right;padding:6px 8px">100%</td>
+            </tr>`;
+        }
     }
 
     function wCalcCallReset() { wCallCalcReset(); }
