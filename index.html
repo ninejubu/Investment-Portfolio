@@ -6563,12 +6563,12 @@
             const card     = document.createElement('div');
             card.className = 'wcc-lot-card' + (sel ? ' selected' : '');
             card.dataset.lotIdx = i;
-            card.innerHTML = \`
-                <input type="checkbox" \${sel?'checked':''} style="margin-top:2px;accent-color:#9B5CF6;cursor:pointer" onchange="wccToggleLot(\${i},this.checked)">
+            card.innerHTML = `
+                <input type="checkbox" ${sel?'checked':''} style="margin-top:2px;accent-color:#9B5CF6;cursor:pointer" onchange="wccToggleLot(${i},this.checked)">
                 <label style="cursor:pointer">
-                    <span class="wcc-lot-name">\${satEsc(lot.name)}\${tag?\` <span class="wheel-tag">\${satEsc(tag)}</span>\`:''}</span>
-                    <span class="wcc-lot-meta">\${defAmt} BTC · Strike: \${defStk}</span>
-                </label>\`;
+                    <span class="wcc-lot-name">${satEsc(lot.name)}${tag?` <span class="wheel-tag">${satEsc(tag)}</span>`:''}</span>
+                    <span class="wcc-lot-meta">${defAmt} BTC · Strike: ${defStk}</span>
+                </label>`;
             lotsEl.appendChild(card);
         });
 
@@ -6589,13 +6589,13 @@
         if (targetBar) {
             const gapPct = btcPrice > 0 ? ((waStrike - btcPrice) / btcPrice * 100) : 0;
             const gapCol = gapPct >= 0 ? '#6EE7B7' : '#FCA5A5';
-            targetBar.innerHTML = \`
+            targetBar.innerHTML = `
                 <div><span style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block">Target WA Strike</span>
-                    <span style="font-size:16px;font-weight:700;color:#C4B5FD">\${wusd(waStrike)}</span></div>
+                    <span style="font-size:16px;font-weight:700;color:#C4B5FD">${wusd(waStrike)}</span></div>
                 <div><span style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block">Total BTC to cover</span>
-                    <span style="font-size:16px;font-weight:700;color:#F8FAFC">\${totalAmt.toFixed(4)}</span></div>
+                    <span style="font-size:16px;font-weight:700;color:#F8FAFC">${totalAmt.toFixed(4)}</span></div>
                 <div><span style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block">Gap vs BTC now</span>
-                    <span style="font-size:14px;font-weight:700;color:\${gapCol}">\${gapPct>=0?'+':''}\${gapPct.toFixed(2)}%</span></div>\`;
+                    <span style="font-size:14px;font-weight:700;color:${gapCol}">${gapPct>=0?'+':''}${gapPct.toFixed(2)}%</span></div>`;
         }
 
         if (wccOrders.length === 0) {
@@ -6616,40 +6616,40 @@
                 const dispAmt    = isLast ? (remainAmt > 0 ? remainAmt.toFixed(4) : '0.0000') : (order.amt || '');
                 const dispStrike = isLast ? (requiredStrike > 0 ? Math.round(requiredStrike).toLocaleString('en-US') : '—') : (order.strike || '');
                 const row = document.createElement('div');
-                row.style.cssText = \`display:grid;grid-template-columns:130px 1fr 1fr auto;gap:8px;align-items:end;padding:10px 12px;border-radius:8px;background:\${isLast?'rgba(155,92,246,.06)':'#0F172A'};border:1px solid \${isLast?'#9B5CF6':'#1E293B'}\`;
-                row.innerHTML = \`
+                row.style.cssText = `display:grid;grid-template-columns:130px 1fr 1fr auto;gap:8px;align-items:end;padding:10px 12px;border-radius:8px;background:${isLast?'rgba(155,92,246,.06)':'#0F172A'};border:1px solid ${isLast?'#9B5CF6':'#1E293B'}`;
+                row.innerHTML = `
                     <div>
-                        <div class="wcc-input-label" style="color:\${isLast?'#C4B5FD':'#64748b'}">\${isLast?'✦ Auto-solved':'Order '+(idx+1)}</div>
-                        <div style="font-size:10px;color:#475569;margin-top:2px">\${isLast?'remaining BTC + required strike':'editable'}</div>
+                        <div class="wcc-input-label" style="color:${isLast?'#C4B5FD':'#64748b'}">${isLast?'✦ Auto-solved':'Order '+(idx+1)}</div>
+                        <div style="font-size:10px;color:#475569;margin-top:2px">${isLast?'remaining BTC + required strike':'editable'}</div>
                     </div>
                     <div>
                         <div class="wcc-input-label">Amount (BTC)</div>
                         <input class="wcc-input" type="text" inputmode="decimal"
-                            value="\${isLast?'':dispAmt}"
-                            placeholder="\${isLast?remainAmt.toFixed(4):'0.0000'}"
-                            \${isLast?'readonly style="background:#0A1222;color:#9B5CF6;cursor:default;border-color:#4C1D95" ':''} 
-                            oninput="wccOrderChange(\${order.id},'amt',this.value)">
+                            value="${isLast?'':dispAmt}"
+                            placeholder="${isLast?remainAmt.toFixed(4):'0.0000'}"
+                            ${isLast?'readonly style="background:#0A1222;color:#9B5CF6;cursor:default;border-color:#4C1D95" ':''} 
+                            oninput="wccOrderChange(${order.id},'amt',this.value)">
                     </div>
                     <div>
                         <div class="wcc-input-label">Strike ($)</div>
                         <input class="wcc-input" type="text" inputmode="decimal"
-                            value="\${isLast?'':dispStrike}"
-                            placeholder="\${isLast?(requiredStrike>0?Math.round(requiredStrike).toLocaleString('en-US'):'auto'):'e.g. 85000'}"
-                            \${isLast?\`readonly style="background:#0A1222;color:#C4B5FD;font-weight:700;cursor:default;border-color:#4C1D95" \`:''}
-                            oninput="wccOrderChange(\${order.id},'strike',this.value)">
+                            value="${isLast?'':dispStrike}"
+                            placeholder="${isLast?(requiredStrike>0?Math.round(requiredStrike).toLocaleString('en-US'):'auto'):'e.g. 85000'}"
+                            ${isLast?`readonly style="background:#0A1222;color:#C4B5FD;font-weight:700;cursor:default;border-color:#4C1D95" `:''}
+                            oninput="wccOrderChange(${order.id},'strike',this.value)">
                     </div>
                     <div style="display:flex;gap:4px;margin-bottom:1px">
-                        \${isLast
-                            ? \`<button class="w-btn w-btn-sm w-btn-primary" onclick="wccLockSolved()" title="Lock this order and add another">+ Split</button>\`
-                            : \`<button class="w-btn-icon w-btn-danger" onclick="wccRemoveOrder(\${order.id})" title="Remove">✕</button>\`
+                        ${isLast
+                            ? `<button class="w-btn w-btn-sm w-btn-primary" onclick="wccLockSolved()" title="Lock this order and add another">+ Split</button>`
+                            : `<button class="w-btn-icon w-btn-danger" onclick="wccRemoveOrder(${order.id})" title="Remove">✕</button>`
                         }
-                    </div>\`;
+                    </div>`;
                 ordersEl.appendChild(row);
                 if (!isLast && wpn(order.amt) > 0 && wpn(order.strike) > 0) {
                     const info = document.createElement('div');
                     info.style.cssText = 'font-size:10px;color:#64748b;padding:0 12px 4px;margin-top:-4px';
                     const n = wpn(order.amt) * wpn(order.strike);
-                    info.textContent = \`Notional: \${wusd(n)}  ·  \${((wpn(order.amt)/totalAmt)*100).toFixed(1)}% of total\`;
+                    info.textContent = `Notional: ${wusd(n)}  ·  ${((wpn(order.amt)/totalAmt)*100).toFixed(1)}% of total`;
                     ordersEl.appendChild(info);
                 }
             });
@@ -6673,44 +6673,44 @@
         const gapPct      = btcPrice > 0 ? ((actualWA - btcPrice) / btcPrice * 100) : 0;
         const gapCol      = gapPct >= 0 ? '#6EE7B7' : '#FCA5A5';
 
-        gridEl.innerHTML = \`
+        gridEl.innerHTML = `
             <div class="wcc-result-metric">
                 <span class="wcc-result-label">Actual WA Strike</span>
-                <span class="wcc-result-value" style="color:\${waMatch?'#C4B5FD':'#FCA5A5'}">\${wusd(actualWA)}</span>
-                <span class="wcc-result-sub" style="color:\${waMatch?'#10B981':'#EF4444'}">\${waMatch?'✓ Matches target':'Δ '+wusd(waDiff)+' off target'}</span>
+                <span class="wcc-result-value" style="color:${waMatch?'#C4B5FD':'#FCA5A5'}">${wusd(actualWA)}</span>
+                <span class="wcc-result-sub" style="color:${waMatch?'#10B981':'#EF4444'}">${waMatch?'✓ Matches target':'Δ '+wusd(waDiff)+' off target'}</span>
             </div>
             <div class="wcc-result-metric">
                 <span class="wcc-result-label">Target WA Strike</span>
-                <span class="wcc-result-value" style="color:#F8FAFC">\${wusd(waStrike)}</span>
-                <span class="wcc-result-sub">\${wccSelectedLots.size} lot\${wccSelectedLots.size>1?'s':''} selected</span>
+                <span class="wcc-result-value" style="color:#F8FAFC">${wusd(waStrike)}</span>
+                <span class="wcc-result-sub">${wccSelectedLots.size} lot${wccSelectedLots.size>1?'s':''} selected</span>
             </div>
             <div class="wcc-result-metric">
                 <span class="wcc-result-label">Orders / Total BTC</span>
-                <span class="wcc-result-value" style="color:#F8FAFC">\${allOrders.length} / \${allAmt.toFixed(4)}</span>
-                <span class="wcc-result-sub">covers \${((allAmt/totalAmt)*100).toFixed(1)}% of target</span>
+                <span class="wcc-result-value" style="color:#F8FAFC">${allOrders.length} / ${allAmt.toFixed(4)}</span>
+                <span class="wcc-result-sub">covers ${((allAmt/totalAmt)*100).toFixed(1)}% of target</span>
             </div>
             <div class="wcc-result-metric">
                 <span class="wcc-result-label">Gap vs BTC</span>
-                <span class="wcc-result-value" style="color:\${gapCol}">\${gapPct>=0?'+':''}\${gapPct.toFixed(2)}%</span>
-                <span class="wcc-result-sub">BTC now \${btcPrice>0?wusd(btcPrice):'—'}</span>
-            </div>\`;
+                <span class="wcc-result-value" style="color:${gapCol}">${gapPct>=0?'+':''}${gapPct.toFixed(2)}%</span>
+                <span class="wcc-result-sub">BTC now ${btcPrice>0?wusd(btcPrice):'—'}</span>
+            </div>`;
 
         brkEl.innerHTML = allOrders.map(o => {
             const wt = allAmt>0?(o.amt/allAmt*100).toFixed(1):'—';
-            return \`<tr style="border-top:1px solid #1E293B">
-                <td style="padding:5px 8px;color:\${o.solved?'#C4B5FD':'#94A3B8'}">\${satEsc(o.label)}</td>
-                <td style="text-align:right;padding:5px 8px">\${o.amt.toFixed(4)}</td>
-                <td style="text-align:right;padding:5px 8px;color:\${o.solved?'#C4B5FD':'#94A3B8'}">\${o.strike>0?wusd(o.strike):'—'}</td>
-                <td style="text-align:right;padding:5px 8px">\${o.strike>0?wusd(o.amt*o.strike):'—'}</td>
-                <td style="text-align:right;padding:5px 8px;color:#64748b">\${wt}%</td>
-            </tr>\`;
-        }).join('') + \`<tr style="border-top:1px solid #334155;font-weight:700;color:#F8FAFC">
+            return `<tr style="border-top:1px solid #1E293B">
+                <td style="padding:5px 8px;color:${o.solved?'#C4B5FD':'#94A3B8'}">${satEsc(o.label)}</td>
+                <td style="text-align:right;padding:5px 8px">${o.amt.toFixed(4)}</td>
+                <td style="text-align:right;padding:5px 8px;color:${o.solved?'#C4B5FD':'#94A3B8'}">${o.strike>0?wusd(o.strike):'—'}</td>
+                <td style="text-align:right;padding:5px 8px">${o.strike>0?wusd(o.amt*o.strike):'—'}</td>
+                <td style="text-align:right;padding:5px 8px;color:#64748b">${wt}%</td>
+            </tr>`;
+        }).join('') + `<tr style="border-top:1px solid #334155;font-weight:700;color:#F8FAFC">
             <td style="padding:6px 8px">TOTAL</td>
-            <td style="text-align:right;padding:6px 8px">\${allAmt.toFixed(4)}</td>
-            <td style="text-align:right;padding:6px 8px;color:#C4B5FD">\${wusd(actualWA)}</td>
-            <td style="text-align:right;padding:6px 8px">\${wusd(allNotional)}</td>
+            <td style="text-align:right;padding:6px 8px">${allAmt.toFixed(4)}</td>
+            <td style="text-align:right;padding:6px 8px;color:#C4B5FD">${wusd(actualWA)}</td>
+            <td style="text-align:right;padding:6px 8px">${wusd(allNotional)}</td>
             <td style="text-align:right;padding:6px 8px">100%</td>
-        </tr>\`;
+        </tr>`;
     }
 
     function wccToggleLot(idx, checked) {
