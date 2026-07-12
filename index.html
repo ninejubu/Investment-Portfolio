@@ -171,7 +171,41 @@
         .holdings-panel-controls select {
             max-width: 100%;
         }
-        /* ── Unified HB button groups ── */
+        /* ── Per-page refresh button ── */
+        .page-refresh-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #94A3B8;
+            background: transparent;
+            border: 1px solid #334155;
+            cursor: pointer;
+            transition: color .15s, border-color .15s, background .15s;
+        }
+        .page-refresh-btn:hover {
+            color: #60A5FA;
+            border-color: #3B82F6;
+            background: rgba(59,130,246,.06);
+        }
+        .page-refresh-btn.loading {
+            color: #F59E0B;
+            border-color: #F59E0B;
+        }
+        .page-refresh-btn.loading i {
+            animation: wspin .7s linear infinite;
+        }
+        .page-refresh-btn.ok {
+            color: #10B981;
+            border-color: #10B981;
+        }
+        .page-refresh-btn.err {
+            color: #EF4444;
+            border-color: #EF4444;
+        }
         .hb-btn-grid {
             display: grid;
             gap: 3px;
@@ -1326,6 +1360,11 @@
             <!-- ══════════ DASHBOARD TAB ══════════ -->
             <div id="tab-dashboard" class="tab-content active space-y-6">
                 <div id="core-dashboard-view" class="space-y-6">
+                <div class="flex justify-end mb-1">
+                    <button onclick="doPageRefresh('core')" class="page-refresh-btn" title="Refresh Core Port data from Google Sheets">
+                        <i class="fa-solid fa-arrows-rotate" id="core-refresh-icon"></i> Refresh
+                    </button>
+                </div>
                 <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
                     <div class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-2 flex flex-col justify-center">
                         <p class="text-slate-400 mb-1 font-medium flex items-center gap-2">Total Net Worth
@@ -1556,6 +1595,9 @@
                             </div>
                             <button class="sat-btn" onclick="switchTab('transactions')"><i class="fa-solid fa-list-check"></i> Transactions</button>
                             <button class="sat-btn primary" onclick="satOpenPositionModal()"><i class="fa-solid fa-plus"></i> Position</button>
+                            <button onclick="doPageRefresh('sat')" class="page-refresh-btn" title="Refresh Satellite Port data from Google Sheets">
+                                <i class="fa-solid fa-arrows-rotate" id="sat-refresh-icon"></i> Refresh
+                            </button>
                         </div>
                     </div>
 
@@ -1719,6 +1761,9 @@
                             </label>
                             <button class="cf-btn" type="button" onclick="cfPullFromSheets()"><i class="fa-solid fa-cloud-arrow-down"></i> Pull</button>
                             <button class="cf-btn primary" type="button" onclick="cfPushToSheets()"><i class="fa-solid fa-cloud-arrow-up"></i> Save</button>
+                            <button onclick="doPageRefresh('cashflow')" class="page-refresh-btn" title="Refresh Cashflow data from Google Sheets">
+                                <i class="fa-solid fa-arrows-rotate" id="cf-refresh-icon"></i> Refresh
+                            </button>
                         </div>
                     </div>
 
@@ -5903,6 +5948,43 @@
         const icon = document.getElementById('refresh-icon');
         if (!icon) return;
         icon.style.animation = on ? 'wspin .7s linear infinite' : 'none';
+    }
+
+    // ── Per-page targeted refresh ──────────────────────
+    async function doPageRefresh(page) {
+        const url = getGsUrl();
+        if (!url) { openSyncModal(); return; }
+
+        const iconId  = { core: 'core-refresh-icon', sat: 'sat-refresh-icon', cashflow: 'cf-refresh-icon' }[page];
+        const btnEl   = iconId && document.getElementById(iconId)?.closest('.page-refresh-btn');
+        const setBtn  = (state) => {
+            if (!btnEl) return;
+            btnEl.className = 'page-refresh-btn' + (state ? ' ' + state : '');
+        };
+
+        setBtn('loading');
+        setSyncPill('loading', 'Syncing…');
+        let ok = false;
+        try {
+            if (page === 'core') {
+                ok = await loadFromGSheet();
+                if (ok) { updateDashboard(); renderMonthlyTiers(); }
+            } else if (page === 'sat') {
+                ok = await satPullFromSheets(true, { forcePrices: true });
+            } else if (page === 'cashflow') {
+                ok = await cfPullFromSheets(true);
+            }
+        } catch(e) { ok = false; }
+
+        const now = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+        if (ok) {
+            setBtn('ok');
+            setSyncPill('ok', 'Synced ' + now);
+        } else {
+            setBtn('err');
+            setSyncPill('err', 'Sync failed');
+        }
+        setTimeout(() => setBtn(''), 3000);
     }
 
     // ── Full refresh — pulls all workspaces ─────────
