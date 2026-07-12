@@ -155,24 +155,29 @@
         }
         .holdings-panel-controls {
             display: flex;
-            gap: 6px;
+            gap: 8px;
             align-items: center;
             justify-content: flex-end;
             flex-wrap: wrap;
             min-width: 0;
         }
+        /* thin divider between groups */
+        .hb-ctrl-sep {
+            width: 1px;
+            height: 28px;
+            background: #1E293B;
+            flex-shrink: 0;
+        }
         .holdings-panel-controls select {
             max-width: 100%;
         }
+        /* ── Unified HB button groups ── */
         .hb-btn-grid {
             display: grid;
             gap: 3px;
         }
         .hb-btn-grid-2x2 {
             grid-template-columns: repeat(2, 1fr);
-        }
-        .hb-btn-grid-period {
-            grid-template-columns: repeat(5, 1fr);
         }
         .hb-btn {
             background: #0F172A;
@@ -185,10 +190,12 @@
             cursor: pointer;
             white-space: nowrap;
             transition: background .15s, color .15s, border-color .15s;
+            text-align: center;
         }
         .hb-btn:hover {
             background: #1E293B;
             color: #F8FAFC;
+            border-color: #475569;
         }
         .hb-btn.is-active {
             background: #1E293B;
@@ -198,10 +205,44 @@
         .hb-btn-period.is-active {
             border-color: #A855F7;
         }
-        @media (max-width: 640px) {
-            .hb-btn-grid-period {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        /* By Ticker / By Theme uses the same hb-btn style */
+        #hb-view-toggle {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3px;
+            border: none;
+            border-radius: 0;
+            overflow: visible;
+            margin-right: 0;
+        }
+        #hb-view-ticker,
+        #hb-view-segment {
+            background: #0F172A;
+            border: 1px solid #334155 !important;
+            color: #94A3B8;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 9px;
+            border-radius: 5px !important;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background .15s, color .15s, border-color .15s;
+        }
+        #hb-view-ticker:hover,
+        #hb-view-segment:hover {
+            background: #1E293B;
+            color: #F8FAFC;
+            border-color: #475569 !important;
+        }
+        #hb-view-ticker.view-active {
+            background: #1E293B;
+            border-color: #10B981 !important;
+            color: #F8FAFC;
+        }
+        #hb-view-segment.view-active {
+            background: #1E293B;
+            border-color: #10B981 !important;
+            color: #F8FAFC;
         }
         .hb-body-layout {
             display: flex;
@@ -1435,13 +1476,9 @@
                 <div id="dashboard-lower-row" class="dashboard-lower-row">
                     <!-- Holdings Breakdown -->
                     <div id="panel-holdings" class="bg-card rounded-xl border border-slate-700 flex flex-col" onclick="expandHoldingsPanel()" style="min-width:0;padding:20px;overflow:hidden;box-sizing:border-box">
-                        <div class="flex items-center justify-between mb-4 holdings-panel-header" onclick="expandHoldingsPanel()">
+                        <div class="flex items-center justify-between mb-2 holdings-panel-header" onclick="expandHoldingsPanel()">
                             <h4 class="text-white font-bold">Holdings Breakdown</h4>
                             <div class="holdings-panel-controls">
-                                <div id="hb-view-toggle" style="display:inline-flex;border:1px solid #334155;border-radius:6px;overflow:hidden;margin-right:4px">
-                                    <button id="hb-view-ticker" onclick="hbSetView('ticker',event)" style="background:#1E293B;border:none;color:#F8FAFC;font-size:10px;padding:4px 8px;cursor:pointer;transition:background .15s">By Ticker</button>
-                                    <button id="hb-view-segment" onclick="hbSetView('segment',event)" style="background:transparent;border:none;color:#94A3B8;font-size:10px;padding:4px 8px;cursor:pointer;transition:background .15s">By Theme</button>
-                                </div>
                                 <select id="hb-asset" onchange="renderHoldingsBreakdown()" style="display:none">
                                     <option value="stocks">Stocks</option>
                                     <option value="bonds">Bonds</option>
@@ -1454,22 +1491,28 @@
                                     <button type="button" class="hb-btn" data-value="crypto" onclick="hbSelectOption('hb-asset','crypto',this,event)">Crypto</button>
                                     <button type="button" class="hb-btn" data-value="gold" onclick="hbSelectOption('hb-asset','gold',this,event)">Gold</button>
                                 </div>
+                                <div class="hb-ctrl-sep"></div>
                                 <select id="hb-quarter" onchange="renderHoldingsBreakdown()" style="display:none">
                                     <option value="Q1">Q1</option>
                                     <option value="Q2">Q2</option>
                                     <option value="Q3">Q3</option>
                                     <option value="Q4">Q4</option>
                                 </select>
-                                <div id="hb-quarter-buttons" class="hb-btn-grid hb-btn-grid-2x2 hb-btn-grid-period">
+                                <div id="hb-quarter-buttons" class="hb-btn-grid hb-btn-grid-2x2">
                                     <button type="button" class="hb-btn hb-btn-period" data-value="Q1" onclick="hbSelectOption('hb-quarter','Q1',this,event)">Q1</button>
                                     <button type="button" class="hb-btn hb-btn-period" data-value="Q2" onclick="hbSelectOption('hb-quarter','Q2',this,event)">Q2</button>
                                     <button type="button" class="hb-btn hb-btn-period" data-value="Q3" onclick="hbSelectOption('hb-quarter','Q3',this,event)">Q3</button>
                                     <button type="button" class="hb-btn hb-btn-period" data-value="Q4" onclick="hbSelectOption('hb-quarter','Q4',this,event)">Q4</button>
                                 </div>
+                                <div class="hb-ctrl-sep"></div>
+                                <div id="hb-view-toggle">
+                                    <button id="hb-view-ticker" onclick="hbSetView('ticker',event)">By Ticker</button>
+                                    <button id="hb-view-segment" onclick="hbSetView('segment',event)">By Theme</button>
+                                </div>
                                 <button id="toggle-holdings-panel" onclick="toggleHoldingsPanel(event)" title="Collapse holdings breakdown" class="bg-slate-800 border-none text-[10px] text-slate-300 rounded px-2 py-1 hover:text-white hover:bg-slate-700 transition-colors"><i class="fa-solid fa-chevron-up"></i></button>
                             </div>
                         </div>
-                        <div id="hb-ticker-slicer" style="display:none;width:100%;justify-content:flex-end;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px"></div>
+                        <div id="hb-ticker-slicer" style="display:none;width:100%;justify-content:flex-start;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px"></div>
                         <div id="holdings-panel-body" class="hb-body-layout">
                             <!-- Donut chart -->
                             <div class="hb-chart-col"><canvas id="hbChart"></canvas></div>
@@ -7052,8 +7095,14 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             const latest = getLatestClosedPeriod();
             quarterEl.value = latest === 'Beg' ? 'Q1' : latest;
         }
+        // sync button active states
         hbSyncButtonGroup('hb-asset-buttons', document.getElementById('hb-asset')?.value);
         hbSyncButtonGroup('hb-quarter-buttons', quarterEl?.value);
+        // sync view toggle
+        const tickerBtn  = document.getElementById('hb-view-ticker');
+        const segmentBtn = document.getElementById('hb-view-segment');
+        if (tickerBtn)  tickerBtn.classList.toggle('view-active',  hbView === 'ticker');
+        if (segmentBtn) segmentBtn.classList.toggle('view-active', hbView === 'segment');
     }
 
     function hbSyncButtonGroup(groupId, value) {
@@ -7119,10 +7168,11 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         if (event) event.stopPropagation();
         hbView = view;
         hbSegmentDrill = null;
+        hbThemeFilter  = new Set();
         const tickerBtn  = document.getElementById('hb-view-ticker');
         const segmentBtn = document.getElementById('hb-view-segment');
-        if (tickerBtn)  { tickerBtn.style.background  = view === 'ticker'  ? '#1E293B' : 'transparent'; tickerBtn.style.color  = view === 'ticker'  ? '#F8FAFC' : '#94A3B8'; }
-        if (segmentBtn) { segmentBtn.style.background = view === 'segment' ? '#1E293B' : 'transparent'; segmentBtn.style.color = view === 'segment' ? '#F8FAFC' : '#94A3B8'; }
+        if (tickerBtn)  tickerBtn.classList.toggle('view-active',  view === 'ticker');
+        if (segmentBtn) segmentBtn.classList.toggle('view-active', view === 'segment');
         renderHoldingsBreakdown();
     }
 
