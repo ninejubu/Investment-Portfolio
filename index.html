@@ -6900,6 +6900,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         if (icon) icon.className = balancesHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
         if (balancesHidden) {
             applyBalanceMask();
+            if (typeof renderHoldingsBreakdown === 'function') renderHoldingsBreakdown();
         } else {
             updateDashboard();
         }
@@ -7195,6 +7196,10 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         const rawRows   = ddLoad(asset, quarter);
         const assetBal  = ddGetAssetBalForPeriod(asset, quarter);
 
+        // Amount formatter — masks when balances are hidden
+        const fmtAmt = (v) => balancesHidden ? '฿ ••••••' : `฿${(v||0).toLocaleString('en-US',{maximumFractionDigits:0})}`;
+        const fmtPct = (v) => `${v.toFixed(1)}%`;
+
         // Merge raw rows by ticker, preserving platforms and segment
         const tickerMap = new Map();
         rawRows.forEach(r => {
@@ -7254,7 +7259,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                                 return pct >= 9 ? `${pct.toFixed(0)}%` : '';
                             }
                         },
-                        tooltip: { callbacks: { label: (c) => ` ${c.label}: ฿${c.raw.toLocaleString('en-US',{maximumFractionDigits:0})} (${assetBal>0?(c.raw/assetBal*100).toFixed(1):0}%)` } } } }
+                        tooltip: { callbacks: { label: (c) => balancesHidden ? ` ${c.label}: ฿ ••••••` : ` ${c.label}: ฿${c.raw.toLocaleString('en-US',{maximumFractionDigits:0})} (${assetBal>0?(c.raw/assetBal*100).toFixed(1):0}%)` } } } }
             });
         }
     }
@@ -7349,7 +7354,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                     <div style="flex:1;min-width:0;font-size:11px;color:${isUT?'#475569':'#F8FAFC'};font-style:${isUT?'italic':'normal'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
                     <div style="width:64px;flex-shrink:0;display:flex;justify-content:center">${r.theme ? `<span style="font-size:9px;color:#64748b;background:#1E293B;padding:1px 5px;border-radius:3px;white-space:nowrap">${r.theme}</span>` : ''}</div>
                     <div style="width:44px;flex-shrink:0;text-align:center;font-size:11px;font-weight:600;color:${isUT?'#475569':color};white-space:nowrap">${pct.toFixed(1)}%</div>
-                    <div style="width:76px;flex-shrink:0;text-align:right;font-size:10px;color:#64748b;white-space:nowrap">฿${(r.amount||0).toLocaleString('en-US',{maximumFractionDigits:0})}</div>
+                    <div style="width:76px;flex-shrink:0;text-align:right;font-size:10px;color:#64748b;white-space:nowrap">${fmtAmt(r.amount)}</div>
                     <div style="font-size:9px;color:#64748b;width:9px;flex-shrink:0">${multi?'▸':''}</div>`;
                 el.appendChild(mainRow);
 
@@ -7363,7 +7368,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                         sub.innerHTML = `
                             <div style="flex:1;min-width:0;font-size:10px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.platform||'—'}</div>
                             <div style="width:44px;flex-shrink:0;text-align:center;font-size:10px;color:#64748b">${subPct.toFixed(1)}%</div>
-                            <div style="width:76px;flex-shrink:0;text-align:right;font-size:10px;color:#64748b">฿${p.amount.toLocaleString('en-US',{maximumFractionDigits:0})}</div>`;
+                            <div style="width:76px;flex-shrink:0;text-align:right;font-size:10px;color:#64748b">${fmtAmt(p.amount)}</div>`;
                         subList.appendChild(sub);
                     });
                     el.appendChild(subList);
@@ -7416,11 +7421,11 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                     <div style="width:8px;height:8px;border-radius:50%;background:${colors[i]};flex-shrink:0"></div>
                     <div style="flex:1;min-width:0;font-size:11px;color:#F8FAFC;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
                     <div style="width:44px;flex-shrink:0;text-align:center;font-size:11px;font-weight:600;color:${color}">${pct.toFixed(1)}%</div>
-                    <div style="width:76px;flex-shrink:0;text-align:right;font-size:10px;color:#64748b">฿${r.amount.toLocaleString('en-US',{maximumFractionDigits:0})}</div>`;
+                    <div style="width:76px;flex-shrink:0;text-align:right;font-size:10px;color:#64748b">${fmtAmt(r.amount)}</div>`;
                 listEl.appendChild(el);
             });
             if (hintEl)  hintEl.textContent  = hbSegmentDrill;
-            if (totalEl) totalEl.textContent = `฿${segTotal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+            if (totalEl) totalEl.textContent = balancesHidden ? '฿ ••••••' : `฿${segTotal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
             return;
         }
 
@@ -7517,7 +7522,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                     </div>
                     <div style="text-align:right">
                         <div style="font-size:11px;font-weight:600;color:${color}">${pct.toFixed(1)}%</div>
-                        <div style="font-size:10px;color:#64748b">฿${s.amount.toLocaleString('en-US',{maximumFractionDigits:0})}</div>
+                        <div style="font-size:10px;color:#64748b">${fmtAmt(s.amount)}</div>
                     </div>
                     <div style="font-size:9px;color:#64748b">▸</div>`;
                 listEl.appendChild(el);
@@ -7530,7 +7535,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                     <div style="width:8px;height:8px;border-radius:50%;background:#334155;flex-shrink:0"></div>
                     <div style="flex:1;font-size:11px;color:#475569;font-style:italic">Untracked</div>
                     <div style="font-size:11px;font-weight:600;color:#475569">${utPct.toFixed(1)}%</div>
-                    <div style="font-size:10px;color:#64748b">฿${untracked.toLocaleString('en-US',{maximumFractionDigits:0})}</div>`;
+                    <div style="font-size:10px;color:#64748b">${fmtAmt(untracked)}</div>`;
                 listEl.appendChild(el);
             }
         }
