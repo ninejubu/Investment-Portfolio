@@ -552,7 +552,42 @@
         .lots-table td:first-child, .lots-table td:last-child { text-align: left; font-family: 'Inter', sans-serif; }
         .lots-table tr:last-child td { border-bottom: none; }
         .lots-table tr:hover td { background: rgba(155,92,246,.025); }
-        .lot-name { display: flex; align-items: center; gap: 7px; font-weight: 600; font-size: 12px; font-family: 'Inter', sans-serif; }
+        .wcc-lot-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background: #0F172A;
+            border: 1px solid #1E293B;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: border-color .15s;
+        }
+        .wcc-lot-card.selected {
+            border-color: #9B5CF6;
+            background: rgba(155,92,246,.07);
+        }
+        .wcc-lot-card label { display:flex;flex-direction:column;gap:3px;flex:1;cursor:pointer }
+        .wcc-lot-name { font-size:12px;font-weight:600;color:#F8FAFC }
+        .wcc-lot-meta { font-size:10px;color:#64748b }
+        .wcc-lot-inputs { display:flex;gap:6px;margin-top:6px;align-items:center }
+        .wcc-input {
+            background: #0A1628;
+            border: 1px solid #334155;
+            border-radius: 5px;
+            color: #F8FAFC;
+            font-size: 11px;
+            padding: 4px 7px;
+            width: 100%;
+            outline: none;
+        }
+        .wcc-input:focus { border-color: #9B5CF6; }
+        .wcc-input-label { font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.05em }
+        .wcc-manual-row { display:flex;gap:8px;align-items:center;background:#0F172A;border:1px solid #1E293B;border-radius:7px;padding:8px 10px }
+        .wcc-result-metric { display:flex;flex-direction:column;gap:2px }
+        .wcc-result-label { font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.06em }
+        .wcc-result-value { font-size:18px;font-weight:700;font-family:'Inter',sans-serif }
+        .wcc-result-sub { font-size:10px;color:#64748b }
         .lot-dot { width: 6px; height: 6px; border-radius: 50%; background: #9B5CF6; flex-shrink: 0; }
         .p-pos { color: #10B981; } .p-neg { color: #EF4444; }
         .fcov { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: rgba(16,185,129,.1); color: #34D399; font-family: 'Inter', sans-serif; }
@@ -2073,6 +2108,45 @@
                                 <tbody id="lotsBody"></tbody>
                                 <tfoot id="lotsFoot"></tfoot>
                             </table>
+                        </div>
+                    </div>
+
+                    <!-- Short Call WA Calculator -->
+                    <div class="wheel-card" id="wCallCalcCard">
+                        <div class="wheel-card-title">
+                            <span class="ctl">Short Call — Weighted Average Strike Calculator</span>
+                            <button class="w-btn w-btn-sm" onclick="wCalcCallReset()" title="Clear all rows">↺ Reset</button>
+                        </div>
+                        <div style="padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+                            <!-- Description -->
+                            <p style="font-size:11px;color:#64748b;margin:0">Select lots and optionally override amounts to calculate the weighted-average strike needed for a combined Short Call order.</p>
+
+                            <!-- Lot selector grid -->
+                            <div id="wCallCalcLots" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px"></div>
+
+                            <!-- Manual rows (extra legs not tied to lots) -->
+                            <div id="wCallCalcManual" style="display:flex;flex-direction:column;gap:6px"></div>
+                            <button onclick="wCalcCallAddRow()" class="w-btn w-btn-sm" style="align-self:flex-start"><i class="fa-solid fa-plus" style="font-size:9px"></i> Add manual leg</button>
+
+                            <!-- Result panel -->
+                            <div id="wCallCalcResult" style="background:#0F172A;border:1px solid #1E293B;border-radius:10px;padding:16px;display:none">
+                                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px" id="wCallCalcResultGrid"></div>
+                                <!-- Breakdown table -->
+                                <div style="margin-top:14px;overflow-x:auto">
+                                    <table style="width:100%;font-size:11px;border-collapse:collapse">
+                                        <thead><tr style="color:#475569;text-transform:uppercase;font-size:9px;letter-spacing:.06em">
+                                            <th style="text-align:left;padding:4px 8px">Leg</th>
+                                            <th style="text-align:right;padding:4px 8px">Amount (BTC)</th>
+                                            <th style="text-align:right;padding:4px 8px">Strike</th>
+                                            <th style="text-align:right;padding:4px 8px">Notional</th>
+                                            <th style="text-align:right;padding:4px 8px">Weight</th>
+                                        </tr></thead>
+                                        <tbody id="wCallCalcBreakdown" style="color:#94A3B8"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div id="wCallCalcEmpty" style="font-size:11px;color:#475569;text-align:center;padding:12px">Select at least one lot or add a manual leg to calculate.</div>
                         </div>
                     </div>
 
@@ -6342,7 +6416,7 @@
         try { const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'); const d = await r.json(); btcPrice = parseFloat(d.lastPrice); const chg = parseFloat(d.priceChangePercent); document.getElementById('btcPrice').textContent = wusd(btcPrice,2); const ce = document.getElementById('btcChange'); ce.textContent = (chg>=0?'+':'')+chg.toFixed(2)+'%'; ce.className = 'btc-change-val '+(chg>=0?'up':'down'); const cs = document.getElementById('calcBtcShow'); if(cs) cs.textContent = wusd(btcPrice,2); wCalcAll(); wUpdateExerciseAndAlerts(); } catch(e) {}
     }
 
-    function wCalcAll() { wRenderSummary(); wRenderLots(); wRenderOrders(); wRenderCalc(); wRenderHistory(); wUpdateExerciseAndAlerts(); }
+    function wCalcAll() { wRenderSummary(); wRenderLots(); wRenderOrders(); wRenderCalc(); wRenderCallCalc(); wRenderHistory(); wUpdateExerciseAndAlerts(); }
 
     function wRenderSummary() {
         const bal = wpn(document.getElementById('optBalance').value);
@@ -6430,17 +6504,205 @@
         if (!el) return;
         const open = wOrders.filter(o => o.status === 'open');
         const totalBtc = open.reduce((sum,o) => sum + wpn(o.contracts), 0);
-        const putBtc = open.filter(o => o.product === 'Short Put').reduce((sum,o) => sum + wpn(o.contracts), 0);
-        const callBtc = open.filter(o => o.product === 'Short Call').reduce((sum,o) => sum + wpn(o.contracts), 0);
+        const putOrders  = open.filter(o => o.product === 'Short Put');
+        const callOrders = open.filter(o => o.product === 'Short Call');
+        const putBtc  = putOrders.reduce((sum,o)  => sum + wpn(o.contracts), 0);
+        const callBtc = callOrders.reduce((sum,o) => sum + wpn(o.contracts), 0);
+        const waCall = callBtc > 0 ? callOrders.reduce((s,o) => s + wpn(o.strike)*wpn(o.contracts), 0) / callBtc : 0;
+        const waPut  = putBtc  > 0 ? putOrders.reduce((s,o)  => s + wpn(o.strike)*wpn(o.contracts), 0) / putBtc  : 0;
         const orderTags = new Set(open.flatMap(wOrderTags));
         const missingTags = wLotTags().filter(tag => !orderTags.has(tag));
         const missingClass = missingTags.length ? 'warn' : 'ok';
         const missingText = missingTags.length ? satEsc(wFormatTagSelection(missingTags)) : 'All lot tags are linked';
         el.innerHTML = `
             <div class="wheel-order-metric"><span class="muted">Open BTC</span><strong>${totalBtc.toFixed(4)} BTC</strong><span style="color:#64748B">Put ${putBtc.toFixed(4)} · Call ${callBtc.toFixed(4)}</span></div>
+            ${waCall > 0 ? `<div class="wheel-order-metric"><span class="muted">Wtd Avg Strike (Call)</span><strong style="color:#C4B5FD">${wusd(waCall)}</strong><span style="color:#64748B">${callBtc.toFixed(4)} BTC</span></div>` : ''}
+            ${waPut  > 0 ? `<div class="wheel-order-metric"><span class="muted">Wtd Avg Strike (Put)</span><strong style="color:#6EE7B7">${wusd(waPut)}</strong><span style="color:#64748B">${putBtc.toFixed(4)} BTC</span></div>` : ''}
             <div class="wheel-order-metric ${missingClass}"><span class="muted">Lots not in Open orders</span><strong>${missingText}</strong></div>
         `;
     }
+
+    // ── Short Call WA Calculator ─────────────────────────
+    let wCallCalcManualRows = [];
+    let wCallCalcManualId = 0;
+
+    function wRenderCallCalc() {
+        const lotsEl = document.getElementById('wCallCalcLots');
+        if (!lotsEl) return;
+        // Rebuild lot cards preserving checked/amount/strike state
+        const existingState = {};
+        lotsEl.querySelectorAll('.wcc-lot-card').forEach(card => {
+            const tag = card.dataset.tag;
+            const chk = card.querySelector('input[type=checkbox]');
+            const amtEl = card.querySelector('.wcc-amt');
+            const stEl  = card.querySelector('.wcc-strike');
+            existingState[tag] = {
+                checked: chk?.checked || false,
+                amount: amtEl?.value || '',
+                strike: stEl?.value  || ''
+            };
+        });
+        lotsEl.innerHTML = '';
+        wLots.forEach(lot => {
+            const tag = wLotTag(lot);
+            const prev = existingState[tag] || {};
+            const defAmount = wpn(lot.amount).toFixed(4);
+            const defStrike = wpn(lot.target) > 0 ? wpn(lot.target).toLocaleString('en-US') : '';
+            const card = document.createElement('div');
+            card.className = 'wcc-lot-card' + (prev.checked ? ' selected' : '');
+            card.dataset.tag = tag;
+            card.innerHTML = `
+                <input type="checkbox" ${prev.checked ? 'checked' : ''} style="margin-top:2px;accent-color:#9B5CF6;cursor:pointer" onchange="wCallCalcToggle(this)">
+                <label>
+                    <span class="wcc-lot-name">${satEsc(lot.name)}${tag ? ` <span class="wheel-tag">${satEsc(tag)}</span>` : ''}</span>
+                    <span class="wcc-lot-meta">Buy: ${wpn(lot.price)>0?wusd(wpn(lot.price),2):'—'} · Default: ${defAmount} BTC · Strike: ${defStrike||'—'}</span>
+                    <div class="wcc-lot-inputs" style="display:${prev.checked?'flex':'none'}">
+                        <div style="flex:1"><div class="wcc-input-label">Amount (BTC)</div>
+                            <input class="wcc-input wcc-amt" type="text" inputmode="decimal" placeholder="${defAmount}" value="${prev.amount||defAmount}" onchange="wCallCalcRecalc()"></div>
+                        <div style="flex:1"><div class="wcc-input-label">Strike ($)</div>
+                            <input class="wcc-input wcc-strike" type="text" inputmode="decimal" placeholder="${defStrike||'target strike'}" value="${prev.strike||defStrike}" onchange="wCallCalcRecalc()"></div>
+                    </div>
+                </label>`;
+            lotsEl.appendChild(card);
+        });
+
+        // Render manual rows
+        const manualEl = document.getElementById('wCallCalcManual');
+        if (manualEl) {
+            manualEl.innerHTML = '';
+            wCallCalcManualRows.forEach(row => {
+                const div = document.createElement('div');
+                div.className = 'wcc-manual-row';
+                div.innerHTML = `
+                    <div style="flex:1"><div class="wcc-input-label">Label</div>
+                        <input class="wcc-input" type="text" placeholder="Custom leg" value="${satEsc(row.label||'')}" onchange="wCallCalcUpdateManual(${row.id},'label',this.value)"></div>
+                    <div style="flex:1"><div class="wcc-input-label">Amount (BTC)</div>
+                        <input class="wcc-input" type="text" inputmode="decimal" placeholder="0.0500" value="${row.amount||''}" onchange="wCallCalcUpdateManual(${row.id},'amount',this.value);wCallCalcRecalc()"></div>
+                    <div style="flex:1"><div class="wcc-input-label">Strike ($)</div>
+                        <input class="wcc-input" type="text" inputmode="decimal" placeholder="95000" value="${row.strike||''}" onchange="wCallCalcUpdateManual(${row.id},'strike',this.value);wCallCalcRecalc()"></div>
+                    <button onclick="wCallCalcRemoveManual(${row.id})" class="w-btn-icon w-btn-danger" style="margin-top:14px" title="Remove">✕</button>`;
+                manualEl.appendChild(div);
+            });
+        }
+        wCallCalcRecalc();
+    }
+
+    function wCallCalcToggle(chk) {
+        const card = chk.closest('.wcc-lot-card');
+        const inputs = card.querySelector('.wcc-lot-inputs');
+        card.classList.toggle('selected', chk.checked);
+        if (inputs) inputs.style.display = chk.checked ? 'flex' : 'none';
+        wCallCalcRecalc();
+    }
+
+    function wCallCalcAddRow() {
+        wCallCalcManualRows.push({ id: ++wCallCalcManualId, label: '', amount: '', strike: '' });
+        wRenderCallCalc();
+    }
+
+    function wCallCalcRemoveManual(id) {
+        wCallCalcManualRows = wCallCalcManualRows.filter(r => r.id !== id);
+        wRenderCallCalc();
+    }
+
+    function wCallCalcUpdateManual(id, field, value) {
+        const row = wCallCalcManualRows.find(r => r.id === id);
+        if (row) row[field] = value;
+    }
+
+    function wCallCalcReset() {
+        wCallCalcManualRows = [];
+        wCallCalcManualId = 0;
+        const lotsEl = document.getElementById('wCallCalcLots');
+        if (lotsEl) lotsEl.querySelectorAll('input[type=checkbox]').forEach(chk => {
+            chk.checked = false;
+            const card = chk.closest('.wcc-lot-card');
+            card?.classList.remove('selected');
+            const inputs = card?.querySelector('.wcc-lot-inputs');
+            if (inputs) inputs.style.display = 'none';
+        });
+        const manualEl = document.getElementById('wCallCalcManual');
+        if (manualEl) manualEl.innerHTML = '';
+        wCallCalcRecalc();
+    }
+
+    function wCallCalcRecalc() {
+        const resultEl  = document.getElementById('wCallCalcResult');
+        const emptyEl   = document.getElementById('wCallCalcEmpty');
+        const gridEl    = document.getElementById('wCallCalcResultGrid');
+        const brkEl     = document.getElementById('wCallCalcBreakdown');
+        if (!resultEl || !emptyEl || !gridEl || !brkEl) return;
+
+        // Collect legs from selected lot cards
+        const legs = [];
+        document.querySelectorAll('#wCallCalcLots .wcc-lot-card.selected').forEach(card => {
+            const amt    = wpn(card.querySelector('.wcc-amt')?.value);
+            const strike = wpn(card.querySelector('.wcc-strike')?.value);
+            const name   = card.querySelector('.wcc-lot-name')?.textContent?.trim() || 'Lot';
+            if (amt > 0 && strike > 0) legs.push({ name, amt, strike });
+        });
+        // Collect manual legs
+        wCallCalcManualRows.forEach(row => {
+            const amt    = wpn(row.amount);
+            const strike = wpn(row.strike);
+            if (amt > 0 && strike > 0) legs.push({ name: row.label || 'Manual', amt, strike });
+        });
+
+        if (!legs.length) {
+            resultEl.style.display = 'none';
+            emptyEl.style.display  = 'block';
+            return;
+        }
+        emptyEl.style.display  = 'none';
+        resultEl.style.display = 'block';
+
+        const totalAmt      = legs.reduce((s,l) => s + l.amt, 0);
+        const totalNotional = legs.reduce((s,l) => s + l.strike * l.amt, 0);
+        const waStrike      = totalNotional / totalAmt;
+        const gapPct        = btcPrice > 0 ? ((waStrike - btcPrice) / btcPrice * 100) : 0;
+        const gapCol        = gapPct >= 0 ? '#6EE7B7' : '#FCA5A5';
+
+        gridEl.innerHTML = `
+            <div class="wcc-result-metric">
+                <span class="wcc-result-label">Wtd Avg Strike</span>
+                <span class="wcc-result-value" style="color:#C4B5FD">${wusd(waStrike)}</span>
+                <span class="wcc-result-sub">across ${legs.length} leg${legs.length>1?'s':''}</span>
+            </div>
+            <div class="wcc-result-metric">
+                <span class="wcc-result-label">Total BTC</span>
+                <span class="wcc-result-value" style="color:#F8FAFC">${totalAmt.toFixed(4)}</span>
+                <span class="wcc-result-sub">combined amount</span>
+            </div>
+            <div class="wcc-result-metric">
+                <span class="wcc-result-label">Total Notional</span>
+                <span class="wcc-result-value" style="color:#F8FAFC">${wusd(totalNotional)}</span>
+                <span class="wcc-result-sub">at weighted strike</span>
+            </div>
+            <div class="wcc-result-metric">
+                <span class="wcc-result-label">Gap vs BTC</span>
+                <span class="wcc-result-value" style="color:${gapCol}">${gapPct>=0?'+':''}${gapPct.toFixed(2)}%</span>
+                <span class="wcc-result-sub">BTC now ${btcPrice>0?wusd(btcPrice):'—'}</span>
+            </div>`;
+
+        brkEl.innerHTML = legs.map(l => {
+            const weight = (l.amt / totalAmt * 100).toFixed(1);
+            return `<tr style="border-top:1px solid #1E293B">
+                <td style="padding:5px 8px">${satEsc(l.name)}</td>
+                <td style="text-align:right;padding:5px 8px">${l.amt.toFixed(4)}</td>
+                <td style="text-align:right;padding:5px 8px;color:#C4B5FD">${wusd(l.strike)}</td>
+                <td style="text-align:right;padding:5px 8px">${wusd(l.strike*l.amt)}</td>
+                <td style="text-align:right;padding:5px 8px;color:#64748b">${weight}%</td>
+            </tr>`;
+        }).join('') + `<tr style="border-top:1px solid #334155;font-weight:700;color:#F8FAFC">
+            <td style="padding:6px 8px">TOTAL</td>
+            <td style="text-align:right;padding:6px 8px">${totalAmt.toFixed(4)}</td>
+            <td style="text-align:right;padding:6px 8px;color:#C4B5FD">${wusd(waStrike)}</td>
+            <td style="text-align:right;padding:6px 8px">${wusd(totalNotional)}</td>
+            <td style="text-align:right;padding:6px 8px">100%</td>
+        </tr>`;
+    }
+
+    function wCalcCallReset() { wCallCalcReset(); }
 
     function wToggleOrderTag(id, tag, checked, input) {
         const order = wOrders.find(item => item.id === id);
@@ -6491,7 +6753,18 @@
             const tag = wLotTag(lot);
             tr.innerHTML=`<td><div class="lot-name"><div class="lot-dot" style="background:${noBtc?'#EF4444':'#9B5CF6'}"></div>${lot.name}${noBtc?'<span class="tag-r">NO BTC</span>':''}</div></td><td>${tag ? `<span class="wheel-tag">${satEsc(tag)}</span>` : '—'}</td><td>${price>0?wusd(price,2):'—'}</td><td>${amount.toFixed(4)} BTC</td><td>${price>0?wusd(cost):'—'}</td><td>${target>0?wusd(target):'—'}</td><td class="${pl>=0?'p-pos':'p-neg'}">${noBtc?'—':(pl>=0?'+':'')+wusd(pl)}</td><td class="p-pos">${wusd(accRealPL,2)}</td><td class="${net>=0?'p-pos':'p-neg'}">${noBtc?'—':(net>=0?'+':'')+wusd(net)}</td><td>${noBtc?'<span class="tag-r">Cash Settle</span>':(target>0 ? (covOK?'<span class="fcov">Fully Cover</span>':`<span style="font-size:11px;color:#FCA5A5;font-family:'Inter',sans-serif">${wusd((target-btcPrice)*amount)} short</span>`) : '—')}</td><td style="text-align:left;white-space:nowrap"><button class="w-btn-icon" onclick="openWheelLotModal(${lot.id})" title="Edit">✎</button><button class="w-btn-icon w-btn-danger" onclick="wDelLot(${lot.id})" title="Delete" style="margin-left:4px">✕</button></td>`;
             body.appendChild(tr); });
-        foot.innerHTML=`<tr class="tr-tot"><td>TOTAL</td><td></td><td></td><td>${wLots.reduce((s,l)=>s+wpn(l.amount),0).toFixed(4)} BTC</td><td>${wusd(tC)}</td><td></td><td class="${tPL>=0?'p-pos':'p-neg'}">${(tPL>=0?'+':'')+wusd(tPL)}</td><td class="p-pos">${wusd(tA,2)}</td><td class="${tN>=0?'p-pos':'p-neg'}">${(tN>=0?'+':'')+wusd(tN)}</td><td></td><td></td></tr>`;
+        foot.innerHTML=`<tr class="tr-tot">
+            <td>TOTAL</td><td></td>
+            <td style="font-size:10px;color:#94A3B8">
+                ${(()=>{const lv=wLots.filter(l=>wpn(l.price)>0);const wa=lv.length?lv.reduce((s,l)=>s+wpn(l.price)*wpn(l.amount),0)/lv.reduce((s,l)=>s+wpn(l.amount),0):0;return wa>0?`<span style="display:block;color:#64748b;font-size:9px;letter-spacing:.04em;text-transform:uppercase">Wtd Avg</span><span style="color:#C4B5FD;font-weight:700">${wusd(wa,2)}</span>`:'—';})()}
+            </td>
+            <td>${wLots.reduce((s,l)=>s+wpn(l.amount),0).toFixed(4)} BTC</td>
+            <td>${wusd(tC)}</td><td></td>
+            <td class="${tPL>=0?'p-pos':'p-neg'}">${(tPL>=0?'+':'')+wusd(tPL)}</td>
+            <td class="p-pos">${wusd(tA,2)}</td>
+            <td class="${tN>=0?'p-pos':'p-neg'}">${(tN>=0?'+':'')+wusd(tN)}</td>
+            <td></td><td></td>
+        </tr>`;
     }
     function wDelLot(id){if(!confirm('Delete this lot?'))return;wLots=wLots.filter(l=>l.id!==id);wCalcAll();wAutoPush();}
 
