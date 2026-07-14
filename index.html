@@ -6842,11 +6842,12 @@
             body.appendChild(tr); });
         foot.innerHTML=`<tr class="tr-tot">
             <td>TOTAL</td><td></td>
-            <td style="font-size:10px;color:#94A3B8">
-                ${(()=>{const validAmt=wLots.reduce((s,l)=>{const noBtc=l.problem===true||String(l.problem).toLowerCase()==='true'||wpn(l.price)===0;return s+(noBtc?0:wpn(l.amount));},0);const wa=validAmt>0?tC/validAmt:0;return wa>0?`<span style="display:block;color:#64748b;font-size:9px;letter-spacing:.04em;text-transform:uppercase">Wtd Avg</span><span style="color:#C4B5FD;font-weight:700">${wusd(wa,2)}</span>`:'—';})()}
-            </td>
+            <td></td>
             <td>${wLots.reduce((s,l)=>s+wpn(l.amount),0).toFixed(4)} BTC</td>
-            <td>${wusd(tC)}</td><td></td>
+            <td>${wusd(tC)}</td>
+            <td style="font-size:10px;color:#94A3B8">
+                ${(()=>{const validAmt=wLots.reduce((s,l)=>{const noBtc=l.problem===true||String(l.problem).toLowerCase()==='true'||wpn(l.price)===0;return s+(noBtc?0:wpn(l.amount));},0);const waTarget=validAmt>0?wLots.reduce((s,l)=>{const noBtc=l.problem===true||String(l.problem).toLowerCase()==='true'||wpn(l.price)===0;return s+(noBtc?0:wpn(l.target)*wpn(l.amount));},0)/validAmt:0;return waTarget>0?`<span style="display:block;color:#64748b;font-size:9px;letter-spacing:.04em;text-transform:uppercase">Wtd Avg</span><span style="color:#C4B5FD;font-weight:700">${wusd(waTarget,2)}</span>`:'—';})()}
+            </td>
             <td class="${tPL>=0?'p-pos':'p-neg'}">${(tPL>=0?'+':'')+wusd(tPL)}</td>
             <td class="p-pos">${wusd(tA,2)}</td>
             <td class="${tN>=0?'p-pos':'p-neg'}">${(tN>=0?'+':'')+wusd(tN)}</td>
