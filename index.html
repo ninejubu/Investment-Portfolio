@@ -2128,8 +2128,7 @@
                             <!-- Step 2: Order split panel (shows after ≥1 lot selected) -->
                             <div id="wCallCalcSplitPanel" style="display:none">
                                 <!-- Target summary bar -->
-                                <div id="wCallCalcTargetBar" style="display:flex;gap:20px;align-items:center;background:#0F172A;border:1px solid #1E293B;border-radius:8px;padding:10px 16px;margin-bottom:14px;flex-wrap:wrap">
-                                </div>
+                                <div id="wCallCalcTargetBar" style="font-size:11px;color:#94A3B8;margin-bottom:14px"></div>
 
                                 <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Step 2 — Split into orders <span style="color:#475569;font-size:9px;text-transform:none;letter-spacing:0">(edit amount &amp; strike per order; last order auto-solves)</span></div>
 
@@ -6643,18 +6642,10 @@
     function wccRecalc() {
         const { totalAmt, waStrike } = wccTarget();
 
-        // Update target bar
+        // Update target bar (slim single-line summary)
         const targetBar = document.getElementById('wCallCalcTargetBar');
         if (targetBar) {
-            const gapPct = btcPrice > 0 ? ((waStrike - btcPrice) / btcPrice * 100) : 0;
-            const gapCol = gapPct >= 0 ? '#6EE7B7' : '#FCA5A5';
-            targetBar.innerHTML = `
-                <div><span style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block">Target WA Strike</span>
-                    <span style="font-size:16px;font-weight:700;color:#C4B5FD">${wusd(waStrike)}</span></div>
-                <div><span style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block">Total BTC to cover</span>
-                    <span style="font-size:16px;font-weight:700;color:#F8FAFC">${totalAmt.toFixed(4)}</span></div>
-                <div><span style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block">Gap vs BTC now</span>
-                    <span style="font-size:14px;font-weight:700;color:${gapCol}">${gapPct>=0?'+':''}${gapPct.toFixed(2)}%</span></div>`;
+            targetBar.innerHTML = `Covering <strong style="color:#F8FAFC">${wccSelectedLots.size} lot${wccSelectedLots.size>1?'s':''}</strong> · <strong style="color:#F8FAFC">${totalAmt.toFixed(4)} BTC</strong> · Target WA <strong style="color:#C4B5FD">${wusd(waStrike)}</strong>`;
         }
 
         // Compute solved values from current input state (read live from DOM to get latest keystrokes)
@@ -6724,17 +6715,12 @@
             <div class="wcc-result-metric">
                 <span class="wcc-result-label">Actual WA Strike</span>
                 <span class="wcc-result-value" style="color:${waMatch?'#C4B5FD':'#FCA5A5'}">${wusd(actualWA)}</span>
-                <span class="wcc-result-sub" style="color:${waMatch?'#10B981':'#EF4444'}">${waMatch?'✓ Matches target':'Δ '+wusd(waDiff)+' off'}</span>
-            </div>
-            <div class="wcc-result-metric">
-                <span class="wcc-result-label">Target WA Strike</span>
-                <span class="wcc-result-value" style="color:#F8FAFC">${wusd(waStrike)}</span>
-                <span class="wcc-result-sub">${wccSelectedLots.size} lot${wccSelectedLots.size>1?'s':''} selected</span>
+                <span class="wcc-result-sub" style="color:${waMatch?'#10B981':'#EF4444'}">${waMatch?'✓ Matches target':'Δ '+wusd(waDiff)+' vs '+wusd(waStrike)+' target'}</span>
             </div>
             <div class="wcc-result-metric">
                 <span class="wcc-result-label">Orders / Total BTC</span>
                 <span class="wcc-result-value" style="color:#F8FAFC">${allOrders.length} / ${allAmt.toFixed(4)}</span>
-                <span class="wcc-result-sub">covers ${totalAmt>0?((allAmt/totalAmt)*100).toFixed(1):0}%</span>
+                <span class="wcc-result-sub">covers ${totalAmt>0?((allAmt/totalAmt)*100).toFixed(1):0}% of target</span>
             </div>
             <div class="wcc-result-metric">
                 <span class="wcc-result-label">Gap vs BTC</span>
