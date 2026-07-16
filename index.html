@@ -603,6 +603,7 @@
         .wcc-result-label { font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.06em }
         .wcc-result-value { font-size:18px;font-weight:700;font-family:'Inter',sans-serif }
         .wcc-result-sub { font-size:10px;color:#64748b }
+        .lot-name { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
         .lot-dot { width: 6px; height: 6px; border-radius: 50%; background: #9B5CF6; flex-shrink: 0; }
         .p-pos { color: #10B981; } .p-neg { color: #EF4444; }
         .fcov { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: rgba(16,185,129,.1); color: #34D399; font-family: 'Inter', sans-serif; }
@@ -6541,6 +6542,7 @@
             ${waCall > 0 ? `<div class="wheel-order-metric"><span class="muted">Wtd Avg Strike (Call)</span><strong style="color:#C4B5FD">${wusd(waCall)}</strong><span style="color:#64748B">${callBtc.toFixed(4)} BTC</span></div>` : ''}
             ${waPut  > 0 ? `<div class="wheel-order-metric"><span class="muted">Wtd Avg Strike (Put)</span><strong style="color:#6EE7B7">${wusd(waPut)}</strong><span style="color:#64748B">${putBtc.toFixed(4)} BTC</span></div>` : ''}
             <div class="wheel-order-metric ${missingClass}"><span class="muted">Lots not in Open orders</span><strong>${missingText}</strong></div>
+            ${gapHtml}
         `;
     }
 
