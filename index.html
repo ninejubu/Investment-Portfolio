@@ -6084,19 +6084,11 @@
         setSyncPill('loading', 'Syncing…');
         setRefreshSpin(true);
         let invOk = false, wheelOk = false, satelliteOk = false, cashflowOk = false;
-        try {
-            invOk = await loadFromGSheet();
-            if (invOk) { updateDashboard(); renderMonthlyTiers(); }
-        } catch(e) {}
-        try {
-            wheelOk = await wPullFromSheets(true);
-        } catch(e) {}
-        try {
-            satelliteOk = await satPullFromSheets(true, { forcePrices: true });
-        } catch(e) {}
-        try {
-            cashflowOk = await cfPullFromSheets(true);
-        } catch(e) {}
+        try { invOk = await loadFromGSheet(); } catch(e) {}
+        try { wheelOk = await wPullFromSheets(true); } catch(e) {}
+        try { satelliteOk = await satPullFromSheets(true, { forcePrices: true }); } catch(e) {}
+        try { cashflowOk = await cfPullFromSheets(true); } catch(e) {}
+        updateDashboard(); renderMonthlyTiers();
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
         if (invOk && wheelOk && satelliteOk && cashflowOk) setSyncPill('ok', 'Synced ' + now);
@@ -6149,10 +6141,11 @@
         setRefreshSpin(true);
         // Try both
         let invOk = false, wheelOk = false, satelliteOk = false, cashflowOk = false;
-        try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
+        try { invOk  = await loadFromGSheet(); } catch(e) {}
         try { wheelOk = await wPullFromSheets(true); } catch(e) {}
         try { satelliteOk = await satPullFromSheets(true, { forcePrices: true }); } catch(e) {}
         try { cashflowOk = await cfPullFromSheets(true); } catch(e) {}
+        updateDashboard(); renderMonthlyTiers();
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
         if (invOk || wheelOk || satelliteOk || cashflowOk) {
@@ -6173,10 +6166,11 @@
         setSyncPill('loading', 'Pulling…');
         setRefreshSpin(true);
         let invOk = false, wheelOk = false, satelliteOk = false, cashflowOk = false;
-        try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
+        try { invOk  = await loadFromGSheet(); } catch(e) {}
         try { wheelOk = await wPullFromSheets(true); } catch(e) {}
         try { satelliteOk = await satPullFromSheets(true, { forcePrices: true }); } catch(e) {}
         try { cashflowOk = await cfPullFromSheets(true); } catch(e) {}
+        updateDashboard(); renderMonthlyTiers();
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
         setSyncPill(invOk || wheelOk || satelliteOk || cashflowOk ? 'ok' : 'err', invOk || wheelOk || satelliteOk || cashflowOk ? 'Synced ' + now : 'Pull failed');
@@ -7435,13 +7429,13 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             setSyncPill('loading', 'Connecting…');
             setRefreshSpin(true);
             let invOk = false, wheelOk = false, satelliteOk = false, cashflowOk = false;
-            try { invOk  = await loadFromGSheet(); if (invOk) { updateDashboard(); renderMonthlyTiers(); } } catch(e) {}
+            try { invOk  = await loadFromGSheet(); } catch(e) {}
             try { wheelOk = await wPullFromSheets(true); } catch(e) {}
             try { satelliteOk = await satPullFromSheets(true, { forcePrices: true }); } catch(e) {}
             try { cashflowOk = await cfPullFromSheets(true); } catch(e) {}
             if (satelliteOk) satRefreshMarketPrices(false).catch(error => console.warn('Market price refresh failed:', error.message));
-            // updateDashboard() above already replaced skeleton content with real values
-            if (!invOk) { updateDashboard(); } // ensure skeleton is cleared even on failure
+            // Always call updateDashboard after all pulls complete
+            updateDashboard(); renderMonthlyTiers();
             setRefreshSpin(false);
             const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
             if (invOk || wheelOk || satelliteOk || cashflowOk) setSyncPill('ok', 'Synced ' + now);
