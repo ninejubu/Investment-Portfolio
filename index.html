@@ -6545,6 +6545,24 @@
         const missingTags = wLotTags().filter(tag => !orderTags.has(tag));
         const missingClass = missingTags.length ? 'warn' : 'ok';
         const missingText = missingTags.length ? satEsc(wFormatTagSelection(missingTags)) : 'All lot tags are linked';
+
+        // BTC coverage gap: compare open Short Call BTC vs lot amounts for same tags
+        const callTagMap = new Map(); // tag -> total contracts in open Short Call orders
+        callOrders.forEach(o => {
+            wOrderTags(o).forEach(tag => {
+                callTagMap.set(tag, (callTagMap.get(tag) || 0) + wpn(o.contracts));
+            });
+        });
+        const gapLines = [];
+        callTagMap.forEach((openBtc, tag) => {
+            const lot = wLots.find(l => wLotTag(l) === tag);
+            if (!lot) return;
+            const lotBtc = wpn(lot.amount);
+            const gap = lotBtc - openBtc;
+            if (gap > 0.001) gapLines.push(`${tag}: Open ${openBtc.toFixed(4)} vs Lot ${lotBtc.toFixed(4)} (need +${gap.toFixed(4)} BTC more)`);
+        });
+        const gapHtml = gapLines.length ? `<div class="wheel-order-metric" style="grid-column:1/-1"><span class="muted" style="color:#FCA5A5">⚠ Short Call BTC gap</span><span style="color:#FCA5A5;font-size:10px;line-height:1.6">${gapLines.map(g=>`<div>${satEsc(g)}</div>`).join('')}</span></div>` : '';
+
         el.innerHTML = `
             <div class="wheel-order-metric"><span class="muted">Open BTC</span><strong>${totalBtc.toFixed(4)} BTC</strong><span style="color:#64748B">Put ${putBtc.toFixed(4)} · Call ${callBtc.toFixed(4)}</span></div>
             ${waCall > 0 ? `<div class="wheel-order-metric"><span class="muted">Wtd Avg Strike (Call)</span><strong style="color:#C4B5FD">${wusd(waCall)}</strong><span style="color:#64748B">${callBtc.toFixed(4)} BTC</span></div>` : ''}
