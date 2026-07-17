@@ -6088,7 +6088,7 @@
         try { wheelOk = await wPullFromSheets(true); } catch(e) {}
         try { satelliteOk = await satPullFromSheets(true, { forcePrices: true }); } catch(e) {}
         try { cashflowOk = await cfPullFromSheets(true); } catch(e) {}
-        updateDashboard(); renderMonthlyTiers();
+        updateDashboard(); renderMonthlyTiers(); wCalcAll();
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
         if (invOk && wheelOk && satelliteOk && cashflowOk) setSyncPill('ok', 'Synced ' + now);
@@ -6145,7 +6145,7 @@
         try { wheelOk = await wPullFromSheets(true); } catch(e) {}
         try { satelliteOk = await satPullFromSheets(true, { forcePrices: true }); } catch(e) {}
         try { cashflowOk = await cfPullFromSheets(true); } catch(e) {}
-        updateDashboard(); renderMonthlyTiers();
+        updateDashboard(); renderMonthlyTiers(); wCalcAll();
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
         if (invOk || wheelOk || satelliteOk || cashflowOk) {
@@ -6170,7 +6170,7 @@
         try { wheelOk = await wPullFromSheets(true); } catch(e) {}
         try { satelliteOk = await satPullFromSheets(true, { forcePrices: true }); } catch(e) {}
         try { cashflowOk = await cfPullFromSheets(true); } catch(e) {}
-        updateDashboard(); renderMonthlyTiers();
+        updateDashboard(); renderMonthlyTiers(); wCalcAll();
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
         setSyncPill(invOk || wheelOk || satelliteOk || cashflowOk ? 'ok' : 'err', invOk || wheelOk || satelliteOk || cashflowOk ? 'Synced ' + now : 'Pull failed');
@@ -7435,7 +7435,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             try { cashflowOk = await cfPullFromSheets(true); } catch(e) {}
             if (satelliteOk) satRefreshMarketPrices(false).catch(error => console.warn('Market price refresh failed:', error.message));
             // Always call updateDashboard after all pulls complete
-            updateDashboard(); renderMonthlyTiers();
+            updateDashboard(); renderMonthlyTiers(); wCalcAll();
             setRefreshSpin(false);
             const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
             if (invOk || wheelOk || satelliteOk || cashflowOk) setSyncPill('ok', 'Synced ' + now);
