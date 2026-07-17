@@ -6088,7 +6088,7 @@
         try { wheelOk = await wPullFromSheets(true); } catch(e) {}
         try { satelliteOk = await satPullFromSheets(true, { forcePrices: true }); } catch(e) {}
         try { cashflowOk = await cfPullFromSheets(true); } catch(e) {}
-        updateDashboard(); renderMonthlyTiers(); wCalcAll();
+        try { updateDashboard(); renderMonthlyTiers(); wCalcAll(); } catch(e) { console.error('Render after sync failed:', e); }
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
         if (invOk && wheelOk && satelliteOk && cashflowOk) setSyncPill('ok', 'Synced ' + now);
@@ -6145,7 +6145,7 @@
         try { wheelOk = await wPullFromSheets(true); } catch(e) {}
         try { satelliteOk = await satPullFromSheets(true, { forcePrices: true }); } catch(e) {}
         try { cashflowOk = await cfPullFromSheets(true); } catch(e) {}
-        updateDashboard(); renderMonthlyTiers(); wCalcAll();
+        try { updateDashboard(); renderMonthlyTiers(); wCalcAll(); } catch(e) { console.error('Render after sync failed:', e); }
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
         if (invOk || wheelOk || satelliteOk || cashflowOk) {
@@ -6170,7 +6170,7 @@
         try { wheelOk = await wPullFromSheets(true); } catch(e) {}
         try { satelliteOk = await satPullFromSheets(true, { forcePrices: true }); } catch(e) {}
         try { cashflowOk = await cfPullFromSheets(true); } catch(e) {}
-        updateDashboard(); renderMonthlyTiers(); wCalcAll();
+        try { updateDashboard(); renderMonthlyTiers(); wCalcAll(); } catch(e) { console.error('Render after sync failed:', e); }
         setRefreshSpin(false);
         const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
         setSyncPill(invOk || wheelOk || satelliteOk || cashflowOk ? 'ok' : 'err', invOk || wheelOk || satelliteOk || cashflowOk ? 'Synced ' + now : 'Pull failed');
@@ -6217,7 +6217,14 @@
         const extra = new URLSearchParams(params);
         const extraText = extra.toString();
         if (extraText) requestUrl += '&' + extraText;
-        const res = await fetch(requestUrl);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        let res;
+        try {
+            res = await fetch(requestUrl, { signal: controller.signal });
+        } finally {
+            clearTimeout(timeout);
+        }
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         if (data && data.error) throw new Error(data.error);
@@ -6287,7 +6294,14 @@
         const url = getInvUrl(); if (!url) return false;
         let ok = false;
         try {
-            const res = await fetch(url);
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 15000);
+            let res;
+            try {
+                res = await fetch(url, { signal: controller.signal });
+            } finally {
+                clearTimeout(timeout);
+            }
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const flows = await res.json();
             if (flows && flows.error) throw new Error(flows.error);
@@ -7298,7 +7312,14 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     async function wPullFromSheets(silent=false) {
         const url = wGetSheetsUrl(); if (!url) return false;
         try {
-            const r = await fetch(url + '?action=wheel_read&t=' + Date.now());
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 15000);
+            let r;
+            try {
+                r = await fetch(url + '?action=wheel_read&t=' + Date.now(), { signal: controller.signal });
+            } finally {
+                clearTimeout(timeout);
+            }
             if (!r.ok) throw new Error('HTTP ' + r.status);
             const data = await r.json();
             if (data.error) throw new Error(data.error);
@@ -7435,7 +7456,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             try { cashflowOk = await cfPullFromSheets(true); } catch(e) {}
             if (satelliteOk) satRefreshMarketPrices(false).catch(error => console.warn('Market price refresh failed:', error.message));
             // Always call updateDashboard after all pulls complete
-            updateDashboard(); renderMonthlyTiers(); wCalcAll();
+            try { updateDashboard(); renderMonthlyTiers(); wCalcAll(); } catch(e) { console.error('Render after sync failed:', e); }
             setRefreshSpin(false);
             const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
             if (invOk || wheelOk || satelliteOk || cashflowOk) setSyncPill('ok', 'Synced ' + now);
