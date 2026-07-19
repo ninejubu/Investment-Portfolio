@@ -316,6 +316,7 @@ function readSettingTypedRows(values, out) {
   var cClass  = findSettingCol(h, ['class', 'asset class']);
   var cName   = findSettingCol(h, ['name']);
   var cTicker = findSettingCol(h, ['ticker']);
+  var cTheme  = findSettingCol(h, ['theme']);
   var periodCols = {
     Beg: findSettingCol(h, ['beg', 'beginning']),
     Q1:  findSettingCol(h, ['q1']),
@@ -344,11 +345,12 @@ function readSettingTypedRows(values, out) {
         var amount = settingNumber(row[periodCols[period]]);
         if (amount === null) return;
         out.holdings.push({
-          asset: asset,
-          period: period,
-          name: String(row[cName] || '').trim(),
-          ticker: String(row[cTicker] || '').trim(),
-          amount: amount
+          asset:   asset,
+          period:  period,
+          name:    String(row[cName]   || '').trim(),
+          ticker:  String(row[cTicker] || '').trim(),
+          theme:   cTheme >= 0 ? String(row[cTheme] || '').trim() : '',
+          amount:  amount
         });
       });
     }
