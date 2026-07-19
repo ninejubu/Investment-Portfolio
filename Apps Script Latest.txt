@@ -778,10 +778,24 @@ function cashflowWrite(data) {
 function wheelRead() {
   try {
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+    // Read Wheel_meta: A1=key, B1=value (e.g. optBalance)
+    var meta = {};
+    var metaSheet = ss.getSheetByName('Wheel_meta');
+    if (metaSheet) {
+      var metaData = metaSheet.getDataRange().getValues();
+      for (var m = 0; m < metaData.length; m++) {
+        var key = String(metaData[m][0] || '').trim();
+        var val = metaData[m][1];
+        if (key) meta[key] = val == null ? '' : val;
+      }
+    }
+
     return jsonOut({
       orders:  sheetToJson(ss.getSheetByName(TAB_WHL_ORDERS)),
       lots:    sheetToJson(ss.getSheetByName(TAB_WHL_LOTS)),
-      history: sheetToJson(ss.getSheetByName(TAB_WHL_HISTORY))
+      history: sheetToJson(ss.getSheetByName(TAB_WHL_HISTORY)),
+      meta:    meta
     });
   } catch (err) { return jsonOut({ error: err.message }); }
 }
@@ -792,6 +806,34 @@ function wheelWrite(data) {
     if (data.orders  !== undefined) writeSheet(ss, TAB_WHL_ORDERS,  data.orders);
     if (data.lots    !== undefined) writeSheet(ss, TAB_WHL_LOTS,    data.lots);
     if (data.history !== undefined) writeSheet(ss, TAB_WHL_HISTORY, data.history);
+
+    // Save meta values (e.g. optBalance) to Wheel_meta sheet
+    if (data.meta && typeof data.meta === 'object') {
+      var metaSheet = ss.getSheetByName('Wheel_meta');
+      if (!metaSheet) metaSheet = ss.insertSheet('Wheel_meta');
+      // Build key→row map from existing data
+      var existing = metaSheet.getDataRange().getValues();
+      var keyToRow = {};
+      for (var i = 0; i < existing.length; i++) {
+        var k = String(existing[i][0] || '').trim();
+        if (k) keyToRow[k] = i + 1; // 1-based row
+      }
+      var keys = Object.keys(data.meta);
+      for (var j = 0; j < keys.length; j++) {
+        var metaKey = keys[j];
+        var metaVal = data.meta[metaKey];
+        if (keyToRow[metaKey]) {
+          metaSheet.getRange(keyToRow[metaKey], 2).setValue(metaVal);
+        } else {
+          // Append new key to next empty row
+          var nextRow = Object.keys(keyToRow).length + 1;
+          metaSheet.getRange(nextRow, 1).setValue(metaKey);
+          metaSheet.getRange(nextRow, 2).setValue(metaVal);
+          keyToRow[metaKey] = nextRow;
+        }
+      }
+    }
+
     return jsonOut({ ok: true, timestamp: new Date().toISOString() });
   } catch (err) { return jsonOut({ error: err.message }); }
 }
