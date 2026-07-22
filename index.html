@@ -2050,7 +2050,7 @@
                             <div class="mb-3">
                                 <div class="wheel-input-group">
                                     <span class="wheel-label">Total Options Balance ($)</span>
-                                    <input type="text" inputmode="numeric" class="wheel-input" id="optBalance" value="" oninput="wFmtNum(this);wCalcAll()">
+                                    <input type="text" inputmode="numeric" class="wheel-input" id="optBalance" value="" oninput="wFmtNum(this);wCalcAll();wSaveOptBalance()">
                                 </div>
                             </div>
                             <div class="wheel-stat-grid">
@@ -6792,8 +6792,16 @@
     function wccToggleLot(idx, checked) {
         if (checked) wccSelectedLots.add(idx);
         else         wccSelectedLots.delete(idx);
-        wccOrders  = [];
         wccOrderId = 0;
+        wccOrders = Array.from(wccSelectedLots).sort((a,b)=>a-b).map(i => {
+            const lot = wLots[i];
+            return {
+                id: ++wccOrderId,
+                amt:    wpn(lot?.amount) > 0 ? wpn(lot.amount).toFixed(4) : '',
+                strike: wpn(lot?.target) > 0 ? String(Math.round(wpn(lot.target))) : '',
+                auto: false
+            };
+        });
         wRenderCallCalc();
     }
 
@@ -7291,7 +7299,19 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
 
     // ─── Wheel Google Sheets Sync ───
     const WHEEL_LS_KEY = GS_URL_KEY;
+    const WHEEL_OPT_BAL_KEY = 'wheel_opt_balance';
     function wGetSheetsUrl() { return getGsUrl(); }
+
+    function wSaveOptBalance() {
+        const v = document.getElementById('optBalance')?.value || '';
+        localStorage.setItem(WHEEL_OPT_BAL_KEY, v);
+        wAutoPush(); // push to Google Sheets too (debounced inside wAutoPush's caller pattern if any)
+    }
+    function wLoadOptBalanceLocal() {
+        const el = document.getElementById('optBalance');
+        const saved = localStorage.getItem(WHEEL_OPT_BAL_KEY);
+        if (el && saved !== null && saved !== '') { el.value = saved; wFmtNum(el); }
+    }
 
     function wField(obj, ...keys) {
         for (const key of keys) {
@@ -7347,6 +7367,10 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             if (Array.isArray(data.orders) && data.orders.length) { wOrders = data.orders.filter(isValidOrder).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'open'),tags:wParseOrderTags(o.tags||o.tag).join(','),tag:'',note:String(o.note||'')})); wNextId = Math.max(...wOrders.map(o=>o.id), wNextId) + 1; }
             if (Array.isArray(data.lots) && data.lots.length) { wLots = data.lots.filter(isValidLot).map(wNormalizeSheetLot); }
             if (Array.isArray(data.history) && data.history.length) { wClosed = data.history.filter(isValidHist).map(o => ({id:+o.id,cex:String(o.cex||''),product:String(o.product||''),openDate:String(o.openDate||''),expiryDate:String(o.expiryDate||''),strike:+o.strike,contracts:+o.contracts,premium:+o.premium,currency:String(o.currency||'Contracts'),status:String(o.status||'closed'),tags:wParseOrderTags(o.tags||o.tag).join(','),tag:'',lotCreditPL:wpn(o.lotCreditPL),lotCredits:String(o.lotCredits||''),note:String(o.note||''),exercisePL:wpn(o.exercisePL ?? o.realizedPL ?? o.pnl ?? o.pl ?? 0)})); }
+            if (data.meta && data.meta.optBalance !== undefined && data.meta.optBalance !== '') {
+                const optEl = document.getElementById('optBalance');
+                if (optEl) { optEl.value = data.meta.optBalance; wFmtNum(optEl); localStorage.setItem(WHEEL_OPT_BAL_KEY, String(data.meta.optBalance)); }
+            }
             wCalcAll(); return true;
         } catch(e) { console.error('Wheel pull error:', e); return false; }
     }
@@ -7354,7 +7378,8 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     async function wPushToSheets(silent=false) {
         const url = wGetSheetsUrl(); if (!url) return;
         try {
-            await postGsWrite({ action: 'wheel_write', orders: wOrders, lots: wLots.map(l => ({...l, problem: l.problem ? 'true' : 'false'})), history: wClosed });
+            const optBal = document.getElementById('optBalance')?.value || '';
+            await postGsWrite({ action: 'wheel_write', orders: wOrders, lots: wLots.map(l => ({...l, problem: l.problem ? 'true' : 'false'})), history: wClosed, meta: { optBalance: optBal } });
         } catch(e) { console.error('Wheel push error:', e); throw e; }
     }
 
@@ -7438,6 +7463,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         clearCachedFinancialSettings();
         satLoadLocal();
         cfLoadLocal();
+        wLoadOptBalanceLocal();
         applyColorTheme(localStorage.getItem(THEME_KEY) || 'dark');
         applySidebarState();
         updatePortfolioControls();
@@ -7711,7 +7737,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                 });
             }
         });
-        const mergedRows = Array.from(tickerMap.values());
+        const mergedRows = Array.from(tickerMap.values()).sort((a, b) => b.amount - a.amount);
 
         const hintEl  = document.getElementById('hb-hint');
         const totalEl = document.getElementById('hb-total');
