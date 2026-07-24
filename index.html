@@ -6633,7 +6633,16 @@
         emptyEl.style.display    = 'none';
 
         if (wccOrders.length === 0) {
-            wccOrders = [{ id: ++wccOrderId, amt: '', strike: '', locked: false }];
+            wccOrders = Array.from(wccSelectedLots).sort((a,b)=>a-b).map(i => {
+                const lot = wLots[i];
+                return {
+                    id: ++wccOrderId,
+                    amt:    wpn(lot?.amount) > 0 ? wpn(lot.amount).toFixed(4) : '',
+                    strike: wpn(lot?.target) > 0 ? String(Math.round(wpn(lot.target))) : '',
+                    auto: false
+                };
+            });
+            if (wccOrders.length === 0) wccOrders = [{ id: ++wccOrderId, amt: '', strike: '', auto: false }];
         }
 
         // Render order rows (only once; inputs kept in DOM)
@@ -6647,35 +6656,34 @@
         ordersEl.innerHTML = '';
         wccOrders.forEach((order, idx) => {
             const isLast = idx === wccOrders.length - 1;
+            const isAuto = !!order.auto;
             const row    = document.createElement('div');
             row.id       = 'wcc-order-row-' + order.id;
-            row.style.cssText = `display:grid;grid-template-columns:130px 1fr 1fr auto;gap:8px;align-items:end;padding:10px 12px;border-radius:8px;background:${isLast?'rgba(155,92,246,.06)':'#0F172A'};border:1px solid ${isLast?'#9B5CF6':'#1E293B'}`;
+            row.style.cssText = `display:grid;grid-template-columns:130px 1fr 1fr auto;gap:8px;align-items:end;padding:10px 12px;border-radius:8px;background:${isAuto?'rgba(155,92,246,.06)':'#0F172A'};border:1px solid ${isAuto?'#9B5CF6':'#1E293B'}`;
             row.innerHTML = `
                 <div>
-                    <div class="wcc-input-label" style="color:${isLast?'#C4B5FD':'#64748b'}">${isLast?'✦ Auto-solved':'Order '+(idx+1)}</div>
-                    <div style="font-size:10px;color:#475569;margin-top:2px">${isLast?'remaining BTC + required strike':'editable'}</div>
+                    <div class="wcc-input-label" style="color:${isAuto?'#C4B5FD':'#64748b'}">${isAuto?'✦ Auto-solved':'Order '+(idx+1)}</div>
+                    <div style="font-size:10px;color:#475569;margin-top:2px">${isAuto?'remaining BTC + required strike':'editable'}</div>
                 </div>
                 <div>
                     <div class="wcc-input-label">Amount (BTC)</div>
                     <input id="wcc-amt-${order.id}" class="wcc-input" type="text" inputmode="decimal"
-                        value="${isLast?'':order.amt}"
-                        placeholder="${isLast?'auto':'0.0000'}"
-                        ${isLast?'readonly style="background:#0A1222;color:#9B5CF6;cursor:default;border-color:#4C1D95"':''}
+                        value="${isAuto?'':order.amt}"
+                        placeholder="${isAuto?'auto':'0.0000'}"
+                        ${isAuto?'readonly style="background:#0A1222;color:#9B5CF6;cursor:default;border-color:#4C1D95"':''}
                         oninput="wccFieldChange(${order.id},'amt',this.value)">
                 </div>
                 <div>
                     <div class="wcc-input-label">Strike ($)</div>
                     <input id="wcc-stk-${order.id}" class="wcc-input" type="text" inputmode="decimal"
-                        value="${isLast?'':order.strike}"
-                        placeholder="${isLast?'auto':'e.g. 85000'}"
-                        ${isLast?'readonly style="background:#0A1222;color:#C4B5FD;font-weight:700;cursor:default;border-color:#4C1D95"':''}
+                        value="${isAuto?'':order.strike}"
+                        placeholder="${isAuto?'auto':'e.g. 85000'}"
+                        ${isAuto?'readonly style="background:#0A1222;color:#C4B5FD;font-weight:700;cursor:default;border-color:#4C1D95"':''}
                         oninput="wccFieldChange(${order.id},'strike',this.value)">
                 </div>
                 <div style="display:flex;gap:4px;margin-bottom:1px">
-                    ${isLast
-                        ? `<button class="w-btn w-btn-sm w-btn-primary" onclick="wccLockSolved()" title="Lock this order and add another">+ Split</button>`
-                        : `<button class="w-btn-icon w-btn-danger" onclick="wccRemoveOrder(${order.id})" title="Remove">✕</button>`
-                    }
+                    ${isLast ? `<button class="w-btn w-btn-sm w-btn-primary" onclick="wccSplitAction()" title="Add another order">+ Split</button>` : ''}
+                    ${!isAuto ? `<button class="w-btn-icon w-btn-danger" onclick="wccRemoveOrder(${order.id})" title="Remove">✕</button>` : ''}
                 </div>`;
             ordersEl.appendChild(row);
         });
@@ -6692,7 +6700,8 @@
         }
 
         // Compute solved values from current input state (read live from DOM to get latest keystrokes)
-        const fixedOrders = wccOrders.slice(0, -1);
+        const fixedOrders = wccOrders.filter(o => !o.auto);
+        const autoOrder   = wccOrders.find(o => o.auto);
         const fixedAmt      = fixedOrders.reduce((s,o) => s + (wpn(document.getElementById('wcc-amt-'+o.id)?.value ?? o.amt)||0), 0);
         const fixedNotional = fixedOrders.reduce((s,o) => {
             const a = wpn(document.getElementById('wcc-amt-'+o.id)?.value ?? o.amt)||0;
@@ -6702,11 +6711,10 @@
         const remainAmt      = Math.max(0, totalAmt - fixedAmt);
         const requiredStrike = remainAmt > 0 ? (waStrike * totalAmt - fixedNotional) / remainAmt : 0;
 
-        // Update solved row placeholders (don't touch value, just placeholder)
-        const lastOrder  = wccOrders[wccOrders.length - 1];
-        if (lastOrder) {
-            const amtEl = document.getElementById('wcc-amt-'+lastOrder.id);
-            const stkEl = document.getElementById('wcc-stk-'+lastOrder.id);
+        // Update solved row placeholders (don't touch value, just placeholder) — only if an auto row exists
+        if (autoOrder) {
+            const amtEl = document.getElementById('wcc-amt-'+autoOrder.id);
+            const stkEl = document.getElementById('wcc-stk-'+autoOrder.id);
             if (amtEl) amtEl.placeholder = remainAmt > 0 ? remainAmt.toFixed(4) : '0.0000';
             if (stkEl) stkEl.placeholder = requiredStrike > 0 ? Math.round(requiredStrike).toLocaleString('en-US') : 'auto';
         }
@@ -6743,7 +6751,7 @@
                 strike: wpn(document.getElementById('wcc-stk-'+o.id)?.value)||0,
                 solved: false
             })),
-            { label: '✦ Solved order', amt: remainAmt, strike: requiredStrike > 0 ? requiredStrike : 0, solved: true }
+            ...(autoOrder ? [{ label: '✦ Solved order', amt: remainAmt, strike: requiredStrike > 0 ? requiredStrike : 0, solved: true }] : [])
         ].filter(o => o.amt > 0);
 
         const allAmt      = allOrders.reduce((s,o)=>s+o.amt,0);
@@ -6812,9 +6820,10 @@
         wccRecalc();
     }
 
+    // Locks the current auto-solved row's computed values in place, then appends a fresh auto row
     function wccLockSolved() {
         const { totalAmt, waStrike } = wccTarget();
-        const fixedOrders   = wccOrders.slice(0, -1);
+        const fixedOrders   = wccOrders.filter(o => !o.auto);
         const fixedAmt      = fixedOrders.reduce((s,o) => s + (wpn(document.getElementById('wcc-amt-'+o.id)?.value ?? o.amt)||0), 0);
         const fixedNotional = fixedOrders.reduce((s,o) => {
             const a = wpn(document.getElementById('wcc-amt-'+o.id)?.value ?? o.amt)||0;
@@ -6823,20 +6832,33 @@
         }, 0);
         const remainAmt      = Math.max(0, totalAmt - fixedAmt);
         const requiredStrike = remainAmt > 0 ? (waStrike * totalAmt - fixedNotional) / remainAmt : 0;
-        const last = wccOrders[wccOrders.length - 1];
-        if (last) {
-            last.amt    = remainAmt.toFixed(4);
-            last.strike = Math.round(requiredStrike).toString();
-            last.locked = true;
+        const autoOrder = wccOrders.find(o => o.auto);
+        if (autoOrder) {
+            autoOrder.amt    = remainAmt.toFixed(4);
+            autoOrder.strike = Math.round(requiredStrike).toString();
+            autoOrder.auto   = false;
         }
-        wccOrders.push({ id: ++wccOrderId, amt: '', strike: '', locked: false });
+        wccOrders.push({ id: ++wccOrderId, amt: '', strike: '', auto: true });
         wccRenderOrderRows();
         wccRecalc();
     }
 
+    // "+ Split" button handler: if the last row is already an auto-solved slot, lock it in
+    // and add a new auto slot after it. Otherwise (all rows currently fixed/editable),
+    // just append a fresh auto-solved slot to cover any remaining BTC.
+    function wccSplitAction() {
+        const last = wccOrders[wccOrders.length - 1];
+        if (last && last.auto) {
+            wccLockSolved();
+        } else {
+            wccOrders.push({ id: ++wccOrderId, amt: '', strike: '', auto: true });
+            wccRenderOrderRows();
+            wccRecalc();
+        }
+    }
+
     function wccRemoveOrder(id) {
         wccOrders = wccOrders.filter(o => o.id !== id);
-        if (wccOrders.length === 0) wccOrders = [{ id: ++wccOrderId, amt:'', strike:'', locked:false }];
         wccRenderOrderRows();
         wccRecalc();
     }
