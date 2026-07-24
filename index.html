@@ -6042,8 +6042,13 @@
     // ── Per-page targeted refresh ──────────────────────
     async function doCurrentPageRefresh() {
         const port = state?.currentPort || 'port1';
-        const pageMap = { port1: 'core', port2: 'sat', port3: 'cashflow' };
-        await doPageRefresh(pageMap[port] || 'core');
+        const activeWheelTab = document.getElementById('tab-wheel')?.classList.contains('active');
+        if (port === 'port1' && activeWheelTab) {
+            await doPageRefresh('wheel');
+        } else {
+            const pageMap = { port1: 'core', port2: 'sat', port3: 'cashflow' };
+            await doPageRefresh(pageMap[port] || 'core');
+        }
     }
 
     async function doPageRefresh(page) {
@@ -6062,6 +6067,9 @@
             if (page === 'core') {
                 ok = await loadFromGSheet();
                 if (ok) { updateDashboard(); renderMonthlyTiers(); }
+            } else if (page === 'wheel') {
+                ok = await wPullFromSheets(true);
+                if (ok) { wCalcAll(); }
             } else if (page === 'sat') {
                 ok = await satPullFromSheets(true, { forcePrices: true });
             } else if (page === 'cashflow') {
