@@ -2146,7 +2146,7 @@
                                 <!-- Target summary bar -->
                                 <div id="wCallCalcTargetBar" style="font-size:11px;color:#94A3B8;margin-bottom:14px"></div>
 
-                                <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Step 2 — Split into orders <span style="color:#475569;font-size:9px;text-transform:none;letter-spacing:0">(edit amount &amp; strike per order; last order auto-solves)</span></div>
+                                <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Step 2 — Edit &amp; split orders <span style="color:#475569;font-size:9px;text-transform:none;letter-spacing:0">(inline edit amount &amp; strike · change strike to see suggested fixes · reduce amount to auto-split)</span></div>
 
                                 <!-- Order rows -->
                                 <div id="wCallCalcOrders" style="display:flex;flex-direction:column;gap:8px"></div>
@@ -6573,9 +6573,10 @@
     }
 
     // ── Short Call Order Split Calculator ────────────────
-    let wccOrders      = [];
-    let wccOrderId     = 0;
+    let wccOrders       = [];  // [{id, label, amt, strike, lotIdx, custom}]
+    let wccOrderId      = 0;
     let wccSelectedLots = new Set();
+    let wccSuggestions  = [];  // [{targetId, suggestedStrike}]
 
     function wccTarget() {
         const lots = wLots.filter((_,i) => wccSelectedLots.has(i));
@@ -6589,28 +6590,40 @@
         wccOrders       = [];
         wccOrderId      = 0;
         wccSelectedLots = new Set();
+        wccSuggestions  = [];
         wRenderCallCalc();
     }
     function wCalcCallReset() { wCallCalcReset(); }
 
+    // Build wccOrders fresh from selected lots
+    function wccBuildOrdersFromLots() {
+        wccOrderId = 0;
+        wccSuggestions = [];
+        wccOrders = Array.from(wccSelectedLots).sort((a,b)=>a-b).map(i => {
+            const lot = wLots[i];
+            return {
+                id:     ++wccOrderId,
+                label:  lot.name || ('Short Call L'+(wccOrderId)),
+                amt:    wpn(lot.amount) > 0 ? wpn(lot.amount).toFixed(4) : '0.0000',
+                strike: wpn(lot.target) > 0 ? String(Math.round(wpn(lot.target))) : '',
+                lotIdx: i,
+                custom: false
+            };
+        });
+    }
+
     function wRenderCallCalc() {
-        // ── Lot cards (rebuilt only when lot selection changes) ──
         const lotsEl = document.getElementById('wCallCalcLots');
         if (!lotsEl) return;
         lotsEl.innerHTML = '';
         wLots.forEach((lot, i) => {
-            const tag      = wLotTag(lot);
-            const sel      = wccSelectedLots.has(i);
-            const defAmt   = wpn(lot.amount).toFixed(4);
-            const defStk   = wpn(lot.target) > 0 ? wpn(lot.target).toLocaleString('en-US') : '—';
-            const card     = document.createElement('div');
+            const tag  = wLotTag(lot);
+            const sel  = wccSelectedLots.has(i);
+            const defAmt = wpn(lot.amount).toFixed(4);
+            const defStk = wpn(lot.target) > 0 ? wpn(lot.target).toLocaleString('en-US') : '—';
+            const card = document.createElement('div');
             card.className = 'wcc-lot-card' + (sel ? ' selected' : '');
-            card.dataset.lotIdx = i;
-            // Clicking anywhere on the card toggles it
-            card.onclick = (e) => {
-                if (e.target.tagName === 'INPUT') return; // let checkbox handle itself
-                wccToggleLot(i, !wccSelectedLots.has(i));
-            };
+            card.onclick = (e) => { if (e.target.tagName === 'INPUT') return; wccToggleLot(i, !wccSelectedLots.has(i)); };
             card.innerHTML = `
                 <input type="checkbox" ${sel?'checked':''} style="margin-top:2px;accent-color:#9B5CF6;cursor:pointer" onchange="wccToggleLot(${i},this.checked)">
                 <label style="cursor:pointer;pointer-events:none">
@@ -6623,7 +6636,6 @@
         const splitPanel = document.getElementById('wCallCalcSplitPanel');
         const emptyEl    = document.getElementById('wCallCalcEmpty');
         if (!splitPanel || !emptyEl) return;
-
         if (wccSelectedLots.size === 0) {
             splitPanel.style.display = 'none';
             emptyEl.style.display    = 'block';
@@ -6632,237 +6644,251 @@
         splitPanel.style.display = '';
         emptyEl.style.display    = 'none';
 
-        if (wccOrders.length === 0) {
-            wccOrders = Array.from(wccSelectedLots).sort((a,b)=>a-b).map(i => {
-                const lot = wLots[i];
-                return {
-                    id: ++wccOrderId,
-                    amt:    wpn(lot?.amount) > 0 ? wpn(lot.amount).toFixed(4) : '',
-                    strike: wpn(lot?.target) > 0 ? String(Math.round(wpn(lot.target))) : '',
-                    auto: false
-                };
-            });
-            if (wccOrders.length === 0) wccOrders = [{ id: ++wccOrderId, amt: '', strike: '', auto: false }];
-        }
-
-        // Render order rows (only once; inputs kept in DOM)
-        wccRenderOrderRows();
-        wccRecalc();
+        if (wccOrders.length === 0) wccBuildOrdersFromLots();
+        wccRenderTable();
     }
 
-    function wccRenderOrderRows() {
+    function wccRenderTable() {
         const ordersEl = document.getElementById('wCallCalcOrders');
         if (!ordersEl) return;
-        ordersEl.innerHTML = '';
-        wccOrders.forEach((order, idx) => {
-            const isLast = idx === wccOrders.length - 1;
-            const isAuto = !!order.auto;
-            const row    = document.createElement('div');
-            row.id       = 'wcc-order-row-' + order.id;
-            row.style.cssText = `display:grid;grid-template-columns:130px 1fr 1fr auto;gap:8px;align-items:end;padding:10px 12px;border-radius:8px;background:${isAuto?'rgba(155,92,246,.06)':'#0F172A'};border:1px solid ${isAuto?'#9B5CF6':'#1E293B'}`;
-            row.innerHTML = `
-                <div>
-                    <div class="wcc-input-label" style="color:${isAuto?'#C4B5FD':'#64748b'}">${isAuto?'✦ Auto-solved':'Order '+(idx+1)}</div>
-                    <div style="font-size:10px;color:#475569;margin-top:2px">${isAuto?'remaining BTC + required strike':'editable'}</div>
-                </div>
-                <div>
-                    <div class="wcc-input-label">Amount (BTC)</div>
-                    <input id="wcc-amt-${order.id}" class="wcc-input" type="text" inputmode="decimal"
-                        value="${isAuto?'':order.amt}"
-                        placeholder="${isAuto?'auto':'0.0000'}"
-                        ${isAuto?'readonly style="background:#0A1222;color:#9B5CF6;cursor:default;border-color:#4C1D95"':''}
-                        oninput="wccFieldChange(${order.id},'amt',this.value)">
-                </div>
-                <div>
-                    <div class="wcc-input-label">Strike ($)</div>
-                    <input id="wcc-stk-${order.id}" class="wcc-input" type="text" inputmode="decimal"
-                        value="${isAuto?'':order.strike}"
-                        placeholder="${isAuto?'auto':'e.g. 85000'}"
-                        ${isAuto?'readonly style="background:#0A1222;color:#C4B5FD;font-weight:700;cursor:default;border-color:#4C1D95"':''}
-                        oninput="wccFieldChange(${order.id},'strike',this.value)">
-                </div>
-                <div style="display:flex;gap:4px;margin-bottom:1px">
-                    ${isLast ? `<button class="w-btn w-btn-sm w-btn-primary" onclick="wccSplitAction()" title="Add another order">+ Split</button>` : ''}
-                    ${!isAuto ? `<button class="w-btn-icon w-btn-danger" onclick="wccRemoveOrder(${order.id})" title="Remove">✕</button>` : ''}
-                </div>`;
-            ordersEl.appendChild(row);
-        });
-    }
 
-    // Called oninput — only updates solved placeholders + result panel, never touches focused inputs
-    function wccRecalc() {
         const { totalAmt, waStrike } = wccTarget();
+        const tbAmt      = wccOrders.reduce((s,o) => s + (wpn(o.amt)||0), 0);
+        const tbNotional = wccOrders.reduce((s,o) => s + (wpn(o.amt)||0)*(wpn(o.strike)||0), 0);
+        const actualWA   = tbAmt > 0 ? tbNotional / tbAmt : 0;
+        const waMatch    = waStrike > 0 && Math.abs(actualWA - waStrike) / waStrike * 100 < 0.01;
+        const gapPct     = btcPrice > 0 ? ((actualWA - btcPrice)/btcPrice*100) : 0;
+        const gapCol     = gapPct >= 0 ? '#6EE7B7' : '#FCA5A5';
 
-        // Update target bar (slim single-line summary)
+        // target bar
         const targetBar = document.getElementById('wCallCalcTargetBar');
         if (targetBar) {
             targetBar.innerHTML = `Covering <strong style="color:#F8FAFC">${wccSelectedLots.size} lot${wccSelectedLots.size>1?'s':''}</strong> · <strong style="color:#F8FAFC">${totalAmt.toFixed(4)} BTC</strong> · Target WA <strong style="color:#C4B5FD">${wusd(waStrike)}</strong>`;
         }
 
-        // Compute solved values from current input state (read live from DOM to get latest keystrokes)
-        const fixedOrders = wccOrders.filter(o => !o.auto);
-        const autoOrder   = wccOrders.find(o => o.auto);
-        const fixedAmt      = fixedOrders.reduce((s,o) => s + (wpn(document.getElementById('wcc-amt-'+o.id)?.value ?? o.amt)||0), 0);
-        const fixedNotional = fixedOrders.reduce((s,o) => {
-            const a = wpn(document.getElementById('wcc-amt-'+o.id)?.value ?? o.amt)||0;
-            const k = wpn(document.getElementById('wcc-stk-'+o.id)?.value ?? o.strike)||0;
-            return s + a * k;
-        }, 0);
-        const remainAmt      = Math.max(0, totalAmt - fixedAmt);
-        const requiredStrike = remainAmt > 0 ? (waStrike * totalAmt - fixedNotional) / remainAmt : 0;
+        // Build suggestion map: orderId -> suggestedStrike (if single-order suggestion)
+        const suggMap = new Map(wccSuggestions.map(s => [s.targetId, s.suggestedStrike]));
 
-        // Update solved row placeholders (don't touch value, just placeholder) — only if an auto row exists
-        if (autoOrder) {
-            const amtEl = document.getElementById('wcc-amt-'+autoOrder.id);
-            const stkEl = document.getElementById('wcc-stk-'+autoOrder.id);
-            if (amtEl) amtEl.placeholder = remainAmt > 0 ? remainAmt.toFixed(4) : '0.0000';
-            if (stkEl) stkEl.placeholder = requiredStrike > 0 ? Math.round(requiredStrike).toLocaleString('en-US') : 'auto';
-        }
+        // Table
+        let html = `<table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="color:#64748b;font-size:10px;letter-spacing:.05em;text-transform:uppercase">
+                <th style="text-align:left;padding:6px 8px;font-weight:500">Order</th>
+                <th style="text-align:right;padding:6px 8px;font-weight:500">Amount (BTC)</th>
+                <th style="text-align:right;padding:6px 8px;font-weight:500">Strike ($)</th>
+                <th style="text-align:right;padding:6px 8px;font-weight:500">Notional</th>
+                <th style="text-align:right;padding:6px 8px;font-weight:500">Weight</th>
+                <th style="padding:6px 8px"></th>
+            </tr></thead><tbody>`;
 
-        // Update notional info lines under each fixed order
-        fixedOrders.forEach((o, idx) => {
-            const infoId = 'wcc-info-' + o.id;
-            let infoEl   = document.getElementById(infoId);
-            const rowEl  = document.getElementById('wcc-order-row-' + o.id);
-            const a = wpn(document.getElementById('wcc-amt-'+o.id)?.value)||0;
-            const k = wpn(document.getElementById('wcc-stk-'+o.id)?.value)||0;
-            if (a > 0 && k > 0) {
-                if (!infoEl) {
-                    infoEl = document.createElement('div');
-                    infoEl.id = infoId;
-                    infoEl.style.cssText = 'font-size:10px;color:#64748b;padding:0 12px 4px;margin-top:-4px';
-                    rowEl?.after(infoEl);
-                }
-                infoEl.textContent = `Notional: ${wusd(a*k)}  ·  ${((a/totalAmt)*100).toFixed(1)}% of total`;
-            } else if (infoEl) {
-                infoEl.remove();
-            }
+        wccOrders.forEach((o, idx) => {
+            const a = wpn(o.amt)||0;
+            const k = wpn(o.strike)||0;
+            const notional = a*k;
+            const wt = tbAmt > 0 ? (a/tbAmt*100).toFixed(1) : '0.0';
+            const sugg = suggMap.get(o.id);
+            const hasSugg = sugg !== undefined;
+
+            html += `<tr style="border-top:1px solid #1E293B">
+                <td style="padding:6px 8px">
+                    ${o.custom
+                        ? `<input value="${satEsc(o.label)}" class="wcc-input" style="width:140px;padding:3px 6px;font-size:11px" oninput="wccSetLabel(${o.id},this.value)" placeholder="Order name">`
+                        : `<span style="color:#F8FAFC;font-weight:600">${satEsc(o.label)}</span>`}
+                </td>
+                <td style="padding:4px 8px;text-align:right">
+                    <input id="wcc-amt-${o.id}" value="${satEsc(o.amt)}" class="wcc-input" style="width:90px;text-align:right" type="text" inputmode="decimal"
+                        oninput="wccOnAmtChange(${o.id},this.value)">
+                </td>
+                <td style="padding:4px 8px;text-align:right">
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                        <input id="wcc-stk-${o.id}" value="${satEsc(o.strike)}" class="wcc-input" style="width:110px;text-align:right" type="text" inputmode="decimal"
+                            oninput="wccOnStkChange(${o.id},this.value)">
+                        ${hasSugg ? `<div style="display:flex;align-items:center;gap:5px">
+                            <span style="font-size:10px;color:#C4B5FD">→ ${wusd(sugg)}</span>
+                            <button class="w-btn w-btn-sm" style="font-size:9px;padding:2px 7px;background:#4C1D95;border:1px solid #9B5CF6;color:#C4B5FD;border-radius:5px" onclick="wccApplySugg(${o.id})">Apply</button>
+                        </div>` : ''}
+                    </div>
+                </td>
+                <td style="padding:6px 8px;text-align:right;color:#94A3B8">${notional>0?wusd(notional):'—'}</td>
+                <td style="padding:6px 8px;text-align:right;color:#64748b">${wt}%</td>
+                <td style="padding:6px 8px;text-align:right">
+                    <button class="w-btn-icon w-btn-danger" onclick="wccRemoveOrder(${o.id})" title="Remove">✕</button>
+                </td>
+            </tr>`;
         });
 
-        // Result table
+        html += `<tr style="border-top:1px solid #334155;font-weight:700;color:#F8FAFC">
+            <td style="padding:6px 8px">TOTAL</td>
+            <td style="text-align:right;padding:6px 8px">${tbAmt.toFixed(4)}</td>
+            <td style="text-align:right;padding:6px 8px;color:${waMatch?'#C4B5FD':'#FCA5A5'}">${wusd(actualWA)}
+                <div style="font-size:9px;font-weight:400;color:${waMatch?'#10B981':'#EF4444'}">${waMatch?'✓ Matches target':'Δ '+wusd(Math.abs(actualWA-waStrike))+' off'}</div>
+            </td>
+            <td style="text-align:right;padding:6px 8px">${wusd(tbNotional)}</td>
+            <td style="text-align:right;padding:6px 8px">100%</td>
+            <td></td>
+        </tr></tbody></table>
+
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+            <button class="w-btn w-btn-sm w-btn-primary" onclick="wccAddOrder()">+ Order</button>
+            <span style="font-size:10px;color:#475569">Add a new custom order row</span>
+        </div>`;
+
+        ordersEl.innerHTML = html;
+
+        // summary metrics
         const brkEl  = document.getElementById('wCallCalcBreakdown');
         const gridEl = document.getElementById('wCallCalcResultGrid');
-        if (!brkEl || !gridEl) return;
-
-        const allOrders = [
-            ...fixedOrders.map((o,i) => ({
-                label:  'Order '+(i+1),
-                amt:    wpn(document.getElementById('wcc-amt-'+o.id)?.value)||0,
-                strike: wpn(document.getElementById('wcc-stk-'+o.id)?.value)||0,
-                solved: false
-            })),
-            ...(autoOrder ? [{ label: '✦ Solved order', amt: remainAmt, strike: requiredStrike > 0 ? requiredStrike : 0, solved: true }] : [])
-        ].filter(o => o.amt > 0);
-
-        const allAmt      = allOrders.reduce((s,o)=>s+o.amt,0);
-        const allNotional = allOrders.reduce((s,o)=>s+o.amt*o.strike,0);
-        const actualWA    = allAmt > 0 ? allNotional/allAmt : 0;
-        const waDiff      = Math.abs(actualWA - waStrike);
-        const waMatch     = waStrike > 0 && waDiff/waStrike*100 < 0.01;
-        const gapPct      = btcPrice > 0 ? ((actualWA - btcPrice)/btcPrice*100) : 0;
-        const gapCol      = gapPct >= 0 ? '#6EE7B7' : '#FCA5A5';
-
-        gridEl.innerHTML = `
+        if (gridEl) {
+            gridEl.innerHTML = `
             <div class="wcc-result-metric">
                 <span class="wcc-result-label">Actual WA Strike</span>
                 <span class="wcc-result-value" style="color:${waMatch?'#C4B5FD':'#FCA5A5'}">${wusd(actualWA)}</span>
-                <span class="wcc-result-sub" style="color:${waMatch?'#10B981':'#EF4444'}">${waMatch?'✓ Matches target':'Δ '+wusd(waDiff)+' vs '+wusd(waStrike)+' target'}</span>
+                <span class="wcc-result-sub" style="color:${waMatch?'#10B981':'#EF4444'}">${waMatch?'✓ Matches target':'Δ '+wusd(Math.abs(actualWA-waStrike))+' vs '+wusd(waStrike)}</span>
             </div>
             <div class="wcc-result-metric">
                 <span class="wcc-result-label">Orders / Total BTC</span>
-                <span class="wcc-result-value" style="color:#F8FAFC">${allOrders.length} / ${allAmt.toFixed(4)}</span>
-                <span class="wcc-result-sub">covers ${totalAmt>0?((allAmt/totalAmt)*100).toFixed(1):0}% of target</span>
+                <span class="wcc-result-value" style="color:#F8FAFC">${wccOrders.length} / ${tbAmt.toFixed(4)}</span>
+                <span class="wcc-result-sub">covers ${totalAmt>0?((tbAmt/totalAmt)*100).toFixed(1):0}% of target</span>
             </div>
             <div class="wcc-result-metric">
                 <span class="wcc-result-label">Gap vs BTC</span>
                 <span class="wcc-result-value" style="color:${gapCol}">${gapPct>=0?'+':''}${gapPct.toFixed(2)}%</span>
                 <span class="wcc-result-sub">BTC now ${btcPrice>0?wusd(btcPrice):'—'}</span>
             </div>`;
-
-        brkEl.innerHTML = allOrders.map(o => {
-            const wt = allAmt>0?(o.amt/allAmt*100).toFixed(1):'—';
-            return `<tr style="border-top:1px solid #1E293B">
-                <td style="padding:5px 8px;color:${o.solved?'#C4B5FD':'#94A3B8'}">${satEsc(o.label)}</td>
-                <td style="text-align:right;padding:5px 8px">${o.amt.toFixed(4)}</td>
-                <td style="text-align:right;padding:5px 8px;color:${o.solved?'#C4B5FD':'#94A3B8'}">${o.strike>0?wusd(o.strike):'—'}</td>
-                <td style="text-align:right;padding:5px 8px">${o.strike>0?wusd(o.amt*o.strike):'—'}</td>
-                <td style="text-align:right;padding:5px 8px;color:#64748b">${wt}%</td>
-            </tr>`;
-        }).join('') + `<tr style="border-top:1px solid #334155;font-weight:700;color:#F8FAFC">
-            <td style="padding:6px 8px">TOTAL</td>
-            <td style="text-align:right;padding:6px 8px">${allAmt.toFixed(4)}</td>
-            <td style="text-align:right;padding:6px 8px;color:#C4B5FD">${wusd(actualWA)}</td>
-            <td style="text-align:right;padding:6px 8px">${wusd(allNotional)}</td>
-            <td style="text-align:right;padding:6px 8px">100%</td>
-        </tr>`;
+        }
+        if (brkEl) brkEl.innerHTML = '';  // table is now in ordersEl
     }
 
     function wccToggleLot(idx, checked) {
         if (checked) wccSelectedLots.add(idx);
         else         wccSelectedLots.delete(idx);
-        wccOrderId = 0;
-        wccOrders = Array.from(wccSelectedLots).sort((a,b)=>a-b).map(i => {
-            const lot = wLots[i];
-            return {
-                id: ++wccOrderId,
-                amt:    wpn(lot?.amount) > 0 ? wpn(lot.amount).toFixed(4) : '',
-                strike: wpn(lot?.target) > 0 ? String(Math.round(wpn(lot.target))) : '',
-                auto: false
-            };
-        });
+        wccBuildOrdersFromLots();
         wRenderCallCalc();
     }
 
-    // Called oninput — save to state then recalc only (no DOM rebuild)
-    function wccFieldChange(id, field, value) {
+    // ── Case A: Strike changed ──────────────────────────────────────────────
+    // Compute, for each unchanged order, what strike it would need (alone) to restore WA
+    function wccOnStkChange(id, value) {
         const order = wccOrders.find(o => o.id === id);
-        if (order) order[field] = value;
-        wccRecalc();
+        if (order) order.strike = value;
+        wccComputeSuggestions(id, 'strike');
+        wccRenderTable();
     }
 
-    // Locks the current auto-solved row's computed values in place, then appends a fresh auto row
-    function wccLockSolved() {
+    function wccComputeSuggestions(changedId, field) {
         const { totalAmt, waStrike } = wccTarget();
-        const fixedOrders   = wccOrders.filter(o => !o.auto);
-        const fixedAmt      = fixedOrders.reduce((s,o) => s + (wpn(document.getElementById('wcc-amt-'+o.id)?.value ?? o.amt)||0), 0);
-        const fixedNotional = fixedOrders.reduce((s,o) => {
-            const a = wpn(document.getElementById('wcc-amt-'+o.id)?.value ?? o.amt)||0;
-            const k = wpn(document.getElementById('wcc-stk-'+o.id)?.value ?? o.strike)||0;
-            return s + a * k;
-        }, 0);
-        const remainAmt      = Math.max(0, totalAmt - fixedAmt);
-        const requiredStrike = remainAmt > 0 ? (waStrike * totalAmt - fixedNotional) / remainAmt : 0;
-        const autoOrder = wccOrders.find(o => o.auto);
-        if (autoOrder) {
-            autoOrder.amt    = remainAmt.toFixed(4);
-            autoOrder.strike = Math.round(requiredStrike).toString();
-            autoOrder.auto   = false;
+        if (waStrike <= 0) { wccSuggestions = []; return; }
+
+        // Which orders had their strike edited (non-empty, non-default)?
+        // We flag orders as "user-modified" if their strike differs from lot default
+        const modifiedIds = new Set(
+            wccOrders
+                .filter(o => {
+                    if (o.custom) return false;
+                    const lotDefault = wLots[o.lotIdx] ? Math.round(wpn(wLots[o.lotIdx].target)).toString() : '';
+                    return (wpn(o.strike)||0) > 0 && o.strike !== lotDefault;
+                })
+                .map(o => o.id)
+        );
+        if (changedId) modifiedIds.add(changedId);
+
+        const modifiedOrders   = wccOrders.filter(o => modifiedIds.has(o.id));
+        const unmodifiedOrders = wccOrders.filter(o => !modifiedIds.has(o.id));
+
+        if (modifiedOrders.length === 0 || unmodifiedOrders.length === 0) {
+            wccSuggestions = [];
+            return;
         }
-        wccOrders.push({ id: ++wccOrderId, amt: '', strike: '', auto: true });
-        wccRenderOrderRows();
-        wccRecalc();
+
+        // totalNotional needed = waStrike * totalAmt
+        const targetNotional = waStrike * totalAmt;
+        // Modified orders' notional contribution
+        const modNotional = modifiedOrders.reduce((s,o) => s + (wpn(o.amt)||0)*(wpn(o.strike)||0), 0);
+        const remainNotional = targetNotional - modNotional;
+        const unmodAmt = unmodifiedOrders.reduce((s,o) => s + (wpn(o.amt)||0), 0);
+
+        // For each unmodified order: what strike alone would cover the full remainNotional?
+        wccSuggestions = unmodifiedOrders.map(o => {
+            const oAmt = wpn(o.amt)||0;
+            if (oAmt <= 0 || unmodAmt <= 0) return null;
+            // If this order alone absorbs the entire remainder:
+            // suggested_strike * oAmt + (unmodAmt - oAmt) * original_strike = remainNotional
+            const otherOrders = unmodifiedOrders.filter(x => x.id !== o.id);
+            const otherNotional = otherOrders.reduce((s,x) => {
+                const lot = wLots[x.lotIdx];
+                const origStrike = lot ? wpn(lot.target) : (wpn(x.strike)||0);
+                return s + (wpn(x.amt)||0) * origStrike;
+            }, 0);
+            const needed = (remainNotional - otherNotional) / oAmt;
+            if (needed <= 0) return null;
+            return { targetId: o.id, suggestedStrike: needed };
+        }).filter(Boolean);
     }
 
-    // "+ Split" button handler: if the last row is already an auto-solved slot, lock it in
-    // and add a new auto slot after it. Otherwise (all rows currently fixed/editable),
-    // just append a fresh auto-solved slot to cover any remaining BTC.
-    function wccSplitAction() {
-        const last = wccOrders[wccOrders.length - 1];
-        if (last && last.auto) {
-            wccLockSolved();
-        } else {
-            wccOrders.push({ id: ++wccOrderId, amt: '', strike: '', auto: true });
-            wccRenderOrderRows();
-            wccRecalc();
+    function wccApplySugg(orderId) {
+        const sugg = wccSuggestions.find(s => s.targetId === orderId);
+        if (!sugg) return;
+        const order = wccOrders.find(o => o.id === orderId);
+        if (order) order.strike = Math.round(sugg.suggestedStrike).toString();
+        // Clear suggestion for this order
+        wccSuggestions = wccSuggestions.filter(s => s.targetId !== orderId);
+        wccRenderTable();
+    }
+
+    // ── Case B: Amount changed (decrease only → create split row) ──────────
+    function wccOnAmtChange(id, value) {
+        const order = wccOrders.find(o => o.id === id);
+        if (!order) return;
+        const oldAmt = wpn(order.amt) || 0;
+        const newAmt = wpn(value) || 0;
+        order.amt = value;
+
+        // If decreased and there's a meaningful remainder: create/update split row
+        if (newAmt > 0 && newAmt < oldAmt) {
+            const diff = +(oldAmt - newAmt).toFixed(4);
+            const splitLabel = order.label.replace(' (split)','') + ' (split)';
+            const existingSplit = wccOrders.find(o => o.label === splitLabel);
+            if (existingSplit) {
+                existingSplit.amt = diff.toFixed(4);
+            } else {
+                wccOrders.splice(wccOrders.indexOf(order)+1, 0, {
+                    id:     ++wccOrderId,
+                    label:  splitLabel,
+                    amt:    diff.toFixed(4),
+                    strike: order.strike,
+                    lotIdx: order.lotIdx,
+                    custom: false
+                });
+            }
         }
+
+        wccSuggestions = [];
+        wccRenderTable();
+    }
+
+    function wccSetLabel(id, value) {
+        const order = wccOrders.find(o => o.id === id);
+        if (order) order.label = value;
+    }
+
+    function wccAddOrder() {
+        const nextNum = wccOrders.filter(o => o.custom).length + 1;
+        wccOrders.push({
+            id:     ++wccOrderId,
+            label:  'Short Call L' + (wLots.length + nextNum),
+            amt:    '',
+            strike: '',
+            lotIdx: -1,
+            custom: true
+        });
+        wccSuggestions = [];
+        wccRenderTable();
     }
 
     function wccRemoveOrder(id) {
         wccOrders = wccOrders.filter(o => o.id !== id);
-        wccRenderOrderRows();
-        wccRecalc();
+        wccSuggestions = wccSuggestions.filter(s => s.targetId !== id);
+        wccRenderTable();
     }
-
 
     function wToggleOrderTag(id, tag, checked, input) {
         const order = wOrders.find(item => item.id === id);
