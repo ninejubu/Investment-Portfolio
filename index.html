@@ -6677,8 +6677,16 @@
         // Build suggestion map: orderId -> suggestedStrike (if single-order suggestion)
         const suggMap = new Map(wccSuggestions.map(s => [s.targetId, s.suggestedStrike]));
 
-        // Table
-        let html = `<table style="width:100%;border-collapse:collapse;font-size:12px">
+        // Table — fixed column widths so Strike column never shifts
+        let html = `<table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed">
+            <colgroup>
+                <col style="width:22%">
+                <col style="width:14%">
+                <col style="width:34%">
+                <col style="width:16%">
+                <col style="width:9%">
+                <col style="width:5%">
+            </colgroup>
             <thead><tr style="color:#64748b;font-size:10px;letter-spacing:.05em;text-transform:uppercase">
                 <th style="text-align:left;padding:6px 8px;font-weight:500">Order</th>
                 <th style="text-align:right;padding:6px 8px;font-weight:500">Amount (BTC)</th>
@@ -6695,23 +6703,28 @@
             const wt = tbAmt > 0 ? (a/tbAmt*100).toFixed(1) : '0.0';
             const sugg = suggMap.get(o.id);
             const hasSugg = sugg !== undefined;
+            // Format strike with commas for display in input
+            const strikeDisplay = o.strike ? Number(String(o.strike).replace(/,/g,'')||0).toLocaleString('en-US') : '';
 
             html += `<tr style="border-top:1px solid #1E293B">
-                <td style="padding:6px 8px">
+                <td style="padding:6px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
                     ${o.custom
-                        ? `<input value="${satEsc(o.label)}" class="wcc-input" style="width:140px;padding:3px 6px;font-size:11px" onchange="wccSetLabel(${o.id},this.value)" onblur="wccSetLabel(${o.id},this.value)" placeholder="Order name">`
+                        ? `<input value="${satEsc(o.label)}" class="wcc-input" style="width:100%;padding:3px 6px;font-size:11px;box-sizing:border-box" onchange="wccSetLabel(${o.id},this.value)" onblur="wccSetLabel(${o.id},this.value)" placeholder="Order name">`
                         : `<span style="color:#F8FAFC;font-weight:600">${satEsc(o.label)}</span>`}
                 </td>
                 <td style="padding:4px 8px;text-align:right">
-                    <input id="wcc-amt-${o.id}" value="${satEsc(o.amt)}" class="wcc-input" style="width:90px;text-align:right" type="text" inputmode="decimal"
+                    <input id="wcc-amt-${o.id}" value="${satEsc(o.amt)}" class="wcc-input" style="width:100%;text-align:right;box-sizing:border-box" type="text" inputmode="decimal"
                         onchange="wccOnAmtChange(${o.id},this.value)" onblur="wccOnAmtChange(${o.id},this.value)">
                 </td>
                 <td style="padding:4px 8px;text-align:right">
-                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px">
-                        ${hasSugg ? `<span style="font-size:10px;color:#C4B5FD;white-space:nowrap">→ ${wusd(sugg)}</span>
-                            <button class="w-btn w-btn-sm" style="font-size:9px;padding:2px 7px;background:#4C1D95;border:1px solid #9B5CF6;color:#C4B5FD;border-radius:5px;white-space:nowrap" onclick="wccApplySugg(${o.id})">Apply</button>` : ''}
-                        <input id="wcc-stk-${o.id}" value="${satEsc(o.strike)}" class="wcc-input" style="width:110px;text-align:right" type="text" inputmode="decimal"
-                            onchange="wccOnStkChange(${o.id},this.value)" onblur="wccOnStkChange(${o.id},this.value)">
+                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;width:100%">
+                        <div style="display:flex;align-items:center;gap:4px;opacity:${hasSugg?1:0};pointer-events:${hasSugg?'auto':'none'};white-space:nowrap;min-width:0;flex-shrink:1;overflow:hidden">
+                            <span style="font-size:10px;color:#C4B5FD;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${hasSugg?`→ ${wusd(sugg)}`:''}</span>
+                            <button class="w-btn w-btn-sm" style="font-size:9px;padding:2px 7px;background:#4C1D95;border:1px solid #9B5CF6;color:#C4B5FD;border-radius:5px;white-space:nowrap;flex-shrink:0" onclick="wccApplySugg(${o.id})">Apply</button>
+                        </div>
+                        <input id="wcc-stk-${o.id}" value="${strikeDisplay}" class="wcc-input" style="width:110px;text-align:right;flex-shrink:0" type="text" inputmode="decimal"
+                            oninput="wccFmtStrikeInput(this)"
+                            onblur="wccOnStkChange(${o.id},this.value)">
                     </div>
                 </td>
                 <td style="padding:6px 8px;text-align:right;color:#94A3B8">${notional>0?wusd(notional):'—'}</td>
@@ -6773,9 +6786,21 @@
 
     // ── Case A: Strike changed ──────────────────────────────────────────────
     // Compute, for each unchanged order, what strike it would need (alone) to restore WA
+    // Format strike input with thousands commas while typing
+    function wccFmtStrikeInput(el) {
+        const raw = el.value.replace(/,/g, '').replace(/[^\d.]/g, '');
+        if (raw === '') { el.value = ''; return; }
+        const n = parseFloat(raw);
+        if (isNaN(n)) return;
+        const parts = raw.split('.');
+        el.value = parseInt(parts[0], 10).toLocaleString('en-US') + (parts.length > 1 ? '.' + parts[1] : '');
+    }
+
     function wccOnStkChange(id, value) {
         const order = wccOrders.find(o => o.id === id);
-        if (order) order.strike = value;
+        // Strip commas before storing so wpn() can parse it correctly
+        const clean = String(value).replace(/,/g, '');
+        if (order) order.strike = clean;
         wccComputeSuggestions(id, 'strike');
         wccRenderTable();
     }
