@@ -1452,8 +1452,8 @@
                                 <i class="fa-solid fa-bullseye text-red-500"></i> Financial Goal
                             </h4>
                             <div class="bg-slate-800/80 p-0.5 rounded-lg flex space-x-0.5 border border-slate-700">
-                                <button id="goal-v1-btn" onclick="switchGoalView('v1')" class="px-3 py-1 text-[10px] font-bold rounded-md bg-blue-600 text-white shadow transition-all">Graph</button>
-                                <button id="goal-v2-btn" onclick="switchGoalView('v2')" class="px-3 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">Heat map</button>
+                                <button id="goal-v1-btn" onclick="switchGoalView('v1')" class="px-3 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">Graph</button>
+                                <button id="goal-v2-btn" onclick="switchGoalView('v2')" class="px-3 py-1 text-[10px] font-bold rounded-md bg-blue-600 text-white shadow transition-all">Heat map</button>
                             </div>
                         </div>
                         <div class="flex items-center gap-4 text-xs mb-4 flex-wrap">
@@ -1468,7 +1468,7 @@
                                 <input type="number" id="goal-return-input" onchange="updateGoal()" class="bg-slate-800 border-none text-white rounded px-2 py-1 w-20 focus:ring-1 focus:ring-blue-500" step="0.1">
                             </div>
                         </div>
-                        <div id="goal-view-v1" class="flex flex-col flex-1">
+                        <div id="goal-view-v1" class="hidden flex-col flex-1">
                             <div class="flex items-start gap-4 mb-3">
                                 <div class="flex-1 flex flex-col justify-center">
                                     <div class="w-full bg-slate-800 rounded-full h-2 mb-2"><div id="goal-progress-bar" class="bg-gradient-to-r from-blue-600 to-emerald-400 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div></div>
@@ -1482,7 +1482,7 @@
                             </div>
                             <div class="h-[100px] mt-2 relative w-full border-t border-slate-700/50 pt-3"><canvas id="goalChart"></canvas></div>
                         </div>
-                        <div id="goal-view-v2" class="hidden flex-col flex-1">
+                        <div id="goal-view-v2" class="flex flex-col flex-1">
                             <p class="text-[10px] text-slate-500 mb-2">Each cell = projected portfolio value at goal year. <span class="text-emerald-400 font-bold">Green</span> = reaches goal · <span class="text-red-400 font-bold">Red</span> = falls short · ★ = your current input</p>
                             <div id="goal-heatmap-container" class="overflow-x-auto"></div>
                         </div>
@@ -5906,7 +5906,7 @@
         if(el.dataset.wtab === 'w-history') wRenderHistory();
     }
 
-    let currentGoalView = 'v1';
+    let currentGoalView = 'v2';
     function switchGoalView(v) {
         currentGoalView = v;
         document.getElementById('goal-view-v1').classList.toggle('hidden', v !== 'v1');
@@ -7805,7 +7805,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     }
 
     // ── Holdings Breakdown view state ───────────────────
-    let hbView = 'ticker';
+    let hbView = 'segment';
     let hbSegmentDrill = null;
     let hbThemeFilter = new Set();
     let hbPlatformDrill = null;
