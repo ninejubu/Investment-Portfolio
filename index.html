@@ -2144,28 +2144,24 @@
                             <!-- Step 2: Order split panel (shows after ≥1 lot selected) -->
                             <div id="wCallCalcSplitPanel" style="display:none">
                                 <!-- Target summary bar -->
-                                <div id="wCallCalcTargetBar" style="font-size:11px;color:#94A3B8;margin-bottom:14px"></div>
+                                <div id="wCallCalcTargetBar" style="font-size:11px;color:#94A3B8;margin-bottom:10px"></div>
 
                                 <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Step 2 — Edit &amp; split orders <span style="color:#475569;font-size:9px;text-transform:none;letter-spacing:0">(inline edit amount &amp; strike · change strike to see suggested fixes · reduce amount to auto-split)</span></div>
 
-                                <!-- Order rows -->
-                                <div id="wCallCalcOrders" style="display:flex;flex-direction:column;gap:8px"></div>
+                                <!-- Side-by-side: orders left, metrics right -->
+                                <div style="display:flex;gap:12px;align-items:flex-start">
 
-                                <!-- Result summary -->
-                                <div id="wCallCalcResult" style="background:#0F172A;border:1px solid #1E293B;border-radius:10px;padding:16px;margin-top:12px">
-                                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:14px" id="wCallCalcResultGrid"></div>
-                                    <div style="overflow-x:auto">
-                                        <table style="width:100%;font-size:11px;border-collapse:collapse">
-                                            <thead><tr style="color:#475569;text-transform:uppercase;font-size:9px;letter-spacing:.06em">
-                                                <th style="text-align:left;padding:4px 8px">Order</th>
-                                                <th style="text-align:right;padding:4px 8px">Amount (BTC)</th>
-                                                <th style="text-align:right;padding:4px 8px">Strike</th>
-                                                <th style="text-align:right;padding:4px 8px">Notional</th>
-                                                <th style="text-align:right;padding:4px 8px">Weight</th>
-                                            </tr></thead>
-                                            <tbody id="wCallCalcBreakdown" style="color:#94A3B8"></tbody>
-                                        </table>
+                                    <!-- LEFT: Order rows table -->
+                                    <div style="flex:1 1 0;min-width:0">
+                                        <div id="wCallCalcOrders"></div>
                                     </div>
+
+                                    <!-- RIGHT: Result summary metrics -->
+                                    <div id="wCallCalcResult" style="flex:0 0 220px;width:220px;background:#0F172A;border:1px solid #1E293B;border-radius:10px;padding:14px;align-self:stretch">
+                                        <div id="wCallCalcResultGrid" style="display:flex;flex-direction:column;gap:16px"></div>
+                                        <div id="wCallCalcBreakdown" style="color:#94A3B8"></div>
+                                    </div>
+
                                 </div>
                             </div>
 
@@ -6680,20 +6676,20 @@
         // Table — fixed column widths so Strike column never shifts
         let html = `<table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed">
             <colgroup>
-                <col style="width:22%">
+                <col style="width:20%">
+                <col style="width:15%">
+                <col style="width:36%">
                 <col style="width:14%">
-                <col style="width:34%">
-                <col style="width:16%">
                 <col style="width:9%">
-                <col style="width:5%">
+                <col style="width:6%">
             </colgroup>
             <thead><tr style="color:#64748b;font-size:10px;letter-spacing:.05em;text-transform:uppercase">
-                <th style="text-align:left;padding:6px 8px;font-weight:500">Order</th>
-                <th style="text-align:right;padding:6px 8px;font-weight:500">Amount (BTC)</th>
-                <th style="text-align:right;padding:6px 8px;font-weight:500">Strike ($)</th>
-                <th style="text-align:right;padding:6px 8px;font-weight:500">Notional</th>
-                <th style="text-align:right;padding:6px 8px;font-weight:500">Weight</th>
-                <th style="padding:6px 8px"></th>
+                <th style="text-align:left;padding:5px 6px;font-weight:500">Order</th>
+                <th style="text-align:right;padding:5px 6px;font-weight:500">Amount (BTC)</th>
+                <th style="text-align:right;padding:5px 6px;font-weight:500">Strike ($)</th>
+                <th style="text-align:right;padding:5px 6px;font-weight:500">Notional</th>
+                <th style="text-align:right;padding:5px 6px;font-weight:500">Weight</th>
+                <th style="padding:5px 6px"></th>
             </tr></thead><tbody>`;
 
         wccOrders.forEach((o, idx) => {
@@ -6707,29 +6703,29 @@
             const strikeDisplay = o.strike ? Number(String(o.strike).replace(/,/g,'')||0).toLocaleString('en-US') : '';
 
             html += `<tr style="border-top:1px solid #1E293B">
-                <td style="padding:6px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                <td style="padding:5px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
                     ${o.custom
                         ? `<input value="${satEsc(o.label)}" class="wcc-input" style="width:100%;padding:3px 6px;font-size:11px;box-sizing:border-box" onchange="wccSetLabel(${o.id},this.value)" onblur="wccSetLabel(${o.id},this.value)" placeholder="Order name">`
-                        : `<span style="color:#F8FAFC;font-weight:600">${satEsc(o.label)}</span>`}
+                        : `<span style="color:#F8FAFC;font-weight:600;font-size:11px">${satEsc(o.label)}</span>`}
                 </td>
-                <td style="padding:4px 8px;text-align:right">
-                    <input id="wcc-amt-${o.id}" value="${satEsc(o.amt)}" class="wcc-input" style="width:100%;text-align:right;box-sizing:border-box" type="text" inputmode="decimal"
+                <td style="padding:4px 6px;text-align:right">
+                    <input id="wcc-amt-${o.id}" value="${satEsc(o.amt)}" class="wcc-input" style="width:100%;text-align:right;box-sizing:border-box;font-size:11px" type="text" inputmode="decimal"
                         onchange="wccOnAmtChange(${o.id},this.value)" onblur="wccOnAmtChange(${o.id},this.value)">
                 </td>
-                <td style="padding:4px 8px;text-align:right">
-                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;width:100%">
-                        <div style="display:flex;align-items:center;gap:4px;opacity:${hasSugg?1:0};pointer-events:${hasSugg?'auto':'none'};white-space:nowrap;min-width:0;flex-shrink:1;overflow:hidden">
-                            <span style="font-size:10px;color:#C4B5FD;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${hasSugg?`→ ${wusd(sugg)}`:''}</span>
-                            <button class="w-btn w-btn-sm" style="font-size:9px;padding:2px 7px;background:#4C1D95;border:1px solid #9B5CF6;color:#C4B5FD;border-radius:5px;white-space:nowrap;flex-shrink:0" onclick="wccApplySugg(${o.id})">Apply</button>
+                <td style="padding:4px 6px;text-align:right">
+                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;width:100%">
+                        <div style="display:flex;align-items:center;gap:3px;opacity:${hasSugg?1:0};pointer-events:${hasSugg?'auto':'none'};white-space:nowrap;min-width:0;flex-shrink:1;overflow:hidden">
+                            <span style="font-size:9px;color:#C4B5FD;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${hasSugg?`→ ${wusd(sugg)}`:''}</span>
+                            <button class="w-btn w-btn-sm" style="font-size:9px;padding:2px 6px;background:#4C1D95;border:1px solid #9B5CF6;color:#C4B5FD;border-radius:5px;white-space:nowrap;flex-shrink:0" onclick="wccApplySugg(${o.id})">Apply</button>
                         </div>
-                        <input id="wcc-stk-${o.id}" value="${strikeDisplay}" class="wcc-input" style="width:110px;text-align:right;flex-shrink:0" type="text" inputmode="decimal"
+                        <input id="wcc-stk-${o.id}" value="${strikeDisplay}" class="wcc-input" style="width:100px;text-align:right;flex-shrink:0;font-size:11px" type="text" inputmode="decimal"
                             oninput="wccFmtStrikeInput(this)"
                             onblur="wccOnStkChange(${o.id},this.value)">
                     </div>
                 </td>
-                <td style="padding:6px 8px;text-align:right;color:#94A3B8">${notional>0?wusd(notional):'—'}</td>
-                <td style="padding:6px 8px;text-align:right;color:#64748b">${wt}%</td>
-                <td style="padding:6px 8px;text-align:right">
+                <td style="padding:5px 6px;text-align:right;color:#94A3B8;font-size:11px">${notional>0?wusd(notional):'—'}</td>
+                <td style="padding:5px 6px;text-align:right;color:#64748b;font-size:11px">${wt}%</td>
+                <td style="padding:5px 6px;text-align:right">
                     <button class="w-btn-icon w-btn-danger" onclick="wccRemoveOrder(${o.id})" title="Remove">✕</button>
                 </td>
             </tr>`;
@@ -6760,17 +6756,19 @@
             gridEl.innerHTML = `
             <div class="wcc-result-metric">
                 <span class="wcc-result-label">Actual WA Strike</span>
-                <span class="wcc-result-value" style="color:${waMatch?'#C4B5FD':'#FCA5A5'}">${wusd(actualWA)}</span>
+                <span class="wcc-result-value" style="color:${waMatch?'#C4B5FD':'#FCA5A5'};font-size:18px">${wusd(actualWA)}</span>
                 <span class="wcc-result-sub" style="color:${waMatch?'#10B981':'#EF4444'}">${waMatch?'✓ Matches target':'Δ '+wusd(Math.abs(actualWA-waStrike))+' vs '+wusd(waStrike)}</span>
             </div>
+            <div style="height:1px;background:#1E293B;margin:4px 0"></div>
             <div class="wcc-result-metric">
                 <span class="wcc-result-label">Orders / Total BTC</span>
-                <span class="wcc-result-value" style="color:#F8FAFC">${wccOrders.length} / ${tbAmt.toFixed(4)}</span>
+                <span class="wcc-result-value" style="color:#F8FAFC;font-size:16px">${wccOrders.length} / ${tbAmt.toFixed(4)}</span>
                 <span class="wcc-result-sub">covers ${totalAmt>0?((tbAmt/totalAmt)*100).toFixed(1):0}% of target</span>
             </div>
+            <div style="height:1px;background:#1E293B;margin:4px 0"></div>
             <div class="wcc-result-metric">
                 <span class="wcc-result-label">Gap vs BTC</span>
-                <span class="wcc-result-value" style="color:${gapCol}">${gapPct>=0?'+':''}${gapPct.toFixed(2)}%</span>
+                <span class="wcc-result-value" style="color:${gapCol};font-size:16px">${gapPct>=0?'+':''}${gapPct.toFixed(2)}%</span>
                 <span class="wcc-result-sub">BTC now ${btcPrice>0?wusd(btcPrice):'—'}</span>
             </div>`;
         }
