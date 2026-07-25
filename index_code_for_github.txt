@@ -316,6 +316,7 @@ function readSettingTypedRows(values, out) {
   var cClass  = findSettingCol(h, ['class', 'asset class']);
   var cName   = findSettingCol(h, ['name']);
   var cTicker = findSettingCol(h, ['ticker']);
+  var cPort   = findSettingCol(h, ['port']);
   var cTheme  = findSettingCol(h, ['theme']);
   var periodCols = {
     Beg: findSettingCol(h, ['beg', 'beginning']),
@@ -349,6 +350,7 @@ function readSettingTypedRows(values, out) {
           period:  period,
           name:    String(row[cName]   || '').trim(),
           ticker:  String(row[cTicker] || '').trim(),
+          port:    cPort  >= 0 ? String(row[cPort]  || '').trim() : '',
           theme:   cTheme >= 0 ? String(row[cTheme] || '').trim() : '',
           amount:  amount
         });
