@@ -239,6 +239,24 @@
         .hb-btn-period.is-active {
             border-color: #A855F7;
         }
+        #hb-port-segment button {
+            background: transparent;
+            border: none;
+            color: #94A3B8;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: background .15s, color .15s;
+        }
+        #hb-port-segment button:hover {
+            color: #F8FAFC;
+        }
+        #hb-port-segment button.is-active {
+            background: #3B82F6;
+            color: #FFFFFF;
+        }
         /* By Ticker / By Theme / By Platform use the same hb-btn style */
         #hb-view-toggle {
             display: grid;
@@ -1597,9 +1615,14 @@
                                     <button id="hb-view-segment" onclick="hbSetView('segment',event)">By Theme</button>
                                     <button id="hb-view-platform" onclick="hbSetView('platform',event)">By Platform</button>
                                 </div>
-                                <div class="hb-ctrl-sep"></div>
-                                <button type="button" id="hb-satellite-toggle" class="hb-btn" onclick="hbToggleSatelliteFilter(event)" title="Showing Core only — click to include Satellite">Core Only</button>
                                 <button id="toggle-holdings-panel" onclick="toggleHoldingsPanel(event)" title="Collapse holdings breakdown" class="bg-slate-800 border-none text-[10px] text-slate-300 rounded px-2 py-1 hover:text-white hover:bg-slate-700 transition-colors"><i class="fa-solid fa-chevron-up"></i></button>
+                            </div>
+                        </div>
+                        <div id="hb-port-toggle-row" style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                            <span style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Port:</span>
+                            <div id="hb-port-segment" style="display:inline-flex;background:#0F172A;border:1px solid #334155;border-radius:999px;padding:2px" onclick="event.stopPropagation()">
+                                <button type="button" id="hb-port-core" onclick="hbSetSatelliteFilter(true,event)">Core</button>
+                                <button type="button" id="hb-port-both" onclick="hbSetSatelliteFilter(false,event)">Core + Satellite</button>
                             </div>
                         </div>
                         <div id="hb-ticker-slicer" style="display:none;width:100%;justify-content:flex-start;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px"></div>
@@ -7794,22 +7817,19 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         : localStorage.getItem(HB_EXCLUDE_SATELLITE_KEY) === 'true';
     const hbIsSatellite = (r) => String(r && r.port || '').trim().toLowerCase() === 'satellite';
 
-    function hbToggleSatelliteFilter(event) {
+    function hbSetSatelliteFilter(excludeSatellite, event) {
         if (event) event.stopPropagation();
-        hbExcludeSatellite = !hbExcludeSatellite;
+        hbExcludeSatellite = !!excludeSatellite;
         localStorage.setItem(HB_EXCLUDE_SATELLITE_KEY, hbExcludeSatellite ? 'true' : 'false');
         hbSyncSatelliteToggleBtn();
         renderHoldingsBreakdown();
     }
 
     function hbSyncSatelliteToggleBtn() {
-        const btn = document.getElementById('hb-satellite-toggle');
-        if (!btn) return;
-        btn.classList.toggle('is-active', hbExcludeSatellite);
-        btn.title = hbExcludeSatellite
-            ? 'Showing Core only — click to include Satellite'
-            : 'Showing Core + Satellite — click to exclude Satellite';
-        btn.textContent = hbExcludeSatellite ? 'Core Only' : 'Core + Satellite';
+        const coreBtn = document.getElementById('hb-port-core');
+        const bothBtn = document.getElementById('hb-port-both');
+        if (coreBtn) coreBtn.classList.toggle('is-active', hbExcludeSatellite);
+        if (bothBtn) bothBtn.classList.toggle('is-active', !hbExcludeSatellite);
     }
     // Amount formatter — masks when balances are hidden (used across all hb* render functions)
     const fmtAmt = (v) => (typeof balancesHidden !== 'undefined' && balancesHidden) ? '฿ ••••••' : `฿${(v||0).toLocaleString('en-US',{maximumFractionDigits:0})}`;
