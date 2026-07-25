@@ -2149,8 +2149,8 @@
                                     <span style="text-transform:none;letter-spacing:0;color:#334155;font-size:9px;margin-left:4px">(edit amount &amp; strike · change strike for suggestions · reduce amount to auto-split)</span>
                                 </div>
 
-                                <!-- CSS Grid: table auto-sizes left, metrics fills right -->
-                                <div style="display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start">
+                                <!-- CSS Grid: table left ~half, metrics right ~half -->
+                                <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start">
 
                                     <!-- LEFT: table takes exactly the space it needs -->
                                     <div id="wCallCalcOrders" style="min-width:0"></div>
@@ -6672,17 +6672,16 @@
         // Build suggestion map: orderId -> suggestedStrike (if single-order suggestion)
         const suggMap = new Map(wccSuggestions.map(s => [s.targetId, s.suggestedStrike]));
 
-        // ── Table: width:auto so it only takes space it needs ──
-        // Columns sized by content: Order flex-text, Amount fixed, Strike fixed+chip, Notional fixed, Weight fixed, Del icon
-        let html = `<table style="border-collapse:collapse;font-size:12px;width:auto">
+        // ── Table: fills left half of grid ──
+        let html = `<table style="border-collapse:collapse;font-size:12px;width:100%">
             <thead>
                 <tr>
-                    <th style="text-align:left;padding:0 16px 8px 0;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Order</th>
-                    <th style="text-align:right;padding:0 16px 8px 0;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Amount (BTC)</th>
-                    <th style="text-align:right;padding:0 16px 8px 0;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Strike ($)</th>
-                    <th style="text-align:right;padding:0 16px 8px 0;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Notional</th>
-                    <th style="text-align:right;padding:0 24px 8px 0;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Weight</th>
-                    <th style="padding:0 0 8px 0;width:24px"></th>
+                    <th style="text-align:left;padding:0 0 8px 0;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;width:28%">Order</th>
+                    <th style="text-align:right;padding:0 0 8px 16px;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;width:22%">Amount (BTC)</th>
+                    <th style="text-align:right;padding:0 0 8px 16px;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;width:22%">Strike ($)</th>
+                    <th style="text-align:right;padding:0 0 8px 16px;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;width:16%">Notional</th>
+                    <th style="text-align:right;padding:0 0 8px 16px;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;width:8%">Wt</th>
+                    <th style="padding:0 0 8px 8px;width:24px"></th>
                 </tr>
             </thead>
             <tbody>`;
@@ -6709,7 +6708,7 @@
                         onchange="wccOnAmtChange(${o.id},this.value)"
                         onblur="wccOnAmtChange(${o.id},this.value)">
                 </td>
-                <td style="padding:6px 16px 6px 0;text-align:right;white-space:nowrap">
+                <td style="padding:6px 16px 6px 16px;text-align:right;white-space:nowrap">
                     ${hasSugg ? `<div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:3px">
                         <span style="font-size:10px;color:#A78BFA">→ ${wusd(sugg)}</span>
                         <button class="w-btn w-btn-sm" style="font-size:9px;padding:1px 6px;background:#3B0764;border:1px solid #7C3AED;color:#C4B5FD;border-radius:4px" onclick="wccApplySugg(${o.id})">Apply</button>
@@ -6720,8 +6719,8 @@
                         oninput="wccFmtStrikeInput(this)"
                         onblur="wccOnStkChange(${o.id},this.value)">
                 </td>
-                <td style="padding:6px 16px 6px 0;text-align:right;color:#94A3B8;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums">${notional>0?wusd(notional):'—'}</td>
-                <td style="padding:6px 24px 6px 0;text-align:right;color:#64748b;font-size:12px;white-space:nowrap">${wt}%</td>
+                <td style="padding:6px 16px 6px 16px;text-align:right;color:#94A3B8;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums">${notional>0?wusd(notional):'—'}</td>
+                <td style="padding:6px 8px 6px 16px;text-align:right;color:#64748b;font-size:12px;white-space:nowrap">${wt}%</td>
                 <td style="padding:6px 0;text-align:center;width:24px">
                     <button class="w-btn-icon w-btn-danger" onclick="wccRemoveOrder(${o.id})" title="Remove" style="opacity:.5;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.5">✕</button>
                 </td>
@@ -6759,7 +6758,7 @@
             const waStatusColor = waMatch ? '#10B981' : '#F87171';
 
             gridEl.innerHTML = `
-            <div style="display:grid;grid-template-columns:auto auto auto auto;gap:0;align-items:start">
+            <div style="display:flex;gap:0;align-items:start;justify-content:flex-start">
 
                 <!-- Actual WA Strike -->
                 <div style="padding:0 20px 0 0;border-right:1px solid #1E293B">
