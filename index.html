@@ -5741,6 +5741,7 @@
         const beEl = document.getElementById('goal-breakeven-display');
         if (beEl && goalAmt > 0 && totalRemainingMonths > 0) { if (projectWithTiers(currentBal, tiers, goalYear, 0) >= goalAmt) { beEl.innerHTML = '<span style="color:#34D399;">0.0%</span>'; } else if (projectWithTiers(currentBal, tiers, goalYear, 100) < goalAmt) { beEl.innerHTML = '<span style="color:#F87171;">&gt;100%</span>'; } else { let lo = 0, hi = 100; for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; projectWithTiers(currentBal, tiers, goalYear, mid) >= goalAmt ? hi = mid : lo = mid; } const be = ((lo + hi) / 2); const beColor = be <= annualReturn ? '#34D399' : '#F87171'; beEl.innerHTML = `<span style="color:${beColor};font-weight:700;">${be.toFixed(1)}%</span>`; } } else if (beEl) { beEl.innerHTML = '—'; }
         renderGoalChart(goalAmt, totalRemainingMonths, currentBal, tiers[0]?.amount || 0, annualReturn, tiers, goalYear);
+        if (currentGoalView === 'v2') renderGoalHeatmap();
     }
 
     function renderGoalChart(target, months, currentBal, userMonthly, userReturn, tiers, goalYear) {
