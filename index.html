@@ -1597,6 +1597,8 @@
                                     <button id="hb-view-segment" onclick="hbSetView('segment',event)">By Theme</button>
                                     <button id="hb-view-platform" onclick="hbSetView('platform',event)">By Platform</button>
                                 </div>
+                                <div class="hb-ctrl-sep"></div>
+                                <button type="button" id="hb-satellite-toggle" class="hb-btn" onclick="hbToggleSatelliteFilter(event)" title="Showing Core only — click to include Satellite">Core Only</button>
                                 <button id="toggle-holdings-panel" onclick="toggleHoldingsPanel(event)" title="Collapse holdings breakdown" class="bg-slate-800 border-none text-[10px] text-slate-300 rounded px-2 py-1 hover:text-white hover:bg-slate-700 transition-colors"><i class="fa-solid fa-chevron-up"></i></button>
                             </div>
                         </div>
@@ -6264,7 +6266,8 @@
             grouped[ddKey(asset, period)].push({
                 name:     String(row.ticker || row.Ticker || '').trim(),   // M = Ticker → display name
                 platform: String(row.name   || row.Name   || '').trim(),   // L = Name   → platform
-                theme:    String(row.theme  || row.Theme  || '').trim(),   // N = Theme  → theme
+                port:     String(row.port   || row.Port   || '').trim(),   // N = Port   → Core / Satellite
+                theme:    String(row.theme  || row.Theme  || '').trim(),   // O = Theme  → theme
                 amount
             });
         });
@@ -7719,6 +7722,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         if (tickerBtn)   tickerBtn.classList.toggle('view-active',   hbView === 'ticker');
         if (segmentBtn)  segmentBtn.classList.toggle('view-active',  hbView === 'segment');
         if (platformBtn) platformBtn.classList.toggle('view-active', hbView === 'platform');
+        hbSyncSatelliteToggleBtn();
     }
 
     function hbSyncButtonGroup(groupId, value) {
@@ -7783,6 +7787,30 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     let hbThemeFilter = new Set();
     let hbPlatformDrill = null;
     let hbPlatformFilter = new Set();
+    // Core/Satellite filter — default excludes Satellite balances from this panel
+    const HB_EXCLUDE_SATELLITE_KEY = 'hb_exclude_satellite';
+    let hbExcludeSatellite = localStorage.getItem(HB_EXCLUDE_SATELLITE_KEY) === null
+        ? true
+        : localStorage.getItem(HB_EXCLUDE_SATELLITE_KEY) === 'true';
+    const hbIsSatellite = (r) => String(r && r.port || '').trim().toLowerCase() === 'satellite';
+
+    function hbToggleSatelliteFilter(event) {
+        if (event) event.stopPropagation();
+        hbExcludeSatellite = !hbExcludeSatellite;
+        localStorage.setItem(HB_EXCLUDE_SATELLITE_KEY, hbExcludeSatellite ? 'true' : 'false');
+        hbSyncSatelliteToggleBtn();
+        renderHoldingsBreakdown();
+    }
+
+    function hbSyncSatelliteToggleBtn() {
+        const btn = document.getElementById('hb-satellite-toggle');
+        if (!btn) return;
+        btn.classList.toggle('is-active', hbExcludeSatellite);
+        btn.title = hbExcludeSatellite
+            ? 'Showing Core only — click to include Satellite'
+            : 'Showing Core + Satellite — click to exclude Satellite';
+        btn.textContent = hbExcludeSatellite ? 'Core Only' : 'Core + Satellite';
+    }
     // Amount formatter — masks when balances are hidden (used across all hb* render functions)
     const fmtAmt = (v) => (typeof balancesHidden !== 'undefined' && balancesHidden) ? '฿ ••••••' : `฿${(v||0).toLocaleString('en-US',{maximumFractionDigits:0})}`;
 
@@ -7818,8 +7846,15 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         const quarter   = quarterEl?.value || getLatestClosedPeriod();
         if (quarterEl && !quarterEl.value) quarterEl.value = quarter;
         const color     = DD_COLORS[asset];
-        const rawRows   = ddLoad(asset, quarter);
-        const assetBal  = ddGetAssetBalForPeriod(asset, quarter);
+        let rawRows     = ddLoad(asset, quarter);
+        let assetBal    = ddGetAssetBalForPeriod(asset, quarter);
+
+        // Core-only filter: exclude Satellite-tagged holdings (and their balance) by default
+        if (hbExcludeSatellite) {
+            const satelliteTotal = rawRows.filter(hbIsSatellite).reduce((s, r) => s + (r.amount || 0), 0);
+            rawRows  = rawRows.filter(r => !hbIsSatellite(r));
+            assetBal = Math.max(0, assetBal - satelliteTotal);
+        }
 
         // Merge raw rows by ticker, preserving platforms and segment
         const tickerMap = new Map();
