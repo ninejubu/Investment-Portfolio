@@ -6700,15 +6700,18 @@
         const suggMap = new Map(wccSuggestions.map(s => [s.targetId, s.suggestedStrike]));
 
         // ── Table: fills left half of grid ──
-        let html = `<table style="border-collapse:collapse;font-size:12px;width:100%">
+        let html = `<table style="border-collapse:collapse;font-size:12px;width:100%;table-layout:fixed">
+            <colgroup>
+                <col style="width:20%"><col style="width:16%"><col style="width:32%"><col style="width:14%"><col style="width:10%"><col style="width:24px">
+            </colgroup>
             <thead>
                 <tr>
-                    <th style="text-align:left;padding:0 0 8px 0;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;width:28%">Order</th>
-                    <th style="text-align:right;padding:0 0 8px 16px;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;width:22%">Amount (BTC)</th>
-                    <th style="text-align:right;padding:0 0 8px 16px;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;width:22%">Strike ($)</th>
-                    <th style="text-align:right;padding:0 0 8px 16px;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;width:16%">Notional</th>
-                    <th style="text-align:right;padding:0 0 8px 16px;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;width:8%">Wt</th>
-                    <th style="padding:0 0 8px 8px;width:24px"></th>
+                    <th style="text-align:left;padding:0 0 10px 0;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Order</th>
+                    <th style="text-align:right;padding:0 0 10px 12px;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Amount (BTC)</th>
+                    <th style="text-align:right;padding:0 0 10px 12px;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Strike ($)</th>
+                    <th style="text-align:right;padding:0 0 10px 12px;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Notional</th>
+                    <th style="text-align:right;padding:0 0 10px 12px;font-size:10px;font-weight:500;color:#475569;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Wt</th>
+                    <th style="padding:0"></th>
                 </tr>
             </thead>
             <tbody>`;
@@ -6717,38 +6720,37 @@
             const a = wpn(o.amt)||0;
             const k = wpn(o.strike)||0;
             const notional = a*k;
-            const wt = tbAmt > 0 ? (a/tbAmt*100).toFixed(1) : '0.0';
+            const wt = tbAmt > 0 ? (a/tbAmt*100).toFixed(2) : '0.00';
             const sugg = suggMap.get(o.id);
             const hasSugg = sugg !== undefined;
             const strikeDisplay = o.strike ? Number(String(o.strike).replace(/,/g,'')||0).toLocaleString('en-US') : '';
 
             html += `<tr style="border-top:1px solid #1E293B">
-                <td style="padding:6px 16px 6px 0;white-space:nowrap">
+                <td style="padding:10px 12px 10px 0;white-space:nowrap">
                     ${o.custom
                         ? `<input value="${satEsc(o.label)}" class="wcc-input" style="width:130px;padding:5px 8px;font-size:11px;box-sizing:border-box" onchange="wccSetLabel(${o.id},this.value)" onblur="wccSetLabel(${o.id},this.value)" placeholder="Order name">`
                         : `<span style="color:#E2E8F0;font-weight:500;font-size:12px">${satEsc(o.label)}</span>`}
                 </td>
-                <td style="padding:6px 16px 6px 0;text-align:right">
+                <td style="padding:10px 12px;text-align:right">
                     <input id="wcc-amt-${o.id}" value="${satEsc(o.amt)}" class="wcc-input"
-                        style="width:96px;text-align:right;font-size:12px;padding:5px 8px"
+                        style="width:100%;max-width:96px;text-align:right;font-size:12px;padding:5px 8px;box-sizing:border-box"
                         type="text" inputmode="decimal"
                         onchange="wccOnAmtChange(${o.id},this.value)"
                         onblur="wccOnAmtChange(${o.id},this.value)">
                 </td>
-                <td style="padding:6px 16px 6px 16px;text-align:right;white-space:nowrap">
-                    ${hasSugg ? `<div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:3px">
-                        <span style="font-size:10px;color:#A78BFA">→ ${wusd(sugg)}</span>
-                        <button class="w-btn w-btn-sm" style="font-size:9px;padding:1px 6px;background:#3B0764;border:1px solid #7C3AED;color:#C4B5FD;border-radius:4px" onclick="wccApplySugg(${o.id})">Apply</button>
-                    </div>` : ''}
-                    <input id="wcc-stk-${o.id}" value="${strikeDisplay}" class="wcc-input"
-                        style="width:96px;text-align:right;font-size:12px;padding:5px 8px"
-                        type="text" inputmode="decimal"
-                        oninput="wccFmtStrikeInput(this)"
-                        onblur="wccOnStkChange(${o.id},this.value)">
+                <td style="padding:10px 12px;text-align:right">
+                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
+                        ${hasSugg ? `<span style="font-size:11px;color:#A78BFA;white-space:nowrap;cursor:pointer" onclick="wccApplySugg(${o.id})">Apply → ${wusd(sugg)}</span>` : ''}
+                        <input id="wcc-stk-${o.id}" value="${strikeDisplay}" class="wcc-input"
+                            style="width:100%;max-width:96px;text-align:right;font-size:12px;padding:5px 8px;box-sizing:border-box"
+                            type="text" inputmode="decimal"
+                            oninput="wccFmtStrikeInput(this)"
+                            onblur="wccOnStkChange(${o.id},this.value)">
+                    </div>
                 </td>
-                <td style="padding:6px 16px 6px 16px;text-align:right;color:#94A3B8;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums">${notional>0?wusd(notional):'—'}</td>
-                <td style="padding:6px 8px 6px 16px;text-align:right;color:#64748b;font-size:12px;white-space:nowrap">${wt}%</td>
-                <td style="padding:6px 0;text-align:center;width:24px">
+                <td style="padding:10px 12px;text-align:right;color:#94A3B8;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums">${notional>0?wusd(notional):'—'}</td>
+                <td style="padding:10px 0 10px 12px;text-align:right;color:#64748b;font-size:12px;white-space:nowrap">${wt}%</td>
+                <td style="padding:10px 0;text-align:center">
                     <button class="w-btn-icon w-btn-danger" onclick="wccRemoveOrder(${o.id})" title="Remove" style="opacity:.5;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.5">✕</button>
                 </td>
             </tr>`;
@@ -6757,14 +6759,14 @@
         html += `</tbody>
             <tfoot>
                 <tr style="border-top:1px solid #334155">
-                    <td style="padding:10px 16px 6px 0;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Total</td>
-                    <td style="padding:10px 16px 6px 0;text-align:right;font-size:13px;font-weight:700;color:#F1F5F9;font-variant-numeric:tabular-nums">${tbAmt.toFixed(4)}</td>
-                    <td style="padding:10px 16px 6px 0;text-align:right">
+                    <td style="padding:10px 12px 6px 0;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Total</td>
+                    <td style="padding:10px 12px 6px 12px;text-align:right;font-size:13px;font-weight:700;color:#F1F5F9;font-variant-numeric:tabular-nums">${tbAmt.toFixed(4)}</td>
+                    <td style="padding:10px 12px 6px 12px;text-align:right">
                         <div style="font-size:13px;font-weight:700;color:${waMatch?'#A78BFA':'#FCA5A5'};font-variant-numeric:tabular-nums">${wusd(actualWA)}</div>
                         <div style="font-size:9px;font-weight:400;color:${waMatch?'#10B981':'#EF4444'};margin-top:1px">${waMatch?'✓ on target':'Δ '+wusd(Math.abs(actualWA-waStrike))}</div>
                     </td>
-                    <td style="padding:10px 16px 6px 0;text-align:right;font-size:13px;font-weight:700;color:#F1F5F9;font-variant-numeric:tabular-nums">${wusd(tbNotional)}</td>
-                    <td style="padding:10px 24px 6px 0;text-align:right;font-size:12px;font-weight:600;color:#94A3B8">100%</td>
+                    <td style="padding:10px 12px 6px 12px;text-align:right;font-size:13px;font-weight:700;color:#F1F5F9;font-variant-numeric:tabular-nums">${wusd(tbNotional)}</td>
+                    <td style="padding:10px 0 6px 12px;text-align:right;font-size:12px;font-weight:600;color:#94A3B8">100%</td>
                     <td></td>
                 </tr>
             </tfoot>
