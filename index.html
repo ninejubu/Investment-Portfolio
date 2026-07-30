@@ -6607,6 +6607,22 @@
     let wccOrderId      = 0;
     let wccSelectedLots = new Set();
     let wccSuggestions  = [];  // [{targetId, suggestedStrike}]
+    let wccUndoStack    = [];  // snapshots of [wccOrders, wccOrderId, wccSuggestions]
+    const WCC_UNDO_MAX  = 30;
+
+    function wccSnapshot() {
+        wccUndoStack.push(JSON.stringify({ orders: wccOrders, orderId: wccOrderId, sugg: wccSuggestions }));
+        if (wccUndoStack.length > WCC_UNDO_MAX) wccUndoStack.shift();
+    }
+
+    function wccUndo() {
+        if (wccUndoStack.length === 0) return;
+        const prev = JSON.parse(wccUndoStack.pop());
+        wccOrders      = prev.orders;
+        wccOrderId     = prev.orderId;
+        wccSuggestions = prev.sugg;
+        wccRenderTable();
+    }
 
     function wccTarget() {
         const lots = wLots.filter((_,i) => wccSelectedLots.has(i));
@@ -6740,7 +6756,7 @@
                 </td>
                 <td style="padding:10px 12px;text-align:right">
                     <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
-                        ${hasSugg ? `<span style="font-size:11px;color:#A78BFA;white-space:nowrap;cursor:pointer" onclick="wccApplySugg(${o.id})">Apply → ${wusd(sugg)}</span>` : ''}
+                        ${hasSugg ? `<button onclick="wccApplySugg(${o.id})" style="display:inline-flex;align-items:center;gap:4px;background:#2D1B69;border:1px solid #7C3AED;color:#C4B5FD;font-size:10px;font-weight:600;padding:3px 8px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s" onmouseover="this.style.background='#3B0764'" onmouseout="this.style.background='#2D1B69'">Apply → ${wusd(sugg)}</button>` : ''}
                         <input id="wcc-stk-${o.id}" value="${strikeDisplay}" class="wcc-input"
                             style="width:100%;max-width:96px;text-align:right;font-size:12px;padding:5px 8px;box-sizing:border-box"
                             type="text" inputmode="decimal"
@@ -6849,8 +6865,8 @@
 
     function wccOnStkChange(id, value) {
         const order = wccOrders.find(o => o.id === id);
-        // Strip commas before storing so wpn() can parse it correctly
         const clean = String(value).replace(/,/g, '');
+        if (order && order.strike !== clean) wccSnapshot();
         if (order) order.strike = clean;
         wccComputeSuggestions(id, 'strike');
         wccRenderTable();
@@ -6909,6 +6925,7 @@
     function wccApplySugg(orderId) {
         const sugg = wccSuggestions.find(s => s.targetId === orderId);
         if (!sugg) return;
+        wccSnapshot();
         const order = wccOrders.find(o => o.id === orderId);
         if (order) order.strike = Math.round(sugg.suggestedStrike).toString();
         // Clear suggestion for this order
@@ -6922,6 +6939,7 @@
         if (!order) return;
         const oldAmt = wpn(order.amt) || 0;
         const newAmt = wpn(value) || 0;
+        if (newAmt !== oldAmt) wccSnapshot();
         order.amt = value;
 
         // If decreased and there's a meaningful remainder: create/update split row
@@ -6953,6 +6971,7 @@
     }
 
     function wccAddOrder() {
+        wccSnapshot();
         const nextNum = wccOrders.filter(o => o.custom).length + 1;
         wccOrders.push({
             id:     ++wccOrderId,
@@ -6967,6 +6986,7 @@
     }
 
     function wccRemoveOrder(id) {
+        wccSnapshot();
         wccOrders = wccOrders.filter(o => o.id !== id);
         wccSuggestions = wccSuggestions.filter(s => s.targetId !== id);
         wccRenderTable();
@@ -8613,6 +8633,15 @@ Click to see tickers`;
     }
 
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrillDown(); });
+    document.addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+            const panel = document.getElementById('wCallCalcSplitPanel');
+            if (panel && panel.style.display !== 'none' && panel.contains(document.activeElement)) {
+                e.preventDefault();
+                wccUndo();
+            }
+        }
+    });
     </script>
 </body>
 </html>
