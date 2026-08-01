@@ -2552,7 +2552,7 @@
     const savedRates = { beginning: null, q1: null, q2: null, q3: null, q4: null };
     const getEmptyEndBalances = () => ({ stocks: { q1:null, q2: null, q3: null, q4: null }, bonds: { q1: null, q2: null, q3: null, q4: null }, crypto: { q1: {thb: null, usds: null, usdo: null}, q2: {thb: null, usds: null, usdo: null}, q3: {thb: null, usds: null, usdo: null}, q4: {thb: null, usds: null, usdo: null} }, gold: { q1: null, q2: null, q3: null, q4: null } });
     const getEmptyBegBalances = () => ({ stocks: 0, bonds: 0, crypto: 0, gold: 0 });
-    const getEmptyBenchmarks = () => ({ stocks: { name: '', q1: null, q2: null, q3: null, q4: null }, bonds: { name: '', q1: null, q2: null, q3: null, q4: null }, crypto: { name: '', q1: null, q2: null, q3: null, q4: null }, gold: { name: '', q1: null, q2: null, q3: null, q4: null } });
+    const getEmptyBenchmarks = () => ({ stocks: { name: '', q1: null, q2: null, q3: null, q4: null }, bonds: { name: '', q1: null, q2: null, q3: null, q4: null }, crypto: { name: '', q1: null, q2: null, q3: null, q4: null }, gold: { name: '', q1: null, q2: null, q3: null, q4: null }, world: { name: '', q1: null, q2: null, q3: null, q4: null } });
     const createDefaultGoal = () => ({ amount: 10000000, year: 2031, monthly: 20000, return: 12, monthlyTiers: [{year: 2026, amount: 20000}, {year: 2028, amount: 36000}] });
     const SAT_BENCHMARK_CACHE_KEY = 'satellite_benchmark_market_cache_v1';
     const SAT_BENCHMARK_REFRESH_KEY = 'satellite_benchmark_refresh_date_v1';
@@ -5696,17 +5696,28 @@
         const calcQoQ_ = (asset, q) => { const currentYTD = getSettingBM(asset, q); if (currentYTD === null) return null; if (q === 1) return currentYTD; const prevYTD = getSettingBM(asset, q - 1); if (prevYTD === null) return null; return (((1 + currentYTD/100) / (1 + prevYTD/100)) - 1) * 100; };
         const getCryptoBM = (q, ytd) => { const rate = parseFloat(state.rates[`q${q}`] || state.rates.beginning) || 0; let usds = 0, usdo = 0; for (let qi = q; qi >= 1; qi--) { const eb = pState().endBalances.crypto[`q${qi}`]; if (eb && (eb.usds !== null || eb.usdo !== null)) { usds = (eb.usds || 0) * rate; usdo = (eb.usdo || 0) * rate; break; } } const totalUSD = usds + usdo; const bmS = ytd ? getSettingBM('bonds', q) : calcQoQ_('bonds', q); const bmO = ytd ? getSettingBM('crypto', q) : calcQoQ_('crypto', q); if (totalUSD === 0) return bmO; const wS = usds / totalUSD; const wO = usdo / totalUSD; if (bmS === null && bmO === null) return null; return (wS * (bmS ?? 0)) + (wO * (bmO ?? 0)); };
         const getBenchGrowth = (aKey, qNum, ytdFlag) => { if (!qNum) return null; const assets = ['stocks', 'bonds', 'crypto', 'gold']; if (ytdFlag) { if (aKey === 'crypto') return getCryptoBM(qNum, true); if (aKey === 'all' || aKey === 'all-sep') { let weightedSum = 0, totalWeight = 0, hasAny = false; assets.forEach(a => { const assetBal = state.computed[a][`q${qNum}`].start; const bmVal = a === 'crypto' ? getCryptoBM(qNum, true) : getSettingBM(a, qNum); if (bmVal !== null) { weightedSum += (bmVal * assetBal); totalWeight += assetBal; hasAny = true; } }); return (hasAny && totalWeight > 0) ? weightedSum / totalWeight : null; } return getSettingBM(aKey, qNum); } else { const calcQoQ = (asset, q) => { if (asset === 'crypto') return getCryptoBM(q, false); return calcQoQ_(asset, q); }; if (aKey === 'all' || aKey === 'all-sep') { let weightedSum = 0, totalWeight = 0, hasAny = false; assets.forEach(a => { const assetBal = state.computed[a][`q${qNum}`].start; const qoqVal = calcQoQ(a, qNum); if (qoqVal !== null) { weightedSum += (qoqVal * assetBal); totalWeight += assetBal; hasAny = true; } }); return (hasAny && totalWeight > 0) ? weightedSum / totalWeight : null; } return calcQoQ(aKey, qNum); } };
+        // World (ACWI) — a single flat benchmark for the whole portfolio, not weighted by asset class
+        const getWorldGrowth = (qNum, ytdFlag) => { if (!qNum) return null; return ytdFlag ? getSettingBM('world', qNum) : calcQoQ_('world', qNum); };
+        const worldName = pState().benchmarks.world?.name || 'World';
         let labels = []; let datasets = []; const qTarget = range === 'all' ? (isYTD ? getLatestClosedQuarterNumber() : 4) : parseInt(range.charAt(1));
         const benchColor = getThemeMode() === 'light' ? '#64748B' : '#94A3B8';
         const benchDataset = (label, data) => ({ label, data, backgroundColor: benchColor, borderColor: benchColor, borderWidth: 1, borderRadius: 4, minBarLength: 5 });
+        const worldColor = '#F59E0B';
+        const worldDataset = (label, data) => ({ label, data, backgroundColor: worldColor, borderColor: worldColor, borderWidth: 1, borderRadius: 4, minBarLength: 5 });
         if (isYTD) {
             labels = [range === 'all' ? (qTarget ? `YTD (Up to Q${qTarget})` : 'YTD') : `YTD (Up to Q${qTarget})`];
             if (assetKey === 'all-sep') { const assets = ['stocks', 'bonds', 'crypto', 'gold']; const colors = { stocks: '#10B981', bonds: '#F59E0B', crypto: '#3B82F6', gold: '#FACC15' }; assets.forEach(a => { datasets.push({ label: a.toUpperCase() + ' Port', data: [getPortGrowth(a, qTarget, true)], backgroundColor: colors[a], borderRadius: 4 }); datasets.push(benchDataset(a.toUpperCase() + ' Bench', [getBenchGrowth(a, qTarget, true)])); }); }
-            else { datasets = [{ label: 'Portfolio', data: [getPortGrowth(assetKey, qTarget, true)], backgroundColor: '#3B82F6', borderRadius: 4 }, benchDataset('Benchmark', [getBenchGrowth(assetKey, qTarget, true)])]; }
+            else {
+                datasets = [{ label: 'Portfolio', data: [getPortGrowth(assetKey, qTarget, true)], backgroundColor: '#3B82F6', borderRadius: 4 }, benchDataset('Benchmark', [getBenchGrowth(assetKey, qTarget, true)])];
+                if (assetKey === 'all') datasets.push(worldDataset(worldName, [getWorldGrowth(qTarget, true)]));
+            }
         } else {
             const quarters = range === 'all' ? [1, 2, 3, 4] : [qTarget]; labels = range === 'all' ? ['Q1', 'Q2', 'Q3', 'Q4'] : [`Q${qTarget}`];
             if (assetKey === 'all-sep') { const assets = ['stocks', 'bonds', 'crypto', 'gold']; const colors = { stocks: '#10B981', bonds: '#F59E0B', crypto: '#3B82F6', gold: '#FACC15' }; assets.forEach(a => { datasets.push({ label: a.toUpperCase() + ' Port', data: quarters.map(q => getPortGrowth(a, q, false)), backgroundColor: colors[a], borderRadius: 4 }); datasets.push(benchDataset(a.toUpperCase() + ' Bench', quarters.map(q => getBenchGrowth(a, q, false)))); }); }
-            else { datasets = [{ label: 'Portfolio', data: quarters.map(q => getPortGrowth(assetKey, q, false)), backgroundColor: '#3B82F6', borderRadius: 4 }, benchDataset('Benchmark', quarters.map(q => getBenchGrowth(assetKey, q, false)))]; }
+            else {
+                datasets = [{ label: 'Portfolio', data: quarters.map(q => getPortGrowth(assetKey, q, false)), backgroundColor: '#3B82F6', borderRadius: 4 }, benchDataset('Benchmark', quarters.map(q => getBenchGrowth(assetKey, q, false)))];
+                if (assetKey === 'all') datasets.push(worldDataset(worldName, quarters.map(q => getWorldGrowth(q, false))));
+            }
         }
         if(charts.perf) charts.perf.destroy();
         const theme = chartTheme();
@@ -5975,9 +5986,12 @@
             endC.innerHTML += h + `</div></div>`;
         });
         ['beginning','q1','q2','q3','q4'].forEach(r => document.getElementById('rate-'+r).value = state.rates[r] ? state.rates[r].toLocaleString() : '');
-        const bmC = document.getElementById('benchmarks-container'); bmC.innerHTML = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="bm-grid"></div>';
+        const bmC = document.getElementById('benchmarks-container'); bmC.innerHTML = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="bm-grid"></div><div class="mt-4" id="bm-world-wrap"></div>';
         const bmG = document.getElementById('bm-grid');
         ['stocks','bonds','crypto','gold'].forEach(a => { let h = `<div class="bg-slate-800/40 p-3 rounded-lg border border-slate-700"><h5 class="text-[10px] font-bold text-slate-400 mb-2 uppercase">${a}</h5><input type="text" id="input-bm-name-${a}" value="${pState().benchmarks[a].name||''}" class="w-full bg-slate-900 border border-slate-700 text-white rounded px-2 py-1 text-xs mb-3" placeholder="Name"><div class="grid grid-cols-2 gap-2 text-[10px]">`; [1,2,3,4].forEach(q => h += `<div class="flex items-center justify-between bg-slate-900 border border-slate-700 rounded px-2 py-1"><span class="text-slate-500">Q${q}</span><div class="pct-suffix"><input type="text" oninput="formatNumberInput(this)" id="input-bm-q${q}-${a}" value="${pState().benchmarks[a][`q${q}`]!==null?pState().benchmarks[a][`q${q}`]:''}" class="bg-transparent border-none text-white w-12 text-right focus:outline-none"></div></div>`); bmG.innerHTML += h + `</div></div>`; });
+        // World (ACWI) — single blended benchmark for the whole portfolio, not tied to any asset class
+        const bmWorldWrap = document.getElementById('bm-world-wrap');
+        bmWorldWrap.innerHTML = `<div class="bg-slate-800/40 p-3 rounded-lg border border-amber-500/40"><div class="flex items-center gap-2 mb-2"><h5 class="text-[10px] font-bold text-amber-400 uppercase">World / All (single portfolio benchmark)</h5></div><input type="text" id="input-bm-name-world" value="${pState().benchmarks.world.name||''}" class="w-full bg-slate-900 border border-slate-700 text-white rounded px-2 py-1 text-xs mb-3" placeholder="e.g. ACWI"><div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px]">${[1,2,3,4].map(q => `<div class="flex items-center justify-between bg-slate-900 border border-slate-700 rounded px-2 py-1"><span class="text-slate-500">Q${q}</span><div class="pct-suffix"><input type="text" oninput="formatNumberInput(this)" id="input-bm-q${q}-world" value="${pState().benchmarks.world[`q${q}`]!==null?pState().benchmarks.world[`q${q}`]:''}" class="bg-transparent border-none text-white w-12 text-right focus:outline-none"></div></div>`).join('')}</div></div>`;
         // Pre-fill unified URL
         const savedUrl = getGsUrl();
         const ugsEl = document.getElementById('unified-gs-url');
@@ -6021,6 +6035,11 @@
 
     function saveSettings() {
         ['stocks','bonds','crypto','gold'].forEach(a => { pState().begBalances[a] = getRawValue(document.getElementById(`input-beg-${a}`).value); [1,2,3,4].forEach(q => { if (a === 'crypto') { const thbVal = document.getElementById(`input-eb-crypto-thb-q${q}`).value; const usdsVal = document.getElementById(`input-eb-crypto-usds-q${q}`).value; const usdoVal = document.getElementById(`input-eb-crypto-usdo-q${q}`).value; pState().endBalances.crypto[`q${q}`] = { thb: thbVal !== '' ? getRawValue(thbVal) : null, usds: usdsVal !== '' ? getRawValue(usdsVal) : null, usdo: usdoVal !== '' ? getRawValue(usdoVal) : null }; } else pState().endBalances[a][`q${q}`] = document.getElementById(`input-eb-${a}-q${q}`).value !== '' ? getRawValue(document.getElementById(`input-eb-${a}-q${q}`).value) : null; pState().benchmarks[a][`q${q}`] = document.getElementById(`input-bm-q${q}-${a}`).value !== '' ? getRawValue(document.getElementById(`input-bm-q${q}-${a}`).value) : null; pState().benchmarks[a].name = document.getElementById(`input-bm-name-${a}`).value; }); });
+        // World (ACWI) — single blended benchmark, no beg/end balance of its own
+        if (document.getElementById('input-bm-name-world')) {
+            pState().benchmarks.world.name = document.getElementById('input-bm-name-world').value;
+            [1,2,3,4].forEach(q => { const el = document.getElementById(`input-bm-q${q}-world`); pState().benchmarks.world[`q${q}`] = el && el.value !== '' ? getRawValue(el.value) : null; });
+        }
         ['beginning','q1','q2','q3','q4'].forEach(r => state.rates[r] = document.getElementById('rate-'+r).value !== '' ? getRawValue(document.getElementById('rate-'+r).value) : null);
         localStorage.setItem('goal_port1', JSON.stringify(state.portfolios.port1.goal));
         localStorage.setItem('goal_port2', JSON.stringify(state.portfolios.port2.goal));
