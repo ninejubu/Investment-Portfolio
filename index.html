@@ -2108,27 +2108,54 @@
 
                         <!-- Options Calculator -->
                         <div class="wheel-card lg:col-span-2" style="display:flex;flex-direction:column">
-                            <div class="wheel-card-title">
-                                <div style="display:flex;align-items:center;gap:10px">
-                                    <span class="ctl">Options Calculator</span>
-                                    <!-- Put / Call toggle -->
-                                    <div id="calcToggle" style="display:flex;background:#0F172A;border:1px solid #334155;border-radius:6px;padding:2px;gap:2px">
-                                        <button id="calcTogglePut" onclick="wSetCalcMode('put')" style="padding:3px 12px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer;background:#F4884A;color:#fff;transition:all .15s">PUT</button>
-                                        <button id="calcToggleCall" onclick="wSetCalcMode('call')" style="padding:3px 12px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer;background:transparent;color:#64748b;transition:all .15s">CALL</button>
+                            <div style="display:flex;gap:16px;align-items:flex-start;flex:1;flex-wrap:wrap">
+                                <!-- LEFT: Options Calculator -->
+                                <div style="display:flex;flex-direction:column;flex:1 1 360px;min-width:320px">
+                                    <div class="wheel-card-title">
+                                        <div style="display:flex;align-items:center;gap:10px">
+                                            <span class="ctl">Options Calculator</span>
+                                            <!-- Put / Call toggle -->
+                                            <div id="calcToggle" style="display:flex;background:#0F172A;border:1px solid #334155;border-radius:6px;padding:2px;gap:2px">
+                                                <button id="calcTogglePut" onclick="wSetCalcMode('put')" style="padding:3px 12px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer;background:#F4884A;color:#fff;transition:all .15s">PUT</button>
+                                                <button id="calcToggleCall" onclick="wSetCalcMode('call')" style="padding:3px 12px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.06em;border:none;cursor:pointer;background:transparent;color:#64748b;transition:all .15s">CALL</button>
+                                            </div>
+                                        </div>
+                                        <div style="display:flex;align-items:center;gap:8px">
+                                            <span style="font-size:10px;color:#475569;font-weight:500">BTC/USD</span>
+                                            <span style="font-size:13px;font-weight:600;color:#93C5FD" id="calcBtcShow">—</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="wheel-calc-scroll">
+                                        <!-- Header -->
+                                        <div class="wheel-calc-header-row" style="display:grid;grid-template-columns:70px 100px 105px 36px 30px;gap:6px;font-size:9px;color:#475569;letter-spacing:.05em;text-transform:uppercase;padding:0 10px;margin-bottom:5px;font-weight:600">
+                                            <span>Gap %</span><span>Strike</span><span>Expire Date</span><span></span><span></span>
+                                        </div>
+                                        <div id="strikeRows" style="display:flex;flex-direction:column;gap:4px;min-width:340px"></div>
                                     </div>
                                 </div>
-                                <div style="display:flex;align-items:center;gap:8px">
-                                    <span style="font-size:10px;color:#475569;font-weight:500">BTC/USD</span>
-                                    <span style="font-size:13px;font-weight:600;color:#93C5FD" id="calcBtcShow">—</span>
-                                </div>
-                            </div>
 
-                            <div class="wheel-calc-scroll">
-                                <!-- Header -->
-                                <div class="wheel-calc-header-row" style="display:grid;grid-template-columns:75px 110px 115px 1fr 72px 36px 30px;gap:6px;font-size:9px;color:#475569;letter-spacing:.05em;text-transform:uppercase;padding:0 10px;margin-bottom:5px;font-weight:600">
-                                    <span>Gap %</span><span>Strike</span><span>Expire Date</span><span>Prem/Contract</span><span>APY %</span><span></span><span></span>
+                                <!-- Divider -->
+                                <div style="width:1px;align-self:stretch;background:#334155"></div>
+
+                                <!-- RIGHT: Weighted Average Calculator -->
+                                <div style="display:flex;flex-direction:column;flex:1 1 260px;min-width:260px">
+                                    <div class="wheel-card-title">
+                                        <span class="ctl">Weighted Average Calculator</span>
+                                        <button class="w-btn w-btn-primary w-btn-sm" onclick="waCalcAddOrder()">+ Order</button>
+                                    </div>
+                                    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+                                        <div class="wheel-input-group">
+                                            <span class="wheel-label">Price</span>
+                                            <input type="text" inputmode="numeric" class="wheel-input" id="waTargetPrice" placeholder="92,000.00" oninput="wFmtNum(this);waCalcRender()">
+                                        </div>
+                                        <div class="wheel-input-group">
+                                            <span class="wheel-label">Amount</span>
+                                            <input type="text" inputmode="decimal" class="wheel-input" id="waTargetAmount" placeholder="0.10" oninput="waCalcRender()">
+                                        </div>
+                                    </div>
+                                    <div id="waCalcTableWrap"></div>
                                 </div>
-                                <div id="strikeRows" style="display:flex;flex-direction:column;gap:4px;min-width:580px"></div>
                             </div>
                         </div>
                     </div>
@@ -2323,6 +2350,7 @@
                 <div class="wheel-input-group"><span class="wheel-label">Contracts</span><input type="text" inputmode="numeric" class="wheel-input" id="mo_contracts" value="0.04"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Premium / Contract ($)</span><input type="text" inputmode="numeric" class="wheel-input" id="mo_prem" placeholder="145" oninput="wFmtNum(this)"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Currency</span><select class="wheel-input" id="mo_curr"><option>Contracts</option><option>USD</option></select></div>
+                <div class="wheel-input-group"><span class="wheel-label">Tag</span><input type="text" class="wheel-input" id="mo_tags" placeholder="e.g. L5-L6"></div>
                 <div class="wheel-input-group wheel-modal-full"><span class="wheel-label">Note</span><input type="text" class="wheel-input" id="mo_note" placeholder="e.g. L5-L6"></div>
             </div>
             <div class="wheel-modal-actions">
@@ -2338,6 +2366,7 @@
             <div class="wheel-modal-title" id="mWheelLotTitle">Add BTC Lot</div>
             <div class="wheel-modal-grid">
                 <div class="wheel-input-group wheel-modal-full"><span class="wheel-label">Lot Name</span><input type="text" class="wheel-input" id="ml_name" placeholder="Short call L9"></div>
+                <div class="wheel-input-group"><span class="wheel-label">Tag</span><input type="text" class="wheel-input" id="ml_tag" placeholder="e.g. L9"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Buy Price ($)</span><input type="text" inputmode="numeric" class="wheel-input" id="ml_price" placeholder="75,000" oninput="wFmtNum(this)"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Amount (BTC)</span><input type="text" inputmode="numeric" class="wheel-input" id="ml_amt" placeholder="0.05"></div>
                 <div class="wheel-input-group"><span class="wheel-label">Target Strike ($)</span><input type="text" inputmode="numeric" class="wheel-input" id="ml_target" placeholder="80,000" oninput="wFmtNum(this)"></div>
@@ -6477,7 +6506,7 @@
         try { const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'); const d = await r.json(); btcPrice = parseFloat(d.lastPrice); const chg = parseFloat(d.priceChangePercent); document.getElementById('btcPrice').textContent = wusd(btcPrice,2); const ce = document.getElementById('btcChange'); ce.textContent = (chg>=0?'+':'')+chg.toFixed(2)+'%'; ce.className = 'btc-change-val '+(chg>=0?'up':'down'); const cs = document.getElementById('calcBtcShow'); if(cs) cs.textContent = wusd(btcPrice,2); wCalcAll(); wUpdateExerciseAndAlerts(); } catch(e) {}
     }
 
-    function wCalcAll() { wRenderSummary(); wRenderLots(); wRenderOrders(); wRenderCalc(); wRenderCallCalc(); wRenderHistory(); wUpdateExerciseAndAlerts(); }
+    function wCalcAll() { wRenderSummary(); wRenderLots(); wRenderOrders(); wRenderCalc(); wRenderCallCalc(); wRenderHistory(); wUpdateExerciseAndAlerts(); waCalcRender(); }
 
     function wRenderSummary() {
         const bal = wpn(document.getElementById('optBalance').value);
@@ -7266,7 +7295,7 @@
             const expLabel = expDate || '';
 
             const row = document.createElement('div');
-            row.style.cssText = 'display:grid;grid-template-columns:75px 110px 115px 1fr 72px 36px 30px;gap:6px;align-items:center;background:#0F172A;border:1px solid #334155;border-radius:7px;padding:7px 10px;transition:border-color .15s';
+            row.style.cssText = 'display:grid;grid-template-columns:70px 100px 105px 36px 30px;gap:6px;align-items:center;background:#0F172A;border:1px solid #334155;border-radius:7px;padding:7px 10px;transition:border-color .15s';
             row.onmouseenter = () => row.style.borderColor = '#3B82F6';
             row.onmouseleave = () => row.style.borderColor = '#334155';
 
@@ -7275,37 +7304,30 @@
                 ? `<span style="font-size:12px;font-weight:600;color:${gapColor}">${actualLabel}</span>`
                 : isStrikeMode
                     ? `<span style="font-size:11px;font-weight:500;color:${gapColor}">${actualLabel || '—'}</span>`
-                    : `<input value="${rs.customGap}" style="width:68px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:${gapColor};font-size:11px;font-weight:600;padding:3px 5px;text-align:center" onblur="wCalcRowState[${i}].customGap=this.value;wRenderCalc()"
+                    : `<input value="${rs.customGap}" style="width:60px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:${gapColor};font-size:11px;font-weight:600;padding:3px 5px;text-align:center" onblur="wCalcRowState[${i}].customGap=this.value;wRenderCalc()"
 onkeypress="if(event.key==='Enter'){this.blur()}" />`;
 
             // Col 2: Strike Price
             const col2 = isStrikeMode
-                ? `<input value="${rs.customStrike}" style="width:100px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:#F8FAFC;font-size:12px;font-weight:500;padding:3px 5px" onblur="wCalcRowState[${i}].customStrike=this.value.replace(/,/g,'');wRenderCalc()"
+                ? `<input value="${rs.customStrike}" style="width:92px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:#F8FAFC;font-size:12px;font-weight:500;padding:3px 5px" onblur="wCalcRowState[${i}].customStrike=this.value.replace(/,/g,'');wRenderCalc()"
 onkeypress="if(event.key==='Enter'){this.blur()}" />`
                 : `<span style="font-size:13px;font-weight:500;color:#F8FAFC">${strikeDisplay ? '$' + strikeDisplay : '—'}</span>`;
 
             // Col 3: Expire date as YYYY-MM-DD
             const col3 = cfg.expIdx !== null
                 ? `<span style="font-size:11px;color:#94A3B8">${expLabel}</span>`
-                : `<input type="date" value="${expDate}" style="width:108px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:#94A3B8;font-size:11px;padding:3px 5px" onblur="wCalcRowState[${i}].customDate=this.value;wRenderCalc()"
+                : `<input type="date" value="${expDate}" style="width:98px;background:#0F172A;border:1px solid #334155;border-radius:4px;color:#94A3B8;font-size:11px;padding:3px 5px" onblur="wCalcRowState[${i}].customDate=this.value;wRenderCalc()"
 onkeypress="if(event.key==='Enter'){this.blur()}" />`;
 
-            // Col 4: Premium input
-            const col4 = `<input id="prem-input-${i}" value="${rs.premiumVal}" style="width:112px;background:#0F172A;border:1px solid #3B82F6;border-radius:4px;color:#10B981;font-size:12px;font-weight:500;padding:3px 6px" oninput="wCalcPremChange(${i},this.value)" />`;
-
-            // Col 5: APY
-            const apyColor = premium ? '#F59E0B' : '#475569';
-            const col5 = `<span id="apy-span-${i}" style="font-size:11px;font-weight:600;color:${apyColor}">${apyStr}</span>`;
-
-            // Col 6: + Add
+            // Col 4: + Add
             const safeStrike = strikeVal || 0;
             const safeExp    = expDate   || '';
-            const col6 = `<button onclick="wQuickAddCalc(${i},${safeStrike},'${safeExp}')" title="Add to orders" style="background:#3B82F6;border:none;border-radius:5px;color:#fff;font-size:14px;font-weight:700;padding:3px 10px;cursor:pointer;line-height:1" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">+</button>`;
+            const col4 = `<button onclick="wQuickAddCalc(${i},${safeStrike},'${safeExp}')" title="Add to orders" style="background:#3B82F6;border:none;border-radius:5px;color:#fff;font-size:14px;font-weight:700;padding:3px 10px;cursor:pointer;line-height:1" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">+</button>`;
 
-            // Col 7: Edit
-            const col7 = `<button onclick="wCalcEditRow(${i})" title="Edit row" style="background:transparent;border:1px solid #334155;border-radius:4px;color:#64748b;font-size:10px;padding:3px 6px;cursor:pointer" onmouseover="this.style.borderColor='#94A3B8';this.style.color='#94A3B8'" onmouseout="this.style.borderColor='#334155';this.style.color='#64748b'">✎</button>`;
+            // Col 5: Edit
+            const col5 = `<button onclick="wCalcEditRow(${i})" title="Edit row" style="background:transparent;border:1px solid #334155;border-radius:4px;color:#64748b;font-size:10px;padding:3px 6px;cursor:pointer" onmouseover="this.style.borderColor='#94A3B8';this.style.color='#94A3B8'" onmouseout="this.style.borderColor='#334155';this.style.color='#64748b'">✎</button>`;
 
-            row.innerHTML = col1 + col2 + col3 + col4 + col5 + col6 + col7;
+            row.innerHTML = col1 + col2 + col3 + col4 + col5;
             rows.appendChild(row);
         });
     }
@@ -7347,11 +7369,105 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     function openWheelModal(id){document.getElementById(id).classList.add('open')}
     function closeWheelModal(id){document.getElementById(id).classList.remove('open')}
 
-    function openWheelOrderModal(id){ wEditOrderId=id; const o=id?wOrders.find(x=>x.id===id):null; document.getElementById('mWheelOrderTitle').textContent=o?'Edit Order':'New Order'; document.getElementById('mo_cex').value=o?o.cex:'BINANCE'; document.getElementById('mo_product').value=o?o.product:'Short Put'; document.getElementById('mo_open').value=o?o.openDate:new Date().toISOString().split('T')[0]; document.getElementById('mo_expiry').value=o?o.expiryDate:''; document.getElementById('mo_strike').value=o?o.strike.toLocaleString('en-US'):''; document.getElementById('mo_contracts').value=o?o.contracts:'0.04'; document.getElementById('mo_prem').value=o?o.premium.toLocaleString('en-US'):''; document.getElementById('mo_curr').value=o?o.currency:'Contracts'; document.getElementById('mo_note').value=o?o.note:''; openWheelModal('mWheelOrder'); }
-    function wSubmitOrder(){ const existing=wEditOrderId?wOrders.find(x=>x.id===wEditOrderId):null; const o={id:wEditOrderId||wNextId++,cex:document.getElementById('mo_cex').value,product:document.getElementById('mo_product').value,openDate:document.getElementById('mo_open').value,expiryDate:document.getElementById('mo_expiry').value,strike:wpn(document.getElementById('mo_strike').value),contracts:wpn(document.getElementById('mo_contracts').value),premium:wpn(document.getElementById('mo_prem').value),currency:document.getElementById('mo_curr').value,status:'open',tags:wOrderTags(existing).join(','),tag:'',note:document.getElementById('mo_note').value}; if(wEditOrderId){const i=wOrders.findIndex(x=>x.id===wEditOrderId);if(i>=0)wOrders[i]=o} else wOrders.push(o); closeWheelModal('mWheelOrder');wCalcAll();wAutoPush(); }
+    // ── Weighted Average Calculator ──────────────────────
+    // Last order in waOrders is always auto-calculated (Price & Amount)
+    // so it balances the target Price (weighted avg) and target Amount (sum).
+    let waOrders = [{ price: '', amount: '' }, { price: '', amount: '' }];
 
-    function openWheelLotModal(id){ wEditLotId=id; const l=id?wLots.find(x=>x.id===id):null; document.getElementById('mWheelLotTitle').textContent=l?'Edit Lot':'Add BTC Lot'; document.getElementById('ml_name').value=l?l.name:''; document.getElementById('ml_price').value=l&&l.price?l.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):''; document.getElementById('ml_amt').value=l?l.amount:''; document.getElementById('ml_target').value=l?l.target.toLocaleString('en-US'):''; document.getElementById('ml_acc').value=l?l.accRealPL.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'0.00'; openWheelModal('mWheelLot'); }
-    function wSubmitLot(){ const price=wpn(document.getElementById('ml_price').value); const l={id:wEditLotId||(wLots.length?Math.max(...wLots.map(x=>x.id))+1:1),name:document.getElementById('ml_name').value,price,amount:wpn(document.getElementById('ml_amt').value),target:wpn(document.getElementById('ml_target').value),accRealPL:wpn(document.getElementById('ml_acc').value),problem:price===0}; if(wEditLotId){const i=wLots.findIndex(x=>x.id===wEditLotId);if(i>=0)wLots[i]=l} else wLots.push(l); closeWheelModal('mWheelLot');wCalcAll();wAutoPush(); }
+    function waCalcAddOrder() {
+        waOrders.splice(waOrders.length - 1, 0, { price: '', amount: '' });
+        waCalcRender();
+    }
+
+    function waCalcRemoveOrder(idx) {
+        if (waOrders.length <= 2) return; // keep at least 1 editable + 1 auto row
+        waOrders.splice(idx, 1);
+        waCalcRender();
+    }
+
+    function waCalcSetPrice(idx, val) {
+        waOrders[idx].price = val;
+        waCalcRender();
+    }
+
+    function waCalcSetAmount(idx, val) {
+        waOrders[idx].amount = val;
+        waCalcRender();
+    }
+
+    function waCalcRender() {
+        const wrap = document.getElementById('waCalcTableWrap');
+        if (!wrap) return;
+
+        const targetPrice  = wpn(document.getElementById('waTargetPrice')?.value) || 0;
+        const targetAmount = wpn(document.getElementById('waTargetAmount')?.value) || 0;
+        const lastIdx = waOrders.length - 1;
+
+        // Sum entered (non-auto) rows
+        let enteredAmountSum = 0, enteredWeightedSum = 0;
+        waOrders.forEach((o, i) => {
+            if (i === lastIdx) return;
+            const p = wpn(o.price) || 0;
+            const a = wpn(o.amount) || 0;
+            enteredAmountSum   += a;
+            enteredWeightedSum += p * a;
+        });
+
+        // Auto-calc last row so totals match target Price & Amount
+        const autoAmount = targetAmount - enteredAmountSum;
+        let autoPrice = 0;
+        if (Math.abs(autoAmount) > 1e-9 && targetAmount) {
+            autoPrice = (targetPrice * targetAmount - enteredWeightedSum) / autoAmount;
+        }
+        waOrders[lastIdx].price  = autoPrice > 0 ? autoPrice.toFixed(2) : '';
+        waOrders[lastIdx].amount = targetAmount ? autoAmount.toFixed(8).replace(/0+$/,'').replace(/\.$/,'') : '';
+
+        // ── Build table ──
+        let html = `<table style="border-collapse:collapse;font-size:12px;width:100%;table-layout:fixed">
+            <colgroup><col style="width:34%"><col style="width:38%"><col style="width:28%"></colgroup>
+            <thead><tr>
+                <th style="text-align:left;padding:0 0 6px 0;font-size:9px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.05em">Order</th>
+                <th style="text-align:right;padding:0 0 6px 8px;font-size:9px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.05em">Expected Price</th>
+                <th style="text-align:right;padding:0 0 6px 8px;font-size:9px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.05em">Amount</th>
+            </tr></thead><tbody>`;
+
+        waOrders.forEach((o, i) => {
+            const isAuto = i === lastIdx;
+            const priceDisplay = o.price ? Number(o.price).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : '';
+            html += `<tr style="border-top:1px solid #1E293B">
+                <td style="padding:6px 0;color:#94A3B8;font-size:12px;white-space:nowrap">Order ${i+1}${!isAuto && waOrders.length > 2 ? `<span onclick="waCalcRemoveOrder(${i})" style="margin-left:6px;color:#475569;cursor:pointer;font-size:11px" title="Remove">✕</span>` : ''}</td>
+                <td style="padding:6px 0 6px 8px;text-align:right">
+                    ${isAuto
+                        ? `<div style="background:#0F172A;border:1px solid #334155;border-radius:6px;color:#F1F5F9;font-size:12px;padding:5px 8px;text-align:right;opacity:.85">${priceDisplay || '—'}</div>`
+                        : `<input value="${satEsc(o.price)}" class="wcc-input" style="width:100%;text-align:right;font-size:12px;padding:5px 8px;box-sizing:border-box" type="text" inputmode="decimal" onchange="waCalcSetPrice(${i},this.value)" onblur="waCalcSetPrice(${i},this.value)">`}
+                </td>
+                <td style="padding:6px 0 6px 8px;text-align:right">
+                    ${isAuto
+                        ? `<div style="background:#0F172A;border:1px solid #334155;border-radius:6px;color:#F1F5F9;font-size:12px;padding:5px 8px;text-align:right;opacity:.85">${o.amount || '—'}</div>`
+                        : `<input value="${satEsc(o.amount)}" class="wcc-input" style="width:100%;text-align:right;font-size:12px;padding:5px 8px;box-sizing:border-box" type="text" inputmode="decimal" onchange="waCalcSetAmount(${i},this.value)" onblur="waCalcSetAmount(${i},this.value)">`}
+                </td>
+            </tr>`;
+        });
+
+        // Totals row
+        const totalAmount = waOrders.reduce((s,o) => s + (wpn(o.amount)||0), 0);
+        const totalWeighted = waOrders.reduce((s,o) => s + (wpn(o.price)||0) * (wpn(o.amount)||0), 0);
+        const actualWA = totalAmount > 0 ? totalWeighted / totalAmount : 0;
+
+        html += `</tbody><tfoot><tr style="border-top:1px solid #334155">
+            <td style="padding:8px 0 4px 0;font-size:11px;font-weight:700;color:#E2E8F0">Total</td>
+            <td style="padding:8px 0 4px 8px;text-align:right;font-size:12px;font-weight:700;color:#F1F5F9">${actualWA ? actualWA.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</td>
+            <td style="padding:8px 0 4px 8px;text-align:right;font-size:12px;font-weight:700;color:#F1F5F9">${totalAmount ? totalAmount.toFixed(8).replace(/0+$/,'').replace(/\.$/,'') : '—'}</td>
+        </tr></tfoot></table>`;
+
+        wrap.innerHTML = html;
+    }
+
+    function openWheelOrderModal(id){ wEditOrderId=id; const o=id?wOrders.find(x=>x.id===id):null; document.getElementById('mWheelOrderTitle').textContent=o?'Edit Order':'New Order'; document.getElementById('mo_cex').value=o?o.cex:'BINANCE'; document.getElementById('mo_product').value=o?o.product:'Short Put'; document.getElementById('mo_open').value=o?o.openDate:new Date().toISOString().split('T')[0]; document.getElementById('mo_expiry').value=o?o.expiryDate:''; document.getElementById('mo_strike').value=o?o.strike.toLocaleString('en-US'):''; document.getElementById('mo_contracts').value=o?o.contracts:'0.04'; document.getElementById('mo_prem').value=o?o.premium.toLocaleString('en-US'):''; document.getElementById('mo_curr').value=o?o.currency:'Contracts'; document.getElementById('mo_tags').value=o?wOrderTags(o).join(','):''; document.getElementById('mo_note').value=o?o.note:''; openWheelModal('mWheelOrder'); }
+    function wSubmitOrder(){ const existing=wEditOrderId?wOrders.find(x=>x.id===wEditOrderId):null; const o={id:wEditOrderId||wNextId++,cex:document.getElementById('mo_cex').value,product:document.getElementById('mo_product').value,openDate:document.getElementById('mo_open').value,expiryDate:document.getElementById('mo_expiry').value,strike:wpn(document.getElementById('mo_strike').value),contracts:wpn(document.getElementById('mo_contracts').value),premium:wpn(document.getElementById('mo_prem').value),currency:document.getElementById('mo_curr').value,status:'open',tags:wParseOrderTags(document.getElementById('mo_tags').value).join(','),tag:'',note:document.getElementById('mo_note').value}; if(wEditOrderId){const i=wOrders.findIndex(x=>x.id===wEditOrderId);if(i>=0)wOrders[i]=o} else wOrders.push(o); closeWheelModal('mWheelOrder');wCalcAll();wAutoPush(); }
+
+    function openWheelLotModal(id){ wEditLotId=id; const l=id?wLots.find(x=>x.id===id):null; document.getElementById('mWheelLotTitle').textContent=l?'Edit Lot':'Add BTC Lot'; document.getElementById('ml_name').value=l?l.name:''; document.getElementById('ml_tag').value=l?(l.tag||''):''; document.getElementById('ml_price').value=l&&l.price?l.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):''; document.getElementById('ml_amt').value=l?l.amount:''; document.getElementById('ml_target').value=l?l.target.toLocaleString('en-US'):''; document.getElementById('ml_acc').value=l?l.accRealPL.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'0.00'; openWheelModal('mWheelLot'); }
+    function wSubmitLot(){ const price=wpn(document.getElementById('ml_price').value); const l={id:wEditLotId||(wLots.length?Math.max(...wLots.map(x=>x.id))+1:1),name:document.getElementById('ml_name').value,tag:document.getElementById('ml_tag').value.trim(),price,amount:wpn(document.getElementById('ml_amt').value),target:wpn(document.getElementById('ml_target').value),accRealPL:wpn(document.getElementById('ml_acc').value),problem:price===0}; if(wEditLotId){const i=wLots.findIndex(x=>x.id===wEditLotId);if(i>=0)wLots[i]=l} else wLots.push(l); closeWheelModal('mWheelLot');wCalcAll();wAutoPush(); }
 
     function openWheelHistModal(){ document.getElementById('mh_open').value=''; document.getElementById('mh_close').value=new Date().toISOString().split('T')[0]; document.getElementById('mh_strike').value=''; document.getElementById('mh_contracts').value='0.04'; document.getElementById('mh_prem').value=''; document.getElementById('mh_exercise_pl').value=''; document.getElementById('mh_note').value=''; openWheelModal('mWheelHist'); }
     function wSubmitHist(){ const status=document.getElementById('mh_status').value; wClosed.push({id:wNextId++,cex:document.getElementById('mh_cex').value,product:document.getElementById('mh_product').value,openDate:document.getElementById('mh_open').value,expiryDate:document.getElementById('mh_close').value,strike:wpn(document.getElementById('mh_strike').value),contracts:wpn(document.getElementById('mh_contracts').value),premium:wpn(document.getElementById('mh_prem').value),currency:'Contracts',status,tags:'',tag:'',lotCreditPL:0,lotCredits:'',note:document.getElementById('mh_note').value,exercisePL:status==='exercised'?wpn(document.getElementById('mh_exercise_pl').value):0}); closeWheelModal('mWheelHist');wCalcAll();wAutoPush(); }
