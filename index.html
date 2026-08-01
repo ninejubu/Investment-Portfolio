@@ -5702,7 +5702,7 @@
         let labels = []; let datasets = []; const qTarget = range === 'all' ? (isYTD ? getLatestClosedQuarterNumber() : 4) : parseInt(range.charAt(1));
         const benchColor = getThemeMode() === 'light' ? '#64748B' : '#94A3B8';
         const benchDataset = (label, data) => ({ label, data, backgroundColor: benchColor, borderColor: benchColor, borderWidth: 1, borderRadius: 4, minBarLength: 5 });
-        const worldColor = '#00008b';
+        const worldColor = '#0047AB';
         const worldDataset = (label, data) => ({ label, data, backgroundColor: worldColor, borderColor: worldColor, borderWidth: 1, borderRadius: 4, minBarLength: 5 });
         if (isYTD) {
             labels = [range === 'all' ? (qTarget ? `YTD (Up to Q${qTarget})` : 'YTD') : `YTD (Up to Q${qTarget})`];
