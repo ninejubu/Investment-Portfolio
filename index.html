@@ -7389,28 +7389,36 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     function closeWheelModal(id){document.getElementById(id).classList.remove('open')}
 
     // ── Weighted Average Calculator ──────────────────────
-    // Last order in waOrders is always auto-calculated (Price & Amount)
-    // so it balances the target Price (weighted avg) and target Amount (sum).
-    let waOrders = [{ price: '', amount: '' }, { price: '', amount: '' }];
+    // The last row is always the "auto" row — it shows the computed Price & Amount
+    // needed to hit the target. The moment the user types into it, it's committed
+    // as a manual entry and a fresh auto row is appended after it.
+    let waOrders = [
+        { price: '', amount: '', auto: false },
+        { price: '', amount: '', auto: true }
+    ];
 
     function waCalcAddOrder() {
-        waOrders.splice(waOrders.length - 1, 0, { price: '', amount: '' });
+        waOrders.splice(waOrders.length - 1, 0, { price: '', amount: '', auto: false });
         waCalcRender();
     }
 
     function waCalcRemoveOrder(idx) {
-        if (waOrders.length <= 2) return; // keep at least 1 editable + 1 auto row
+        if (waOrders[idx] && waOrders[idx].auto) return; // never remove the auto row directly
         waOrders.splice(idx, 1);
         waCalcRender();
     }
 
     function waCalcSetPrice(idx, val) {
-        waOrders[idx].price = val;
+        const o = waOrders[idx];
+        o.price = val;
+        if (o.auto) { o.auto = false; waOrders.push({ price: '', amount: '', auto: true }); }
         waCalcRender();
     }
 
     function waCalcSetAmount(idx, val) {
-        waOrders[idx].amount = val;
+        const o = waOrders[idx];
+        o.amount = val;
+        if (o.auto) { o.auto = false; waOrders.push({ price: '', amount: '', auto: true }); }
         waCalcRender();
     }
 
@@ -7420,30 +7428,33 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
 
         const targetPrice  = wpn(document.getElementById('waTargetPrice')?.value) || 0;
         const targetAmount = wpn(document.getElementById('waTargetAmount')?.value) || 0;
-        const lastIdx = waOrders.length - 1;
+        const autoIdx = waOrders.findIndex(o => o.auto);
 
-        // Sum entered (non-auto) rows
+        // Sum all manually-entered (non-auto) rows
         let enteredAmountSum = 0, enteredWeightedSum = 0;
         waOrders.forEach((o, i) => {
-            if (i === lastIdx) return;
+            if (i === autoIdx) return;
             const p = wpn(o.price) || 0;
             const a = wpn(o.amount) || 0;
             enteredAmountSum   += a;
             enteredWeightedSum += p * a;
         });
 
-        // Auto-calc last row so totals match target Price & Amount
-        const autoAmount = targetAmount - enteredAmountSum;
-        let autoPrice = 0;
-        if (Math.abs(autoAmount) > 1e-9 && targetAmount) {
-            autoPrice = (targetPrice * targetAmount - enteredWeightedSum) / autoAmount;
+        // Auto-calc the auto row so totals match target Price & Amount
+        let autoAmountDisplay = '', autoPriceDisplay = '';
+        if (autoIdx >= 0) {
+            const autoAmount = targetAmount - enteredAmountSum;
+            let autoPrice = 0;
+            if (Math.abs(autoAmount) > 1e-9 && targetAmount) {
+                autoPrice = (targetPrice * targetAmount - enteredWeightedSum) / autoAmount;
+            }
+            autoPriceDisplay  = autoPrice > 0 ? autoPrice.toFixed(2) : '';
+            autoAmountDisplay = targetAmount ? autoAmount.toFixed(8).replace(/0+$/,'').replace(/\.$/,'') : '';
         }
-        waOrders[lastIdx].price  = autoPrice > 0 ? autoPrice.toFixed(2) : '';
-        waOrders[lastIdx].amount = targetAmount ? autoAmount.toFixed(8).replace(/0+$/,'').replace(/\.$/,'') : '';
 
         // ── Build table ──
         let html = `<table style="border-collapse:collapse;font-size:12px;width:100%;table-layout:fixed">
-            <colgroup><col style="width:34%"><col style="width:38%"><col style="width:28%"></colgroup>
+            <colgroup><col style="width:30%"><col style="width:38%"><col style="width:32%"></colgroup>
             <thead><tr>
                 <th style="text-align:left;padding:0 0 6px 0;font-size:9px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.05em">Order</th>
                 <th style="text-align:right;padding:0 0 6px 8px;font-size:9px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.05em">Expected Price</th>
@@ -7451,26 +7462,24 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             </tr></thead><tbody>`;
 
         waOrders.forEach((o, i) => {
-            const isAuto = i === lastIdx;
-            const priceDisplay = o.price ? Number(o.price).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : '';
+            const isAuto = !!o.auto;
+            const priceVal  = isAuto ? autoPriceDisplay  : o.price;
+            const amountVal = isAuto ? autoAmountDisplay : o.amount;
+            const priceDisplay = priceVal ? Number(priceVal).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : '';
             html += `<tr style="border-top:1px solid #1E293B">
-                <td style="padding:6px 0;color:#94A3B8;font-size:12px;white-space:nowrap">Order ${i+1}${!isAuto && waOrders.length > 2 ? `<span onclick="waCalcRemoveOrder(${i})" style="margin-left:6px;color:#475569;cursor:pointer;font-size:11px" title="Remove">✕</span>` : ''}</td>
+                <td style="padding:6px 0;color:#94A3B8;font-size:12px;white-space:nowrap">Order ${i+1}${!isAuto ? `<span onclick="waCalcRemoveOrder(${i})" style="margin-left:6px;color:#475569;cursor:pointer;font-size:11px" title="Remove">✕</span>` : `<span style="margin-left:6px;font-size:9px;color:#475569;font-style:italic">(auto)</span>`}</td>
                 <td style="padding:6px 0 6px 8px;text-align:right">
-                    ${isAuto
-                        ? `<div style="background:#0F172A;border:1px solid #334155;border-radius:6px;color:#F1F5F9;font-size:12px;padding:5px 8px;text-align:right;opacity:.85">${priceDisplay || '—'}</div>`
-                        : `<input value="${satEsc(o.price)}" class="wcc-input" style="width:100%;text-align:right;font-size:12px;padding:5px 8px;box-sizing:border-box" type="text" inputmode="decimal" onchange="waCalcSetPrice(${i},this.value)" onblur="waCalcSetPrice(${i},this.value)">`}
+                    <input value="${satEsc(priceDisplay)}" class="wcc-input" style="width:100%;text-align:right;font-size:12px;padding:5px 8px;box-sizing:border-box;${isAuto?'color:#93C5FD':''}" type="text" inputmode="decimal" placeholder="${isAuto?'auto':''}" onchange="waCalcSetPrice(${i},this.value)" onblur="waCalcSetPrice(${i},this.value)">
                 </td>
                 <td style="padding:6px 0 6px 8px;text-align:right">
-                    ${isAuto
-                        ? `<div style="background:#0F172A;border:1px solid #334155;border-radius:6px;color:#F1F5F9;font-size:12px;padding:5px 8px;text-align:right;opacity:.85">${o.amount || '—'}</div>`
-                        : `<input value="${satEsc(o.amount)}" class="wcc-input" style="width:100%;text-align:right;font-size:12px;padding:5px 8px;box-sizing:border-box" type="text" inputmode="decimal" onchange="waCalcSetAmount(${i},this.value)" onblur="waCalcSetAmount(${i},this.value)">`}
+                    <input value="${satEsc(amountVal)}" class="wcc-input" style="width:100%;text-align:right;font-size:12px;padding:5px 8px;box-sizing:border-box;${isAuto?'color:#93C5FD':''}" type="text" inputmode="decimal" placeholder="${isAuto?'auto':''}" onchange="waCalcSetAmount(${i},this.value)" onblur="waCalcSetAmount(${i},this.value)">
                 </td>
             </tr>`;
         });
 
         // Totals row
-        const totalAmount = waOrders.reduce((s,o) => s + (wpn(o.amount)||0), 0);
-        const totalWeighted = waOrders.reduce((s,o) => s + (wpn(o.price)||0) * (wpn(o.amount)||0), 0);
+        const totalAmount = waOrders.reduce((s,o,i) => s + (wpn(i===autoIdx?autoAmountDisplay:o.amount)||0), 0);
+        const totalWeighted = waOrders.reduce((s,o,i) => { const p = wpn(i===autoIdx?autoPriceDisplay:o.price)||0; const a = wpn(i===autoIdx?autoAmountDisplay:o.amount)||0; return s + p*a; }, 0);
         const actualWA = totalAmount > 0 ? totalWeighted / totalAmount : 0;
 
         html += `</tbody><tfoot><tr style="border-top:1px solid #334155">
