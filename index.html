@@ -1590,11 +1590,14 @@
                                     <option value="crypto">Crypto</option>
                                     <option value="gold">Gold</option>
                                 </select>
-                                <div id="hb-asset-buttons" class="hb-btn-grid hb-btn-grid-2x2">
-                                    <button type="button" class="hb-btn" data-value="stocks" onclick="hbSelectOption('hb-asset','stocks',this,event)">Stocks</button>
-                                    <button type="button" class="hb-btn" data-value="bonds" onclick="hbSelectOption('hb-asset','bonds',this,event)">Bonds</button>
-                                    <button type="button" class="hb-btn" data-value="crypto" onclick="hbSelectOption('hb-asset','crypto',this,event)">Crypto</button>
-                                    <button type="button" class="hb-btn" data-value="gold" onclick="hbSelectOption('hb-asset','gold',this,event)">Gold</button>
+                                <div id="hb-asset-selector" style="display:flex;flex-direction:column;gap:3px">
+                                    <button type="button" class="hb-btn" data-value="all" style="width:100%" onclick="hbSelectAssetOption('all',this,event)" title="Select all asset classes">All</button>
+                                    <div id="hb-asset-buttons" class="hb-btn-grid hb-btn-grid-2x2">
+                                        <button type="button" class="hb-btn" data-value="stocks" onclick="hbSelectAssetOption('stocks',this,event)" title="Ctrl/Cmd+Click to select multiple">Stocks</button>
+                                        <button type="button" class="hb-btn" data-value="bonds" onclick="hbSelectAssetOption('bonds',this,event)" title="Ctrl/Cmd+Click to select multiple">Bonds</button>
+                                        <button type="button" class="hb-btn" data-value="crypto" onclick="hbSelectAssetOption('crypto',this,event)" title="Ctrl/Cmd+Click to select multiple">Crypto</button>
+                                        <button type="button" class="hb-btn" data-value="gold" onclick="hbSelectAssetOption('gold',this,event)" title="Ctrl/Cmd+Click to select multiple">Gold</button>
+                                    </div>
                                 </div>
                                 <div class="hb-ctrl-sep"></div>
                                 <select id="hb-quarter" onchange="renderHoldingsBreakdown()" style="display:none">
@@ -7895,6 +7898,50 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     //  HOLDINGS BREAKDOWN PANEL
     // ══════════════════════════════════════════════════════
     let hbChartInst = null;
+    const HB_ALL_ASSETS = ['stocks', 'bonds', 'crypto', 'gold'];
+    let hbSelectedAssets = new Set(['stocks']);
+
+    function hbSelectAssetOption(value, btnEl, event) {
+        if (event) event.stopPropagation();
+        const isMulti = event && (event.ctrlKey || event.metaKey);
+
+        if (value === 'all') {
+            hbSelectedAssets = new Set(HB_ALL_ASSETS);
+        } else if (isMulti) {
+            if (hbSelectedAssets.has(value)) {
+                hbSelectedAssets.delete(value);
+                if (hbSelectedAssets.size === 0) hbSelectedAssets.add(value); // never allow empty selection
+            } else {
+                hbSelectedAssets.add(value);
+            }
+            // If ctrl/cmd-clicking landed on all four, treat it exactly like the All button
+            if (HB_ALL_ASSETS.every(a => hbSelectedAssets.has(a))) hbSelectedAssets = new Set(HB_ALL_ASSETS);
+        } else {
+            hbSelectedAssets = new Set([value]);
+        }
+
+        // Keep the legacy hidden <select> in sync (primary/first selected asset)
+        const selectEl = document.getElementById('hb-asset');
+        if (selectEl) selectEl.value = Array.from(hbSelectedAssets)[0];
+
+        hbThemeFilter = new Set();
+        hbSegmentDrill = null;
+        hbPlatformFilter = new Set();
+        hbPlatformDrill = null;
+
+        hbSyncAssetButtons();
+        renderHoldingsBreakdown();
+    }
+
+    function hbSyncAssetButtons() {
+        const wrap = document.getElementById('hb-asset-selector');
+        if (!wrap) return;
+        const allSelected = HB_ALL_ASSETS.every(a => hbSelectedAssets.has(a));
+        wrap.querySelectorAll('.hb-btn').forEach(btn => {
+            const v = btn.dataset.value;
+            btn.classList.toggle('is-active', v === 'all' ? allSelected : (hbSelectedAssets.has(v) && !allSelected));
+        });
+    }
 
     function initHoldingsBreakdownDefaultPeriod() {
         const quarterEl = document.getElementById('hb-quarter');
@@ -7903,7 +7950,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             quarterEl.value = latest === 'Beg' ? 'Q1' : latest;
         }
         // sync button active states
-        hbSyncButtonGroup('hb-asset-buttons', document.getElementById('hb-asset')?.value);
+        hbSyncAssetButtons();
         hbSyncButtonGroup('hb-quarter-buttons', quarterEl?.value);
         // sync view toggle
         const tickerBtn   = document.getElementById('hb-view-ticker');
@@ -8028,13 +8075,18 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     }
 
     function renderHoldingsBreakdownInner() {
-        const asset     = document.getElementById('hb-asset')?.value || 'stocks';
+        const selected  = hbSelectedAssets.size ? Array.from(hbSelectedAssets) : ['stocks'];
+        const asset     = selected[0]; // primary asset — used for drill-down & legacy single-asset consumers
         const quarterEl = document.getElementById('hb-quarter');
         const quarter   = quarterEl?.value || getLatestClosedPeriod();
         if (quarterEl && !quarterEl.value) quarterEl.value = quarter;
-        const color     = DD_COLORS[asset];
-        let rawRows     = ddLoad(asset, quarter);
-        let assetBal    = ddGetAssetBalForPeriod(asset, quarter);
+        const color     = DD_COLORS[asset] || '#8B5CF6';
+        let rawRows  = [];
+        let assetBal = 0;
+        selected.forEach(a => {
+            rawRows  = rawRows.concat(ddLoad(a, quarter));
+            assetBal += ddGetAssetBalForPeriod(a, quarter);
+        });
 
         // Core-only filter: exclude Satellite-tagged holdings (and their balance) by default
         if (hbExcludeSatellite) {
