@@ -1348,14 +1348,14 @@
             
             <div id="sidebar-port-toggle" class="bg-slate-800/80 p-1 rounded-lg flex space-x-1 border border-slate-700">
                 <button id="btn-port1" onclick="switchPortfolio('port1')" class="flex-1 py-1.5 text-xs font-bold rounded-md bg-blue-600 text-white shadow transition-all">Core Port</button>
-                <button id="btn-port2" onclick="switchPortfolio('port2')" class="flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">Satellite Port</button>
+                <button id="btn-port2" onclick="switchPortfolio('port2')" class="flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">Financial Planning</button>
             </div>
             <button id="btn-port3" onclick="switchPortfolio('port3')" class="mt-2 w-full py-1.5 text-xs font-bold rounded-md border border-slate-700 text-slate-400 hover:text-white hover:border-teal-500/60 hover:bg-teal-500/10 transition-all">
                 Cashflow Planner
             </button>
             <div id="sidebar-port-toggle-collapsed" aria-label="Portfolio selector">
                 <button id="btn-port1-c" class="collapsed-port-btn" onclick="switchPortfolio('port1')" title="Core Port" aria-label="Core Port"></button>
-                <button id="btn-port2-c" class="collapsed-port-btn" onclick="switchPortfolio('port2')" title="Satellite Port" aria-label="Satellite Port"></button>
+                <button id="btn-port2-c" class="collapsed-port-btn" onclick="switchPortfolio('port2')" title="Financial Planning" aria-label="Financial Planning"></button>
                 <button id="btn-port3-c" class="collapsed-port-btn" onclick="switchPortfolio('port3')" title="Cashflow Planner" aria-label="Cashflow Planner"></button>
             </div>
         </div>
@@ -1655,172 +1655,40 @@
                 </div>
                 </div>
 
-                <!-- ══════════ SATELLITE TRADING DASHBOARD ══════════ -->
-                <div id="sat-dashboard-view" class="sat-workspace hidden space-y-4">
+                <!-- ══════════ FINANCIAL PLANNING ══════════ -->
+                <div id="fp-view" class="sat-workspace hidden space-y-4">
                     <div class="sat-toolbar">
                         <div>
-                            <div class="sat-kicker">Satellite Port</div>
-                            <h3 class="text-xl font-bold text-white mt-1">Trading Performance</h3>
-                        </div>
-                        <div class="sat-actions">
-                            <div class="sat-currency-control">
-                                <div class="sat-segment sat-currency-toggle">
-                                    <button type="button" data-currency="USD" onclick="satSetDisplayCurrency('USD')">USD</button>
-                                    <button type="button" data-currency="THB" onclick="satSetDisplayCurrency('THB')">THB</button>
-                                </div>
-                                <span class="sat-fx-meta" data-sat-fx-status>FX loading...</span>
-                            </div>
-                            <button class="sat-btn" onclick="switchTab('transactions')"><i class="fa-solid fa-list-check"></i> Transactions</button>
-                            <button class="sat-btn primary" onclick="satOpenPositionModal()"><i class="fa-solid fa-plus"></i> Position</button>
+                            <div class="sat-kicker">Financial Planning</div>
+                            <h3 class="text-xl font-bold text-white mt-1">Asset Allocation Pyramid</h3>
                         </div>
                     </div>
 
-                    <div class="sat-stats-grid">
-                        <div class="sat-stat-card"><span class="sat-stat-label">Total Value</span><strong id="sat-total-value" class="sat-stat-value">฿0</strong><span id="sat-total-value-meta" class="sat-stat-meta">Cash + open positions</span></div>
-                        <div class="sat-stat-card"><span class="sat-stat-label">Total P/L</span><strong id="sat-total-pl" class="sat-stat-value">฿0</strong><span id="sat-total-pl-meta" class="sat-stat-meta">Realized + unrealized</span></div>
-                        <div class="sat-stat-card"><span class="sat-stat-label">Unrealized P/L</span><strong id="sat-unrealized-pl" class="sat-stat-value">฿0</strong><span id="sat-unrealized-pct" class="sat-stat-meta">0.0%</span></div>
-                        <div class="sat-stat-card"><span class="sat-stat-label">Realized P/L</span><strong id="sat-realized-pl" class="sat-stat-value">฿0</strong><span id="sat-realized-meta" class="sat-stat-meta">Closed positions</span></div>
-                        <div class="sat-stat-card"><span class="sat-stat-label">Cash</span><strong id="sat-cash" class="sat-stat-value">฿0</strong><span class="sat-stat-meta">From trade cash flow</span></div>
-                        <div class="sat-stat-card"><span class="sat-stat-label">Open Positions</span><strong id="sat-open-count" class="sat-stat-value">0</strong><span id="sat-hold-days" class="sat-stat-meta">No active positions</span></div>
-                        <div class="sat-stat-card"><span class="sat-stat-label">Win Rate</span><strong id="sat-win-rate" class="sat-stat-value">—</strong><span id="sat-closed-count" class="sat-stat-meta">0 closed positions</span></div>
-                        <div class="sat-stat-card"><span class="sat-stat-label">Net Deposited</span><strong id="sat-net-deposited" class="sat-stat-value">฿0</strong><span id="sat-trade-count" class="sat-stat-meta">0 trade records</span></div>
+                    <div class="bg-card rounded-xl border border-slate-700 p-6">
+                        <p style="font-size:12px;color:#64748b;margin:0 0 20px 0;max-width:640px">
+                            Every holding in your Investment Port is tagged with a <b style="color:#94A3B8">Layer</b> —
+                            <span style="color:#10B981;font-weight:600">Savings</span> (the foundation),
+                            <span style="color:#3B82F6;font-weight:600">Investments</span> (the middle), and
+                            <span style="color:#F59E0B;font-weight:600">Trading</span> (the top, smallest and highest-risk slice).
+                            The pyramid below is sized using your actual current balances.
+                        </p>
+                        <div style="display:flex;gap:36px;flex-wrap:wrap;align-items:center">
+                            <div style="flex:0 0 auto" id="fp-pyramid-wrap">
+                                <svg id="fp-pyramid-svg" viewBox="0 0 420 320" style="width:380px;max-width:100%"></svg>
+                            </div>
+                            <div style="flex:1 1 260px;min-width:240px" id="fp-legend"></div>
+                        </div>
+                        <div id="fp-empty-hint" class="hidden" style="margin-top:18px;padding:12px 16px;background:#1E293B;border:1px solid #334155;border-radius:8px;font-size:12px;color:#94A3B8;line-height:1.6">
+                            No holdings are tagged with a <b style="color:#E2E8F0">Layer</b> yet. In your Google Sheet, add a <code style="background:#0F172A;padding:1px 5px;border-radius:4px;color:#93C5FD">Layer</code> column next to Ticker for each holding row, and set the value to <b>Savings</b>, <b>Investments</b>, or <b>Trading</b> — then this pyramid will fill in automatically.
+                        </div>
                     </div>
 
-                    <section class="sat-panel sat-performance-panel">
-                        <div class="sat-panel-head">
-                            <div>
-                                <h4 id="sat-performance-title" class="sat-panel-title">Cumulative Trading P/L</h4>
-                                <div class="sat-benchmark-meta">
-                                    <div id="sat-benchmark-status" class="sat-benchmark-status"></div>
-                                    <button id="sat-benchmark-refresh" class="sat-benchmark-refresh" type="button" onclick="satRefreshBenchmarkData()" title="Refresh benchmark data" aria-label="Refresh benchmark data">
-                                        <i class="fa-solid fa-rotate"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="sat-performance-controls">
-                                <div class="sat-segment" id="sat-performance-mode">
-                                    <button type="button" data-mode="value" onclick="satSetPerformanceMode('value')">P/L</button>
-                                    <button type="button" data-mode="percent" onclick="satSetPerformanceMode('percent')">P/L %</button>
-                                </div>
-                                <div class="sat-segment sat-benchmark-toggle" id="sat-performance-benchmark">
-                                    <button type="button" data-benchmark="sp500" onclick="satSetPerformanceBenchmark('sp500')">S&amp;P 500</button>
-                                    <button type="button" data-benchmark="nasdaq" onclick="satSetPerformanceBenchmark('nasdaq')">NASDAQ</button>
-                                </div>
-                                <div class="sat-segment" id="sat-performance-range">
-                                    <button type="button" data-range="1m" onclick="satSetPerformanceRange('1m')">1M</button>
-                                    <button type="button" data-range="3m" onclick="satSetPerformanceRange('3m')">3M</button>
-                                    <button type="button" data-range="all" class="active" onclick="satSetPerformanceRange('all')">ALL</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="sat-performance-period">
-                            <label class="sat-date-field">START
-                                <input id="sat-performance-start" class="sat-date-input" type="date" onchange="satSetPerformanceCustomRange()">
-                            </label>
-                            <label class="sat-date-field">END
-                                <input id="sat-performance-end" class="sat-date-input" type="date" onchange="satSetPerformanceCustomRange()">
-                            </label>
-                        </div>
-                        <div class="sat-performance-chart"><canvas id="satPerformanceChart"></canvas></div>
-                    </section>
-
-                    <div class="sat-two-col">
-                        <section class="sat-panel">
-                            <div class="sat-panel-head">
-                                <div>
-                                    <h4 class="sat-panel-title">Allocation by Ticker</h4>
-                                </div>
-                                <div class="sat-segment" id="sat-allocation-mode">
-                                    <button type="button" data-mode="cost" onclick="satSetAllocationMode('cost')">Cost</button>
-                                    <button type="button" data-mode="current" class="active" onclick="satSetAllocationMode('current')">Current Value</button>
-                                </div>
-                            </div>
-                            <div class="sat-allocation-layout">
-                                <div class="sat-allocation-chart"><canvas id="satAllocationChart"></canvas></div>
-                                <div id="sat-allocation-list" class="sat-alloc-list"></div>
-                            </div>
-                        </section>
-
-                        <section class="sat-panel">
-                            <div class="sat-panel-head">
-                                <div>
-                                    <h4 class="sat-panel-title">Trading Insights</h4>
-                                </div>
-                            </div>
-                            <div id="sat-insights-list" class="sat-insights-list"></div>
-                        </section>
-                    </div>
-
-                    <section class="sat-panel">
-                        <div class="sat-panel-head">
-                            <div>
-                                <h4 class="sat-panel-title">Holdings</h4>
-                            </div>
-                            <div class="sat-actions">
-                                <div id="sat-holdings-filter" class="sat-segment" aria-label="Holdings filter">
-                                    <button type="button" data-status="open" class="active" onclick="satSetHoldingsFilter('open')">Open</button>
-                                    <button type="button" data-status="closed" onclick="satSetHoldingsFilter('closed')">Closed</button>
-                                    <button type="button" data-status="all" onclick="satSetHoldingsFilter('all')">All</button>
-                                </div>
-                                <button class="sat-btn primary" onclick="satOpenPositionModal()"><i class="fa-solid fa-plus"></i> Add</button>
-                            </div>
-                        </div>
-                        <div class="sat-table-wrap">
-                            <table class="sat-table">
-                                <thead><tr><th>Ticker</th><th>Name / Side</th><th>Qty</th><th>Avg Cost</th><th>Current / Exit</th><th>Cost</th><th>Market Value</th><th>Unrealized P/L</th><th>Realized P/L</th><th title="Share of cash plus open current market value">Portfolio Weight</th><th>Days Held</th><th></th></tr></thead>
-                                <tbody id="sat-holdings-tbody"></tbody>
-                                <tfoot id="sat-holdings-tfoot"></tfoot>
-                            </table>
-                        </div>
-                        <div id="sat-holdings-empty" class="sat-empty hidden">No positions in this view.</div>
-                    </section>
-
-                    <div class="sat-two-col">
-                        <section class="sat-panel">
-                            <div class="sat-panel-head">
-                                <div>
-                                    <h4 class="sat-panel-title">Position Journal</h4>
-                                </div>
-                            </div>
-                            <div class="sat-journal-layout">
-                                <div>
-                                    <input id="sat-journal-search" class="sat-input mb-2" type="search" placeholder="Search ticker or position..." oninput="satRenderJournal()">
-                                    <div class="sat-segment mb-3" id="sat-journal-status">
-                                        <button type="button" data-status="open" class="active" onclick="satSetJournalStatus('open')">Open</button>
-                                        <button type="button" data-status="closed" onclick="satSetJournalStatus('closed')">Closed</button>
-                                        <button type="button" data-status="all" onclick="satSetJournalStatus('all')">All</button>
-                                    </div>
-                                    <div id="sat-journal-list" class="sat-journal-list"></div>
-                                </div>
-                                <div id="sat-journal-detail" class="sat-journal-detail"></div>
-                            </div>
-                        </section>
-
-                        <section class="sat-panel">
-                            <div class="sat-panel-head">
-                                <div>
-                                    <h4 class="sat-panel-title">Trade Log</h4>
-                                </div>
-                                <button class="sat-btn" onclick="switchTab('transactions')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Full Log</button>
-                            </div>
-                            <div class="sat-table-wrap sticky-head" style="max-height:430px">
-                                <table class="sat-table sat-dashboard-trade-table">
-                                    <colgroup>
-                                        <col style="width:22%">
-                                        <col style="width:18%">
-                                        <col style="width:16%">
-                                        <col style="width:12%">
-                                        <col style="width:16%">
-                                        <col style="width:16%">
-                                    </colgroup>
-                                    <thead><tr><th>Date</th><th>Ticker</th><th>Action</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead>
-                                    <tbody id="sat-dashboard-trades-tbody"></tbody>
-                                </table>
-                            </div>
-                            <div id="sat-dashboard-trades-empty" class="sat-empty hidden">No trade records yet.</div>
-                        </section>
+                    <div class="bg-card rounded-xl border border-slate-700 p-6">
+                        <h4 class="text-white font-bold mb-1">Analysis</h4>
+                        <p style="font-size:12px;color:#64748b;margin:0">More detailed analysis of how your layer mix compares to your Financial Goal is coming soon.</p>
                     </div>
                 </div>
+
 
                 <!-- ══════════ PERSONAL CASHFLOW PLANNER ══════════ -->
                 <div id="cf-dashboard-view" class="cf-workspace hidden space-y-4">
@@ -3949,35 +3817,175 @@
     }
 
     function satRenderAll() {
-        satRenderFxStatus();
-        satRenderSummary();
-        satRenderPerformance();
-        satRenderAllocation();
-        satRenderInsights();
-        satRenderHoldings();
-        satRenderJournal();
-        satRenderTradeLogs();
-        satRenderPositionOptions();
+        // Satellite Port dashboard UI was removed (replaced by Financial Planning).
+        // Kept as a no-op so any lingering call sites don't throw.
     }
 
     function satApplyWorkspace() {
         const isSatellite = state.currentPort === 'port2';
         const isCashflow = state.currentPort === 'port3';
         document.getElementById('core-dashboard-view')?.classList.toggle('hidden', isSatellite || isCashflow);
-        document.getElementById('sat-dashboard-view')?.classList.toggle('hidden', !isSatellite);
+        document.getElementById('fp-view')?.classList.toggle('hidden', !isSatellite);
         document.getElementById('cf-dashboard-view')?.classList.toggle('hidden', !isCashflow);
         document.getElementById('core-transactions-view')?.classList.toggle('hidden', isSatellite || isCashflow);
-        document.getElementById('sat-transactions-view')?.classList.toggle('hidden', !isSatellite);
         const activeTab = document.querySelector('.tab-content.active')?.id?.replace('tab-','') || 'dashboard';
         const titles = isCashflow
             ? { dashboard: 'Personal Cashflow Planner' }
             : isSatellite
-                ? { dashboard: 'Satellite Trading Dashboard', transactions: 'Satellite Trade Ledger', wheel: 'Wheel Strategy', settings: 'Settings' }
+                ? { dashboard: 'Financial Planning' }
                 : { dashboard: 'Portfolio Overview', transactions: 'Transaction Ledger', wheel: 'Wheel Strategy', settings: 'Settings' };
         const title = document.getElementById('page-title');
         if (title) title.textContent = titles[activeTab] || '';
-        if (isSatellite) requestAnimationFrame(satRenderAll);
+        if (isSatellite) requestAnimationFrame(fpRenderAll);
         if (isCashflow) requestAnimationFrame(cfRenderAll);
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  FINANCIAL PLANNING — Asset Allocation Pyramid
+    // ══════════════════════════════════════════════════════
+    const FP_LAYERS = [
+        { key: 'trading',     label: 'Trading',     color: '#F59E0B' }, // top (apex) — smallest, highest risk
+        { key: 'investments', label: 'Investments', color: '#3B82F6' }, // middle
+        { key: 'savings',     label: 'Savings',     color: '#10B981' }  // base — largest, safest
+    ];
+
+    function fpNormalizeLayer(raw) {
+        const s = String(raw || '').trim().toLowerCase();
+        if (!s) return '';
+        if (s.startsWith('saving')) return 'savings';
+        if (s.startsWith('invest')) return 'investments';
+        if (s.startsWith('trad'))   return 'trading';
+        return '';
+    }
+
+    function fpCollectLayerTotals() {
+        const assets  = ['stocks', 'bonds', 'crypto', 'gold'];
+        const quarter = document.getElementById('hb-quarter')?.value || getLatestClosedPeriod();
+        const totals  = { savings: 0, investments: 0, trading: 0 };
+        let uncategorized = 0;
+        let hasAnyLayerTag = false;
+
+        assets.forEach(a => {
+            (ddLoad(a, quarter) || []).forEach(r => {
+                const layer = fpNormalizeLayer(r.layer);
+                const amt   = r.amount || 0;
+                if (layer) { totals[layer] += amt; hasAnyLayerTag = true; }
+                else uncategorized += amt;
+            });
+        });
+
+        return { totals, uncategorized, hasAnyLayerTag, quarter };
+    }
+
+    function fpRenderAll() {
+        try { fpRenderPyramid(); } catch (err) { console.error('[Financial Planning] render error:', err); }
+    }
+
+    function fpRenderPyramid() {
+        const { totals, uncategorized, hasAnyLayerTag } = fpCollectLayerTotals();
+        const grandTotal = totals.savings + totals.investments + totals.trading;
+
+        const emptyHint = document.getElementById('fp-empty-hint');
+        const wrap      = document.getElementById('fp-pyramid-wrap');
+        const legendEl  = document.getElementById('fp-legend');
+        if (!emptyHint || !wrap || !legendEl) return;
+
+        if (!hasAnyLayerTag || grandTotal <= 0) {
+            emptyHint.classList.remove('hidden');
+            wrap.style.opacity = '.25';
+            legendEl.innerHTML = '';
+            fpDrawPyramidSvg([]); // clear
+            return;
+        }
+        emptyHint.classList.toggle('hidden', uncategorized <= 0);
+        wrap.style.opacity = '1';
+
+        const data = FP_LAYERS.map(l => ({ ...l, amount: totals[l.key], pct: grandTotal > 0 ? totals[l.key] / grandTotal * 100 : 0 }));
+        fpDrawPyramidSvg(data);
+
+        // Legend / breakdown list
+        let html = '';
+        data.forEach(d => {
+            html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1E293B">
+                <div style="display:flex;align-items:center;gap:8px">
+                    <span style="width:10px;height:10px;border-radius:3px;background:${d.color};flex-shrink:0"></span>
+                    <span style="font-size:13px;font-weight:600;color:#E2E8F0">${d.label}</span>
+                </div>
+                <div style="text-align:right">
+                    <div style="font-size:13px;font-weight:700;color:#F8FAFC">${balancesHidden ? '฿ ••••••' : '฿' + d.amount.toLocaleString('en-US', {maximumFractionDigits:0})}</div>
+                    <div style="font-size:10px;color:#64748b">${d.pct.toFixed(1)}%</div>
+                </div>
+            </div>`;
+        });
+        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;margin-top:2px">
+            <span style="font-size:12px;font-weight:700;color:#94A3B8">Total</span>
+            <span style="font-size:13px;font-weight:700;color:#F8FAFC">${balancesHidden ? '฿ ••••••' : '฿' + grandTotal.toLocaleString('en-US', {maximumFractionDigits:0})}</span>
+        </div>`;
+        if (uncategorized > 0) {
+            html += `<div style="margin-top:8px;font-size:10px;color:#64748b">+ ฿${uncategorized.toLocaleString('en-US',{maximumFractionDigits:0})} not yet tagged with a Layer</div>`;
+        }
+        legendEl.innerHTML = html;
+    }
+
+    // data: array ordered [trading, investments, savings] (top → base), each {label, color, amount, pct}
+    function fpDrawPyramidSvg(data) {
+        const svg = document.getElementById('fp-pyramid-svg');
+        if (!svg) return;
+        svg.innerHTML = '';
+        if (!data.length) return;
+
+        const W = 420, H = 280, cx = W / 2, topPad = 10, baseY = topPad + H;
+        const total = data.reduce((s, d) => s + d.amount, 0);
+        if (total <= 0) return;
+
+        const widthAt = y => W * 0.82 * ((y - topPad) / H); // 0 at apex, full width at base
+        let cumY = topPad;
+        const ns = 'http://www.w3.org/2000/svg';
+
+        data.forEach((d, i) => {
+            const bandH  = H * (d.amount / total);
+            const yTop   = cumY;
+            const yBot   = cumY + bandH;
+            const wTop   = widthAt(yTop);
+            const wBot   = widthAt(yBot);
+            const points = [
+                [cx - wTop / 2, yTop], [cx + wTop / 2, yTop],
+                [cx + wBot / 2, yBot], [cx - wBot / 2, yBot]
+            ].map(p => p.join(',')).join(' ');
+
+            const poly = document.createElementNS(ns, 'polygon');
+            poly.setAttribute('points', points);
+            poly.setAttribute('fill', d.color);
+            poly.setAttribute('fill-opacity', '0.85');
+            poly.setAttribute('stroke', '#0B1120');
+            poly.setAttribute('stroke-width', '2');
+            svg.appendChild(poly);
+
+            // Label (only if band is tall enough to fit text)
+            if (bandH > 22 && d.pct > 0) {
+                const labelY = (yTop + yBot) / 2;
+                const text = document.createElementNS(ns, 'text');
+                text.setAttribute('x', cx);
+                text.setAttribute('y', labelY - 4);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', '#0B1120');
+                text.setAttribute('font-size', '13');
+                text.setAttribute('font-weight', '800');
+                text.textContent = d.label;
+                svg.appendChild(text);
+
+                const text2 = document.createElementNS(ns, 'text');
+                text2.setAttribute('x', cx);
+                text2.setAttribute('y', labelY + 12);
+                text2.setAttribute('text-anchor', 'middle');
+                text2.setAttribute('fill', '#0B1120');
+                text2.setAttribute('font-size', '11');
+                text2.setAttribute('font-weight', '700');
+                text2.textContent = `${d.pct.toFixed(1)}%`;
+                svg.appendChild(text2);
+            }
+            cumY = yBot;
+        });
     }
 
     async function satExecutionFx(date, currency, saved={}) {
@@ -5609,9 +5617,7 @@
         state.currentPort = ['port1','port2','port3'].includes(id) ? id : 'port1';
         updatePortfolioControls();
         const activeTab = document.querySelector('.tab-content.active')?.id?.replace('tab-', '') || 'dashboard';
-        if (state.currentPort === 'port3' && activeTab !== 'dashboard') {
-            switchTab('dashboard');
-        } else if (state.currentPort === 'port2' && (activeTab === 'wheel' || activeTab === 'settings')) {
+        if ((state.currentPort === 'port3' || state.currentPort === 'port2') && activeTab !== 'dashboard') {
             switchTab('dashboard');
         } else if (activeTab === 'settings') {
             initSettings();
@@ -5621,7 +5627,7 @@
             updateDashboard();
             renderMonthlyTiers();
         } else if (state.currentPort === 'port2') {
-            satRenderAll();
+            fpRenderAll();
         } else {
             cfRenderAll();
         }
@@ -5916,7 +5922,7 @@
 
     function switchTab(id) {
         if (state.currentPort === 'port3' && id !== 'dashboard') id = 'dashboard';
-        if (state.currentPort === 'port2' && (id === 'wheel' || id === 'settings')) id = 'dashboard';
+        if (state.currentPort === 'port2' && id !== 'dashboard') id = 'dashboard';
         const tab = document.getElementById('tab-'+id);
         const btn = document.getElementById('btn-'+id);
         if (!tab || !btn) return;
@@ -5927,7 +5933,7 @@
         const titles = state.currentPort === 'port3'
             ? { dashboard: 'Personal Cashflow Planner' }
             : state.currentPort === 'port2'
-                ? { dashboard: 'Satellite Trading Dashboard', transactions: 'Satellite Trade Ledger', wheel: 'Wheel Strategy', settings: 'Settings' }
+                ? { dashboard: 'Financial Planning' }
                 : { dashboard: 'Portfolio Overview', transactions: 'Transaction Ledger', wheel: 'Wheel Strategy', settings: 'Settings' };
         document.getElementById('page-title').innerText = titles[id] || '';
         // Show BTC price chip only on Wheel tab
@@ -5935,7 +5941,7 @@
         if (btcChip) btcChip.classList.toggle('hidden', id !== 'wheel');
         if(id === 'settings') initSettings();
         else if(id !== 'wheel') {
-            if (state.currentPort === 'port2') satRenderAll();
+            if (state.currentPort === 'port2') fpRenderAll();
             else if (state.currentPort === 'port3') cfRenderAll();
             else { updateDashboard(); applyBalanceMask(); }
         }
@@ -6341,6 +6347,7 @@
             grouped[ddKey(asset, period)].push({
                 name:     String(row.ticker || row.Ticker || '').trim(),   // M = Ticker → display name
                 platform: String(row.name   || row.Name   || '').trim(),   // L = Name   → platform
+                layer:    String(row.layer  || row.Layer  || '').trim(),   // Layer      → Savings/Investments/Trading
                 port:     String(row.port   || row.Port   || '').trim(),   // N = Port   → Core / Satellite
                 theme:    String(row.theme  || row.Theme  || '').trim(),   // O = Theme  → theme
                 amount
@@ -7774,7 +7781,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         saveGoals();
 
         satApplyWorkspace();
-        updateDashboard(); renderMonthlyTiers(); satRenderAll(); cfRenderAll();
+        updateDashboard(); renderMonthlyTiers(); satRenderAll(); cfRenderAll(); fpRenderAll();
         satWarmFxRates().catch(error => console.warn('Satellite FX warm-up failed:', error));
         setTimeout(satAutoRefreshBenchmarks, 2500);
         fetchFearGreedIndexes();
