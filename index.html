@@ -1664,28 +1664,16 @@
                         </div>
                     </div>
 
-                    <div class="bg-card rounded-xl border border-slate-700 p-6">
-                        <p style="font-size:12px;color:#64748b;margin:0 0 20px 0;max-width:640px">
-                            Every holding in your Investment Port is tagged with a <b style="color:#94A3B8">Layer</b> —
-                            <span style="color:#10B981;font-weight:600">Savings</span> (the foundation),
-                            <span style="color:#3B82F6;font-weight:600">Investments</span> (the middle), and
-                            <span style="color:#F59E0B;font-weight:600">Trading</span> (the top, smallest and highest-risk slice).
-                            The pyramid below is sized using your actual current balances.
-                        </p>
-                        <div style="display:flex;gap:36px;flex-wrap:wrap;align-items:center">
+                    <div class="bg-card rounded-xl border border-slate-700 p-6" style="position:relative;overflow:hidden">
+                        <div style="display:flex;gap:36px;flex-wrap:wrap;align-items:center;position:relative;z-index:1">
                             <div style="flex:0 0 auto" id="fp-pyramid-wrap">
-                                <svg id="fp-pyramid-svg" viewBox="0 0 420 320" style="width:380px;max-width:100%"></svg>
+                                <svg id="fp-pyramid-svg" viewBox="0 0 460 400" style="width:420px;max-width:100%"></svg>
                             </div>
                             <div style="flex:1 1 260px;min-width:240px" id="fp-legend"></div>
                         </div>
-                        <div id="fp-empty-hint" class="hidden" style="margin-top:18px;padding:12px 16px;background:#1E293B;border:1px solid #334155;border-radius:8px;font-size:12px;color:#94A3B8;line-height:1.6">
-                            No holdings are tagged with a <b style="color:#E2E8F0">Layer</b> yet. In your Google Sheet, add a <code style="background:#0F172A;padding:1px 5px;border-radius:4px;color:#93C5FD">Layer</code> column next to Ticker for each holding row, and set the value to <b>Savings</b>, <b>Investments</b>, or <b>Trading</b> — then this pyramid will fill in automatically.
+                        <div id="fp-empty-hint" class="hidden" style="margin-top:18px;padding:12px 16px;background:#1E293B;border:1px solid #334155;border-radius:8px;font-size:12px;color:#94A3B8;line-height:1.6;position:relative;z-index:1">
+                            Add a <code style="background:#0F172A;padding:1px 5px;border-radius:4px;color:#93C5FD">Layer</code> column (Savings / Investments / Trading) to your Holdings rows in Google Sheet to populate this pyramid.
                         </div>
-                    </div>
-
-                    <div class="bg-card rounded-xl border border-slate-700 p-6">
-                        <h4 class="text-white font-bold mb-1">Analysis</h4>
-                        <p style="font-size:12px;color:#64748b;margin:0">More detailed analysis of how your layer mix compares to your Financial Goal is coming soon.</p>
                     </div>
                 </div>
 
@@ -3844,9 +3832,9 @@
     //  FINANCIAL PLANNING — Asset Allocation Pyramid
     // ══════════════════════════════════════════════════════
     const FP_LAYERS = [
-        { key: 'trading',     label: 'Trading',     color: '#F59E0B' }, // top (apex) — smallest, highest risk
-        { key: 'investments', label: 'Investments', color: '#3B82F6' }, // middle
-        { key: 'savings',     label: 'Savings',     color: '#10B981' }  // base — largest, safest
+        { key: 'trading',     label: 'Trading',     color: '#A78BFA' }, // apex — smallest, highest risk (matches app's purple accent)
+        { key: 'investments', label: 'Investments', color: '#F59E0B' }, // middle (matches app's amber accent)
+        { key: 'savings',     label: 'Savings',     color: '#3B82F6' }  // base — largest, safest (app's primary blue)
     ];
 
     function fpNormalizeLayer(raw) {
@@ -3908,7 +3896,7 @@
         data.forEach(d => {
             html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1E293B">
                 <div style="display:flex;align-items:center;gap:8px">
-                    <span style="width:10px;height:10px;border-radius:3px;background:${d.color};flex-shrink:0"></span>
+                    <span style="width:10px;height:10px;border-radius:3px;background:${d.color};box-shadow:0 0 8px ${d.color};flex-shrink:0"></span>
                     <span style="font-size:13px;font-weight:600;color:#E2E8F0">${d.label}</span>
                 </div>
                 <div style="text-align:right">
@@ -3927,65 +3915,140 @@
         legendEl.innerHTML = html;
     }
 
-    // data: array ordered [trading, investments, savings] (top → base), each {label, color, amount, pct}
+    function fpHexToRgb(hex) {
+        const h = hex.replace('#','');
+        return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+    }
+    function fpShade(hex, factor) { // factor <1 darkens, >1 lightens
+        const [r,g,b] = fpHexToRgb(hex);
+        const f = v => Math.max(0, Math.min(255, Math.round(v * factor)));
+        return `rgb(${f(r)},${f(g)},${f(b)})`;
+    }
+    function fpLerp(p0, p1, t) { return [p0[0] + (p1[0]-p0[0])*t, p0[1] + (p1[1]-p0[1])*t]; }
+    function fpPts(arr) { return arr.map(p => p.join(',')).join(' '); }
+
+    // data: array ordered [trading, investments, savings] (apex → base), each {label, color, amount, pct}
+    // Renders a pseudo-3D, sci-fi glowing pyramid: two visible faces (left = lit, right = shadow),
+    // split into value-weighted horizontal bands per layer, with glowing wireframe edges.
     function fpDrawPyramidSvg(data) {
         const svg = document.getElementById('fp-pyramid-svg');
         if (!svg) return;
+        const ns = 'http://www.w3.org/2000/svg';
         svg.innerHTML = '';
         if (!data.length) return;
 
-        const W = 420, H = 280, cx = W / 2, topPad = 10, baseY = topPad + H;
         const total = data.reduce((s, d) => s + d.amount, 0);
         if (total <= 0) return;
 
-        const widthAt = y => W * 0.82 * ((y - topPad) / H); // 0 at apex, full width at base
-        let cumY = topPad;
-        const ns = 'http://www.w3.org/2000/svg';
+        const W = 460, H = 400;
+        const cx = W / 2;
+        const topY = 34, baseY = 320, halfW = 168, depth = 26; // depth = pseudo-3D offset for the back ridge
 
-        data.forEach((d, i) => {
-            const bandH  = H * (d.amount / total);
-            const yTop   = cumY;
-            const yBot   = cumY + bandH;
-            const wTop   = widthAt(yTop);
-            const wBot   = widthAt(yBot);
-            const points = [
-                [cx - wTop / 2, yTop], [cx + wTop / 2, yTop],
-                [cx + wBot / 2, yBot], [cx - wBot / 2, yBot]
-            ].map(p => p.join(',')).join(' ');
+        const apex = [cx, topY];
+        const L    = [cx - halfW, baseY];
+        const R    = [cx + halfW, baseY];
+        const C    = [cx, baseY + depth]; // center ridge point, pulled down for 3D feel
 
-            const poly = document.createElementNS(ns, 'polygon');
-            poly.setAttribute('points', points);
-            poly.setAttribute('fill', d.color);
-            poly.setAttribute('fill-opacity', '0.85');
-            poly.setAttribute('stroke', '#0B1120');
-            poly.setAttribute('stroke-width', '2');
-            svg.appendChild(poly);
+        // ── <defs>: glow filter + subtle radial backdrop ──
+        const defs = document.createElementNS(ns, 'defs');
+        defs.innerHTML = `
+            <filter id="fpGlow" x="-60%" y="-60%" width="220%" height="220%">
+                <feGaussianBlur stdDeviation="4.2" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <radialGradient id="fpBackdrop" cx="50%" cy="42%" r="65%">
+                <stop offset="0%" stop-color="#1E293B" stop-opacity="0.55"/>
+                <stop offset="100%" stop-color="#0B1120" stop-opacity="0"/>
+            </radialGradient>`;
+        svg.appendChild(defs);
 
-            // Label (only if band is tall enough to fit text)
-            if (bandH > 22 && d.pct > 0) {
-                const labelY = (yTop + yBot) / 2;
-                const text = document.createElementNS(ns, 'text');
-                text.setAttribute('x', cx);
-                text.setAttribute('y', labelY - 4);
-                text.setAttribute('text-anchor', 'middle');
-                text.setAttribute('fill', '#0B1120');
-                text.setAttribute('font-size', '13');
-                text.setAttribute('font-weight', '800');
-                text.textContent = d.label;
-                svg.appendChild(text);
-
-                const text2 = document.createElementNS(ns, 'text');
-                text2.setAttribute('x', cx);
-                text2.setAttribute('y', labelY + 12);
-                text2.setAttribute('text-anchor', 'middle');
-                text2.setAttribute('fill', '#0B1120');
-                text2.setAttribute('font-size', '11');
-                text2.setAttribute('font-weight', '700');
-                text2.textContent = `${d.pct.toFixed(1)}%`;
-                svg.appendChild(text2);
-            }
-            cumY = yBot;
+        // Sci-fi backdrop glow + faint grid rings behind the pyramid
+        const backdrop = document.createElementNS(ns, 'circle');
+        backdrop.setAttribute('cx', cx); backdrop.setAttribute('cy', (topY+baseY)/2);
+        backdrop.setAttribute('r', 190); backdrop.setAttribute('fill', 'url(#fpBackdrop)');
+        svg.appendChild(backdrop);
+        [70, 115, 160].forEach(r => {
+            const ring = document.createElementNS(ns, 'ellipse');
+            ring.setAttribute('cx', cx); ring.setAttribute('cy', baseY + depth/2);
+            ring.setAttribute('rx', r); ring.setAttribute('ry', r*0.22);
+            ring.setAttribute('fill', 'none'); ring.setAttribute('stroke', '#334155');
+            ring.setAttribute('stroke-width', '1'); ring.setAttribute('opacity', '0.35');
+            svg.appendChild(ring);
         });
+
+        // Cumulative t-boundaries (0 = apex, 1 = base) from layer values
+        let cumT = 0;
+        const bounds = data.map(d => { const t0 = cumT; cumT += d.amount/total; return { ...d, t0, t1: cumT }; });
+
+        bounds.forEach(band => {
+            const lFace = [fpLerp(apex,L,band.t0), fpLerp(apex,C,band.t0), fpLerp(apex,C,band.t1), fpLerp(apex,L,band.t1)];
+            const rFace = [fpLerp(apex,C,band.t0), fpLerp(apex,R,band.t0), fpLerp(apex,R,band.t1), fpLerp(apex,C,band.t1)];
+
+            const lPoly = document.createElementNS(ns, 'polygon');
+            lPoly.setAttribute('points', fpPts(lFace));
+            lPoly.setAttribute('fill', fpShade(band.color, 1.15));
+            lPoly.setAttribute('fill-opacity', '0.55');
+            svg.appendChild(lPoly);
+
+            const rPoly = document.createElementNS(ns, 'polygon');
+            rPoly.setAttribute('points', fpPts(rFace));
+            rPoly.setAttribute('fill', fpShade(band.color, 0.55));
+            rPoly.setAttribute('fill-opacity', '0.65');
+            svg.appendChild(rPoly);
+
+            // Glowing band-boundary line (front seam across L–C–R at t1)
+            if (band.t1 < 0.999) {
+                const lineL = fpLerp(apex, L, band.t1), lineC = fpLerp(apex, C, band.t1), lineR = fpLerp(apex, R, band.t1);
+                const seam = document.createElementNS(ns, 'polyline');
+                seam.setAttribute('points', fpPts([lineL, lineC, lineR]));
+                seam.setAttribute('fill', 'none');
+                seam.setAttribute('stroke', band.color);
+                seam.setAttribute('stroke-width', '1.4');
+                seam.setAttribute('opacity', '0.9');
+                seam.setAttribute('filter', 'url(#fpGlow)');
+                svg.appendChild(seam);
+            }
+
+            // Label — placed on the lit (left) face, mid-band
+            const midT = (band.t0 + band.t1) / 2;
+            const labelPt = fpLerp(fpLerp(apex, L, midT), fpLerp(apex, C, midT), 0.5);
+            const bandPx = (band.t1 - band.t0) * (baseY - topY);
+            if (bandPx > 26 && band.pct > 0) {
+                const t1 = document.createElementNS(ns, 'text');
+                t1.setAttribute('x', labelPt[0]); t1.setAttribute('y', labelPt[1] - 5);
+                t1.setAttribute('text-anchor', 'middle');
+                t1.setAttribute('fill', '#F8FAFC'); t1.setAttribute('font-size', '12');
+                t1.setAttribute('font-weight', '800'); t1.setAttribute('letter-spacing', '.03em');
+                t1.textContent = band.label.toUpperCase();
+                svg.appendChild(t1);
+
+                const t2 = document.createElementNS(ns, 'text');
+                t2.setAttribute('x', labelPt[0]); t2.setAttribute('y', labelPt[1] + 12);
+                t2.setAttribute('text-anchor', 'middle');
+                t2.setAttribute('fill', band.color); t2.setAttribute('font-size', '13');
+                t2.setAttribute('font-weight', '700');
+                t2.textContent = `${band.pct.toFixed(1)}%`;
+                svg.appendChild(t2);
+            }
+        });
+
+        // Glowing wireframe edges on top (apex→L, apex→C, apex→R, base L–R)
+        [[apex,L], [apex,C], [apex,R], [L,C], [C,R]].forEach(([p0,p1]) => {
+            const edge = document.createElementNS(ns, 'line');
+            edge.setAttribute('x1', p0[0]); edge.setAttribute('y1', p0[1]);
+            edge.setAttribute('x2', p1[0]); edge.setAttribute('y2', p1[1]);
+            edge.setAttribute('stroke', '#93C5FD');
+            edge.setAttribute('stroke-width', '1');
+            edge.setAttribute('opacity', '0.45');
+            svg.appendChild(edge);
+        });
+
+        // Apex glow point
+        const apexGlow = document.createElementNS(ns, 'circle');
+        apexGlow.setAttribute('cx', apex[0]); apexGlow.setAttribute('cy', apex[1]);
+        apexGlow.setAttribute('r', 3.2); apexGlow.setAttribute('fill', '#F8FAFC');
+        apexGlow.setAttribute('filter', 'url(#fpGlow)');
+        svg.appendChild(apexGlow);
     }
 
     async function satExecutionFx(date, currency, saved={}) {
