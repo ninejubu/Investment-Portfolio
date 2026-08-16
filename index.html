@@ -3857,8 +3857,12 @@
         let uncategorized = 0;
         let hasAnyLayerTag = false;
 
+        // Holdings data is stored under port1 key — read directly regardless of currentPort
         assets.forEach(a => {
-            (ddLoad(a, quarter) || []).forEach(r => {
+            const key  = `holdings_port1_${a}_${quarter}`;
+            let rows   = [];
+            try { rows = JSON.parse(localStorage.getItem(key)) || []; } catch {}
+            rows.forEach(r => {
                 const layer = fpNormalizeLayer(r.layer);
                 const amt   = r.amount || 0;
                 if (layer) { totals[layer] += amt; hasAnyLayerTag = true; }
