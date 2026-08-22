@@ -63,7 +63,7 @@
         }
         .structure-grid {
             display: grid;
-            grid-template-columns: minmax(220px,.78fr) minmax(520px,1.55fr) minmax(220px,.78fr);
+            grid-template-columns: minmax(240px,.85fr) minmax(520px,1.7fr);
             gap: 18px;
             align-items: stretch;
         }
@@ -75,18 +75,18 @@
             backdrop-filter: blur(14px);
             box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
         }
-        .structure-stat-value { font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
-        .structure-stat-label { color:#64748B; font-size:9px; text-transform:uppercase; letter-spacing:.12em; margin-bottom:5px; }
+        .structure-stat-value { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+        .structure-stat-label { color:#64748B; font-size:11px; text-transform:uppercase; letter-spacing:.12em; margin-bottom:6px; }
         .structure-layer-list { display:flex; flex-direction:column; gap:8px; }
         .structure-layer-row {
             display:grid; grid-template-columns:8px minmax(0,1fr) auto; gap:9px; align-items:center;
-            padding:9px 10px; border-radius:9px; background:rgba(2,6,23,.28);
+            padding:10px 11px; border-radius:9px; background:rgba(2,6,23,.28);
             border:1px solid rgba(51,65,85,.45);
         }
-        .structure-layer-dot { width:7px; height:7px; border-radius:50%; box-shadow:0 0 12px currentColor; }
-        .structure-layer-name { font-size:11px; font-weight:700; color:#E2E8F0; }
-        .structure-layer-meta { font-size:9px; color:#64748B; margin-top:2px; }
-        .structure-layer-pct { font-size:12px; font-weight:700; color:#CBD5E1; }
+        .structure-layer-dot { width:8px; height:8px; border-radius:50%; box-shadow:0 0 12px currentColor; }
+        .structure-layer-name { font-size:13px; font-weight:700; color:#E2E8F0; }
+        .structure-layer-meta { font-size:11px; color:#64748B; margin-top:2px; }
+        .structure-layer-pct { font-size:14px; font-weight:700; color:#CBD5E1; }
         .structure-pyramid-wrap {
             position:relative; min-height:590px; display:flex; align-items:center; justify-content:center;
         }
@@ -98,56 +98,73 @@
         #structure-pyramid { width:100%; height:590px; overflow:visible; }
         .structure-svg-glow { filter:url(#structure-glow); }
         .structure-layer-title {
-            font:700 16px Inter, sans-serif; letter-spacing:.12em; text-transform:uppercase; fill:#F8FAFC;
+            font:700 18px Inter, sans-serif; letter-spacing:.12em; text-transform:uppercase; fill:#F8FAFC;
         }
         .structure-layer-sub {
-            font:600 10px Inter, sans-serif; letter-spacing:.04em; fill:#94A3B8;
+            font:600 12px Inter, sans-serif; letter-spacing:.04em; fill:#94A3B8;
         }
         .structure-total {
             border-top:1px solid rgba(71,85,105,.45); margin-top:12px; padding-top:12px;
             display:flex; justify-content:space-between; gap:10px; align-items:end;
         }
         .structure-coverage {
-            margin-top:10px; font-size:9px; line-height:1.5; color:#64748B;
+            margin-top:10px; font-size:11px; line-height:1.5; color:#64748B;
         }
         .structure-note {
-            padding:11px 12px; border-radius:9px; border:1px solid rgba(59,130,246,.18);
-            background:rgba(59,130,246,.055); color:#94A3B8; font-size:10px; line-height:1.55;
+            padding:12px 13px; border-radius:9px; border:1px solid rgba(59,130,246,.18);
+            background:rgba(59,130,246,.055); color:#94A3B8; font-size:12px; line-height:1.55;
         }
         .structure-3d-label {
             paint-order:stroke; stroke:rgba(2,6,23,.85); stroke-width:5px; stroke-linejoin:round;
         }
         .structure-table-wrap { margin-top:22px; }
-        .structure-table { width:100%; border-collapse:collapse; font-size:11px; }
-        .structure-table th {
-            text-align:left; padding:8px 10px; background:rgba(30,41,59,.7); color:#64748B;
-            font-size:9px; text-transform:uppercase; letter-spacing:.1em; border-bottom:1px solid rgba(71,85,105,.5);
+        .structure-table-grid {
+            --stg-template: 108px 108px minmax(112px,1.05fr) minmax(150px,1.35fr) minmax(112px,1.05fr) minmax(150px,1.35fr) minmax(96px,.85fr);
+            width:100%; min-width:900px; border-radius:12px; overflow:hidden;
+            border:1px solid rgba(71,85,105,.4);
         }
-        .structure-table th.num, .structure-table td.num { text-align:right; }
-        .structure-table td { padding:7px 10px; border-bottom:1px solid rgba(51,65,85,.35); color:#E2E8F0; white-space:nowrap; }
-        .structure-table td.num { font-variant-numeric:tabular-nums; }
-        .structure-table tr.structure-table-total td {
-            font-weight:700; background:rgba(30,41,59,.55); border-top:1px solid rgba(71,85,105,.6); border-bottom:none;
+        .stg-row {
+            display:grid; grid-template-columns:var(--stg-template);
+            column-gap:16px; align-items:center;
         }
-        .structure-table input.structure-input {
-            width:100%; min-width:76px; background:rgba(2,6,23,.4); border:1px solid rgba(71,85,105,.45);
-            border-radius:6px; color:#F8FAFC; padding:4px 7px; font-size:11px; text-align:right; font-variant-numeric:tabular-nums;
+        .stg-cell { min-width:0; color:#E2E8F0; font-variant-numeric:tabular-nums; }
+        .stg-cell.num { text-align:right; }
+        .stg-head {
+            padding:10px 16px; background:rgba(30,41,59,.7);
+            border-bottom:1px solid rgba(71,85,105,.5);
         }
-        .structure-table input.structure-input:focus { outline:none; border-color:#3B82F6; background:rgba(2,6,23,.6); }
+        .stg-head .stg-cell {
+            color:#64748B; font-size:10px; text-transform:uppercase; letter-spacing:.1em; font-weight:700;
+        }
+        .stg-body-row { padding:9px 16px; border-bottom:1px solid rgba(51,65,85,.35); font-size:13px; }
+        .stg-body-row:last-of-type { border-bottom:none; }
+        .stg-total-row {
+            padding:10px 16px; font-weight:700; font-size:13px;
+            background:rgba(30,41,59,.55); border-top:1px solid rgba(71,85,105,.6);
+        }
+        .structure-table-grid input.structure-input {
+            width:100%; background:rgba(2,6,23,.4); border:1px solid rgba(71,85,105,.45);
+            border-radius:6px; color:#F8FAFC; padding:5px 9px; font-size:13px; text-align:right;
+            font-variant-numeric:tabular-nums;
+        }
+        .structure-table-grid input.structure-input:focus { outline:none; border-color:#3B82F6; background:rgba(2,6,23,.6); }
+        body.theme-light .structure-table-grid { border-color:#D6DEE8; }
+        body.theme-light .stg-head { background:rgba(226,232,240,.7); border-color:#D6DEE8; }
+        body.theme-light .stg-head .stg-cell { color:#475569; }
+        body.theme-light .stg-body-row { color:#0F172A; border-color:#E2E8F0; }
+        body.theme-light .stg-cell { color:#0F172A; }
+        body.theme-light .stg-total-row { background:rgba(226,232,240,.55); border-color:#D6DEE8; }
+        body.theme-light .structure-table-grid input.structure-input { background:#fff; border-color:#CBD5E1; color:#0F172A; }
         .structure-pct-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px; }
         .structure-pct-box { background:rgba(15,23,42,.55); border:1px solid rgba(71,85,105,.48); border-radius:12px; overflow:hidden; }
-        .structure-pct-box-head { padding:9px 12px; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; }
+        .structure-pct-box-head { padding:10px 13px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; }
         .structure-pct-box.with .structure-pct-box-head { background:rgba(245,158,11,.16); color:#FDE68A; }
         .structure-pct-box.without .structure-pct-box-head { background:rgba(239,68,68,.16); color:#FCA5A5; }
         .structure-pct-row {
-            display:flex; justify-content:space-between; gap:10px; padding:8px 12px; font-size:11px;
+            display:flex; justify-content:space-between; gap:10px; padding:9px 13px; font-size:13px;
             border-bottom:1px solid rgba(51,65,85,.35); color:#CBD5E1;
         }
         .structure-pct-row.total { font-weight:700; color:#F8FAFC; background:rgba(2,6,23,.28); border-bottom:none; }
-        body.theme-light .structure-table th { background:rgba(226,232,240,.7); color:#475569; }
-        body.theme-light .structure-table td { color:#0F172A; border-color:#E2E8F0; }
-        body.theme-light .structure-table tr.structure-table-total td { background:rgba(226,232,240,.55); }
-        body.theme-light .structure-table input.structure-input { background:#fff; border-color:#CBD5E1; color:#0F172A; }
         body.theme-light .structure-pct-box { background:#fff; border-color:#D6DEE8; }
         body.theme-light .structure-pct-row { color:#334155; border-color:#E2E8F0; }
         @media (max-width:760px) {
@@ -169,13 +186,9 @@
         body.theme-light .structure-note { color:#475569; }
         @media (max-width:1180px) {
             .structure-grid { grid-template-columns:minmax(190px,.7fr) minmax(420px,1.4fr); }
-            .structure-grid > .structure-side-right { grid-column:1 / -1; }
-            .structure-side-right .structure-layer-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
         }
         @media (max-width:760px) {
             .structure-grid { grid-template-columns:1fr; }
-            .structure-grid > .structure-side-right { grid-column:auto; }
-            .structure-side-right .structure-layer-list { grid-template-columns:1fr; }
             .structure-pyramid-wrap { min-height:460px; }
             #structure-pyramid { height:460px; }
         }
@@ -2084,13 +2097,18 @@
                 <div class="structure-shell rounded-2xl p-5 md:p-7">
                     <div class="flex items-start justify-between gap-4 flex-wrap mb-5">
                         <div>
-                            <div class="text-[9px] text-blue-400 uppercase tracking-[.22em] font-bold">Asset Architecture</div>
-                            <h3 class="text-2xl font-bold text-white mt-1 tracking-tight">Portfolio Structure</h3>
-                            <p class="text-[11px] text-slate-500 mt-1">Asset allocation by financial objective · based on latest closed balance</p>
+                            <div class="text-[10px] text-blue-400 uppercase tracking-[.22em] font-bold">Asset Architecture</div>
+                            <h3 class="text-3xl font-bold text-white mt-1 tracking-tight">Portfolio Structure</h3>
+                            <p class="text-[13px] text-slate-500 mt-1">Asset allocation by financial objective · based on latest closed balance</p>
                         </div>
-                        <div class="structure-stat min-w-[180px]">
-                            <div class="structure-stat-label">Balance Period</div>
-                            <div id="structure-period" class="text-sm font-bold text-slate-200">Q2</div>
+                        <div class="structure-stat min-w-[180px] flex items-center justify-between gap-3">
+                            <div>
+                                <div class="structure-stat-label">Balance Period</div>
+                                <div id="structure-period" class="text-base font-bold text-slate-200">Q2</div>
+                            </div>
+                            <button id="structure-bal-toggle-btn" onclick="toggleBalanceVisibility()" title="Show/Hide balances" style="background:transparent;border:none;cursor:pointer;color:#64748b;padding:2px 4px;border-radius:4px;transition:color .15s" onmouseover="this.style.color='#F8FAFC'" onmouseout="this.style.color='#64748b'">
+                                <i class="fa-solid fa-eye-slash" id="structure-bal-toggle-icon" style="font-size:15px"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -2111,44 +2129,26 @@
                         <div class="structure-pyramid-wrap">
                             <svg id="structure-pyramid" viewBox="0 0 900 620" role="img" aria-label="3D asset allocation pyramid"></svg>
                         </div>
-
-                        <div class="structure-side-right space-y-3">
-                            <div class="structure-stat">
-                                <div class="structure-stat-label">Architecture</div>
-                                <div class="text-sm font-bold text-slate-200">3-Layer Financial Pyramid</div>
-                                <div class="text-[10px] text-slate-500 mt-1 leading-relaxed">
-                                    Savings forms the foundation, Investments builds long-term growth, and Trading sits at the top as the active/risk-seeking layer.
-                                </div>
-                            </div>
-                            <div class="structure-stat">
-                                <div class="structure-stat-label">Data Rule</div>
-                                <div class="text-[10px] text-slate-400 leading-relaxed">
-                                    Layer is read from the <span class="text-slate-200 font-semibold">Layer</span> column in Google Sheets. “Saving/Savings” and “Investment/Investments” are normalized automatically.
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="structure-table-wrap">
                         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-                            <h4 class="text-sm font-bold text-white">Layer / Class Breakdown</h4>
-                            <div class="text-[10px] text-slate-500">Allocation &amp; Expected Return are editable — saved on this device</div>
+                            <h4 class="text-base font-bold text-white">Layer / Class Breakdown</h4>
+                            <div class="text-[12px] text-slate-500">Allocation &amp; Expected Return are editable — saved on this device</div>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="structure-table">
-                                <thead>
-                                    <tr>
-                                        <th>Layer</th>
-                                        <th>Class</th>
-                                        <th class="num">Balance</th>
-                                        <th class="num">Allocation</th>
-                                        <th class="num">Net Balance</th>
-                                        <th class="num">Expected Return</th>
-                                        <th class="num">Return</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="structure-table-body"></tbody>
-                            </table>
+                            <div class="structure-table-grid">
+                                <div class="stg-row stg-head">
+                                    <div class="stg-cell">Layer</div>
+                                    <div class="stg-cell">Class</div>
+                                    <div class="stg-cell num">Balance</div>
+                                    <div class="stg-cell num">Allocation</div>
+                                    <div class="stg-cell num">Net Balance</div>
+                                    <div class="stg-cell num">Expected Return</div>
+                                    <div class="stg-cell num">Return</div>
+                                </div>
+                                <div id="structure-table-body"></div>
+                            </div>
                         </div>
                         <div class="structure-pct-grid">
                             <div class="structure-pct-box with">
@@ -6215,30 +6215,30 @@
             const showLayer = r.layer !== lastLayer;
             lastLayer = r.layer;
 
-            bodyHtml += `<tr>
-                <td>${showLayer ? '<strong>' + layerLabels[r.layer] + '</strong>' : ''}</td>
-                <td>${clsLabels[r.cls] || r.cls}</td>
-                <td class="num">${structureFormatAmount(r.balance)}</td>
-                <td class="num"><input class="structure-input" type="text" inputmode="decimal" value="${allocation ? allocation.toLocaleString('en-US', { maximumFractionDigits: 2 }) : ''}" placeholder="0" oninput="formatNumberInput(this)" onblur="updateStructureRowInput('${r.key}','allocation',this)"></td>
-                <td class="num">${structureFormatAmount(netBalance)}</td>
-                <td class="num"><input class="structure-input" type="number" step="0.1" value="${expReturn || ''}" placeholder="0" onblur="updateStructureRowInput('${r.key}','expReturn',this)"></td>
-                <td class="num">${structureFormatAmount(ret)}</td>
-            </tr>`;
+            bodyHtml += `<div class="stg-row stg-body-row">
+                <div class="stg-cell">${showLayer ? '<strong>' + layerLabels[r.layer] + '</strong>' : ''}</div>
+                <div class="stg-cell">${clsLabels[r.cls] || r.cls}</div>
+                <div class="stg-cell num">${structureFormatAmount(r.balance)}</div>
+                <div class="stg-cell num"><input class="structure-input" type="text" inputmode="decimal" value="${allocation ? allocation.toLocaleString('en-US', { maximumFractionDigits: 2 }) : ''}" placeholder="0" oninput="formatNumberInput(this)" onblur="updateStructureRowInput('${r.key}','allocation',this)"></div>
+                <div class="stg-cell num">${structureFormatAmount(netBalance)}</div>
+                <div class="stg-cell num"><input class="structure-input" type="number" step="0.1" value="${expReturn || ''}" placeholder="0" onblur="updateStructureRowInput('${r.key}','expReturn',this)"></div>
+                <div class="stg-cell num">${structureFormatAmount(ret)}</div>
+            </div>`;
         });
 
         if (!rows.length) {
-            bodyHtml = `<tr><td colspan="7" class="text-center text-slate-500" style="padding:18px;">No holdings found for ${period}. Add Layer &amp; Class values in Google Sheets.</td></tr>`;
+            bodyHtml = `<div class="stg-row stg-body-row"><div class="stg-cell" style="grid-column:1 / -1; text-align:center; color:#64748B; padding:8px 0;">No holdings found for ${period}. Add Layer &amp; Class values in Google Sheets.</div></div>`;
         }
 
         const avgExpReturn = grandNet !== 0 ? (grandReturn / grandNet * 100) : 0;
-        bodyHtml += `<tr class="structure-table-total">
-            <td colspan="2">Total</td>
-            <td class="num">${structureFormatAmount(grandBalance)}</td>
-            <td class="num">${structureFormatAmount(grandAlloc)}</td>
-            <td class="num">${structureFormatAmount(grandNet)}</td>
-            <td class="num">${avgExpReturn.toFixed(2)}%</td>
-            <td class="num">${structureFormatAmount(grandReturn)}</td>
-        </tr>`;
+        bodyHtml += `<div class="stg-row stg-total-row">
+            <div class="stg-cell" style="grid-column:1 / 3;">Total</div>
+            <div class="stg-cell num">${structureFormatAmount(grandBalance)}</div>
+            <div class="stg-cell num">${structureFormatAmount(grandAlloc)}</div>
+            <div class="stg-cell num">${structureFormatAmount(grandNet)}</div>
+            <div class="stg-cell num">${avgExpReturn.toFixed(2)}%</div>
+            <div class="stg-cell num">${structureFormatAmount(grandReturn)}</div>
+        </div>`;
         tbody.innerHTML = bodyHtml;
 
         const withTotal = layerNet.savings + layerNet.investments + layerNet.trading;
@@ -8212,11 +8212,16 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         balancesHidden = !balancesHidden;
         const icon = document.getElementById('bal-toggle-icon');
         if (icon) icon.className = balancesHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+        const structIcon = document.getElementById('structure-bal-toggle-icon');
+        if (structIcon) structIcon.className = balancesHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
         if (balancesHidden) {
             applyBalanceMask();
             if (typeof renderHoldingsBreakdown === 'function') renderHoldingsBreakdown();
         } else {
             updateDashboard();
+        }
+        if (typeof renderStructure === 'function' && document.getElementById('tab-structure')?.classList.contains('active')) {
+            renderStructure();
         }
     }
 
