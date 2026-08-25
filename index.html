@@ -6545,6 +6545,7 @@
         if (document.getElementById('input-bm-name-world')) {
             pState().benchmarks.world.name = document.getElementById('input-bm-name-world').value;
             [1,2,3,4].forEach(q => { const el = document.getElementById(`input-bm-q${q}-world`); pState().benchmarks.world[`q${q}`] = el && el.value !== '' ? getRawValue(el.value) : null; });
+            localStorage.setItem('benchmarks_world_port1', JSON.stringify(pState().benchmarks.world));
         }
         ['beginning','q1','q2','q3','q4'].forEach(r => state.rates[r] = document.getElementById('rate-'+r).value !== '' ? getRawValue(document.getElementById('rate-'+r).value) : null);
         localStorage.setItem('goal_port1', JSON.stringify(state.portfolios.port1.goal));
@@ -6868,7 +6869,22 @@
         const target = state.portfolios.port1;
         if (settings.begBalances) target.begBalances = Object.assign(getEmptyBegBalances(), settings.begBalances);
         if (settings.endBalances) target.endBalances = Object.assign(getEmptyEndBalances(), settings.endBalances);
-        if (settings.benchmarks) target.benchmarks = Object.assign(getEmptyBenchmarks(), settings.benchmarks);
+        if (settings.benchmarks) {
+            target.benchmarks = Object.assign(getEmptyBenchmarks(), settings.benchmarks);
+            // World: sheet values win when present; localStorage fills fields the sheet leaves empty
+            try {
+                const savedWorld = localStorage.getItem('benchmarks_world_port1');
+                if (savedWorld) {
+                    const w = JSON.parse(savedWorld);
+                    if (w && typeof w === 'object') {
+                        const merged = Object.assign(getEmptyBenchmarks().world, w);
+                        const sw = target.benchmarks.world || {};
+                        ['name', 'q1', 'q2', 'q3', 'q4'].forEach(k => { if (sw[k] !== null && sw[k] !== undefined && sw[k] !== '') merged[k] = sw[k]; });
+                        target.benchmarks.world = merged;
+                    }
+                }
+            } catch (e) { /* ignore corrupt cache */ }
+        }
         if (settings.rates) state.rates = Object.assign({ beginning: null, q1: null, q2: null, q3: null, q4: null }, settings.rates);
         target.holdings = Array.isArray(settings.holdings) ? settings.holdings.slice() : [];
         applySheetHoldings(target.holdings);

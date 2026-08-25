@@ -260,7 +260,8 @@ function emptySettings() {
       stocks: { name: '', q1: null, q2: null, q3: null, q4: null },
       bonds:  { name: '', q1: null, q2: null, q3: null, q4: null },
       crypto: { name: '', q1: null, q2: null, q3: null, q4: null },
-      gold:   { name: '', q1: null, q2: null, q3: null, q4: null }
+      gold:   { name: '', q1: null, q2: null, q3: null, q4: null },
+      world:  { name: '', q1: null, q2: null, q3: null, q4: null }
     },
     holdings: []
   };
@@ -377,6 +378,7 @@ function normSettingAsset(v) {
   if (s.indexOf('bond') === 0) return 'bonds';
   if (s.indexOf('crypto') === 0) return 'crypto';
   if (s.indexOf('gold') === 0) return 'gold';
+  if (s.indexOf('world') === 0) return 'world';
   return '';
 }
 
