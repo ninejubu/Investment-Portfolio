@@ -6560,6 +6560,23 @@
     const GS_URL_KEY = 'unified_gs_url';
     const GS_WRITE_TOKEN_KEY = 'unified_gs_write_token';
     function getGsUrl() { return localStorage.getItem(GS_URL_KEY) || ''; }
+    // Apps Script cold start can take 40s+ (warm ≈5s). Try 15s first, then retry
+    // once with a long window so the first pull after page load doesn't fail.
+    async function gsFetch(url, options = {}, maxTimeoutMs = 45000) {
+        let lastErr;
+        for (const timeoutMs of [15000, maxTimeoutMs]) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                return await fetch(url, Object.assign({}, options, { signal: controller.signal }));
+            } catch (err) {
+                lastErr = err;
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+        throw lastErr;
+    }
     function getGsWriteToken() { return localStorage.getItem(GS_WRITE_TOKEN_KEY) || ''; }
     function withWriteToken(payload) {
         const writeToken = getGsWriteToken();
@@ -6569,11 +6586,19 @@
     async function postGsWrite(payload) {
         const url = getGsUrl();
         if (!url) throw new Error('Apps Script URL is not configured');
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(withWriteToken(payload))
-        });
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 45000);
+        let response;
+        try {
+            response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(withWriteToken(payload)),
+                signal: controller.signal
+            });
+        } finally {
+            clearTimeout(timer);
+        }
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         if (data && data.error) throw new Error(data.error);
@@ -6801,14 +6826,7 @@
         const extra = new URLSearchParams(params);
         const extraText = extra.toString();
         if (extraText) requestUrl += '&' + extraText;
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 15000);
-        let res;
-        try {
-            res = await fetch(requestUrl, { signal: controller.signal });
-        } finally {
-            clearTimeout(timeout);
-        }
+        const res = await gsFetch(requestUrl);
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         if (data && data.error) throw new Error(data.error);
@@ -6897,14 +6915,7 @@
         const url = getInvUrl(); if (!url) return false;
         let ok = false;
         try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 15000);
-            let res;
-            try {
-                res = await fetch(url, { signal: controller.signal });
-            } finally {
-                clearTimeout(timeout);
-            }
+            const res = await gsFetch(url);
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const flows = await res.json();
             if (flows && flows.error) throw new Error(flows.error);
@@ -8169,14 +8180,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     async function wPullFromSheets(silent=false) {
         const url = wGetSheetsUrl(); if (!url) return false;
         try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 15000);
-            let r;
-            try {
-                r = await fetch(url + '?action=wheel_read&t=' + Date.now(), { signal: controller.signal });
-            } finally {
-                clearTimeout(timeout);
-            }
+            const r = await gsFetch(url + '?action=wheel_read&t=' + Date.now());
             if (!r.ok) throw new Error('HTTP ' + r.status);
             const data = await r.json();
             if (data.error) throw new Error(data.error);
