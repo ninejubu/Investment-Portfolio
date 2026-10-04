@@ -2042,18 +2042,18 @@
                         </div>
                         <div class="cf-income-row mb-3">
                             <label class="cf-label" for="cf-income-input">Monthly income</label>
-                            <input id="cf-income-input" class="cf-input" type="text" inputmode="decimal" placeholder="0" oninput="cfSetIncome(this.value)">
+                            <input id="cf-income-input" class="cf-input" type="text" inputmode="decimal" placeholder="0" oninput="cfFormatAmount(this); cfSetIncome(this.value)">
                         </div>
                         <div class="cf-section-label mb-2">Monthly expenses by category</div>
                         <div id="cf-monthly-cats">
-                            <div class="cf-cat-row"><span class="cf-cat-name">Food&Bev</span><span class="cf-cat-pct" id="cf-catpct-foodbev"></span><input class="cf-cat-amount" id="cf-cat-foodbev" type="text" inputmode="decimal" placeholder="0" oninput="cfSetCat('foodbev', this.value)"></div>
-                            <div class="cf-cat-row"><span class="cf-cat-name">Coffee</span><span class="cf-cat-pct" id="cf-catpct-coffee"></span><input class="cf-cat-amount" id="cf-cat-coffee" type="text" inputmode="decimal" placeholder="0" oninput="cfSetCat('coffee', this.value)"></div>
-                            <div class="cf-cat-row"><span class="cf-cat-name">Shopping</span><span class="cf-cat-pct" id="cf-catpct-shopping"></span><input class="cf-cat-amount" id="cf-cat-shopping" type="text" inputmode="decimal" placeholder="0" oninput="cfSetCat('shopping', this.value)"></div>
-                            <div class="cf-cat-row"><span class="cf-cat-name">Transportation</span><span class="cf-cat-pct" id="cf-catpct-transport"></span><input class="cf-cat-amount" id="cf-cat-transport" type="text" inputmode="decimal" placeholder="0" oninput="cfSetCat('transport', this.value)"></div>
-                            <div class="cf-cat-row"><span class="cf-cat-name">Bills</span><span class="cf-cat-pct" id="cf-catpct-bills"></span><input class="cf-cat-amount" id="cf-cat-bills" type="text" inputmode="decimal" placeholder="0" oninput="cfSetCat('bills', this.value)"></div>
-                            <div class="cf-cat-row"><span class="cf-cat-name">Invest</span><span class="cf-cat-pct" id="cf-catpct-invest"></span><input class="cf-cat-amount" id="cf-cat-invest" type="text" inputmode="decimal" placeholder="0" oninput="cfSetCat('invest', this.value)"></div>
-                            <div class="cf-cat-row"><span class="cf-cat-name">Family</span><span class="cf-cat-pct" id="cf-catpct-family"></span><input class="cf-cat-amount" id="cf-cat-family" type="text" inputmode="decimal" placeholder="0" oninput="cfSetCat('family', this.value)"></div>
-                            <div class="cf-cat-row"><span class="cf-cat-name">Other</span><span class="cf-cat-pct" id="cf-catpct-other"></span><input class="cf-cat-amount" id="cf-cat-other" type="text" inputmode="decimal" placeholder="0" oninput="cfSetCat('other', this.value)"></div>
+                            <div class="cf-cat-row"><span class="cf-cat-name">Food &amp; Beverage</span><span class="cf-cat-pct" id="cf-catpct-foodbev"></span><input class="cf-cat-amount" id="cf-cat-foodbev" type="text" inputmode="decimal" placeholder="0" oninput="cfFormatAmount(this); cfSetCat('foodbev', this.value)"></div>
+                            <div class="cf-cat-row"><span class="cf-cat-name">Coffee</span><span class="cf-cat-pct" id="cf-catpct-coffee"></span><input class="cf-cat-amount" id="cf-cat-coffee" type="text" inputmode="decimal" placeholder="0" oninput="cfFormatAmount(this); cfSetCat('coffee', this.value)"></div>
+                            <div class="cf-cat-row"><span class="cf-cat-name">Shopping</span><span class="cf-cat-pct" id="cf-catpct-shopping"></span><input class="cf-cat-amount" id="cf-cat-shopping" type="text" inputmode="decimal" placeholder="0" oninput="cfFormatAmount(this); cfSetCat('shopping', this.value)"></div>
+                            <div class="cf-cat-row"><span class="cf-cat-name">Transportation</span><span class="cf-cat-pct" id="cf-catpct-transport"></span><input class="cf-cat-amount" id="cf-cat-transport" type="text" inputmode="decimal" placeholder="0" oninput="cfFormatAmount(this); cfSetCat('transport', this.value)"></div>
+                            <div class="cf-cat-row"><span class="cf-cat-name">Bills</span><span class="cf-cat-pct" id="cf-catpct-bills"></span><input class="cf-cat-amount" id="cf-cat-bills" type="text" inputmode="decimal" placeholder="0" oninput="cfFormatAmount(this); cfSetCat('bills', this.value)"></div>
+                            <div class="cf-cat-row"><span class="cf-cat-name">Investment</span><span class="cf-cat-pct" id="cf-catpct-invest"></span><input class="cf-cat-amount" id="cf-cat-invest" type="text" inputmode="decimal" placeholder="0" oninput="cfFormatAmount(this); cfSetCat('invest', this.value)"></div>
+                            <div class="cf-cat-row"><span class="cf-cat-name">Family</span><span class="cf-cat-pct" id="cf-catpct-family"></span><input class="cf-cat-amount" id="cf-cat-family" type="text" inputmode="decimal" placeholder="0" oninput="cfFormatAmount(this); cfSetCat('family', this.value)"></div>
+                            <div class="cf-cat-row"><span class="cf-cat-name">Others</span><span class="cf-cat-pct" id="cf-catpct-other"></span><input class="cf-cat-amount" id="cf-cat-other" type="text" inputmode="decimal" placeholder="0" oninput="cfFormatAmount(this); cfSetCat('other', this.value)"></div>
                             <div class="cf-cat-total-row"><span class="cf-monthly-stat-label">Total expenses</span><span id="cf-monthly-expense-total" class="cf-cat-total-value">฿0</span></div>
                         </div>
                     </section>
@@ -4547,19 +4547,35 @@
     // localStorage (cashflow_* keys) and git history, so it can be restored.
     const CF_MONTHLY_KEY = 'cashflow_monthly_v2';
     const CF_MONTHLY_CATS = [
-        { key: 'foodbev', label: 'Food&Bev' },
+        { key: 'foodbev', label: 'Food & Beverage' },
         { key: 'coffee', label: 'Coffee' },
         { key: 'shopping', label: 'Shopping' },
         { key: 'transport', label: 'Transportation' },
         { key: 'bills', label: 'Bills' },
-        { key: 'invest', label: 'Invest' },
+        { key: 'invest', label: 'Investment' },
         { key: 'family', label: 'Family' },
-        { key: 'other', label: 'Other' }
+        { key: 'other', label: 'Others' }
     ];
 
     function cfMoney(value, digits=0) {
         const n = satNumber(value);
         return (n < 0 ? '-' : '') + '฿' + Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    }
+
+    // Live thousand separators while typing (10000 -> 10,000), cursor preserved.
+    function cfFormatAmount(input) {
+        let raw = String(input.value).replace(/[^0-9.]/g, '');
+        const firstDot = raw.indexOf('.');
+        if (firstDot !== -1) raw = raw.slice(0, firstDot + 1) + raw.slice(firstDot + 1).replace(/\./g, '');
+        if (!raw) { input.value = ''; return; }
+        const dot = raw.lastIndexOf('.');
+        const intPart = dot === -1 ? raw : raw.slice(0, dot);
+        const decPart = dot === -1 ? '' : raw.slice(dot);
+        const n = Number(intPart);
+        input.value = (Number.isFinite(n) ? n.toLocaleString('en-US') : intPart) + decPart;
+        const digitsAfter = input.value.slice(input.selectionStart).replace(/,/g, '').length;
+        const pos = input.value.length - digitsAfter;
+        input.setSelectionRange(pos, pos);
     }
 
     function cfMonthLabel(month) {
@@ -4648,7 +4664,7 @@
 
         const incomeInput = document.getElementById('cf-income-input');
         if (incomeInput && document.activeElement !== incomeInput) {
-            incomeInput.value = m.income > 0 ? String(m.income) : '';
+            incomeInput.value = m.income > 0 ? m.income.toLocaleString('en-US') : '';
         }
 
         const saveEl = document.getElementById('cf-monthly-save');
@@ -4684,7 +4700,7 @@
             const input = document.getElementById(`cf-cat-${c.key}`);
             if (input && document.activeElement !== input) {
                 const v = Math.max(0, satNumber(m.cats[c.key]));
-                input.value = v > 0 ? String(v) : '';
+                input.value = v > 0 ? v.toLocaleString('en-US') : '';
             }
             const pctEl = document.getElementById(`cf-catpct-${c.key}`);
             if (pctEl) pctEl.textContent = expense > 0 ? `${Math.round(Math.max(0, satNumber(m.cats[c.key])) / expense * 100)}%` : '';
