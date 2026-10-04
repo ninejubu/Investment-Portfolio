@@ -1260,7 +1260,20 @@
         .cf-monthly-cat .cf-btn { min-height:28px; padding:4px 8px; }
         .cf-table tbody tr:hover td { background:rgba(148,163,184,.05); }
         .cf-table td .cf-btn { min-height:26px; padding:3px 8px; }
-        .cf-monthly-add { margin-top:10px; }
+        .cf-monthly-nav { display:flex; align-items:center; gap:8px; }
+        .cf-monthly-nav .cf-btn { width:36px; min-height:36px; padding:7px 0; }
+        .cf-income-row { display:flex; align-items:center; gap:12px; }
+        .cf-income-row .cf-input { max-width:220px; }
+        .cf-cat-row { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px dashed rgba(71,85,105,.35); }
+        .cf-cat-name { flex:1; min-width:0; color:#E2E8F0; font-size:12px; font-weight:600; }
+        .cf-cat-pct { width:40px; flex:none; text-align:right; color:#64748B; font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; }
+        .cf-cat-amount { width:110px; flex:none; background:#0B1220; border:1px solid #475569; border-radius:6px; color:#F8FAFC; font-size:12px; padding:6px 8px; text-align:right; outline:none; font-variant-numeric:tabular-nums; }
+        .cf-cat-amount:focus { border-color:var(--cf-accent); }
+        .cf-cat-total-row { display:flex; align-items:center; justify-content:space-between; margin-top:10px; padding-top:10px; }
+        .cf-cat-total-value { color:#F8FAFC; font-size:14px; font-weight:750; font-variant-numeric:tabular-nums; }
+        body.theme-light .cf-cat-amount { background:#F8FAFC; border-color:#CBD5E1; color:#0F172A; }
+        body.theme-light .cf-cat-name, body.theme-light .cf-cat-total-value { color:#0F172A; }
+        body.theme-light .cf-cat-row { border-bottom-color:rgba(148,163,184,.4); }
         body.theme-light .cf-monthly-hero, body.theme-light .cf-monthly-stat { background:#FFFFFF; border-color:#CBD5E1; }
         body.theme-light .cf-monthly-hero-value, body.theme-light .cf-monthly-stat-value, body.theme-light .cf-monthly-cat input[type="text"] { color:#0F172A; }
         body.theme-light .cf-monthly-cat input[type="number"] { background:#F8FAFC; border-color:#CBD5E1; color:#0F172A; }
@@ -1999,10 +2012,10 @@
                             <div class="cf-kicker">Personal Cashflow</div>
                             <h3 class="text-xl font-bold text-white mt-1">Monthly Spending</h3>
                         </div>
-                        <div class="cf-toolbar-controls">
-                            <label class="cf-label mb-0">Tracking month
-                                <input id="cf-active-month" class="cf-input mt-1" type="month" onchange="cfSetActiveMonth(this.value)">
-                            </label>
+                        <div class="cf-monthly-nav">
+                            <button class="cf-btn" type="button" onclick="cfShiftMonth(-1)" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
+                            <input id="cf-active-month" class="cf-input" type="month" onchange="cfSetActiveMonth(this.value)">
+                            <button class="cf-btn" type="button" onclick="cfShiftMonth(1)" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
                         </div>
                     </div>
 
@@ -2012,7 +2025,7 @@
                         <div class="cf-panel-head">
                             <div>
                                 <h4 class="cf-title">Monthly Spending</h4>
-                                <div class="cf-subtle">Income minus expenses for the tracking month — how much you can save.</div>
+                                <div class="cf-subtle">Fill in each category's monthly amount — see how much you can save.</div>
                             </div>
                         </div>
                         <div class="cf-monthly-hero mb-3">
@@ -2027,31 +2040,21 @@
                             <div class="cf-monthly-stat"><div class="cf-monthly-stat-label">Expenses</div><div id="cf-monthly-expense" class="cf-monthly-stat-value cf-negative">฿0</div></div>
                             <div class="cf-monthly-stat"><div class="cf-monthly-stat-label">Saved</div><div id="cf-monthly-saved" class="cf-monthly-stat-value">฿0</div></div>
                         </div>
-                        <div class="cf-grid-2">
-                            <div>
-                                <div class="cf-section-label mb-2">Record income / expense</div>
-                                <form id="cf-monthly-form" class="cf-form-grid" onsubmit="cfAddMonthlyEntry(event)">
-                                    <div><label class="cf-label">Date</label><input id="cf-monthly-date" class="cf-input" type="date" required></div>
-                                    <div><label class="cf-label">Type</label><select id="cf-monthly-type" class="cf-select" required><option value="expense">Expense</option><option value="income">Income</option></select></div>
-                                    <div><label class="cf-label">Category</label><input id="cf-monthly-category" class="cf-input" type="text" list="cf-monthly-catl" placeholder="e.g. Food"></div>
-                                    <div><label class="cf-label">Amount</label><input id="cf-monthly-amount" class="cf-input cf-money-input" type="text" inputmode="decimal" required></div>
-                                    <div class="span-4"><label class="cf-label">Note</label><input id="cf-monthly-note" class="cf-input" type="text" placeholder="optional"></div>
-                                    <div class="span-4 flex justify-end"><button class="cf-btn primary" type="submit"><i class="fa-solid fa-plus"></i> Add Entry</button></div>
-                                </form>
-                                <datalist id="cf-monthly-catl"></datalist>
-                            </div>
-                            <div>
-                                <div class="cf-section-label mb-2">Expense categories</div>
-                                <div id="cf-monthly-cats"></div>
-                            </div>
+                        <div class="cf-income-row mb-3">
+                            <label class="cf-label" for="cf-income-input">Monthly income</label>
+                            <input id="cf-income-input" class="cf-input" type="text" inputmode="decimal" placeholder="0" oninput="cfSetIncome(this.value)">
                         </div>
-                        <div class="cf-section-label mb-2" style="margin-top:14px">Entries this month</div>
-                        <div class="cf-table-wrap">
-                            <table class="cf-table">
-                                <thead><tr><th>Date</th><th>Type</th><th>Category</th><th class="num">Amount</th><th>Note</th><th></th></tr></thead>
-                                <tbody id="cf-monthly-tbody"></tbody>
-                            </table>
-                            <div id="cf-monthly-empty" class="cf-empty">No entries for this month yet.</div>
+                        <div class="cf-section-label mb-2">Monthly expenses by category</div>
+                        <div id="cf-monthly-cats">
+                            <div class="cf-cat-row"><span class="cf-cat-name">Food&Bev</span><span class="cf-cat-pct" id="cf-catpct-foodbev"></span><input class="cf-cat-amount" id="cf-cat-foodbev" type="text" inputmode="decimal" placeholder="0" oninput="cfSetCat('foodbev', this.value)"></div>
+                            <div class="cf-cat-row"><span class="cf-cat-name">Coffee</span><span class="cf-cat-pct" id="cf-catpct-coffee"></span><input class="cf-cat-amount" id="cf-cat-coffee" type="text" inputmode="decimal" placeholder="0" oninput="cfSetCat('coffee', this.value)"></div>
+                            <div class="cf-cat-row"><span class="cf-cat-name">Shopping</span><span class="cf-cat-pct" id="cf-catpct-shopping"></span><input class="cf-cat-amount" id="cf-cat-shopping" type="text" inputmode="decimal" placeholder="0" oninput="cfSetCat('shopping', this.value)"></div>
+                            <div class="cf-cat-row"><span class="cf-cat-name">Transportation</span><span class="cf-cat-pct" id="cf-catpct-transport"></span><input class="cf-cat-amount" id="cf-cat-transport" type="text" inputmode="decimal" placeholder="0" oninput="cfSetCat('transport', this.value)"></div>
+                            <div class="cf-cat-row"><span class="cf-cat-name">Bills</span><span class="cf-cat-pct" id="cf-catpct-bills"></span><input class="cf-cat-amount" id="cf-cat-bills" type="text" inputmode="decimal" placeholder="0" oninput="cfSetCat('bills', this.value)"></div>
+                            <div class="cf-cat-row"><span class="cf-cat-name">Invest</span><span class="cf-cat-pct" id="cf-catpct-invest"></span><input class="cf-cat-amount" id="cf-cat-invest" type="text" inputmode="decimal" placeholder="0" oninput="cfSetCat('invest', this.value)"></div>
+                            <div class="cf-cat-row"><span class="cf-cat-name">Family</span><span class="cf-cat-pct" id="cf-catpct-family"></span><input class="cf-cat-amount" id="cf-cat-family" type="text" inputmode="decimal" placeholder="0" oninput="cfSetCat('family', this.value)"></div>
+                            <div class="cf-cat-row"><span class="cf-cat-name">Other</span><span class="cf-cat-pct" id="cf-catpct-other"></span><input class="cf-cat-amount" id="cf-cat-other" type="text" inputmode="decimal" placeholder="0" oninput="cfSetCat('other', this.value)"></div>
+                            <div class="cf-cat-total-row"><span class="cf-monthly-stat-label">Total expenses</span><span id="cf-monthly-expense-total" class="cf-cat-total-value">฿0</span></div>
                         </div>
                     </section>
                 </div>
@@ -2790,7 +2793,7 @@
             cards: [],
             wallets: [],
             events: [],
-            monthly: [],
+            monthly: {},
             activeMonth: localStorage.getItem('cashflow_active_month_v1') || new Date().toISOString().slice(0, 7)
         },
         computed: { stocks: {}, bonds: {}, crypto: {}, gold: {}, portfolio: {} },
@@ -4534,75 +4537,29 @@
     }
 
     // ════════════════════════════════════════════════════
-    //   MONTHLY SPENDING — income vs expenses → savings
+    //   MONTHLY SPENDING — per-category monthly amounts
     // ════════════════════════════════════════════════════
-    // The old Easybills / Debt-Float cashflow planner (credit cards, wallets,
-    // top-ups, payments, debt float, net position) was removed from the UI on
-    // 2026-10-03. Its data (settings / cards / wallets / events) is still
-    // persisted in localStorage under the cashflow_* keys and in git history,
-    // so it can be restored later. Monthly spending entries live in
-    // cfState().monthly and are saved under CF_MONTHLY_KEY.
-    const CF_MONTHLY_KEY = 'cashflow_monthly_v1';
-
-    function cfId(prefix) {
-        return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    }
+    // One amount per category per month (not per transaction). Data shape:
+    //   cfState().monthly = { 'YYYY-MM': { income: number, cats: { foodbev: n, ... } } }
+    // saved under CF_MONTHLY_KEY. The old Easybills / Debt-Float cashflow
+    // planner (credit cards, wallets, top-ups, payments, debt float, net
+    // position) was removed from the UI on 2026-10-03; its data is still in
+    // localStorage (cashflow_* keys) and git history, so it can be restored.
+    const CF_MONTHLY_KEY = 'cashflow_monthly_v2';
+    const CF_MONTHLY_CATS = [
+        { key: 'foodbev', label: 'Food&Bev' },
+        { key: 'coffee', label: 'Coffee' },
+        { key: 'shopping', label: 'Shopping' },
+        { key: 'transport', label: 'Transportation' },
+        { key: 'bills', label: 'Bills' },
+        { key: 'invest', label: 'Invest' },
+        { key: 'family', label: 'Family' },
+        { key: 'other', label: 'Other' }
+    ];
 
     function cfMoney(value, digits=0) {
         const n = satNumber(value);
         return (n < 0 ? '-' : '') + '฿' + Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
-    }
-
-    function cfNumberText(value, digits=2) {
-        const n = satNumber(value);
-        return n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
-    }
-
-    function cfNormalizeMonthlyEntry(raw={}) {
-        return {
-            id: String(raw.id || cfId('mon')),
-            date: toIsoDashboardDate(raw.date) || satToday(),
-            type: String(raw.type || 'expense').toLowerCase() === 'income' ? 'income' : 'expense',
-            category: String(raw.category || '').trim(),
-            amount: Math.max(0, satNumber(raw.amount)),
-            note: String(raw.note || ''),
-            createdAt: String(raw.createdAt || new Date().toISOString())
-        };
-    }
-
-    function cfSaveLocal() {
-        localStorage.setItem(CF_MONTHLY_KEY, JSON.stringify(cfState().monthly || []));
-        localStorage.setItem('cashflow_active_month_v1', cfState().activeMonth);
-    }
-
-    function cfLoadLocal() {
-        try {
-            cfState().monthly = (JSON.parse(localStorage.getItem(CF_MONTHLY_KEY) || '[]') || []).map(cfNormalizeMonthlyEntry);
-            const savedMonth = localStorage.getItem('cashflow_active_month_v1');
-            if (/^\d{4}-\d{2}$/.test(savedMonth || '')) cfState().activeMonth = savedMonth;
-        } catch (error) {
-            console.warn('Monthly spending data reset:', error.message);
-            cfState().monthly = [];
-        }
-    }
-
-    function cfMonthEntries(month=cfState().activeMonth) {
-        return (cfState().monthly || []).filter(e => String(e.date).slice(0, 7) === month);
-    }
-
-    function cfMonthlyTotals(month=cfState().activeMonth) {
-        const entries = cfMonthEntries(month);
-        const income = entries.filter(e => e.type === 'income').reduce((s, e) => s + e.amount, 0);
-        const expense = entries.filter(e => e.type === 'expense').reduce((s, e) => s + e.amount, 0);
-        return { income, expense, savings: income - expense, count: entries.length };
-    }
-
-    function cfMonthlyCategories(month=cfState().activeMonth) {
-        const map = new Map();
-        cfMonthEntries(month).filter(e => e.type === 'expense' && e.category).forEach(e => {
-            map.set(e.category, (map.get(e.category) || 0) + e.amount);
-        });
-        return [...map.entries()].sort((a, b) => b[1] - a[1]);
     }
 
     function cfMonthLabel(month) {
@@ -4611,107 +4568,64 @@
         return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     }
 
-    function cfRenderMonthly() {
-        const month = cfState().activeMonth;
-        const monthInput = document.getElementById('cf-active-month');
-        if (monthInput && monthInput.value !== month) monthInput.value = month;
-
-        const { income, expense, savings, count } = cfMonthlyTotals(month);
-
-        const saveEl = document.getElementById('cf-monthly-save');
-        const verdictEl = document.getElementById('cf-monthly-verdict');
-        const incomeEl = document.getElementById('cf-monthly-income');
-        const expenseEl = document.getElementById('cf-monthly-expense');
-        const savedEl = document.getElementById('cf-monthly-saved');
-
-        if (saveEl) {
-            saveEl.textContent = cfMoney(savings);
-            saveEl.classList.toggle('cf-positive', savings >= 0);
-            saveEl.classList.toggle('cf-negative', savings < 0);
-        }
-        if (incomeEl) incomeEl.textContent = cfMoney(income);
-        if (expenseEl) expenseEl.textContent = cfMoney(expense);
-        if (savedEl) {
-            savedEl.textContent = cfMoney(savings);
-            savedEl.classList.toggle('cf-positive', savings >= 0);
-            savedEl.classList.toggle('cf-negative', savings < 0);
-        }
-        if (verdictEl) {
-            let text;
-            if (!count) text = 'No entries yet — add your income and expenses.';
-            else if (savings > 0) text = `Saving ${cfMoney(savings)} (${Math.round(savings / income * 100)}% of income)`;
-            else if (savings === 0) text = 'Income and expenses are even.';
-            else text = `Spending exceeds income by ${cfMoney(-savings)}.`;
-            verdictEl.textContent = text;
-        }
-
-        const catsEl = document.getElementById('cf-monthly-cats');
-        const cats = cfMonthlyCategories(month);
-        if (catsEl) {
-            if (!cats.length) {
-                catsEl.innerHTML = '<div class="cf-empty">No expense categories yet.</div>';
-            } else {
-                catsEl.innerHTML = cats.map(([cat, total]) => {
-                    const pct = expense > 0 ? Math.round(total / expense * 100) : 0;
-                    return `<div class="cf-monthly-cat">
-                        <span class="cf-monthly-cat-name">${satEsc(cat)}</span>
-                        <div class="cf-monthly-cat-total">${cfMoney(total)} · ${pct}%</div>
-                    </div>`;
-                }).join('');
-            }
-        }
-
-        const datalist = document.getElementById('cf-monthly-catl');
-        if (datalist) {
-            const allCats = new Set();
-            (cfState().monthly || []).forEach(e => { if (e.category) allCats.add(e.category); });
-            datalist.innerHTML = [...allCats].sort().map(c => `<option value="${satEsc(c)}">`).join('');
-        }
-
-        const tbody = document.getElementById('cf-monthly-tbody');
-        const emptyEl = document.getElementById('cf-monthly-empty');
-        const entries = cfMonthEntries(month).slice().sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
-        if (tbody) {
-            tbody.innerHTML = entries.map(e => {
-                const isIncome = e.type === 'income';
-                const sign = isIncome ? '+' : '−';
-                return `<tr>
-                    <td class="cf-monthly-date">${satEsc(e.date)}</td>
-                    <td class="cf-monthly-type ${isIncome ? 'cf-positive' : 'cf-negative'}">${isIncome ? 'Income' : 'Expense'}</td>
-                    <td>${satEsc(e.category) || '—'}</td>
-                    <td class="num ${isIncome ? 'cf-positive' : 'cf-negative'}">${sign}${cfMoney(e.amount)}</td>
-                    <td class="cf-monthly-note">${satEsc(e.note) || ''}</td>
-                    <td><button class="cf-btn danger" type="button" onclick="cfDeleteMonthlyEntry('${e.id}')">✕</button></td>
-                </tr>`;
-            }).join('');
-        }
-        if (emptyEl) emptyEl.style.display = entries.length ? 'none' : '';
+    function cfShiftMonth(delta) {
+        const parts = String(cfState().activeMonth || '').split('-');
+        if (parts.length !== 2) return;
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1 + delta, 1);
+        cfSetActiveMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
     }
 
-    function cfAddMonthlyEntry(event) {
-        if (event) event.preventDefault();
-        const date = document.getElementById('cf-monthly-date')?.value || satToday();
-        const type = document.getElementById('cf-monthly-type')?.value || 'expense';
-        const category = (document.getElementById('cf-monthly-category')?.value || '').trim();
-        const amount = satNumber(document.getElementById('cf-monthly-amount')?.value);
-        const note = (document.getElementById('cf-monthly-note')?.value || '').trim();
-        if (amount <= 0) { document.getElementById('cf-monthly-amount')?.focus(); return; }
-        cfState().monthly = cfState().monthly || [];
-        cfState().monthly.push(cfNormalizeMonthlyEntry({ date, type, category, amount, note }));
-        if (/^\d{4}-\d{2}$/.test(String(date).slice(0, 7))) cfState().activeMonth = String(date).slice(0, 7);
+    function cfMonthData(month) {
+        const data = cfState().monthly || {};
+        if (!data[month]) data[month] = { income: 0, cats: {} };
+        return data[month];
+    }
+
+    function cfSaveLocal() {
+        localStorage.setItem(CF_MONTHLY_KEY, JSON.stringify(cfState().monthly || {}));
+        localStorage.setItem('cashflow_active_month_v1', cfState().activeMonth);
+    }
+
+    function cfLoadLocal() {
+        try {
+            const raw = JSON.parse(localStorage.getItem(CF_MONTHLY_KEY) || '{}') || {};
+            const clean = {};
+            Object.keys(raw).forEach(month => {
+                if (!/^\d{4}-\d{2}$/.test(month)) return;
+                const entry = raw[month] || {};
+                clean[month] = {
+                    income: Math.max(0, satNumber(entry.income)),
+                    cats: CF_MONTHLY_CATS.reduce((acc, c) => {
+                        acc[c.key] = Math.max(0, satNumber(entry.cats ? entry.cats[c.key] : 0));
+                        return acc;
+                    }, {})
+                };
+            });
+            cfState().monthly = clean;
+            const savedMonth = localStorage.getItem('cashflow_active_month_v1');
+            if (/^\d{4}-\d{2}$/.test(savedMonth || '')) cfState().activeMonth = savedMonth;
+        } catch (error) {
+            console.warn('Monthly spending data reset:', error.message);
+            cfState().monthly = {};
+        }
+    }
+
+    function cfMonthlyTotals(month=cfState().activeMonth) {
+        const m = (cfState().monthly || {})[month] || { income: 0, cats: {} };
+        const expense = CF_MONTHLY_CATS.reduce((s, c) => s + Math.max(0, satNumber(m.cats[c.key])), 0);
+        const income = Math.max(0, satNumber(m.income));
+        return { income, expense, savings: income - expense };
+    }
+
+    function cfSetIncome(value) {
+        cfMonthData(cfState().activeMonth).income = Math.max(0, satNumber(value));
         cfSaveLocal();
         cfRenderMonthly();
-        const catInput = document.getElementById('cf-monthly-category');
-        const amtInput = document.getElementById('cf-monthly-amount');
-        const noteInput = document.getElementById('cf-monthly-note');
-        if (catInput) catInput.value = '';
-        if (amtInput) amtInput.value = '';
-        if (noteInput) noteInput.value = '';
-        amtInput?.focus();
     }
 
-    function cfDeleteMonthlyEntry(id) {
-        cfState().monthly = (cfState().monthly || []).filter(e => e.id !== id);
+    function cfSetCat(key, value) {
+        const m = cfMonthData(cfState().activeMonth);
+        m.cats[key] = Math.max(0, satNumber(value));
         cfSaveLocal();
         cfRenderMonthly();
     }
@@ -4722,6 +4636,59 @@
             cfSaveLocal();
             cfRenderMonthly();
         }
+    }
+
+    function cfRenderMonthly() {
+        const month = cfState().activeMonth;
+        const m = (cfState().monthly || {})[month] || { income: 0, cats: {} };
+        const { income, expense, savings } = cfMonthlyTotals(month);
+
+        const monthInput = document.getElementById('cf-active-month');
+        if (monthInput && monthInput.value !== month) monthInput.value = month;
+
+        const incomeInput = document.getElementById('cf-income-input');
+        if (incomeInput && document.activeElement !== incomeInput) {
+            incomeInput.value = m.income > 0 ? String(m.income) : '';
+        }
+
+        const saveEl = document.getElementById('cf-monthly-save');
+        const verdictEl = document.getElementById('cf-monthly-verdict');
+        const incomeEl = document.getElementById('cf-monthly-income');
+        const expenseEl = document.getElementById('cf-monthly-expense');
+        const savedEl = document.getElementById('cf-monthly-saved');
+        const totalEl = document.getElementById('cf-monthly-expense-total');
+
+        if (saveEl) {
+            saveEl.textContent = cfMoney(savings);
+            saveEl.classList.toggle('cf-positive', savings >= 0);
+            saveEl.classList.toggle('cf-negative', savings < 0);
+        }
+        if (incomeEl) incomeEl.textContent = cfMoney(income);
+        if (expenseEl) expenseEl.textContent = cfMoney(expense);
+        if (totalEl) totalEl.textContent = cfMoney(expense);
+        if (savedEl) {
+            savedEl.textContent = cfMoney(savings);
+            savedEl.classList.toggle('cf-positive', savings >= 0);
+            savedEl.classList.toggle('cf-negative', savings < 0);
+        }
+        if (verdictEl) {
+            let text;
+            if (!income && !expense) text = 'Fill in your income and category amounts.';
+            else if (savings > 0) text = income > 0 ? `Saving ${cfMoney(savings)} (${Math.round(savings / income * 100)}% of income)` : `Saving ${cfMoney(savings)}`;
+            else if (savings === 0) text = 'Income and expenses are even.';
+            else text = `Spending exceeds income by ${cfMoney(-savings)}.`;
+            verdictEl.textContent = text;
+        }
+
+        CF_MONTHLY_CATS.forEach(c => {
+            const input = document.getElementById(`cf-cat-${c.key}`);
+            if (input && document.activeElement !== input) {
+                const v = Math.max(0, satNumber(m.cats[c.key]));
+                input.value = v > 0 ? String(v) : '';
+            }
+            const pctEl = document.getElementById(`cf-catpct-${c.key}`);
+            if (pctEl) pctEl.textContent = expense > 0 ? `${Math.round(Math.max(0, satNumber(m.cats[c.key])) / expense * 100)}%` : '';
+        });
     }
 
     function cfRenderAll() {
