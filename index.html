@@ -1241,6 +1241,32 @@
             color:#94A3B8; font-size:10px; font-weight:800; letter-spacing:.12em;
             text-transform:uppercase; padding:3px 1px 0;
         }
+        /* ── Monthly spending tracker ── */
+        .cf-monthly-hero { display:flex; align-items:center; justify-content:space-between; gap:14px; background:#0F172A; border:1px solid #334155; border-radius:10px; padding:14px 16px; }
+        .cf-monthly-hero-value { font-size:26px; font-weight:800; color:#F8FAFC; font-variant-numeric:tabular-nums; line-height:1.1; }
+        .cf-monthly-hero-verdict { font-size:11px; font-weight:600; color:#94A3B8; margin-top:3px; }
+        .cf-monthly-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+        .cf-monthly-stat { background:#0F172A; border:1px solid #334155; border-radius:8px; padding:11px 13px; }
+        .cf-monthly-stat-label { color:#64748B; font-size:9px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
+        .cf-monthly-stat-value { color:#F8FAFC; font-size:16px; font-weight:750; margin-top:4px; font-variant-numeric:tabular-nums; }
+        .cf-monthly-cat { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px dashed rgba(71,85,105,.35); }
+        .cf-monthly-cat:last-child { border-bottom:none; }
+        .cf-monthly-cat-name { flex:1; min-width:0; color:#E2E8F0; font-size:11px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .cf-monthly-cat input[type="text"] { flex:1; min-width:50px; background:transparent; border:none; border-bottom:1px solid #334155; color:#F8FAFC; font-size:11px; padding:3px 0; outline:none; }
+        .cf-monthly-cat input[type="text"]:focus { border-bottom-color:var(--cf-accent); }
+        .cf-monthly-cat input[type="number"] { width:92px; background:#0B1220; border:1px solid #475569; border-radius:6px; color:#F8FAFC; font-size:11px; padding:5px 7px; text-align:right; outline:none; font-variant-numeric:tabular-nums; }
+        .cf-monthly-cat input[type="number"]:focus { border-color:var(--cf-accent); }
+        .cf-monthly-cat-total { width:96px; flex:none; text-align:right; color:#94A3B8; font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; }
+        .cf-monthly-cat .cf-btn { min-height:28px; padding:4px 8px; }
+        .cf-table tbody tr:hover td { background:rgba(148,163,184,.05); }
+        .cf-table td .cf-btn { min-height:26px; padding:3px 8px; }
+        .cf-monthly-add { margin-top:10px; }
+        body.theme-light .cf-monthly-hero, body.theme-light .cf-monthly-stat { background:#FFFFFF; border-color:#CBD5E1; }
+        body.theme-light .cf-monthly-hero-value, body.theme-light .cf-monthly-stat-value, body.theme-light .cf-monthly-cat input[type="text"] { color:#0F172A; }
+        body.theme-light .cf-monthly-cat input[type="number"] { background:#F8FAFC; border-color:#CBD5E1; color:#0F172A; }
+        body.theme-light .cf-monthly-cat { border-bottom-color:rgba(148,163,184,.4); }
+        body.theme-light .cf-monthly-cat input[type="text"] { border-bottom-color:#CBD5E1; }
+        @media (max-width:640px) { .cf-monthly-grid { grid-template-columns:1fr; } }
         .cf-calendar-wrap { overflow:hidden; border:1px solid #273449; border-radius:8px; background:#0B1220; }
         .cf-calendar { width:100%; min-width:0; }
         .cf-calendar-row {
@@ -1971,121 +1997,61 @@
                     <div class="cf-toolbar">
                         <div>
                             <div class="cf-kicker">Personal Cashflow</div>
-                            <h3 class="text-xl font-bold text-white mt-1">Easybills Float Tracker</h3>
+                            <h3 class="text-xl font-bold text-white mt-1">Monthly Spending</h3>
                         </div>
                         <div class="cf-toolbar-controls">
                             <label class="cf-label mb-0">Tracking month
                                 <input id="cf-active-month" class="cf-input mt-1" type="month" onchange="cfSetActiveMonth(this.value)">
                             </label>
-                            <button class="cf-btn" type="button" onclick="cfPullFromSheets()"><i class="fa-solid fa-cloud-arrow-down"></i> Pull</button>
-                            <button class="cf-btn primary" type="button" onclick="cfPushToSheets()"><i class="fa-solid fa-cloud-arrow-up"></i> Save</button>
                         </div>
                     </div>
 
-                    <!-- ── Net Position Hero ───────────────────────── -->
-                    <div class="cf-net-hero">
-                        <div class="cf-net-hero-main">
-                            <div class="cf-net-hero-label">If you paid off all debt right now</div>
-                            <div id="cf-net-position" class="cf-net-hero-value">฿0</div>
-                            <div id="cf-net-verdict" class="cf-net-hero-verdict"></div>
-                        </div>
-                        <div class="cf-net-hero-breakdown">
-                            <div class="cf-net-row">
-                                <span class="cf-net-row-label">Cash on hand</span>
-                                <div class="cf-net-row-right">
-                                    <input id="cf-setting-bank" class="cf-net-cash-input cf-money-input" type="text" inputmode="decimal" onchange="cfSaveBankCash(this.value)" placeholder="0">
-                                    <button class="cf-net-apply" type="button" onclick="cfSaveBankCash(document.getElementById('cf-setting-bank').value)"><i class="fa-solid fa-check"></i></button>
-                                </div>
-                            </div>
-                            <div class="cf-net-row cf-net-divider">
-                                <span class="cf-net-row-label">Total credit card debt</span>
-                                <span id="cf-card-debt" class="cf-net-row-value cf-negative">฿0</span>
-                            </div>
-                            <div class="cf-net-row cf-net-sub">
-                                <span class="cf-net-row-label cf-subtle">· Easybills (Family Plus + JCB)</span>
-                                <span id="cf-easybills-debt" class="cf-net-row-value cf-subtle">฿0</span>
-                            </div>
-                            <div class="cf-net-row cf-net-sub">
-                                <span class="cf-net-row-label cf-subtle">· Other credit cards (manual)</span>
-                                <div class="cf-net-row-right">
-                                    <input id="cf-setting-other-debt" class="cf-net-cash-input cf-money-input" style="width:100px;font-size:12px;padding:3px 8px" type="text" inputmode="decimal" onchange="cfSaveOtherDebt(this.value)" placeholder="0">
-                                </div>
-                            </div>
-                            <div class="cf-net-row cf-net-sub">
-                                <span class="cf-net-row-label cf-subtle">· Cash still sitting in wallets</span>
-                                <span id="cf-wallet-cash" class="cf-net-row-value cf-subtle">฿0</span>
-                            </div>
-                            <div class="cf-net-row cf-net-sub">
-                                <span class="cf-net-row-label cf-subtle">· Cycle completed this month</span>
-                                <span id="cf-cycle-progress-total" class="cf-net-row-value cf-subtle">0%</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ── Easybills Wallet Progress ──────────────── -->
-                    <div class="cf-section-label">Easybills+ · cash rotation</div>
+                    <!-- ── Monthly spending ───────────────────────── -->
+                    <div class="cf-section-label">Monthly spending · income vs expenses</div>
                     <section class="cf-panel">
                         <div class="cf-panel-head">
-                            <div><h4 class="cf-title">Easybills Wallet Progress</h4></div>
-                        </div>
-                        <div id="cf-wallet-grid" class="cf-wallet-grid"></div>
-                    </section>
-
-                    <!-- ── Record Top-up / Pay Down Debt ──────────── -->
-                    <div class="cf-grid-2">
-                        <section class="cf-panel">
-                            <div class="cf-panel-head"><div><h4 class="cf-title">Record Top-up</h4></div></div>
-                            <form id="cf-topup-form" class="cf-form-grid" onsubmit="cfAddTopup(event)">
-                                <div><label class="cf-label">Date</label><input id="cf-topup-date" class="cf-input" type="date" required></div>
-                                <div><label class="cf-label">Credit card</label><select id="cf-topup-card" class="cf-select" required></select></div>
-                                <div><label class="cf-label">Wallet</label><select id="cf-topup-wallet" class="cf-select" required></select></div>
-                                <div><label class="cf-label">Wallet amount</label><input id="cf-topup-amount" class="cf-input cf-money-input" type="text" inputmode="decimal" value="10,000" required></div>
-                                <div class="span-4 flex justify-end"><button class="cf-btn primary" type="submit"><i class="fa-solid fa-plus"></i> Record Top-up</button></div>
-                            </form>
-                        </section>
-
-                        <section class="cf-panel">
-                            <div class="cf-panel-head"><div><h4 class="cf-title">Pay Down Easybills Debt</h4></div></div>
-                            <form id="cf-payment-form" class="cf-form-grid" onsubmit="cfAddPayment(event)">
-                                <div><label class="cf-label">Date</label><input id="cf-payment-date" class="cf-input" type="date" required></div>
-                                <div><label class="cf-label">Credit card</label><select id="cf-payment-card" class="cf-select" required onchange="cfUpdatePaymentCardMeta()"></select></div>
-                                <div class="span-2"><label class="cf-label">Amount</label><input id="cf-payment-amount" class="cf-input cf-money-input" type="text" inputmode="decimal" required></div>
-                                <div class="span-4"><span id="cf-payment-outstanding" class="cf-subtle" style="font-size:11px"></span></div>
-                                <div class="span-4 flex justify-end"><button class="cf-btn primary" type="submit"><i class="fa-solid fa-money-bill-transfer"></i> Record Payment</button></div>
-                            </form>
-                        </section>
-                    </div>
-
-                    <!-- ── Credit Card Timeline ───────────────────── -->
-                    <div class="cf-section-label">Credit cards · statement & payment timeline</div>
-                    <section class="cf-panel">
-                        <div class="cf-panel-head">
-                            <div><h4 class="cf-title">Credit Card Timeline</h4></div>
-                            <div class="cf-calendar-legend">
-                                <span><i class="cf-calendar-dot"></i> STATE</span>
-                                <span><i class="cf-calendar-dot due"></i> PAY</span>
-                                <span>Line = billing range · drag to change day</span>
-                                <button id="cf-toggle-all-banks" class="cf-calendar-toggle" type="button" onclick="cfToggleAllTimelineBanks()"></button>
+                            <div>
+                                <h4 class="cf-title">Monthly Spending</h4>
+                                <div class="cf-subtle">Income minus expenses for the tracking month — how much you can save.</div>
                             </div>
                         </div>
-                        <div class="cf-calendar-wrap">
-                            <div id="cf-card-timeline" class="cf-calendar"></div>
-                        </div>
-                    </section>
-
-                    <!-- ── Activity log (collapsible) ─────────────── -->
-                    <section class="cf-panel">
-                        <div class="cf-panel-head">
-                            <div><h4 class="cf-title">Cashflow Activity</h4></div>
-                            <button type="button" class="cf-btn" style="font-size:10px;padding:4px 10px" onclick="cfToggleActivity()">
-                                <span id="cf-activity-toggle-label">Show</span>
-                            </button>
-                        </div>
-                        <div id="cf-activity-body" style="display:none">
-                            <div class="cf-table-wrap cf-cycle-log">
-                                <table class="cf-table"><thead><tr><th>Date</th><th>Type</th><th>Card / Wallet</th><th class="num">Cash change</th><th class="num">Debt change</th><th>Note</th><th></th></tr></thead><tbody id="cf-event-tbody"></tbody></table>
+                        <div class="cf-monthly-hero mb-3">
+                            <div>
+                                <div class="cf-monthly-stat-label">You can save this month</div>
+                                <div id="cf-monthly-save" class="cf-monthly-hero-value">฿0</div>
                             </div>
-                            <div id="cf-event-empty" class="cf-empty">No cashflow activity yet.</div>
+                            <div id="cf-monthly-verdict" class="cf-monthly-hero-verdict"></div>
+                        </div>
+                        <div class="cf-monthly-grid mb-3">
+                            <div class="cf-monthly-stat"><div class="cf-monthly-stat-label">Income</div><div id="cf-monthly-income" class="cf-monthly-stat-value cf-positive">฿0</div></div>
+                            <div class="cf-monthly-stat"><div class="cf-monthly-stat-label">Expenses</div><div id="cf-monthly-expense" class="cf-monthly-stat-value cf-negative">฿0</div></div>
+                            <div class="cf-monthly-stat"><div class="cf-monthly-stat-label">Saved</div><div id="cf-monthly-saved" class="cf-monthly-stat-value">฿0</div></div>
+                        </div>
+                        <div class="cf-grid-2">
+                            <div>
+                                <div class="cf-section-label mb-2">Record income / expense</div>
+                                <form id="cf-monthly-form" class="cf-form-grid" onsubmit="cfAddMonthlyEntry(event)">
+                                    <div><label class="cf-label">Date</label><input id="cf-monthly-date" class="cf-input" type="date" required></div>
+                                    <div><label class="cf-label">Type</label><select id="cf-monthly-type" class="cf-select" required><option value="expense">Expense</option><option value="income">Income</option></select></div>
+                                    <div><label class="cf-label">Category</label><input id="cf-monthly-category" class="cf-input" type="text" list="cf-monthly-catl" placeholder="e.g. Food"></div>
+                                    <div><label class="cf-label">Amount</label><input id="cf-monthly-amount" class="cf-input cf-money-input" type="text" inputmode="decimal" required></div>
+                                    <div class="span-4"><label class="cf-label">Note</label><input id="cf-monthly-note" class="cf-input" type="text" placeholder="optional"></div>
+                                    <div class="span-4 flex justify-end"><button class="cf-btn primary" type="submit"><i class="fa-solid fa-plus"></i> Add Entry</button></div>
+                                </form>
+                                <datalist id="cf-monthly-catl"></datalist>
+                            </div>
+                            <div>
+                                <div class="cf-section-label mb-2">Expense categories</div>
+                                <div id="cf-monthly-cats"></div>
+                            </div>
+                        </div>
+                        <div class="cf-section-label mb-2" style="margin-top:14px">Entries this month</div>
+                        <div class="cf-table-wrap">
+                            <table class="cf-table">
+                                <thead><tr><th>Date</th><th>Type</th><th>Category</th><th class="num">Amount</th><th>Note</th><th></th></tr></thead>
+                                <tbody id="cf-monthly-tbody"></tbody>
+                            </table>
+                            <div id="cf-monthly-empty" class="cf-empty">No entries for this month yet.</div>
                         </div>
                     </section>
                 </div>
@@ -2824,6 +2790,7 @@
             cards: [],
             wallets: [],
             events: [],
+            monthly: [],
             activeMonth: localStorage.getItem('cashflow_active_month_v1') || new Date().toISOString().slice(0, 7)
         },
         computed: { stocks: {}, bonds: {}, crypto: {}, gold: {}, portfolio: {} },
@@ -4567,930 +4534,212 @@
     }
 
     // ════════════════════════════════════════════════════
-    //   CASHFLOW PLANNER — Debt Float & Easybills
+    //   MONTHLY SPENDING — income vs expenses → savings
     // ════════════════════════════════════════════════════
-    const CF_SETTINGS_KEY = 'cashflow_settings_v1';
-    const CF_CARDS_KEY = 'cashflow_cards_v1';
-    const CF_WALLETS_KEY = 'cashflow_wallets_v1';
-    const CF_EVENTS_KEY = 'cashflow_events_v1';
-    const CF_COLLAPSED_BANKS_KEY = 'cashflow_collapsed_banks_v1';
-    const CF_SEED_RECOVERY_KEY = 'cashflow_seed_recovery_v2';
-    const CF_SEED_RECOVERY_VERSION = '2026-06-20';
-    let cfTimelineEditor = null;
-    let cfPushTimer = null;
-    let cfSeedRecoveryPending = false;
+    // The old Easybills / Debt-Float cashflow planner (credit cards, wallets,
+    // top-ups, payments, debt float, net position) was removed from the UI on
+    // 2026-10-03. Its data (settings / cards / wallets / events) is still
+    // persisted in localStorage under the cashflow_* keys and in git history,
+    // so it can be restored later. Monthly spending entries live in
+    // cfState().monthly and are saved under CF_MONTHLY_KEY.
+    const CF_MONTHLY_KEY = 'cashflow_monthly_v1';
 
     function cfId(prefix) {
         return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     }
 
-    function cfDefaultWallets() {
-        return [1,2,3,4].map(index => ({
-            id: `wallet_${index}`,
-            name: `Wallet ${index}`,
-            balance: 0,
-            capacity: 50000,
-            active: true,
-            updatedAt: ''
-        }));
+    function cfMoney(value, digits=0) {
+        const n = satNumber(value);
+        return (n < 0 ? '-' : '') + '฿' + Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
     }
 
-    function cfNormalizeSettings(raw={}) {
-        const valueOr = (value, fallback) => value === '' || value === null || value === undefined ? fallback : satNumber(value);
+    function cfNumberText(value, digits=2) {
+        const n = satNumber(value);
+        return n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    }
+
+    function cfNormalizeMonthlyEntry(raw={}) {
         return {
-            bankCash: Math.max(0, satNumber(raw.bankCash)),
-            monthlyIncome: Math.max(0, satNumber(raw.monthlyIncome)),
-            monthlySpending: Math.max(0, satNumber(raw.monthlySpending)),
-            otherReserved: Math.max(0, satNumber(raw.otherReserved)), // other credit card debt not tracked via Easybills cards
-            revolvingTarget: Math.max(0, valueOr(raw.revolvingTarget, 200000)),
-            walletCapacity: Math.max(0, valueOr(raw.walletCapacity, 50000)),
-            feeFixed: 10,
-            feePercent: 0.15
-        };
-    }
-
-    function cfNormalizeCard(raw={}) {
-        return {
-            id: String(raw.id || cfId('card')),
-            issuer: String(raw.issuer || ''),
-            name: String(raw.name || ''),
-            limitGroup: String(raw.limitGroup || raw.id || ''),
-            sortOrder: Math.max(0, Math.round(satNumber(raw.sortOrder))),
-            statementDay: Math.min(31, Math.max(1, Math.round(satNumber(raw.statementDay) || 1))),
-            dueDay: Math.min(31, Math.max(1, Math.round(satNumber(raw.dueDay) || 1))),
-            creditLimit: Math.max(0, satNumber(raw.creditLimit)),
-            outstanding: Math.max(0, satNumber(raw.outstanding)),
-            rollover: raw.rollover === true || String(raw.rollover).toLowerCase() === 'true',
-            active: raw.active === false || String(raw.active).toLowerCase() === 'false' ? false : true,
-            updatedAt: String(raw.updatedAt || '')
-        };
-    }
-
-    function cfMergeLocalCardCatalog() {
-        const catalog = window.CASHFLOW_LOCAL_SEED?.cards;
-        if (!Array.isArray(catalog) || !catalog.length) return false;
-        const retiredIds = new Set(window.CASHFLOW_LOCAL_SEED?.retiredCardIds || []);
-        const retiredNames = new Set(['YCA', 'YCA-A', 'CASHPLUS', 'KAST', 'ETHER']);
-        const beforeRetireCount = cfState().cards.length;
-        cfState().cards = cfState().cards.filter(card =>
-            !retiredIds.has(card.id) && !retiredNames.has(String(card.name || '').trim().toUpperCase())
-        );
-        const catalogVersion = Math.max(0, Math.round(satNumber(window.CASHFLOW_LOCAL_SEED?.catalogVersion)));
-        const appliedVersion = Math.max(0, Math.round(satNumber(localStorage.getItem('cashflow_card_catalog_version'))));
-        const refreshMetadata = catalogVersion > appliedVersion;
-        const existingMap = new Map(cfState().cards.map(card => [card.id, card]));
-        let changed = cfState().cards.length !== beforeRetireCount;
-        catalog.forEach(raw => {
-            const card = cfNormalizeCard(raw);
-            const existing = existingMap.get(card.id);
-            if (existing) {
-                if (!refreshMetadata) return;
-                Object.assign(existing, {
-                    issuer:card.issuer, name:card.name, limitGroup:card.limitGroup,
-                    sortOrder:card.sortOrder, statementDay:card.statementDay,
-                    dueDay:card.dueDay, creditLimit:card.creditLimit
-                });
-                changed = true;
-            } else {
-                cfState().cards.push(card);
-                existingMap.set(card.id, card);
-                changed = true;
-            }
-        });
-        if (catalogVersion) localStorage.setItem('cashflow_card_catalog_version', String(catalogVersion));
-        return changed;
-    }
-
-    function cfNormalizeWallet(raw={}, index=0) {
-        const transferredMonths = Array.isArray(raw.transferredMonths)
-            ? raw.transferredMonths
-            : String(raw.transferredMonths || '').split(',').map(value => value.trim()).filter(Boolean);
-        return {
-            id: String(raw.id || `wallet_${index + 1}`),
-            name: String(raw.name || `Wallet ${index + 1}`),
-            balance: Math.max(0, satNumber(raw.balance)),
-            capacity: Math.max(0, satNumber(raw.capacity) || cfState().settings.walletCapacity || 50000),
-            transferredMonths: [...new Set(transferredMonths.filter(value => /^\d{4}-\d{2}$/.test(value)))],
-            transferTrackingInitialized: raw.transferTrackingInitialized === true || String(raw.transferTrackingInitialized).toLowerCase() === 'true',
-            active: raw.active === false || String(raw.active).toLowerCase() === 'false' ? false : true,
-            updatedAt: String(raw.updatedAt || '')
-        };
-    }
-
-    function cfNormalizeEvent(raw={}) {
-        return {
-            id: String(raw.id || cfId('event')),
+            id: String(raw.id || cfId('mon')),
             date: toIsoDashboardDate(raw.date) || satToday(),
-            type: String(raw.type || '').toLowerCase(),
-            cardId: String(raw.cardId || ''),
-            walletId: String(raw.walletId || ''),
-            amount: satNumber(raw.amount),
-            fee: satNumber(raw.fee),
-            chargedAmount: satNumber(raw.chargedAmount),
-            transferAmount: satNumber(raw.transferAmount),
-            cashDelta: satNumber(raw.cashDelta),
-            debtDelta: satNumber(raw.debtDelta),
-            walletDelta: satNumber(raw.walletDelta),
+            type: String(raw.type || 'expense').toLowerCase() === 'income' ? 'income' : 'expense',
+            category: String(raw.category || '').trim(),
+            amount: Math.max(0, satNumber(raw.amount)),
             note: String(raw.note || ''),
             createdAt: String(raw.createdAt || new Date().toISOString())
         };
     }
 
-    function cfMoney(value, digits=0) {
-        return '฿' + satNumber(value).toLocaleString('en-US', {
-            minimumFractionDigits: digits,
-            maximumFractionDigits: digits
-        });
-    }
-
-    function cfNumberText(value, digits=2) {
-        const number = satNumber(value);
-        return number.toLocaleString('en-US', {
-            minimumFractionDigits: Number.isInteger(number) ? 0 : digits,
-            maximumFractionDigits: digits
-        });
-    }
-
-    function cfPrepareMoneyInputs() {
-        document.querySelectorAll('#cf-dashboard-view .cf-money-input').forEach(input => {
-            input.onfocus = () => { input.value = input.value.replace(/,/g, ''); input.select(); };
-            input.onblur = () => { input.value = cfNumberText(input.value); };
-            input.onkeydown = event => {
-                if (event.key === 'Enter' && input.form?.id !== 'cf-settings-form') {
-                    event.preventDefault();
-                    input.blur();
-                }
-            };
-            if (document.activeElement !== input) input.value = cfNumberText(input.value);
-        });
-    }
-
-    function cfPreviousMonth(month=cfState().activeMonth) {
-        const [year, monthNumber] = String(month).split('-').map(Number);
-        if (!year || !monthNumber) return '';
-        const date = new Date(year, monthNumber - 2, 1);
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-    }
-
-    function cfLatestEventMonth() {
-        let latest = '';
-        (cfState().events || []).forEach(event => {
-            const m = String(event.date || '').slice(0, 7);
-            if (/^\d{4}-\d{2}$/.test(m) && m > latest) latest = m;
-        });
-        return latest;
-    }
-
-    function cfMonthLabel(month) {
-        const [year, monthNumber] = String(month).split('-').map(Number);
-        return new Date(year, monthNumber - 1, 1).toLocaleDateString('en-US', { month:'short', year:'numeric' });
-    }
-
-    function cfMigrateWalletTransferTracking() {
-        const activeMonth = cfState().activeMonth;
-        const previousMonth = cfPreviousMonth(activeMonth);
-        cfState().wallets.forEach(wallet => {
-            if (wallet.transferTrackingInitialized) return;
-            const transferred = new Set(wallet.transferredMonths || []);
-            if (cfWalletMonthTopup(wallet.id, previousMonth) > 0) transferred.add(previousMonth);
-            const activeTopup = cfWalletMonthTopup(wallet.id, activeMonth);
-            if (activeTopup > 0 && satNumber(wallet.balance) <= 0) transferred.add(activeMonth);
-            wallet.transferredMonths = [...transferred];
-            wallet.transferTrackingInitialized = true;
-        });
-    }
-
     function cfSaveLocal() {
-        localStorage.setItem(CF_SETTINGS_KEY, JSON.stringify(cfState().settings));
-        localStorage.setItem(CF_CARDS_KEY, JSON.stringify(cfState().cards));
-        localStorage.setItem(CF_WALLETS_KEY, JSON.stringify(cfState().wallets));
-        localStorage.setItem(CF_EVENTS_KEY, JSON.stringify(cfState().events));
+        localStorage.setItem(CF_MONTHLY_KEY, JSON.stringify(cfState().monthly || []));
         localStorage.setItem('cashflow_active_month_v1', cfState().activeMonth);
-    }
-
-    function cfLooksWiped(settings, cards, wallets, events) {
-        const bankCash = satNumber(settings?.bankCash);
-        const cardDebt = (cards || []).reduce((sum, card) => sum + satNumber(card.outstanding), 0);
-        const walletValue = (wallets || []).reduce((sum, wallet) => sum + satNumber(wallet.balance), 0);
-        return !(events || []).length && bankCash <= 0 && cardDebt <= 0 && walletValue <= 0;
-    }
-
-    function cfRestoreSeedData() {
-        const seed = window.CASHFLOW_LOCAL_SEED;
-        if (!seed) return false;
-        cfState().settings = cfNormalizeSettings(seed.settings || {});
-        cfState().cards = (seed.cards || []).map(cfNormalizeCard).filter(card => card.name);
-        cfState().wallets = ((seed.wallets || []).length ? seed.wallets : cfDefaultWallets()).map(cfNormalizeWallet);
-        cfState().events = (seed.events || []).map(cfNormalizeEvent);
-        if (/^\d{4}-\d{2}$/.test(seed.activeMonth || '')) cfState().activeMonth = seed.activeMonth;
-        cfMigrateWalletTransferTracking();
-        cfSaveLocal();
-        return true;
     }
 
     function cfLoadLocal() {
         try {
-            cfState().settings = cfNormalizeSettings(JSON.parse(localStorage.getItem(CF_SETTINGS_KEY) || '{}'));
-            cfState().cards = (JSON.parse(localStorage.getItem(CF_CARDS_KEY) || '[]') || []).map(cfNormalizeCard).filter(card => card.name);
-            const savedWallets = JSON.parse(localStorage.getItem(CF_WALLETS_KEY) || '[]');
-            cfState().wallets = (Array.isArray(savedWallets) && savedWallets.length ? savedWallets : cfDefaultWallets()).map(cfNormalizeWallet);
-            cfState().events = (JSON.parse(localStorage.getItem(CF_EVENTS_KEY) || '[]') || []).map(cfNormalizeEvent);
-            const seed = window.CASHFLOW_LOCAL_SEED;
-            if (seed && localStorage.getItem(CF_SEED_RECOVERY_KEY) !== CF_SEED_RECOVERY_VERSION) {
-                cfRestoreSeedData();
-                cfSeedRecoveryPending = true;
-            } else if (seed && !cfState().cards.length && !cfState().events.length) {
-                cfRestoreSeedData();
-            } else if (seed
-                && localStorage.getItem(CF_SEED_RECOVERY_KEY) !== CF_SEED_RECOVERY_VERSION
-                && cfLooksWiped(cfState().settings, cfState().cards, cfState().wallets, cfState().events)) {
-                cfRestoreSeedData();
-            }
-            cfMergeLocalCardCatalog();
-            cfMigrateWalletTransferTracking();
-            cfSaveLocal();
+            cfState().monthly = (JSON.parse(localStorage.getItem(CF_MONTHLY_KEY) || '[]') || []).map(cfNormalizeMonthlyEntry);
+            const savedMonth = localStorage.getItem('cashflow_active_month_v1');
+            if (/^\d{4}-\d{2}$/.test(savedMonth || '')) cfState().activeMonth = savedMonth;
         } catch (error) {
-            console.warn('Cashflow local data reset:', error.message);
-            cfState().settings = cfNormalizeSettings({});
-            cfState().cards = [];
-            cfState().wallets = cfDefaultWallets();
-            cfState().events = [];
+            console.warn('Monthly spending data reset:', error.message);
+            cfState().monthly = [];
         }
     }
 
-    function cfTotals() {
-        const bankCash = satNumber(cfState().settings.bankCash);
-        const trackedMonths = [cfState().activeMonth, cfPreviousMonth()];
-        const walletCash = cfState().wallets.filter(wallet => wallet.active).reduce((sum, wallet) => {
-            return sum + trackedMonths.reduce((monthSum, month) => {
-                return monthSum + (wallet.transferredMonths.includes(month) ? 0 : cfWalletMonthTopup(wallet.id, month));
-            }, 0);
-        }, 0);
-        const cardDebt = cfState().cards.filter(card => card.active).reduce((sum, card) => sum + satNumber(card.outstanding), 0)
-            + satNumber(cfState().settings.otherReserved);
-        const rolloverDebt = cfMonthEvents('topup').reduce((sum, event) => sum + satNumber(event.amount), 0);
-        const requiredReserve = Math.max(0, cardDebt - walletCash);
-        const monthlySpending = satNumber(cfState().settings.monthlySpending);
-        const trueFreeCash = bankCash - requiredReserve - monthlySpending;
-        const monthlySurplus = satNumber(cfState().settings.monthlyIncome) - monthlySpending;
-        const coverage = cardDebt > 0 ? (bankCash + walletCash) / cardDebt * 100 : null;
-        return { bankCash, walletCash, cardDebt, rolloverDebt, requiredReserve, trueFreeCash, monthlySurplus, coverage };
+    function cfMonthEntries(month=cfState().activeMonth) {
+        return (cfState().monthly || []).filter(e => String(e.date).slice(0, 7) === month);
     }
 
-    function cfMonthEvents(type='', month=cfState().activeMonth) {
-        const prefix = month;
-        return cfState().events.filter(event => event.date.startsWith(prefix) && (!type || event.type === type));
+    function cfMonthlyTotals(month=cfState().activeMonth) {
+        const entries = cfMonthEntries(month);
+        const income = entries.filter(e => e.type === 'income').reduce((s, e) => s + e.amount, 0);
+        const expense = entries.filter(e => e.type === 'expense').reduce((s, e) => s + e.amount, 0);
+        return { income, expense, savings: income - expense, count: entries.length };
     }
 
-    function cfWalletMonthTopup(walletId, month=cfState().activeMonth) {
-        return cfMonthEvents('topup', month).filter(event => event.walletId === walletId).reduce((sum, event) => sum + satNumber(event.amount), 0);
+    function cfMonthlyCategories(month=cfState().activeMonth) {
+        const map = new Map();
+        cfMonthEntries(month).filter(e => e.type === 'expense' && e.category).forEach(e => {
+            map.set(e.category, (map.get(e.category) || 0) + e.amount);
+        });
+        return [...map.entries()].sort((a, b) => b[1] - a[1]);
     }
 
-    function cfRenderSummary() {
-        const totals = cfTotals();
-        const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+    function cfMonthLabel(month) {
+        if (!/^\d{4}-\d{2}$/.test(month || '')) return month;
+        const [y, m] = month.split('-').map(Number);
+        return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
 
-        // Net position = bankCash + walletCash - cardDebt
-        const netPos = totals.bankCash + totals.walletCash - totals.cardDebt;
-        const netEl  = document.getElementById('cf-net-position');
-        const verdictEl = document.getElementById('cf-net-verdict');
-        if (netEl) {
-            netEl.textContent = cfMoney(netPos);
-            netEl.classList.toggle('cf-positive', netPos >= 0);
-            netEl.classList.toggle('cf-negative', netPos < 0);
+    function cfRenderMonthly() {
+        const month = cfState().activeMonth;
+        const monthInput = document.getElementById('cf-active-month');
+        if (monthInput && monthInput.value !== month) monthInput.value = month;
+
+        const { income, expense, savings, count } = cfMonthlyTotals(month);
+
+        const saveEl = document.getElementById('cf-monthly-save');
+        const verdictEl = document.getElementById('cf-monthly-verdict');
+        const incomeEl = document.getElementById('cf-monthly-income');
+        const expenseEl = document.getElementById('cf-monthly-expense');
+        const savedEl = document.getElementById('cf-monthly-saved');
+
+        if (saveEl) {
+            saveEl.textContent = cfMoney(savings);
+            saveEl.classList.toggle('cf-positive', savings >= 0);
+            saveEl.classList.toggle('cf-negative', savings < 0);
+        }
+        if (incomeEl) incomeEl.textContent = cfMoney(income);
+        if (expenseEl) expenseEl.textContent = cfMoney(expense);
+        if (savedEl) {
+            savedEl.textContent = cfMoney(savings);
+            savedEl.classList.toggle('cf-positive', savings >= 0);
+            savedEl.classList.toggle('cf-negative', savings < 0);
         }
         if (verdictEl) {
-            if (netPos >= 0) {
-                verdictEl.textContent = `✓ You'd have ${cfMoney(netPos)} left over`;
-                verdictEl.style.color = '#10B981';
+            let text;
+            if (!count) text = 'No entries yet — add your income and expenses.';
+            else if (savings > 0) text = `Saving ${cfMoney(savings)} (${Math.round(savings / income * 100)}% of income)`;
+            else if (savings === 0) text = 'Income and expenses are even.';
+            else text = `Spending exceeds income by ${cfMoney(-savings)}.`;
+            verdictEl.textContent = text;
+        }
+
+        const catsEl = document.getElementById('cf-monthly-cats');
+        const cats = cfMonthlyCategories(month);
+        if (catsEl) {
+            if (!cats.length) {
+                catsEl.innerHTML = '<div class="cf-empty">No expense categories yet.</div>';
             } else {
-                verdictEl.textContent = `⚠ You'd be short by ${cfMoney(Math.abs(netPos))}`;
-                verdictEl.style.color = '#F59E0B';
+                catsEl.innerHTML = cats.map(([cat, total]) => {
+                    const pct = expense > 0 ? Math.round(total / expense * 100) : 0;
+                    return `<div class="cf-monthly-cat">
+                        <span class="cf-monthly-cat-name">${satEsc(cat)}</span>
+                        <div class="cf-monthly-cat-total">${cfMoney(total)} · ${pct}%</div>
+                    </div>`;
+                }).join('');
             }
         }
 
-        set('cf-card-debt',  cfMoney(totals.cardDebt));
-        set('cf-wallet-cash', cfMoney(totals.walletCash));
-
-        // Easybills-linked cards = CARD X group (Family Plus + JCB)
-        const easybillsDebt = cfState().cards
-            .filter(c => c.active && (c.limitGroup || '').toLowerCase().startsWith('cardx'))
-            .reduce((s, c) => s + satNumber(c.outstanding), 0);
-        set('cf-easybills-debt', cfMoney(easybillsDebt));
-
-        const totalCapacity = cfState().wallets.filter(w => w.active).reduce((s,w) => s + satNumber(w.capacity), 0);
-        const topped = cfState().wallets.filter(w => w.active).reduce((s,w) => s + Math.min(cfWalletMonthTopup(w.id), satNumber(w.capacity)), 0);
-        const progress = totalCapacity > 0 ? topped / totalCapacity * 100 : 0;
-        set('cf-cycle-progress-total', `${cfMoney(topped)} / ${cfMoney(totalCapacity)} (${progress.toFixed(0)}%)`);
-    }
-
-    function cfSaveBankCash(raw) {
-        const val = satNumber(String(raw).replace(/,/g, ''));
-        if (!Number.isFinite(val) || val < 0) return;
-        cfState().settings.bankCash = val;
-        cfSaveLocal();
-        cfRenderSummary();
-    }
-
-    function cfSaveOtherDebt(raw) {
-        const val = satNumber(String(raw).replace(/,/g, ''));
-        if (!Number.isFinite(val) || val < 0) return;
-        cfState().settings.otherReserved = val;
-        cfSaveLocal();
-        cfRenderSummary();
-    }
-
-    function cfToggleActivity() {
-        const body  = document.getElementById('cf-activity-body');
-        const label = document.getElementById('cf-activity-toggle-label');
-        if (!body) return;
-        const open = body.style.display !== 'none';
-        body.style.display  = open ? 'none' : 'block';
-        if (label) label.textContent = open ? 'Show' : 'Hide';
-    }
-
-    function cfRenderSettings() {
-        const bankInput = document.getElementById('cf-setting-bank');
-        if (bankInput && document.activeElement !== bankInput) {
-            bankInput.value = cfNumberText(cfState().settings.bankCash);
+        const datalist = document.getElementById('cf-monthly-catl');
+        if (datalist) {
+            const allCats = new Set();
+            (cfState().monthly || []).forEach(e => { if (e.category) allCats.add(e.category); });
+            datalist.innerHTML = [...allCats].sort().map(c => `<option value="${satEsc(c)}">`).join('');
         }
-        const otherDebtInput = document.getElementById('cf-setting-other-debt');
-        if (otherDebtInput && document.activeElement !== otherDebtInput) {
-            otherDebtInput.value = cfNumberText(cfState().settings.otherReserved);
-        }
-        const month = document.getElementById('cf-active-month');
-        if (month) month.value = cfState().activeMonth;
-    }
 
-    function cfRenderWallets() {
-        const grid = document.getElementById('cf-wallet-grid');
-        if (!grid) return;
-        grid.innerHTML = cfState().wallets.filter(wallet => wallet.active).map(wallet => {
-            const topup = cfWalletMonthTopup(wallet.id);
-            const capacity = satNumber(wallet.capacity);
-            const pct = capacity > 0 ? Math.min(100, topup / capacity * 100) : 0;
-            const previousMonth = cfPreviousMonth();
-            const currentTransferred = wallet.transferredMonths.includes(cfState().activeMonth);
-            const previousTransferred = wallet.transferredMonths.includes(previousMonth);
-            const pending = (currentTransferred ? 0 : topup) + (previousTransferred ? 0 : cfWalletMonthTopup(wallet.id, previousMonth));
-            return `<div class="cf-wallet">
-                <div class="cf-wallet-top">
-                    <input class="cf-input" style="min-height:30px;padding:5px 7px" value="${satEsc(wallet.name)}" onchange="cfUpdateWallet('${satEsc(wallet.id)}','name',this.value)">
-                    <span class="cf-wallet-amount">${pct.toFixed(0)}%</span>
-                </div>
-                <div class="cf-progress mb-2"><span style="width:${pct}%"></span></div>
-                <div class="cf-subtle mt-2">Top-up ${cfMoney(topup)} / ${cfMoney(capacity)}</div>
-                <div class="cf-wallet-amount mt-1">Still in wallet: <strong>${cfMoney(pending)}</strong></div>
-                <div class="cf-wallet-checks">
-                    <label class="cf-wallet-check"><input type="checkbox" ${currentTransferred ? 'checked' : ''} onchange="cfToggleWalletTransferred('${satEsc(wallet.id)}','${cfState().activeMonth}',this.checked)"> <span>${cfMonthLabel(cfState().activeMonth)}<br>Transferred</span></label>
-                    <label class="cf-wallet-check"><input type="checkbox" ${previousTransferred ? 'checked' : ''} onchange="cfToggleWalletTransferred('${satEsc(wallet.id)}','${previousMonth}',this.checked)"> <span>${cfMonthLabel(previousMonth)}<br>Transferred</span></label>
-                </div>
-            </div>`;
-        }).join('');
-    }
-
-    function cfCardLabel(card) {
-        return [card.issuer, card.name].filter(Boolean).join(' · ');
-    }
-
-    function cfDefaultTopupCardId() {
-        return cfState().cards.find(card =>
-            card.active
-            && String(card.name || '').trim().toUpperCase() === 'FAMILY PLUS'
-        )?.id || '';
-    }
-
-    function cfRenderOptions() {
-        const cardOptions = cfState().cards.filter(card => card.active).map(card => `<option value="${satEsc(card.id)}">${satEsc(cfCardLabel(card))}</option>`).join('');
-        ['cf-topup-card', 'cf-payment-card'].forEach(id => {
-            const select = document.getElementById(id);
-            if (!select) return;
-            const value = select.value;
-            select.innerHTML = `<option value="">Select card</option>${cardOptions}`;
-            if ([...select.options].some(option => option.value === value)) select.value = value;
-            else select.value = cfDefaultTopupCardId();
-        });
-        const walletSelect = document.getElementById('cf-topup-wallet');
-        if (walletSelect) {
-            const value = walletSelect.value;
-            walletSelect.innerHTML = `<option value="">Select wallet</option>` + cfState().wallets.filter(wallet => wallet.active).map(wallet => `<option value="${satEsc(wallet.id)}">${satEsc(wallet.name)}</option>`).join('');
-            if ([...walletSelect.options].some(option => option.value === value)) walletSelect.value = value;
-        }
-    }
-
-    function cfCollapsedBanks() {
-        try {
-            const saved = JSON.parse(localStorage.getItem(CF_COLLAPSED_BANKS_KEY) || '[]');
-            return new Set(Array.isArray(saved) ? saved : []);
-        } catch (_) {
-            return new Set();
-        }
-    }
-
-    function cfToggleTimelineBank(encodedIssuer) {
-        const issuer = decodeURIComponent(encodedIssuer);
-        const collapsed = cfCollapsedBanks();
-        if (collapsed.has(issuer)) collapsed.delete(issuer);
-        else collapsed.add(issuer);
-        localStorage.setItem(CF_COLLAPSED_BANKS_KEY, JSON.stringify([...collapsed]));
-        if (cfTimelineEditor && cfState().cards.find(card => card.id === cfTimelineEditor.cardId)?.issuer === issuer) cfTimelineEditor = null;
-        cfRenderTimeline();
-    }
-
-    function cfToggleAllTimelineBanks() {
-        const issuers = [...new Set(cfState().cards.filter(card => card.active).map(card => card.issuer))];
-        const collapsed = cfCollapsedBanks();
-        const allCollapsed = issuers.length > 0 && issuers.every(issuer => collapsed.has(issuer));
-        localStorage.setItem(CF_COLLAPSED_BANKS_KEY, JSON.stringify(allCollapsed ? [] : issuers));
-        cfTimelineEditor = null;
-        cfRenderTimeline();
-    }
-
-    function cfTimelineDate(day) {
-        const [year, month] = String(cfState().activeMonth || satToday().slice(0, 7)).split('-').map(Number);
-        const lastDay = new Date(year, month, 0).getDate();
-        return `${year}-${String(month).padStart(2, '0')}-${String(Math.min(day, lastDay)).padStart(2, '0')}`;
-    }
-
-    function cfOpenTimelineEditor(cardId, marker) {
-        cfTimelineEditor = cfTimelineEditor?.cardId === cardId && cfTimelineEditor?.marker === marker ? null : { cardId, marker };
-        cfRenderTimeline();
-        requestAnimationFrame(() => document.getElementById('cf-timeline-amount')?.focus());
-    }
-
-    function cfCloseTimelineEditor() {
-        cfTimelineEditor = null;
-        cfRenderTimeline();
-    }
-
-    function cfTimelineEditorHtml(card) {
-        if (!cfTimelineEditor || cfTimelineEditor.cardId !== card.id) return '';
-        const isPayment = cfTimelineEditor.marker === 'due';
-        const day = isPayment ? card.dueDay : card.statementDay;
-        const amount = card.outstanding > 0 ? cfNumberText(card.outstanding) : '';
-        return `<form class="cf-timeline-editor" style="--group-rgb:${cfTimelineColor(card.issuer)}" onsubmit="cfSaveTimelineAmount(event,'${satEsc(card.id)}','${isPayment ? 'due' : 'statement'}')">
-            <div class="cf-timeline-editor-title"><strong>${satEsc(cfCardLabel(card))}</strong><span>${isPayment ? 'Record card payment' : 'Set statement balance'}</span></div>
-            <label class="cf-label">Date<input id="cf-timeline-date" class="cf-input mt-1" type="date" value="${cfTimelineDate(day)}" required></label>
-            <label class="cf-label">Amount<input id="cf-timeline-amount" class="cf-input cf-money-input mt-1" type="text" inputmode="decimal" value="${amount}" required></label>
-            <button class="cf-btn primary" type="submit">${isPayment ? 'Pay' : 'Update'}</button>
-            <button class="cf-btn" type="button" onclick="cfCloseTimelineEditor()">Cancel</button>
-        </form>`;
-    }
-
-    function cfSaveTimelineAmount(event, cardId, marker) {
-        event.preventDefault();
-        const card = cfState().cards.find(item => item.id === cardId);
-        const amount = satNumber(document.getElementById('cf-timeline-amount')?.value);
-        const date = document.getElementById('cf-timeline-date')?.value;
-        if (!card || !date || amount < 0) return;
-        if (marker === 'due') {
-            if (amount <= 0) return;
-            if (amount > card.outstanding) { alert('Payment exceeds the current outstanding balance.'); return; }
-            if (amount > cfState().settings.bankCash) { alert('Payment exceeds current bank cash. Update the cash snapshot first if needed.'); return; }
-        }
-        const debtDelta = marker === 'due' ? -amount : amount - satNumber(card.outstanding);
-        if (Math.abs(debtDelta) > 0.001 || marker === 'due') {
-            const row = cfNormalizeEvent({
-                id:cfId('event'), date, type:marker === 'due' ? 'card_payment' : 'statement_balance',
-                cardId, amount, cashDelta:marker === 'due' ? -amount : 0, debtDelta, walletDelta:0,
-                note:marker === 'due' ? 'Card payment' : 'Statement balance update', createdAt:new Date().toISOString()
-            });
-            cfApplyEvent(row, 1);
-            cfState().events.push(row);
-        }
-        cfTimelineEditor = null;
-        cfCommitChanges();
-    }
-
-    function cfTimelineDragStart(event, cardId, marker) {
-        event.stopPropagation();
-        event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.setData('text/plain', JSON.stringify({ cardId, marker }));
-    }
-
-    function cfTimelineDragOver(event) {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = 'move';
-        event.currentTarget.classList.add('drop-target');
-    }
-
-    function cfTimelineDragLeave(event) {
-        event.currentTarget.classList.remove('drop-target');
-    }
-
-    function cfTimelineDrop(event, day) {
-        event.preventDefault();
-        event.currentTarget.classList.remove('drop-target');
-        try {
-            const payload = JSON.parse(event.dataTransfer.getData('text/plain'));
-            const card = cfState().cards.find(item => item.id === payload.cardId);
-            if (!card || !['statement','due'].includes(payload.marker)) return;
-            if (payload.marker === 'statement') card.statementDay = day;
-            else card.dueDay = day;
-            card.updatedAt = new Date().toISOString();
-            cfTimelineEditor = { cardId: card.id, marker: payload.marker };
-            cfCommitChanges();
-        } catch (_) {}
-    }
-
-    function cfTimelineColor(issuer) {
-        return {
-            'CARD X':'139,92,246', KTC:'192,132,252', AEON:'239,68,68',
-            BBL:'34,197,94', UOB:'59,130,246', BAY:'234,179,8', TTB:'96,165,250'
-        }[issuer] || '20,184,166';
-    }
-
-    function cfCardLimitKey(card) {
-        const issuer = String(card.issuer || '').trim().toUpperCase();
-        return issuer === 'BAY' ? `card:${card.id}` : `bank:${issuer || card.limitGroup || card.id}`;
-    }
-
-    function cfCardLimitGroups(cards) {
-        return cards.reduce((groups, card) => {
-            const key = cfCardLimitKey(card);
-            if (!groups.has(key)) groups.set(key, { debt:0, limit:0, count:0, shared:false });
-            const group = groups.get(key);
-            group.debt += satNumber(card.outstanding);
-            group.limit = Math.max(group.limit, satNumber(card.creditLimit));
-            group.count += 1;
-            group.shared = !key.startsWith('card:') && group.count > 1;
-            return groups;
-        }, new Map());
-    }
-
-    function cfRenderTimeline() {
-        const container = document.getElementById('cf-card-timeline');
-        if (!container) return;
-        const cards = cfState().cards.filter(card => card.active).slice().sort((a,b) =>
-            satNumber(a.sortOrder) - satNumber(b.sortOrder)
-            || a.issuer.localeCompare(b.issuer)
-            || a.name.localeCompare(b.name)
-        );
-        const majorDays = new Set([1,5,10,15,20,25,30,31]);
-        const [todayYear, todayMonthNum, todayDayNum] = satToday().split('-').map(Number);
-        const isCurrentMonth = cfState().activeMonth === `${todayYear}-${String(todayMonthNum).padStart(2, '0')}`;
-        const todayDay = isCurrentMonth ? todayDayNum : 0;
-        const dayCells = (card=null) => Array.from({length:31}, (_,index) => {
-            const day = index + 1;
-            const statementDay = card ? satNumber(card.statementDay) : 0;
-            const dueDay = card ? satNumber(card.dueDay) : 0;
-            const wrapsMonth = statementDay > dueDay;
-            const inRange = !!card && (wrapsMonth
-                ? day >= statementDay || day <= dueDay
-                : day >= statementDay && day <= dueDay);
-            const rangeClasses = inRange
-                ? ` range${day === statementDay ? ' range-start' : ''}${day === dueDay ? ' range-end' : ''}`
-                : '';
-            const markers = !card ? [] : [
-                day === statementDay ? 'statement' : '',
-                day === dueDay ? 'due' : ''
-            ].filter(Boolean);
-            const sameDay = markers.length === 2;
-            const markerButtons = markers.map(marker => `<button class="cf-calendar-marker ${marker}${sameDay ? ' same-day' : ''}" type="button" draggable="true"
-                ondragstart="cfTimelineDragStart(event,'${satEsc(card.id)}','${marker}')"
-                onclick="event.stopPropagation();cfOpenTimelineEditor('${satEsc(card.id)}','${marker}')">${marker === 'statement' ? 'S' : 'P'}</button>`).join('');
-            const markersContainer = markerButtons ? `<div class="cf-calendar-markers${sameDay ? ' same-day' : ''}">${markerButtons}</div>` : '';
-            const content = markersContainer || (!card && majorDays.has(day) ? day : '');
-            return `<div class="cf-calendar-cell day${majorDays.has(day) ? ' major' : ''}${rangeClasses}${day === todayDay ? ' today' : ''}" ondragover="cfTimelineDragOver(event)" ondragleave="cfTimelineDragLeave(event)" ondrop="cfTimelineDrop(event,${day})">${content}</div>`;
-        }).join('');
-        const header = `<div class="cf-calendar-row header">
-            <div class="cf-calendar-cell issuer">BANK</div>
-            <div class="cf-calendar-cell card-name">CARD</div>
-            ${dayCells()}
-            <div class="cf-calendar-cell limit">DEBT / LIMIT</div>
-        </div>`;
-        const collapsed = cfCollapsedBanks();
-        const groups = cards.reduce((map, card) => {
-            if (!map.has(card.issuer)) map.set(card.issuer, []);
-            map.get(card.issuer).push(card);
-            return map;
-        }, new Map());
-        const limitGroups = cfCardLimitGroups(cards);
-        const toggleAllButton = document.getElementById('cf-toggle-all-banks');
-        if (toggleAllButton) {
-            const allCollapsed = groups.size > 0 && [...groups.keys()].every(issuer => collapsed.has(issuer));
-            toggleAllButton.innerHTML = `<i class="fa-solid fa-angles-${allCollapsed ? 'down' : 'up'}"></i>${allCollapsed ? 'Expand all' : 'Collapse all'}`;
-            toggleAllButton.classList.toggle('hidden', groups.size === 0);
-        }
-        const body = [...groups.entries()].map(([issuer, bankCards]) => {
-            const rgb = cfTimelineColor(issuer);
-            const isCollapsed = collapsed.has(issuer);
-            const bankTotal = bankCards.reduce((sum, card) => sum + satNumber(card.outstanding), 0);
-            const bankHeader = `<button type="button" class="cf-calendar-bank${isCollapsed ? ' collapsed' : ''}" style="--group-rgb:${rgb}" onclick="cfToggleTimelineBank('${encodeURIComponent(issuer)}')">
-                <strong><i class="fa-solid fa-chevron-down"></i>${satEsc(issuer || 'Other')}</strong>
-                <span>${bankCards.length} card${bankCards.length === 1 ? '' : 's'} · ${cfMoney(bankTotal)} outstanding</span>
-            </button>`;
-            if (isCollapsed) return bankHeader;
-            return bankHeader + bankCards.map(card => {
-                const limitGroup = limitGroups.get(cfCardLimitKey(card));
-                return `<div class="cf-calendar-row card-row" style="--group-rgb:${rgb}">
-                <div class="cf-calendar-cell issuer"></div>
-                <div class="cf-calendar-cell card-name">${satEsc(card.name)}</div>
-                ${dayCells(card)}
-                <div class="cf-calendar-cell limit" title="${limitGroup?.shared ? 'Shared bank debt / shared bank limit' : 'Card debt / card limit'}">
-                    <span class="cf-calendar-limit-stack">
-                        <span>${cfMoney(limitGroup?.debt || 0)} / ${limitGroup?.limit > 0 ? cfMoney(limitGroup.limit) : '—'}</span>
-                        ${limitGroup?.shared ? '<span class="cf-calendar-limit-meta">shared</span>' : ''}
-                    </span>
-                </div>
-                ${cfTimelineEditorHtml(card)}
-            </div>`;
+        const tbody = document.getElementById('cf-monthly-tbody');
+        const emptyEl = document.getElementById('cf-monthly-empty');
+        const entries = cfMonthEntries(month).slice().sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
+        if (tbody) {
+            tbody.innerHTML = entries.map(e => {
+                const isIncome = e.type === 'income';
+                const sign = isIncome ? '+' : '−';
+                return `<tr>
+                    <td class="cf-monthly-date">${satEsc(e.date)}</td>
+                    <td class="cf-monthly-type ${isIncome ? 'cf-positive' : 'cf-negative'}">${isIncome ? 'Income' : 'Expense'}</td>
+                    <td>${satEsc(e.category) || '—'}</td>
+                    <td class="num ${isIncome ? 'cf-positive' : 'cf-negative'}">${sign}${cfMoney(e.amount)}</td>
+                    <td class="cf-monthly-note">${satEsc(e.note) || ''}</td>
+                    <td><button class="cf-btn danger" type="button" onclick="cfDeleteMonthlyEntry('${e.id}')">✕</button></td>
+                </tr>`;
             }).join('');
-        }).join('');
-        const totalLimit = [...limitGroups.values()].reduce((sum, group) => sum + group.limit, 0);
-        const totalDebt = cards.reduce((sum, card) => sum + satNumber(card.outstanding), 0);
-        const footer = `<div class="cf-calendar-row header">
-            <div class="cf-calendar-cell issuer"></div>
-            <div class="cf-calendar-cell card-name">TOTAL DEBT / LIMIT</div>
-            ${dayCells()}
-            <div class="cf-calendar-cell limit">${cfMoney(totalDebt)} / ${cfMoney(totalLimit)}</div>
-        </div>`;
-        container.innerHTML = cards.length ? header + body + footer : '<div class="cf-empty">Add credit cards to build the timeline.</div>';
+        }
+        if (emptyEl) emptyEl.style.display = entries.length ? 'none' : '';
     }
 
-    function cfEventTypeLabel(event) {
-        return {
-            topup: 'Easybills Top-up',
-            card_payment: 'Card Payment',
-            statement_balance: 'Statement Balance',
-            income: 'Income',
-            expense: 'Expense'
-        }[event.type] || event.type;
-    }
-
-    function cfRenderEvents() {
-        const tbody = document.getElementById('cf-event-tbody');
-        if (!tbody) return;
-        const cardMap = Object.fromEntries(cfState().cards.map(card => [card.id, cfCardLabel(card)]));
-        const walletMap = Object.fromEntries(cfState().wallets.map(wallet => [wallet.id, wallet.name]));
-        const rows = cfState().events.slice().sort((a,b) => String(b.date).localeCompare(String(a.date)) || String(b.createdAt).localeCompare(String(a.createdAt)));
-        tbody.innerHTML = rows.map(event => `<tr>
-            <td>${satEsc(event.date)}</td><td>${satEsc(cfEventTypeLabel(event))}</td>
-            <td>${satEsc([cardMap[event.cardId], walletMap[event.walletId]].filter(Boolean).join(' / ') || 'Bank cash')}</td>
-            <td class="num ${event.cashDelta >= 0 ? 'cf-positive' : 'cf-negative'}">${event.cashDelta >= 0 ? '+' : ''}${cfMoney(event.cashDelta)}</td>
-            <td class="num ${event.debtDelta <= 0 ? 'cf-positive' : 'cf-negative'}">${event.debtDelta >= 0 ? '+' : ''}${cfMoney(event.debtDelta)}</td>
-            <td>${satEsc(event.note || (event.type === 'topup' ? `Fee ${cfMoney(event.fee, 2)}` : ''))}</td>
-            <td class="num"><button class="cf-btn danger" type="button" onclick="cfDeleteEvent('${satEsc(event.id)}')" title="Delete and reverse"><i class="fa-solid fa-xmark"></i></button></td>
-        </tr>`).join('');
-        document.getElementById('cf-event-empty')?.classList.toggle('hidden', rows.length > 0);
-    }
-
-    function cfRenderAll() {
-        cfRenderSettings();
-        cfRenderSummary();
-        cfRenderWallets();
-        cfRenderTimeline();
-        cfRenderEvents();
-        cfRenderOptions();
-        cfPrepareMoneyInputs();
-        const today = satToday();
-        ['cf-topup-date','cf-payment-date'].forEach(id => {
-            const input = document.getElementById(id);
-            if (input && !input.value) input.value = today;
-        });
-        cfUpdatePaymentCardMeta();
-    }
-
-    function cfCommitChanges() {
+    function cfAddMonthlyEntry(event) {
+        if (event) event.preventDefault();
+        const date = document.getElementById('cf-monthly-date')?.value || satToday();
+        const type = document.getElementById('cf-monthly-type')?.value || 'expense';
+        const category = (document.getElementById('cf-monthly-category')?.value || '').trim();
+        const amount = satNumber(document.getElementById('cf-monthly-amount')?.value);
+        const note = (document.getElementById('cf-monthly-note')?.value || '').trim();
+        if (amount <= 0) { document.getElementById('cf-monthly-amount')?.focus(); return; }
+        cfState().monthly = cfState().monthly || [];
+        cfState().monthly.push(cfNormalizeMonthlyEntry({ date, type, category, amount, note }));
+        if (/^\d{4}-\d{2}$/.test(String(date).slice(0, 7))) cfState().activeMonth = String(date).slice(0, 7);
         cfSaveLocal();
-        cfRenderAll();
-        clearTimeout(cfPushTimer);
-        cfPushTimer = setTimeout(() => cfPushToSheets(true).catch(() => {}), 700);
+        cfRenderMonthly();
+        const catInput = document.getElementById('cf-monthly-category');
+        const amtInput = document.getElementById('cf-monthly-amount');
+        const noteInput = document.getElementById('cf-monthly-note');
+        if (catInput) catInput.value = '';
+        if (amtInput) amtInput.value = '';
+        if (noteInput) noteInput.value = '';
+        amtInput?.focus();
+    }
+
+    function cfDeleteMonthlyEntry(id) {
+        cfState().monthly = (cfState().monthly || []).filter(e => e.id !== id);
+        cfSaveLocal();
+        cfRenderMonthly();
     }
 
     function cfSetActiveMonth(value) {
-        if (/^\d{4}-\d{2}$/.test(value)) cfState().activeMonth = value;
-        cfCommitChanges();
-    }
-
-    function cfSaveSettings(event) {
-        event.preventDefault();
-        cfState().settings = cfNormalizeSettings({
-            ...cfState().settings,
-            bankCash: document.getElementById('cf-setting-bank').value,
-            monthlyIncome: document.getElementById('cf-setting-income').value,
-            monthlySpending: document.getElementById('cf-setting-spending').value,
-            otherReserved: 0,
-            feeFixed: 10,
-            feePercent: 0.15
-        });
-        document.activeElement?.blur();
-        cfCommitChanges();
-    }
-
-    function cfUpdateWallet(id, field, value) {
-        const wallet = cfState().wallets.find(item => item.id === id);
-        if (!wallet) return;
-        if (field === 'name') wallet.name = String(value || wallet.name);
-        else wallet[field] = Math.max(0, satNumber(value));
-        wallet.updatedAt = new Date().toISOString();
-        document.activeElement?.blur();
-        cfCommitChanges();
-    }
-
-    function cfToggleWalletTransferred(id, month, checked) {
-        const wallet = cfState().wallets.find(item => item.id === id);
-        if (!wallet || !/^\d{4}-\d{2}$/.test(month)) return;
-        const months = new Set(wallet.transferredMonths || []);
-        if (checked) months.add(month);
-        else months.delete(month);
-        wallet.transferredMonths = [...months].sort();
-        wallet.transferTrackingInitialized = true;
-        wallet.updatedAt = new Date().toISOString();
-        document.activeElement?.blur();
-        cfCommitChanges();
-    }
-
-    function cfApplyEvent(event, direction=1) {
-        cfState().settings.bankCash = Math.max(0, satNumber(cfState().settings.bankCash) + satNumber(event.cashDelta) * direction);
-        if (event.cardId) {
-            const card = cfState().cards.find(item => item.id === event.cardId);
-            if (card) card.outstanding = Math.max(0, satNumber(card.outstanding) + satNumber(event.debtDelta) * direction);
-        }
-    }
-
-    function cfAddTopup(event) {
-        event.preventDefault();
-        const date = document.getElementById('cf-topup-date').value;
-        const cardId = document.getElementById('cf-topup-card').value;
-        const walletId = document.getElementById('cf-topup-wallet').value;
-        const amount = satNumber(document.getElementById('cf-topup-amount').value);
-        const card = cfState().cards.find(item => item.id === cardId);
-        const wallet = cfState().wallets.find(item => item.id === walletId);
-        if (!card || !wallet || !date || amount <= 0) return;
-        if (amount > 10000) { alert('Easybills top-up cannot exceed ฿10,000 per transaction.'); return; }
-        const sameDayCardCount = cfState().events.filter(item => item.type === 'topup' && item.date === date && item.cardId === cardId).length;
-        if (sameDayCardCount >= 2) { alert('This card already has 2 Easybills top-ups on this date.'); return; }
-        const monthTopup = cfState().events.filter(item => item.type === 'topup' && item.walletId === walletId && item.date.slice(0,7) === date.slice(0,7)).reduce((sum,item) => sum + satNumber(item.amount), 0);
-        if (monthTopup + amount > satNumber(wallet.capacity)) { alert(`${wallet.name} would exceed its monthly capacity.`); return; }
-        const fee = satNumber(cfState().settings.feeFixed) + amount * satNumber(cfState().settings.feePercent) / 100;
-        const chargedAmount = amount + fee;
-        const row = cfNormalizeEvent({
-            id: cfId('event'), date, type:'topup', cardId, walletId, amount, fee, chargedAmount,
-            transferAmount:0, cashDelta:0, debtDelta:chargedAmount, walletDelta:amount,
-            note:'',
-            createdAt:new Date().toISOString()
-        });
-        wallet.transferredMonths = (wallet.transferredMonths || []).filter(month => month !== date.slice(0, 7));
-        const topupMonth = date.slice(0, 7);
-        if (/^\d{4}-\d{2}$/.test(topupMonth) && topupMonth > cfState().activeMonth) cfState().activeMonth = topupMonth;
-        cfApplyEvent(row, 1);
-        cfState().events.push(row);
-        document.getElementById('cf-topup-form').reset();
-        document.getElementById('cf-topup-date').value = satToday();
-        document.getElementById('cf-topup-amount').value = '10,000';
-        document.getElementById('cf-topup-card').value = cfDefaultTopupCardId();
-        cfCommitChanges();
-    }
-
-    function cfUpdatePaymentCardMeta() {
-        const cardId = document.getElementById('cf-payment-card')?.value;
-        const card = cfState().cards.find(item => item.id === cardId);
-        const meta = document.getElementById('cf-payment-outstanding');
-        if (meta) meta.textContent = card ? `Outstanding on ${cfCardLabel(card)}: ${cfMoney(card.outstanding)}` : '';
-    }
-
-    function cfAddPayment(event) {
-        event.preventDefault();
-        const date = document.getElementById('cf-payment-date').value;
-        const cardId = document.getElementById('cf-payment-card').value;
-        const amount = satNumber(document.getElementById('cf-payment-amount').value);
-        const card = cfState().cards.find(item => item.id === cardId);
-        if (!card || !date || amount <= 0) return;
-        if (amount > card.outstanding) { alert('Payment exceeds the current outstanding balance.'); return; }
-        if (amount > cfState().settings.bankCash) { alert('Payment exceeds current cash on hand.'); return; }
-        const row = cfNormalizeEvent({
-            id:cfId('event'), date, type:'card_payment', cardId, amount,
-            cashDelta:-amount, debtDelta:-amount, walletDelta:0,
-            note:'Card payment', createdAt:new Date().toISOString()
-        });
-        const paymentMonth = date.slice(0, 7);
-        if (/^\d{4}-\d{2}$/.test(paymentMonth) && paymentMonth > cfState().activeMonth) cfState().activeMonth = paymentMonth;
-        cfApplyEvent(row, 1);
-        cfState().events.push(row);
-        document.getElementById('cf-payment-form').reset();
-        document.getElementById('cf-payment-date').value = satToday();
-        document.getElementById('cf-payment-card').value = cfDefaultTopupCardId();
-        cfUpdatePaymentCardMeta();
-        cfCommitChanges();
-    }
-
-    function cfAddCashMovement(event) {
-        event.preventDefault();
-        const type = document.getElementById('cf-cash-type').value;
-        const amount = satNumber(document.getElementById('cf-cash-amount').value);
-        if (amount <= 0) return;
-        if (type === 'expense' && amount > cfState().settings.bankCash) { alert('Expense exceeds current bank cash.'); return; }
-        const cashDate = document.getElementById('cf-cash-date').value;
-        const row = cfNormalizeEvent({
-            id:cfId('event'), date:cashDate, type, amount,
-            cashDelta:type === 'income' ? amount : -amount, debtDelta:0, walletDelta:0,
-            note:document.getElementById('cf-cash-note').value, createdAt:new Date().toISOString()
-        });
-        const cashMonth = String(cashDate || '').slice(0, 7);
-        if (/^\d{4}-\d{2}$/.test(cashMonth) && cashMonth > cfState().activeMonth) cfState().activeMonth = cashMonth;
-        cfApplyEvent(row, 1);
-        cfState().events.push(row);
-        document.getElementById('cf-cash-form').reset();
-        document.getElementById('cf-cash-date').value = satToday();
-        cfCommitChanges();
-    }
-
-    function cfDeleteEvent(id) {
-        const row = cfState().events.find(event => event.id === id);
-        if (!row) return;
-        const card = row.cardId ? cfState().cards.find(item => item.id === row.cardId) : null;
-        if (card && satNumber(card.outstanding) - satNumber(row.debtDelta) < -0.001) {
-            alert('Delete newer linked card activity first; this deletion would make card debt negative.');
-            return;
-        }
-        cfApplyEvent(row, -1);
-        cfState().events = cfState().events.filter(event => event.id !== id);
-        cfCommitChanges();
-    }
-
-    async function cfPullFromSheets(silent=false) {
-        const url = getGsUrl();
-        if (!url) { if (!silent) openSyncModal(); return false; }
-        try {
-            if (cfSeedRecoveryPending) {
-                await cfPushToSheets(true);
-                localStorage.setItem(CF_SEED_RECOVERY_KEY, CF_SEED_RECOVERY_VERSION);
-                cfSeedRecoveryPending = false;
-                cfSaveLocal();
-                cfRenderAll();
-                if (!silent) setSyncPill('ok', 'Cashflow restored');
-                return true;
-            }
-            const data = await fetchGsAction('cashflow_read');
-            if (!data || data.error) throw new Error(data?.error || 'Invalid Cashflow data');
-            if (data.initialized === false) {
-                if (cfState().cards.length || cfState().events.length) await cfPushToSheets(true);
-                return true;
-            }
-            const settingsRow = Array.isArray(data.settings) ? data.settings[0] : data.settings;
-            const remoteEmpty = !settingsRow
-                && !(data.cards || []).length
-                && !(data.wallets || []).length
-                && !(data.events || []).length;
-            if (remoteEmpty && (cfState().cards.length || cfState().events.length)) {
-                await cfPushToSheets(true);
-                localStorage.setItem(CF_SEED_RECOVERY_KEY, CF_SEED_RECOVERY_VERSION);
-                return true;
-            }
-            const remoteCards = (data.cards || []).map(cfNormalizeCard).filter(card => card.name);
-            const remoteWallets = ((data.wallets || []).length ? data.wallets : cfDefaultWallets()).map(cfNormalizeWallet);
-            const remoteEvents = (data.events || []).map(cfNormalizeEvent);
-            if (window.CASHFLOW_LOCAL_SEED
-                && localStorage.getItem(CF_SEED_RECOVERY_KEY) !== CF_SEED_RECOVERY_VERSION
-                && cfLooksWiped(cfNormalizeSettings(settingsRow || {}), remoteCards, remoteWallets, remoteEvents)) {
-                cfRestoreSeedData();
-                await cfPushToSheets(true);
-                localStorage.setItem(CF_SEED_RECOVERY_KEY, CF_SEED_RECOVERY_VERSION);
-                cfRenderAll();
-                if (!silent) setSyncPill('ok', 'Cashflow restored');
-                return true;
-            }
-            cfState().settings = cfNormalizeSettings(settingsRow || {});
-            cfState().cards = remoteCards;
-            cfState().wallets = remoteWallets;
-            cfState().events = remoteEvents;
-            const latestMonth = cfLatestEventMonth();
-            if (latestMonth && latestMonth > cfState().activeMonth) cfState().activeMonth = latestMonth;
-            cfMergeLocalCardCatalog();
-            cfMigrateWalletTransferTracking();
+        if (/^\d{4}-\d{2}$/.test(value || '')) {
+            cfState().activeMonth = value;
             cfSaveLocal();
-            cfRenderAll();
-            if (!silent) setSyncPill('ok', 'Cashflow synced');
-            return true;
-        } catch (error) {
-            if (!silent) setSyncPill('err', 'Cashflow pull failed');
-            console.warn('Cashflow pull error:', error);
-            return false;
+            cfRenderMonthly();
         }
     }
 
+    function cfRenderAll() {
+        cfRenderMonthly();
+    }
+
+    // ── Sheets sync (kept as no-ops so the global refresh flow keeps working) ──
+    // The old Easybills cashflow synced to Google Sheets; monthly spending is
+    // local-only for now. Restoring Easybills means restoring the original
+    // cfPullFromSheets / cfPushToSheets implementations from git history.
+    async function cfPullFromSheets(silent=false) {
+        cfLoadLocal();
+        cfRenderAll();
+        return true;
+    }
     async function cfPushToSheets(silent=false) {
-        const url = getGsUrl();
-        if (!url) { if (!silent) openSyncModal(); return false; }
-        try {
-            const payload = {
-                action:'cashflow_write',
-                settings:[cfState().settings],
-                cards:cfState().cards,
-                wallets:cfState().wallets.map(wallet => ({
-                    ...wallet,
-                    transferredMonths:(wallet.transferredMonths || []).join(',')
-                })),
-                events:cfState().events
-            };
-            await postGsWrite(payload);
-            if (!silent) setSyncPill('ok', 'Cashflow saved');
-            return true;
-        } catch (error) {
-            if (!silent) setSyncPill('err', 'Cashflow sync failed');
-            throw error;
-        }
+        cfSaveLocal();
+        return true;
     }
 
     function parseDashboardDate(value) {
