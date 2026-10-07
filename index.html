@@ -1810,11 +1810,11 @@
                                 <button type="button" id="hb-port-core" onclick="hbSetSatelliteFilter(true,event)">Core</button>
                                 <button type="button" id="hb-port-both" onclick="hbSetSatelliteFilter(false,event)">Core + Satellite</button>
                             </div>
-                            <div id="hb-port-pie-wrap" style="margin-left:auto;display:flex;align-items:center;gap:6px" title="Core vs Satellite value">
-                                <canvas id="hbPortPie" width="52" height="52" style="width:52px;height:52px"></canvas>
-                                <div style="font-size:8px;line-height:1.6;color:#94A3B8">
-                                    <div><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#3B82F6;margin-right:3px"></span>Core</div>
-                                    <div><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#F59E0B;margin-right:3px"></span>Satellite</div>
+                            <div id="hb-port-pie-wrap" style="display:flex;align-items:center;gap:8px" title="Core vs Satellite value">
+                                <canvas id="hbPortPie" width="104" height="104" style="width:104px;height:104px"></canvas>
+                                <div style="font-size:10px;line-height:1.7;color:#94A3B8">
+                                    <div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#7FA8D9;margin-right:4px"></span>Core</div>
+                                    <div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#D9B98A;margin-right:4px"></span>Satellite</div>
                                 </div>
                             </div>
                         </div>
@@ -7683,13 +7683,27 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             type: 'pie',
             data: {
                 labels: ['Core', 'Satellite'],
-                datasets: [{ data: [coreV, satV], backgroundColor: ['#3B82F6', '#F59E0B'], borderColor: '#0B1120', borderWidth: 1 }]
+                datasets: [{ data: [coreV, satV], backgroundColor: ['#7FA8D9', '#D9B98A'], borderColor: '#0B1120', borderWidth: 1 }]
             },
             options: {
                 responsive: false,
                 animation: false,
+                layout: { padding: 2 },
                 plugins: {
                     legend: { display: false },
+                    datalabels: {
+                        color: '#fff',
+                        clamp: true,
+                        textStrokeColor: 'rgba(11,17,32,.55)',
+                        textStrokeWidth: 2,
+                        font: { weight: 'bold', size: 11 },
+                        formatter: (v, c) => {
+                            const sum = c.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                            if (sum <= 0 || v <= 0) return '';
+                            const pct = (v * 100 / sum);
+                            return pct >= 4 ? pct.toFixed(0) + '%' : '';
+                        }
+                    },
                     tooltip: {
                         callbacks: {
                             label: (c) => {
