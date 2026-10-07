@@ -1810,6 +1810,13 @@
                                 <button type="button" id="hb-port-core" onclick="hbSetSatelliteFilter(true,event)">Core</button>
                                 <button type="button" id="hb-port-both" onclick="hbSetSatelliteFilter(false,event)">Core + Satellite</button>
                             </div>
+                            <div id="hb-port-pie-wrap" style="margin-left:auto;display:flex;align-items:center;gap:6px" title="Core vs Satellite value">
+                                <canvas id="hbPortPie" width="52" height="52" style="width:52px;height:52px"></canvas>
+                                <div style="font-size:8px;line-height:1.6;color:#94A3B8">
+                                    <div><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#3B82F6;margin-right:3px"></span>Core</div>
+                                    <div><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#F59E0B;margin-right:3px"></span>Satellite</div>
+                                </div>
+                            </div>
                         </div>
                         <div id="hb-ticker-slicer" style="display:none;width:100%;justify-content:flex-start;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px"></div>
                         <div id="holdings-panel-body" class="hb-body-layout">
@@ -7661,6 +7668,44 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     //  HOLDINGS BREAKDOWN PANEL
     // ══════════════════════════════════════════════════════
     let hbChartInst = null;
+    let hbPortPieInst = null;
+
+    // Small Core vs Satellite pie — top-right of Holdings Breakdown, below the toggle buttons
+    function hbRenderPortPie(coreVal, satVal) {
+        const cv = document.getElementById('hbPortPie');
+        if (!cv) return;
+        if (hbPortPieInst) { hbPortPieInst.destroy(); hbPortPieInst = null; }
+        const coreV = Math.max(0, coreVal || 0);
+        const satV  = Math.max(0, satVal || 0);
+        const total = coreV + satV;
+        if (total <= 0) { cv.getContext('2d').clearRect(0, 0, cv.width, cv.height); return; }
+        hbPortPieInst = new Chart(cv.getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: ['Core', 'Satellite'],
+                datasets: [{ data: [coreV, satV], backgroundColor: ['#3B82F6', '#F59E0B'], borderColor: '#0B1120', borderWidth: 1 }]
+            },
+            options: {
+                responsive: false,
+                animation: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (c) => {
+                                const pct = total > 0 ? (c.raw / total * 100).toFixed(1) : '0.0';
+                                if (typeof balancesHidden !== 'undefined' && balancesHidden) return ` ${c.label}: ฿ •••••• (${pct}%)`;
+                                return ` ${c.label}: ฿${c.raw.toLocaleString('en-US',{maximumFractionDigits:0})} (${pct}%)`;
+                            }
+                        },
+                        backgroundColor: 'rgba(15,23,42,0.95)',
+                        borderColor: '#334155',
+                        borderWidth: 1
+                    }
+                }
+            }
+        });
+    }
     const HB_ALL_ASSETS = ['stocks', 'bonds', 'crypto', 'gold'];
     let hbSelectedAssets = new Set(['stocks']);
 
@@ -7850,6 +7895,10 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             rawRows  = rawRows.concat(ddLoad(a, quarter));
             assetBal += ddGetAssetBalForPeriod(a, quarter);
         });
+
+        // Core vs Satellite pie (always shows both portions, regardless of the Core-only filter)
+        const satTotalForPie = rawRows.filter(hbIsSatellite).reduce((s, r) => s + (r.amount || 0), 0);
+        hbRenderPortPie(Math.max(0, assetBal - satTotalForPie), satTotalForPie);
 
         // Core-only filter: exclude Satellite-tagged holdings (and their balance) by default
         if (hbExcludeSatellite) {
