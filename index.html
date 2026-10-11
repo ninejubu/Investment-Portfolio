@@ -1573,8 +1573,8 @@
                 <div class="text-xs text-slate-400">
                     USD/THB: <span id="header-rate2" class="text-white font-bold">—</span>
                 </div>
-                <div id="amount-unit-toggle" class="bg-slate-800/80 p-0.5 rounded-lg flex space-x-0.5 border border-slate-700" title="Amount display unit">
-                    <button id="amount-unit-thousand-btn" onclick="setAmountUnit('thousand')" class="px-2.5 py-1 text-[11px] font-bold rounded-md bg-blue-600 text-white shadow transition-all">K</button>
+                <div id="amount-unit-toggle" class="bg-slate-800/80 p-0.5 rounded-lg flex space-x-0.5 border border-slate-700" title="Amount display unit: H = hundreds (1,234.56 → 12.35), ฿ = full baht">
+                    <button id="amount-unit-thousand-btn" onclick="setAmountUnit('thousand')" class="px-2.5 py-1 text-[11px] font-bold rounded-md bg-blue-600 text-white shadow transition-all">H</button>
                     <button id="amount-unit-unit-btn" onclick="setAmountUnit('unit')" class="px-2.5 py-1 text-[11px] font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">฿</button>
                 </div>
                 <button id="theme-toggle" class="theme-toggle" onclick="toggleColorTheme()" title="Switch dark or light mode" aria-label="Switch dark or light mode" aria-pressed="false">
@@ -2816,12 +2816,12 @@
     const chartTheme = () => getThemeMode() === 'light'
         ? { axis: '#475569', grid: 'rgba(148, 163, 184, 0.35)', label: '#0F172A', dataLabel: '#0F172A', pointBorder: '#FFFFFF' }
         : { axis: '#94A3B8', grid: 'rgba(51, 65, 85, 0.5)', label: '#F8FAFC', dataLabel: '#FFFFFF', pointBorder: '#FFFFFF' };
-    // Amount unit for balance displays: 'thousand' (default, value ÷ 1000, no suffix) or 'unit' (full baht)
+    // Amount unit for balance displays: 'thousand' (default, value ÷ 100 i.e. hundreds, no suffix) or 'unit' (full baht)
     var amountUnitMode = 'thousand';
     // Formats a baht number in the current unit. Thousand mode always uses 2 decimals; unit mode uses unitDigits.
     function fmtThbAmount(v, unitDigits = 0) {
         const isThousand = amountUnitMode === 'thousand';
-        const n = (Number(v) || 0) / (isThousand ? 1000 : 1);
+        const n = (Number(v) || 0) / (isThousand ? 100 : 1);
         const d = isThousand ? 2 : unitDigits;
         return n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
     }
