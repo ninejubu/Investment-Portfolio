@@ -1573,6 +1573,10 @@
                 <div class="text-xs text-slate-400">
                     USD/THB: <span id="header-rate2" class="text-white font-bold">—</span>
                 </div>
+                <div id="amount-unit-toggle" class="bg-slate-800/80 p-0.5 rounded-lg flex space-x-0.5 border border-slate-700" title="Amount display unit">
+                    <button id="amount-unit-thousand-btn" onclick="setAmountUnit('thousand')" class="px-2.5 py-1 text-[11px] font-bold rounded-md bg-blue-600 text-white shadow transition-all">K</button>
+                    <button id="amount-unit-unit-btn" onclick="setAmountUnit('unit')" class="px-2.5 py-1 text-[11px] font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">฿</button>
+                </div>
                 <button id="theme-toggle" class="theme-toggle" onclick="toggleColorTheme()" title="Switch dark or light mode" aria-label="Switch dark or light mode" aria-pressed="false">
                     <span class="theme-toggle-knob"><i id="theme-toggle-icon" class="fa-solid fa-moon text-[11px]"></i></span>
                     <span id="theme-toggle-label" class="theme-toggle-label">Dark</span>
@@ -1619,7 +1623,7 @@
                     <div class="bg-card rounded-xl p-6 border border-slate-700 lg:col-span-2 flex flex-col justify-center">
                         <p class="text-slate-400 mb-1 font-medium flex items-center gap-2">Total Net Worth
                             <button id="bal-toggle-btn" onclick="toggleBalanceVisibility()" title="Show/Hide balances" style="background:transparent;border:none;cursor:pointer;color:#64748b;padding:2px 4px;border-radius:4px;transition:color .15s" onmouseover="this.style.color='#F8FAFC'" onmouseout="this.style.color='#64748b'">
-                                <i class="fa-solid fa-eye-slash" id="bal-toggle-icon" style="font-size:13px"></i>
+                                <i class="fa-solid fa-eye" id="bal-toggle-icon" style="font-size:13px"></i>
                             </button>
                         </p>
                         <h3 class="text-4xl font-bold text-white mb-2" id="total-net-worth">฿ 0.00</h3>
@@ -2077,7 +2081,7 @@
                                 <div id="structure-period" class="text-base font-bold text-slate-200">Q2</div>
                             </div>
                             <button id="structure-bal-toggle-btn" onclick="toggleBalanceVisibility()" title="Show/Hide balances" style="background:transparent;border:none;cursor:pointer;color:#64748b;padding:2px 4px;border-radius:4px;transition:color .15s" onmouseover="this.style.color='#F8FAFC'" onmouseout="this.style.color='#64748b'">
-                                <i class="fa-solid fa-eye-slash" id="structure-bal-toggle-icon" style="font-size:15px"></i>
+                                <i class="fa-solid fa-eye" id="structure-bal-toggle-icon" style="font-size:15px"></i>
                             </button>
                         </div>
                     </div>
@@ -2812,10 +2816,20 @@
     const chartTheme = () => getThemeMode() === 'light'
         ? { axis: '#475569', grid: 'rgba(148, 163, 184, 0.35)', label: '#0F172A', dataLabel: '#0F172A', pointBorder: '#FFFFFF' }
         : { axis: '#94A3B8', grid: 'rgba(51, 65, 85, 0.5)', label: '#F8FAFC', dataLabel: '#FFFFFF', pointBorder: '#FFFFFF' };
-    const fmt = (v) => '฿' + (v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    // Amount unit for balance displays: 'thousand' (default, value ÷ 1000, no suffix) or 'unit' (full baht)
+    var amountUnitMode = 'thousand';
+    // Formats a baht number in the current unit. Thousand mode always uses 2 decimals; unit mode uses unitDigits.
+    function fmtThbAmount(v, unitDigits = 0) {
+        const isThousand = amountUnitMode === 'thousand';
+        const n = (Number(v) || 0) / (isThousand ? 1000 : 1);
+        const d = isThousand ? 2 : unitDigits;
+        return n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+    }
+    const fmt = (v) => '฿' + fmtThbAmount(v, 2);
     function fmtCompactTHB(v) {
         const sign = v >= 0 ? '+' : '-';
         const abs = Math.abs(v || 0);
+        if (amountUnitMode === 'thousand') return `${sign}฿${fmtThbAmount(abs)}`;
         if (abs >= 1000000) return `${sign}฿${(abs / 1000000).toFixed(abs >= 10000000 ? 0 : 1)}M`;
         if (abs >= 1000) return `${sign}฿${(abs / 1000).toFixed(abs >= 100000 ? 0 : 1)}K`;
         return `${sign}฿${abs.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
@@ -5384,7 +5398,7 @@
 
     function structureFormatAmount(value) {
         if (typeof balancesHidden !== 'undefined' && balancesHidden) return '฿ ••••••';
-        return `฿${Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+        return `฿${fmtThbAmount(value, 0)}`;
     }
 
     function getStructureRowInputs() {
@@ -7448,7 +7462,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
     // ════════════════════════════════════════════════════
     //   BALANCE VISIBILITY TOGGLE
     // ════════════════════════════════════════════════════
-    let balancesHidden = true;
+    let balancesHidden = false; // amounts visible by default; choosing "Unit" re-censors
     const BALANCE_IDS = ['total-net-worth','stock-bal','bond-bal','crypto-bal','gold-bal','hb-total'];
 
     function applyBalanceMask() {
@@ -7459,6 +7473,33 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         });
         // Re-render quarterly table so fmtQ picks up balancesHidden=true
         if (typeof renderQuarterlyTable === 'function') renderQuarterlyTable();
+    }
+
+    function syncBalanceEyeIcons() {
+        const cls = balancesHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+        ['bal-toggle-icon', 'structure-bal-toggle-icon'].forEach(id => {
+            const icon = document.getElementById(id);
+            if (icon) icon.className = cls;
+        });
+    }
+
+    function setAmountUnit(mode) {
+        if (mode === 'unit') {
+            amountUnitMode = 'unit';
+            balancesHidden = true; // returning to full units re-censors balances
+        } else {
+            amountUnitMode = 'thousand';
+        }
+        const active = 'px-2.5 py-1 text-[11px] font-bold rounded-md transition-all bg-blue-600 text-white shadow';
+        const inactive = 'px-2.5 py-1 text-[11px] font-bold rounded-md transition-all text-slate-400 hover:text-white hover:bg-slate-700/50';
+        const tBtn = document.getElementById('amount-unit-thousand-btn');
+        const uBtn = document.getElementById('amount-unit-unit-btn');
+        if (tBtn) tBtn.className = amountUnitMode === 'thousand' ? active : inactive;
+        if (uBtn) uBtn.className = amountUnitMode === 'unit' ? active : inactive;
+        syncBalanceEyeIcons();
+        updateDashboard(); // re-renders net worth, asset cards, quarterly table and ledger; masks when hidden
+        if (typeof renderHoldingsBreakdown === 'function') renderHoldingsBreakdown();
+        if (document.getElementById('tab-structure')?.classList.contains('active') && typeof renderStructure === 'function') renderStructure();
     }
 
     function toggleBalanceVisibility() {
@@ -7824,7 +7865,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         if (bothBtn) bothBtn.classList.toggle('is-active', !hbExcludeSatellite);
     }
     // Amount formatter — masks when balances are hidden (used across all hb* render functions)
-    const fmtAmt = (v) => (typeof balancesHidden !== 'undefined' && balancesHidden) ? '฿ ••••••' : `฿${(v||0).toLocaleString('en-US',{maximumFractionDigits:0})}`;
+    const fmtAmt = (v) => (typeof balancesHidden !== 'undefined' && balancesHidden) ? '฿ ••••••' : `฿${fmtThbAmount(v, 0)}`;
 
     function hbSetView(view, event) {
         if (event) event.stopPropagation();
@@ -7961,7 +8002,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                                 label: (c) => {
                                     const pct = total > 0 ? (c.raw / total * 100).toFixed(1) : '0.0';
                                     if (balancesHidden) return ` ${c.label}: ฿ •••••• (${pct}%)`;
-                                    return ` ${c.label}: ฿${c.raw.toLocaleString('en-US',{maximumFractionDigits:0})} (${pct}%)`;
+                                    return ` ${c.label}: ฿${fmtThbAmount(c.raw, 0)} (${pct}%)`;
                                 }
                             },
                             backgroundColor: 'rgba(15,23,42,0.95)',
@@ -8103,7 +8144,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
         }
         const filteredTotal = visIndexed.reduce((s,o)=>s+o.r.amount,0) + (showUntracked?untracked:0);
         if (hintEl)  hintEl.textContent  = filterActive ? `${hbThemeFilter.size} theme${hbThemeFilter.size>1?'s':''} selected — tap ticker to expand platforms` : 'Tap ticker to expand platforms';
-        if (totalEl) totalEl.textContent = balancesHidden ? '฿ ••••••' : (filterActive ? `Filtered: ฿${filteredTotal.toLocaleString('en-US',{maximumFractionDigits:0})}` : `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`);
+        if (totalEl) totalEl.textContent = balancesHidden ? '฿ ••••••' : (filterActive ? `Filtered: ฿${fmtThbAmount(filteredTotal, 0)}` : `Total: ฿${fmtThbAmount(assetBal, 0)}`);
     }
 
     function hbRenderSegmentView(mergedRows, assetBal, color, asset, quarter, hintEl, totalEl) {
@@ -8143,7 +8184,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                 listEl.appendChild(el);
             });
             if (hintEl)  hintEl.textContent  = hbSegmentDrill;
-            if (totalEl) totalEl.textContent = balancesHidden ? '฿ ••••••' : `฿${segTotal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+            if (totalEl) totalEl.textContent = balancesHidden ? '฿ ••••••' : `฿${fmtThbAmount(segTotal, 0)}`;
             return;
         }
 
@@ -8213,7 +8254,7 @@ Click to see tickers`;
         }
         const filteredTotal = visSegments.reduce((s,x)=>s+x.amount,0) + (showUntracked?untracked:0);
         if (hintEl)  hintEl.textContent  = 'Hover for balance · Click slice or chip to see tickers';
-        if (totalEl) totalEl.textContent = balancesHidden ? '฿ ......' : `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+        if (totalEl) totalEl.textContent = balancesHidden ? '฿ ......' : `Total: ฿${fmtThbAmount(assetBal, 0)}`;
     }
 
     function hbRenderPlatformView(mergedRows, assetBal, color, asset, quarter, hintEl, totalEl) {
@@ -8337,7 +8378,7 @@ Click to see tickers`;
         }
         const filteredTotal = visPlatforms.reduce((s,x)=>s+x.amount,0) + (showUntracked?untracked:0);
         if (hintEl)  hintEl.textContent  = 'Hover for balance · Click slice or chip to see tickers';
-        if (totalEl) totalEl.textContent = balancesHidden ? '฿ ......' : `Total: ฿${assetBal.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+        if (totalEl) totalEl.textContent = balancesHidden ? '฿ ......' : `Total: ฿${fmtThbAmount(assetBal, 0)}`;
     }
 
     // Re-render breakdown after drill-down closes
