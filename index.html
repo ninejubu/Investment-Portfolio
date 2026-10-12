@@ -1278,6 +1278,27 @@
         body.theme-light .cf-monthly-hero-value, body.theme-light .cf-monthly-stat-value, body.theme-light .cf-monthly-cat input[type="text"] { color:#0F172A; }
         body.theme-light .cf-monthly-cat input[type="number"] { background:#F8FAFC; border-color:#CBD5E1; color:#0F172A; }
         body.theme-light .cf-monthly-cat { border-bottom-color:rgba(148,163,184,.4); }
+        /* ── Card statement & payment dates ── */
+        .cf-dates-head, .cf-dates-row { display:grid; grid-template-columns:minmax(0,1.4fr) repeat(2,172px); align-items:center; gap:10px; padding:6px 0; }
+        .cf-dates-head { color:#64748B; font-size:9px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; padding-top:0; padding-bottom:4px; border-bottom:1px solid #334155; }
+        .cf-dates-head-cell { text-align:right; }
+        .cf-dates-row { border-bottom:1px dashed rgba(71,85,105,.35); }
+        .cf-dates-row:last-child { border-bottom:none; }
+        .cf-dates-name { min-width:0; color:#E2E8F0; font-size:12px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .cf-dates-group { color:#64748B; font-size:9px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; padding:10px 0 3px; }
+        .cf-dates-cell { display:flex; align-items:center; justify-content:flex-end; gap:8px; }
+        .cf-dates-day { width:54px; background:#0B1220; border:1px solid #475569; border-radius:6px; color:#F8FAFC; font-size:12px; padding:5px 6px; text-align:center; outline:none; font-variant-numeric:tabular-nums; }
+        .cf-dates-day:focus { border-color:var(--cf-accent); }
+        .cf-dates-when { width:52px; color:#94A3B8; font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; }
+        body.theme-light .cf-dates-name { color:#0F172A; }
+        body.theme-light .cf-dates-day { background:#F8FAFC; border-color:#CBD5E1; color:#0F172A; }
+        body.theme-light .cf-dates-when { color:#334155; }
+        body.theme-light .cf-dates-row { border-bottom-color:rgba(148,163,184,.4); }
+        @media (max-width:700px) {
+            .cf-dates-head, .cf-dates-row { grid-template-columns:minmax(0,1fr) 96px 96px; gap:6px; }
+            .cf-dates-cell { gap:5px; }
+            .cf-dates-when { width:auto; }
+        }
         body.theme-light .cf-monthly-cat input[type="text"] { border-bottom-color:#CBD5E1; }
         @media (max-width:640px) { .cf-monthly-grid { grid-template-columns:1fr; } }
         .cf-calendar-wrap { overflow:hidden; border:1px solid #273449; border-radius:8px; background:#0B1220; }
@@ -2061,6 +2082,18 @@
                             <div class="cf-cat-row"><span class="cf-cat-name">Others</span><span class="cf-cat-pct" id="cf-catpct-other"></span><input class="cf-cat-amount" id="cf-cat-other" type="text" inputmode="decimal" placeholder="0" oninput="cfFormatAmount(this); cfSetCat('other', this.value)"></div>
                             <div class="cf-cat-total-row"><span class="cf-monthly-stat-label">Total expenses</span><span id="cf-monthly-expense-total" class="cf-cat-total-value">฿0</span></div>
                         </div>
+                    </section>
+
+                    <!-- ── Card statement & payment dates ───────────────── -->
+                    <div class="cf-section-label">Credit cards · statement &amp; payment dates</div>
+                    <section class="cf-panel">
+                        <div class="cf-panel-head">
+                            <div>
+                                <h4 class="cf-title">Card Dates</h4>
+                                <div class="cf-subtle">Statement date and payment due date for each card. Edit the day if your bank changes it — the date on the right follows the month selected above.</div>
+                            </div>
+                        </div>
+                        <div id="cf-card-dates"></div>
                     </section>
                 </div>
             </div>
@@ -4665,7 +4698,7 @@
         if (/^\d{4}-\d{2}$/.test(value || '')) {
             cfState().activeMonth = value;
             cfSaveLocal();
-            cfRenderMonthly();
+            cfRenderAll();
         }
     }
 
@@ -4722,8 +4755,92 @@
         });
     }
 
+    // ── Card statement & payment dates (restored from the old Easybills planner) ──
+    // The card list lives under cashflow_cards_v1 in localStorage — the data was
+    // left in place when Easybills was removed from the UI on 2026-10-03. If a
+    // device never had it, fall back to the seed in cashflow_local_data.js.
+    const CF_CARDS_KEY = 'cashflow_cards_v1';
+
+    function cfRawCards() {
+        let cards = null;
+        try { cards = JSON.parse(localStorage.getItem(CF_CARDS_KEY) || ''); } catch (error) { cards = null; }
+        if (!Array.isArray(cards) || !cards.length) {
+            cards = window.CASHFLOW_LOCAL_SEED && Array.isArray(window.CASHFLOW_LOCAL_SEED.cards) ? window.CASHFLOW_LOCAL_SEED.cards : [];
+            if (cards.length) localStorage.setItem(CF_CARDS_KEY, JSON.stringify(cards));
+        }
+        return Array.isArray(cards) ? cards : [];
+    }
+
+    function cfCardDay(value, fallback) {
+        const n = Math.round(satNumber(value));
+        return Math.min(31, Math.max(1, Number.isFinite(n) && n > 0 ? n : (fallback || 1)));
+    }
+
+    // Concrete calendar date for a day-of-month, following the active month.
+    // A due day before the statement day (e.g. statement 26, due 14) lands in
+    // the next month. Days past the month's length are clamped.
+    function cfCardDateLabel(month, day, prevDay) {
+        const parts = String(month || '').split('-');
+        if (parts.length !== 2) return '';
+        let year = Number(parts[0]), monthIdx = Number(parts[1]);
+        if (prevDay && day < prevDay) {
+            if (monthIdx === 12) { monthIdx = 1; year += 1; }
+            else monthIdx += 1;
+        }
+        const daysInMonth = new Date(year, monthIdx, 0).getDate();
+        const d = Math.min(Math.max(1, Math.round(day)), daysInMonth);
+        return new Date(year, monthIdx - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function cfSetCardDay(cardId, field, input) {
+        const cards = cfRawCards();
+        const card = cards.find(c => c && String(c.id) === String(cardId));
+        if (!card) return;
+        card[field] = cfCardDay(input.value, card[field]);
+        card.updatedAt = new Date().toISOString();
+        localStorage.setItem(CF_CARDS_KEY, JSON.stringify(cards));
+        cfRenderCardDates();
+    }
+
+    function cfRenderCardDates() {
+        const body = document.getElementById('cf-card-dates');
+        if (!body) return;
+        const month = cfState().activeMonth;
+        const cards = cfRawCards()
+            .filter(c => c && c.active !== false && String(c.active).toLowerCase() !== 'false')
+            .sort((a, b) =>
+                (Math.round(satNumber(a.sortOrder) || 0) - Math.round(satNumber(b.sortOrder) || 0)) ||
+                String(a.name || '').localeCompare(String(b.name || '')));
+        if (!cards.length) {
+            body.innerHTML = '<div class="cf-empty">No credit cards found on this device — the card list from the old planner is empty.</div>';
+            return;
+        }
+        const groups = new Map();
+        cards.forEach(card => {
+            const issuer = String(card.issuer || 'Other').trim().toUpperCase() || 'Other';
+            if (!groups.has(issuer)) groups.set(issuer, []);
+            groups.get(issuer).push(card);
+        });
+        let html = '<div class="cf-dates-head"><span>Card</span><span class="cf-dates-head-cell">Statement date</span><span class="cf-dates-head-cell">Payment due</span></div>';
+        groups.forEach((list, issuer) => {
+            html += `<div class="cf-dates-group">${satEsc(issuer)}</div>`;
+            list.forEach(card => {
+                const sd = cfCardDay(card.statementDay);
+                const dd = cfCardDay(card.dueDay);
+                const label = satEsc(card.name || card.id);
+                html += `<div class="cf-dates-row">
+                    <span class="cf-dates-name" title="${label}">${label}</span>
+                    <span class="cf-dates-cell"><input class="cf-dates-day" type="number" min="1" max="31" value="${sd}" onchange="cfSetCardDay('${satEsc(card.id)}','statementDay',this)" aria-label="Statement day for ${label}"><span class="cf-dates-when">${cfCardDateLabel(month, sd)}</span></span>
+                    <span class="cf-dates-cell"><input class="cf-dates-day" type="number" min="1" max="31" value="${dd}" onchange="cfSetCardDay('${satEsc(card.id)}','dueDay',this)" aria-label="Payment due day for ${label}"><span class="cf-dates-when">${cfCardDateLabel(month, dd, sd)}</span></span>
+                </div>`;
+            });
+        });
+        body.innerHTML = html;
+    }
+
     function cfRenderAll() {
         cfRenderMonthly();
+        cfRenderCardDates();
     }
 
     // ── Sheets sync (kept as no-ops so the global refresh flow keeps working) ──
