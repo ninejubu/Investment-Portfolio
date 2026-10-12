@@ -29,10 +29,16 @@ var TAB_CF_SETTINGS   = "Cashflow_settings";
 var TAB_CF_CARDS      = "Cashflow_cards";
 var TAB_CF_WALLETS    = "Cashflow_wallets";
 var TAB_CF_EVENTS     = "Cashflow_events";
-var TAB_CF_MONTHLY    = "Cashflow_monthly";
-var TAB_CF_INVEST     = "Cashflow_invest_returns";
-var TAB_CF_INSURANCE  = "Cashflow_insurance";
-var TAB_CF_TAXFUNDS   = "Cashflow_tax_funds";
+// v2 (current Cashflow Planner): ONE tab, four side-by-side regions.
+// Row 1 = section titles, row 2 = column headers, row 3+ = data.
+var TAB_INV_DATA      = "Investment data";
+var INV_COL = {
+  // region name -> { first (1-based col), fields in order }
+  monthly:   { first: 1,  fields: ['month', 'income', 'expense'] },       // A-C
+  invest:    { first: 4,  fields: ['year', 'amount', 'pct'] },            // D-F
+  insurance: { first: 8,  fields: ['policyNumber', 'amount', 'description', 'duePaid'] }, // H-K
+  taxfunds:  { first: 13, fields: ['type', 'fund', 'start', 'end', 'amount', 'unitAmount', 'platform'] } // M-S
+};
 
 function doGet(e) {
   var p = (e && e.parameter) ? e.parameter : {};
@@ -750,10 +756,95 @@ var CF_EVENT_HEADERS = [
   'transferAmount','cashDelta','debtDelta','walletDelta','note','createdAt'
 ];
 
-var CF_MONTHLY_HEADERS = ['month','income','expense'];
-var CF_INVEST_HEADERS = ['year','amount','pct'];
-var CF_INSURANCE_HEADERS = ['id','policyNumber','type','amount','date'];
-var CF_TAXFUNDS_HEADERS = ['id','name','amount','platform','sellable'];
+// "Investment data" tab layout (the user's own design):
+//   Row 1: section titles  A1 Monthly · D1 Investment return · H1 Insurance · M1 Tax funds
+//   Row 2: column headers (D-F, H-K, M-S). A:B is label/value data from row 2.
+//   Row 3+: data.  C, G, L are spacer columns.
+//   U1 'Synced month (auto)' / U2 'YYYY-MM' — which month A2:B3 currently hold.
+var INV_TITLES = { 1: 'Monthly', 4: 'Investment return', 8: 'Insurance', 13: 'Tax funds' };
+var INV_HEADERS = {
+  4:  ['Year', 'Return', 'Return %'],
+  8:  ['Policy No.', 'Amount', 'Description', 'Due/Paid'],
+  13: ['Type', 'SSF', 'Start', 'End', 'Amount', 'Unit Amount', 'Platform']
+};
+var INV_MONTHLY_CATEGORIES = [
+  'Food & Beverage', 'Coffee', 'Shopping', 'Transportation',
+  'Bills', 'Investment', 'Family', 'Others'
+];
+
+function invNumber(v) {
+  if (v === '' || v === null || v === undefined) return '';
+  if (typeof v === 'number') return v;
+  var s = String(v).trim();
+  if (!s || /^n\/?a$/i.test(s)) return '';
+  var neg = s.charAt(0) === '-' || (s.charAt(0) === '(' && s.charAt(s.length - 1) === ')');
+  var n = parseFloat(s.replace(/[^0-9.]/g, ''));
+  if (isNaN(n)) return '';
+  return neg ? -n : n;
+}
+
+function invCreateSheet_(ss) {
+  var sheet = ss.insertSheet(TAB_INV_DATA);
+  for (var col in INV_TITLES) sheet.getRange(1, Number(col)).setValue(INV_TITLES[col]);
+  for (var h in INV_HEADERS) {
+    var first = Number(h);
+    sheet.getRange(2, first, 1, INV_HEADERS[h].length).setValues([INV_HEADERS[h]]);
+  }
+  sheet.getRange(1, 1).setFontWeight('bold').setFontSize(12);
+  sheet.getRange(2, 1, 1, 19).setFontWeight('bold').setBackground('#D9EAD3');
+  sheet.getRange(2, 1, 2, 2).setValues([['Income', ''], ['Expense', '']]);
+  for (var i = 0; i < INV_MONTHLY_CATEGORIES.length; i++) {
+    sheet.getRange(4 + i, 1).setValue(INV_MONTHLY_CATEGORIES[i]);
+  }
+  sheet.getRange(1, 21).setValue('Synced month (auto)');
+  sheet.getRange(2, 21).setValue('');
+  sheet.setFrozenRows(2);
+  return sheet;
+}
+
+function invReadRegion_(values, region, formats) {
+  var rows = [];
+  for (var r = 2; r < values.length; r++) { // row 3+ (0-based 2)
+    var obj = {};
+    var has = false;
+    for (var c = 0; c < region.fields.length; c++) {
+      var v = values[r][region.first - 1 + c];
+      if (v instanceof Date) v = Utilities.formatDate(v, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+      // Cells formatted as % hold fractions (2.8022 = 280.22%) — scale back.
+      if (typeof v === 'number' && formats && formats[r - 2]
+          && String(formats[r - 2][c] || '').indexOf('%') >= 0) v = v * 100;
+      if (v !== '' && v !== null && v !== undefined) has = true;
+      obj[region.fields[c]] = v == null ? '' : v;
+    }
+    if (has) rows.push(obj);
+  }
+  return rows;
+}
+
+function invWriteRegion_(sheet, region, rows) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow > 2) {
+    sheet.getRange(3, region.first, lastRow - 2, region.fields.length).clearContent();
+  }
+  if (!rows.length) return;
+  var data = rows.map(function(obj) {
+    return region.fields.map(function(f) {
+      var v = obj[f];
+      return v === null || v === undefined ? '' : v;
+    });
+  });
+  sheet.getRange(3, region.first, data.length, region.fields.length).setValues(data);
+  // "Return %" values are plain numbers (280.22) — give the column a literal
+  // % display format so Sheets never reinterprets them as fractions.
+  var pctIdx = region.fields.indexOf('pct');
+  if (pctIdx >= 0) {
+    for (var i = 0; i < data.length; i++) {
+      if (data[i][pctIdx] !== '') {
+        sheet.getRange(3 + i, region.first + pctIdx).setNumberFormat('0.00"%"');
+      }
+    }
+  }
+}
 
 function cashflowRead() {
   try {
@@ -762,24 +853,43 @@ function cashflowRead() {
     var cardsSheet = ss.getSheetByName(TAB_CF_CARDS);
     var walletsSheet = ss.getSheetByName(TAB_CF_WALLETS);
     var eventsSheet = ss.getSheetByName(TAB_CF_EVENTS);
-    var monthlySheet = ss.getSheetByName(TAB_CF_MONTHLY);
-    var investSheet = ss.getSheetByName(TAB_CF_INVEST);
-    var insuranceSheet = ss.getSheetByName(TAB_CF_INSURANCE);
-    var taxfundsSheet = ss.getSheetByName(TAB_CF_TAXFUNDS);
-    return jsonOut({
+    var invSheet = ss.getSheetByName(TAB_INV_DATA);
+    var out = {
       initialized: !!settingsSheet && !!cardsSheet && !!walletsSheet && !!eventsSheet,
-      // true once the v2 tabs exist (created by a dashboard push) — after
-      // that, an empty tab is authoritative ("cleared"), not "uninitialized".
-      initializedV2: !!monthlySheet && !!investSheet && !!insuranceSheet && !!taxfundsSheet,
+      // true once the "Investment data" tab exists — after that its content
+      // is authoritative (empty = cleared), not "uninitialized".
+      initializedV2: !!invSheet,
       settings: structuredSheetToJson(settingsSheet, CF_SETTING_HEADERS),
       cards: structuredSheetToJson(cardsSheet, CF_CARD_HEADERS),
       wallets: structuredSheetToJson(walletsSheet, CF_WALLET_HEADERS),
       events: structuredSheetToJson(eventsSheet, CF_EVENT_HEADERS),
-      monthly: structuredSheetToJson(monthlySheet, CF_MONTHLY_HEADERS),
-      invest: structuredSheetToJson(investSheet, CF_INVEST_HEADERS),
-      insurance: structuredSheetToJson(insuranceSheet, CF_INSURANCE_HEADERS),
-      taxfunds: structuredSheetToJson(taxfundsSheet, CF_TAXFUNDS_HEADERS)
-    });
+      monthly: [],
+      invest: [],
+      insurance: [],
+      taxfunds: [],
+      syncedMonth: ''
+    };
+    if (invSheet) {
+      var values = invSheet.getDataRange().getValues();
+      var monthly = {};
+      for (var r = 1; r < values.length; r++) { // row 2+ (0-based 1), A:B label/value
+        var label = String(values[r][0] || '').trim();
+        if (!label) continue;
+        var key = label.toLowerCase();
+        if (key === 'income') monthly.income = invNumber(values[r][1]);
+        else if (key === 'expense') monthly.expense = invNumber(values[r][1]);
+        // category rows (A4:A11) stay on the sheet untouched
+      }
+      out.monthly = [monthly];
+      out.syncedMonth = String(invSheet.getRange(2, 21).getValue() || '');
+      var fmtRange = values.length > 2
+        ? invSheet.getRange(3, INV_COL.invest.first, values.length - 2, INV_COL.invest.fields.length).getNumberFormats()
+        : [];
+      out.invest = invReadRegion_(values, INV_COL.invest, fmtRange);
+      out.insurance = invReadRegion_(values, INV_COL.insurance, []);
+      out.taxfunds = invReadRegion_(values, INV_COL.taxfunds, []);
+    }
+    return jsonOut(out);
   } catch (err) {
     return jsonOut({ error: err.message });
   }
@@ -788,17 +898,27 @@ function cashflowRead() {
 function cashflowWrite(data) {
   try {
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    // Written only when provided so older payloads never wipe tabs they
-    // don't carry.
+    // Legacy Easybills tabs — written only when provided so older payloads
+    // never wipe tabs they don't carry.
     if (data.settings !== undefined) writeStructuredSheet(ss, TAB_CF_SETTINGS, CF_SETTING_HEADERS, data.settings || []);
     if (data.cards !== undefined) writeStructuredSheet(ss, TAB_CF_CARDS, CF_CARD_HEADERS, data.cards || []);
     if (data.wallets !== undefined) writeStructuredSheet(ss, TAB_CF_WALLETS, CF_WALLET_HEADERS, data.wallets || []);
     if (data.events !== undefined) writeStructuredSheet(ss, TAB_CF_EVENTS, CF_EVENT_HEADERS, data.events || []);
-    // v2 sections (current Cashflow Planner)
-    if (data.monthly !== undefined) writeStructuredSheet(ss, TAB_CF_MONTHLY, CF_MONTHLY_HEADERS, data.monthly || []);
-    if (data.invest !== undefined) writeStructuredSheet(ss, TAB_CF_INVEST, CF_INVEST_HEADERS, data.invest || []);
-    if (data.insurance !== undefined) writeStructuredSheet(ss, TAB_CF_INSURANCE, CF_INSURANCE_HEADERS, data.insurance || []);
-    if (data.taxfunds !== undefined) writeStructuredSheet(ss, TAB_CF_TAXFUNDS, CF_TAXFUNDS_HEADERS, data.taxfunds || []);
+    // v2: single "Investment data" tab, four regions.
+    var hasV2 = data.monthly !== undefined || data.invest !== undefined ||
+                data.insurance !== undefined || data.taxfunds !== undefined;
+    if (hasV2) {
+      var sheet = ss.getSheetByName(TAB_INV_DATA) || invCreateSheet_(ss);
+      if (data.monthly !== undefined) {
+        var m = (data.monthly && data.monthly[0]) || {};
+        sheet.getRange(2, 2).setValue(m.income === 0 || m.income === '' ? '' : m.income);
+        sheet.getRange(3, 2).setValue(m.expense === 0 || m.expense === '' ? '' : m.expense);
+        sheet.getRange(2, 21).setValue(String(data.syncedMonth || ''));
+      }
+      if (data.invest !== undefined) invWriteRegion_(sheet, INV_COL.invest, data.invest || []);
+      if (data.insurance !== undefined) invWriteRegion_(sheet, INV_COL.insurance, data.insurance || []);
+      if (data.taxfunds !== undefined) invWriteRegion_(sheet, INV_COL.taxfunds, data.taxfunds || []);
+    }
     return jsonOut({ ok: true, timestamp: new Date().toISOString() });
   } catch (err) {
     return jsonOut({ error: err.message });

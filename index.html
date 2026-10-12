@@ -2071,13 +2071,13 @@
                             <div class="cf-panel-head">
                                 <div>
                                     <h4 class="cf-title">Insurance Policies</h4>
-                                    <div class="cf-subtle">Your policies — type, payment amount and date.</div>
+                                    <div class="cf-subtle">Your policies — payment amount, description and due/paid.</div>
                                 </div>
                                 <button class="cf-btn" type="button" onclick="cfAddInsurance()"><i class="fa-solid fa-plus"></i> Add</button>
                             </div>
                             <div class="cf-table-wrap">
                                 <table class="cf-mini-table">
-                                    <thead><tr><th>Policy #</th><th>Type</th><th class="num">Payment (฿)</th><th>Payment date</th><th></th></tr></thead>
+                                    <thead><tr><th>Policy #</th><th class="num">Amount (฿)</th><th>Description</th><th>Due/Paid</th><th></th></tr></thead>
                                     <tbody id="cf-insurance-tbody"></tbody>
                                 </table>
                             </div>
@@ -2088,13 +2088,13 @@
                             <div class="cf-panel-head">
                                 <div>
                                     <h4 class="cf-title">Tax Funds</h4>
-                                    <div class="cf-subtle">Tax funds — name, amount, platform and sellable date.</div>
+                                    <div class="cf-subtle">SSF / ESG funds — name, period, amount and platform.</div>
                                 </div>
                                 <button class="cf-btn" type="button" onclick="cfAddTaxFund()"><i class="fa-solid fa-plus"></i> Add</button>
                             </div>
                             <div class="cf-table-wrap">
                                 <table class="cf-mini-table">
-                                    <thead><tr><th>Fund</th><th class="num">Amount (฿)</th><th>Platform</th><th>Sellable date</th><th></th></tr></thead>
+                                    <thead><tr><th>Type</th><th>Fund</th><th>Start</th><th>End</th><th class="num">Amount (฿)</th><th class="num">Unit</th><th>Platform</th><th></th></tr></thead>
                                     <tbody id="cf-taxfund-tbody"></tbody>
                                 </table>
                             </div>
@@ -4997,7 +4997,9 @@
     }
 
     // ── Insurance policies ──
-    // CF_INS_KEY: [{ id, policyNumber, type, amount, date ('YYYY-MM-DD' or '') }]
+    // CF_INS_KEY: [{ id, policyNumber, amount, description, duePaid }]
+    // Mirrors the "Insurance" region (H-K) of the Investment data tab.
+    // duePaid is free text (e.g. "Jan/Jan") to match the sheet.
     const CF_INS_KEY = 'cashflow_insurance_v1';
 
     function cfInsuranceRows() {
@@ -5007,9 +5009,9 @@
             return raw.map((row, i) => ({
                 id: String(row.id || `ins_${i + 1}`),
                 policyNumber: String(row.policyNumber || ''),
-                type: String(row.type || ''),
                 amount: Math.max(0, satNumber(row.amount)),
-                date: /^\d{4}-\d{2}-\d{2}$/.test(String(row.date || '')) ? String(row.date) : ''
+                description: String(row.description || ''),
+                duePaid: String(row.duePaid || '')
             }));
         } catch (error) { return []; }
     }
@@ -5020,7 +5022,7 @@
 
     function cfAddInsurance() {
         const rows = cfInsuranceRows();
-        rows.push({ id: `ins_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, policyNumber: '', type: '', amount: 0, date: '' });
+        rows.push({ id: `ins_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, policyNumber: '', amount: 0, description: '', duePaid: '' });
         cfSaveInsurance(rows);
         cfQueuePush();
         cfRenderInsurance();
@@ -5036,7 +5038,6 @@
         const rows = cfInsuranceRows().map(row => {
             if (row.id !== id) return row;
             if (field === 'amount') row.amount = Math.max(0, satNumber(input.value));
-            else if (field === 'date') row.date = /^\d{4}-\d{2}-\d{2}$/.test(input.value) ? input.value : '';
             else row[field] = String(input.value);
             return row;
         });
@@ -5053,16 +5054,20 @@
         if (emptyEl) emptyEl.classList.toggle('hidden', rows.length > 0);
         tbody.innerHTML = rows.map(row => `<tr>
             <td><input class="cf-mini-input" type="text" placeholder="Policy number" value="${satEsc(row.policyNumber)}" oninput="cfSetInsurance('${row.id}','policyNumber',this)"></td>
-            <td><input class="cf-mini-input" type="text" placeholder="e.g. Life, Medical" value="${satEsc(row.type)}" oninput="cfSetInsurance('${row.id}','type',this)"></td>
             <td class="num"><input class="cf-mini-input" type="text" inputmode="decimal" placeholder="0" value="${row.amount > 0 ? row.amount.toLocaleString('en-US') : ''}" oninput="cfFormatAmount(this); cfSetInsurance('${row.id}','amount',this)"></td>
-            <td><input class="cf-mini-input" type="date" value="${row.date}" onchange="cfSetInsurance('${row.id}','date',this)"></td>
+            <td><input class="cf-mini-input" type="text" placeholder="Description" value="${satEsc(row.description)}" oninput="cfSetInsurance('${row.id}','description',this)"></td>
+            <td><input class="cf-mini-input" type="text" placeholder="e.g. Jan/Jan" value="${satEsc(row.duePaid)}" oninput="cfSetInsurance('${row.id}','duePaid',this)"></td>
             <td><button class="cf-mini-del" type="button" title="Remove policy" onclick="cfDeleteInsurance('${row.id}')"><i class="fa-solid fa-xmark"></i></button></td>
         </tr>`).join('');
     }
 
     // ── Tax funds ──
-    // CF_TAX_KEY: [{ id, name, amount, platform, sellable ('YYYY-MM-DD' or '') }]
+    // CF_TAX_KEY: [{ id, type, fund, start, end, amount, unitAmount, platform }]
+    // Mirrors the "Tax funds" region (M-S) of the Investment data tab.
+    // start/end are 'YYYY-MM-DD' (date inputs); the sheet shows them in its
+    // own Thai date format.
     const CF_TAX_KEY = 'cashflow_tax_funds_v1';
+    const CF_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
     function cfTaxFundRows() {
         try {
@@ -5070,10 +5075,13 @@
             if (!Array.isArray(raw)) return [];
             return raw.map((row, i) => ({
                 id: String(row.id || `tax_${i + 1}`),
-                name: String(row.name || ''),
+                type: String(row.type || ''),
+                fund: String(row.fund || ''),
+                start: CF_DATE_RE.test(String(row.start || '')) ? String(row.start) : '',
+                end: CF_DATE_RE.test(String(row.end || '')) ? String(row.end) : '',
                 amount: Math.max(0, satNumber(row.amount)),
-                platform: String(row.platform || ''),
-                sellable: /^\d{4}-\d{2}-\d{2}$/.test(String(row.sellable || '')) ? String(row.sellable) : ''
+                unitAmount: Math.max(0, satNumber(row.unitAmount)),
+                platform: String(row.platform || '')
             }));
         } catch (error) { return []; }
     }
@@ -5084,7 +5092,7 @@
 
     function cfAddTaxFund() {
         const rows = cfTaxFundRows();
-        rows.push({ id: `tax_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, name: '', amount: 0, platform: '', sellable: '' });
+        rows.push({ id: `tax_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, type: 'SSF', fund: '', start: '', end: '', amount: 0, unitAmount: 0, platform: '' });
         cfSaveTaxFunds(rows);
         cfQueuePush();
         cfRenderTaxFunds();
@@ -5099,8 +5107,8 @@
     function cfSetTaxFund(id, field, input) {
         const rows = cfTaxFundRows().map(row => {
             if (row.id !== id) return row;
-            if (field === 'amount') row.amount = Math.max(0, satNumber(input.value));
-            else if (field === 'sellable') row.sellable = /^\d{4}-\d{2}-\d{2}$/.test(input.value) ? input.value : '';
+            if (field === 'amount' || field === 'unitAmount') row[field] = Math.max(0, satNumber(input.value));
+            else if (field === 'start' || field === 'end') row[field] = CF_DATE_RE.test(input.value) ? input.value : '';
             else row[field] = String(input.value);
             return row;
         });
@@ -5116,10 +5124,13 @@
         const emptyEl = document.getElementById('cf-taxfund-empty');
         if (emptyEl) emptyEl.classList.toggle('hidden', rows.length > 0);
         tbody.innerHTML = rows.map(row => `<tr>
-            <td><input class="cf-mini-input" type="text" placeholder="Fund name" value="${satEsc(row.name)}" oninput="cfSetTaxFund('${row.id}','name',this)"></td>
+            <td><input class="cf-mini-input" type="text" placeholder="SSF" value="${satEsc(row.type)}" oninput="cfSetTaxFund('${row.id}','type',this)"></td>
+            <td><input class="cf-mini-input" type="text" placeholder="Fund name" value="${satEsc(row.fund)}" oninput="cfSetTaxFund('${row.id}','fund',this)"></td>
+            <td><input class="cf-mini-input" type="date" value="${row.start}" onchange="cfSetTaxFund('${row.id}','start',this)"></td>
+            <td><input class="cf-mini-input" type="date" value="${row.end}" onchange="cfSetTaxFund('${row.id}','end',this)"></td>
             <td class="num"><input class="cf-mini-input" type="text" inputmode="decimal" placeholder="0" value="${row.amount > 0 ? row.amount.toLocaleString('en-US') : ''}" oninput="cfFormatAmount(this); cfSetTaxFund('${row.id}','amount',this)"></td>
+            <td class="num"><input class="cf-mini-input" type="text" inputmode="decimal" placeholder="0" value="${row.unitAmount > 0 ? row.unitAmount.toLocaleString('en-US') : ''}" oninput="cfFormatAmount(this); cfSetTaxFund('${row.id}','unitAmount',this)"></td>
             <td><input class="cf-mini-input" type="text" placeholder="Platform" value="${satEsc(row.platform)}" oninput="cfSetTaxFund('${row.id}','platform',this)"></td>
-            <td><input class="cf-mini-input" type="date" value="${row.sellable}" onchange="cfSetTaxFund('${row.id}','sellable',this)"></td>
             <td><button class="cf-mini-del" type="button" title="Remove fund" onclick="cfDeleteTaxFund('${row.id}')"><i class="fa-solid fa-xmark"></i></button></td>
         </tr>`).join('');
     }
@@ -5133,35 +5144,24 @@
     }
 
     // ── Sheets sync (Cashflow Planner v2) ────────────────────────────
-    // The planner's sections sync with Google Sheets through the unified
-    // Apps Script endpoint (cashflow_read / cashflow_write):
-    //   Cashflow_monthly        month, income, expense
-    //   Cashflow_invest_returns year, amount, pct
-    //   Cashflow_insurance      id, policyNumber, type, amount, date
-    //   Cashflow_tax_funds      id, name, amount, platform, sellable
-    // Pull: the sheet is the source of truth once the v2 tabs exist
-    // (initializedV2); before the first push the tabs don't exist yet and
-    // local data is kept. Push: the whole local set is sent (debounced by
-    // cfQueuePush) after local edits. The old Easybills sheet sections
-    // (settings/wallets/events) are passed through unchanged from the last
-    // pull so a push never wipes them — even on the older deployed script.
+    // All planner sections live in ONE Google Sheet tab named
+    // "Investment data" (the user's own layout): row 1 section titles,
+    // row 2 headers, row 3+ data; regions Monthly (A-B label/value),
+    // Investment return (D-F), Insurance (H-K), Tax funds (M-S).
+    // The Monthly region holds ONE month's income/expense — which month is
+    // tracked in cell U2 ("synced month"). Pull applies it to that month;
+    // push sends the active month. Category rows (A4:B11) stay on the sheet
+    // untouched. The old Easybills sheet sections (settings/wallets/events)
+    // are passed through unchanged from the last pull so a push never
+    // wipes them — even on the older deployed script.
     let cfSheetsLegacy = { settings: [], wallets: [], events: [], hasLegacy: false };
 
-    function cfApplySheetsMonthly(rows) {
-        const clean = {};
-        rows.forEach(row => {
-            // Sheets may reformat 'YYYY-MM' as a date ('YYYY-MM-01') — accept both.
-            let month = String(row.month || '').trim();
-            const m = month.match(/^(\d{4}-\d{2})/);
-            if (!m) return;
-            month = m[1];
-            clean[month] = {
-                income: Math.max(0, satNumber(row.income)),
-                expense: Math.max(0, satNumber(row.expense)),
-                cats: {}
-            };
-        });
-        cfState().monthly = clean;
+    function cfApplySheetsMonthly(rows, syncedMonth) {
+        const m0 = (rows && rows[0]) || {};
+        const month = /^\d{4}-\d{2}$/.test(String(syncedMonth || '')) ? String(syncedMonth) : cfState().activeMonth;
+        const entry = cfMonthData(month);
+        entry.income = Math.max(0, satNumber(m0.income));
+        entry.expense = Math.max(0, satNumber(m0.expense));
         cfSaveLocal();
     }
 
@@ -5182,21 +5182,24 @@
         const list = rows.map((row, i) => ({
             id: String(row.id || `ins_${i + 1}`),
             policyNumber: String(row.policyNumber || ''),
-            type: String(row.type || ''),
             amount: Math.max(0, satNumber(row.amount)),
-            date: /^\d{4}-\d{2}-\d{2}$/.test(String(row.date || '')) ? String(row.date) : ''
-        })).filter(row => row.policyNumber || row.type || row.amount > 0 || row.date);
+            description: String(row.description || ''),
+            duePaid: String(row.duePaid || '')
+        })).filter(row => row.policyNumber || row.amount > 0 || row.description || row.duePaid);
         localStorage.setItem(CF_INS_KEY, JSON.stringify(list));
     }
 
     function cfApplySheetsTaxFunds(rows) {
         const list = rows.map((row, i) => ({
             id: String(row.id || `tax_${i + 1}`),
-            name: String(row.name || ''),
+            type: String(row.type || ''),
+            fund: String(row.fund || ''),
+            start: CF_DATE_RE.test(String(row.start || '')) ? String(row.start) : '',
+            end: CF_DATE_RE.test(String(row.end || '')) ? String(row.end) : '',
             amount: Math.max(0, satNumber(row.amount)),
-            platform: String(row.platform || ''),
-            sellable: /^\d{4}-\d{2}-\d{2}$/.test(String(row.sellable || '')) ? String(row.sellable) : ''
-        })).filter(row => row.name || row.amount > 0 || row.platform || row.sellable);
+            unitAmount: Math.max(0, satNumber(row.unitAmount)),
+            platform: String(row.platform || '')
+        })).filter(row => row.type || row.fund || row.amount > 0 || row.platform || row.start || row.end);
         localStorage.setItem(CF_TAX_KEY, JSON.stringify(list));
     }
 
@@ -5205,7 +5208,7 @@
         try {
             const data = await fetchGsAction('cashflow_read');
             if (data && data.initializedV2) {
-                cfApplySheetsMonthly(data.monthly || []);
+                cfApplySheetsMonthly(data.monthly, data.syncedMonth);
                 cfApplySheetsInvest(data.invest || []);
                 cfApplySheetsInsurance(data.insurance || []);
                 cfApplySheetsTaxFunds(data.taxfunds || []);
@@ -5218,8 +5221,7 @@
                     events: Array.isArray(data.events) ? data.events : [],
                     hasLegacy: true
                 };
-                // First run on this spreadsheet: upload local data, which also
-                // creates the four v2 tabs.
+                // First run: upload local data (also creates the tab layout).
                 if (!data.initializedV2) cfQueuePush();
             }
         } catch (error) {
@@ -5235,28 +5237,32 @@
         cfPushTimer = setTimeout(() => { cfPushTimer = null; cfPushToSheets(true); }, 1500);
     }
 
+    function cfInvestPushRows() {
+        const investData = cfInvestData();
+        const rows = Object.keys(investData).map(year => {
+            const entry = investData[year];
+            return { year, amount: Math.max(0, satNumber(entry.amount)), pct: satNumber(entry.pct) };
+        });
+        // Keep a row for the current year even when empty (the sheet has one).
+        const currentYear = String(new Date().getFullYear());
+        if (!rows.some(r => r.year === currentYear)) {
+            rows.push({ year: currentYear, amount: 0, pct: 0 });
+        }
+        return rows.sort((a, b) => a.year.localeCompare(b.year));
+    }
+
     async function cfPushToSheets(silent=false) {
         const url = getGsUrl();
         if (!url) return false;
         try {
-            const monthly = Object.keys(cfState().monthly || {})
-                .map(month => {
-                    const m = cfState().monthly[month];
-                    return { month, income: Math.max(0, satNumber(m.income)), expense: Math.max(0, satNumber(m.expense)) };
-                })
-                .filter(row => row.income > 0 || row.expense > 0)
-                .sort((a, b) => a.month.localeCompare(b.month));
-            const investData = cfInvestData();
-            const invest = Object.keys(investData)
-                .map(year => {
-                    const entry = investData[year];
-                    return { year, amount: Math.max(0, satNumber(entry.amount)), pct: satNumber(entry.pct) };
-                })
-                .sort((a, b) => a.year.localeCompare(b.year));
+            const month = cfState().activeMonth;
+            const m = cfMonthData(month);
             const payload = {
                 action: 'cashflow_write',
-                monthly,
-                invest,
+                // The Monthly region (A-B) holds the active month's figures.
+                monthly: [{ income: Math.max(0, satNumber(m.income)), expense: Math.max(0, satNumber(m.expense)) }],
+                syncedMonth: month,
+                invest: cfInvestPushRows(),
                 insurance: cfInsuranceRows(),
                 taxfunds: cfTaxFundRows(),
                 // Keep the card-date sheet current (local is the master).
