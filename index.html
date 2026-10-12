@@ -5474,7 +5474,7 @@
         });
 
         if (!rows.length) {
-            bodyHtml = `<div class="stg-row stg-body-row"><div class="stg-cell" style="grid-column:1 / -1; text-align:center; color:#64748B; padding:8px 0;">No holdings found for ${period}. Add Layer &amp; Class values in Google Sheets.</div></div>`;
+            bodyHtml = `<div class="stg-row stg-body-row"><div class="stg-cell" style="grid-column:1 / -1; text-align:center; color:#64748B; padding:8px 0;">No holdings found for ${period}. Make sure the holding rows in Google Sheets have Layer and Class values, and the Apps Script web app is redeployed with the latest version.</div></div>`;
         }
 
         const avgExpReturn = grandNet !== 0 ? (grandReturn / grandNet * 100) : 0;
@@ -5560,7 +5560,7 @@
         if (unassignedEl) {
             if (unassigned > 0.01) {
                 unassignedEl.classList.remove('hidden');
-                unassignedEl.innerHTML = `<strong style="color:#CBD5E1">Unassigned layer</strong><br>${structureFormatAmount(unassigned)} (${total > 0 ? (unassigned/total*100).toFixed(1) : '0.0'}%). Add a Layer value in Google Sheets to include this balance in the Pyramid.`;
+                unassignedEl.innerHTML = `<strong style="color:#CBD5E1">Unassigned layer</strong><br>${structureFormatAmount(unassigned)} (${total > 0 ? (unassigned/total*100).toFixed(1) : '0.0'}%). Add a Layer value (Savings / Investments / Trading) to the holding rows in Google Sheets and redeploy the Apps Script web app with the latest version to include this balance in the Pyramid.`;
             } else {
                 unassignedEl.classList.add('hidden');
                 unassignedEl.innerHTML = '';
