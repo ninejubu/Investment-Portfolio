@@ -1329,11 +1329,11 @@
         .cf-calendar-cell.day.today { position:relative; }
         .cf-calendar-cell.day.today::after {
             content:''; position:absolute; top:0; bottom:0; left:50%; width:0;
-            border-left:2px dashed #F59E0B; z-index:6; pointer-events:none;
+            border-left:3px dashed #FBBF24; z-index:6; pointer-events:none;
         }
         .cf-calendar-row.header .cf-calendar-cell.day.today::before {
             content:''; position:absolute; top:3px; left:50%; transform:translateX(-50%);
-            width:6px; height:6px; border-radius:50%; background:#F59E0B; z-index:7; pointer-events:none;
+            width:6px; height:6px; border-radius:50%; background:#FBBF24; z-index:7; pointer-events:none;
         }
         .cf-calendar-marker {
             width:100%; min-width:0; height:28px; border:0; border-radius:0; overflow:hidden;
@@ -4860,7 +4860,11 @@
         if (!container) return;
         const cards = cfActiveCards();
         const majorDays = new Set([1,5,10,15,20,25,30,31]);
-        const [todayYear, todayMonthNum, todayDayNum] = satToday().split('-').map(Number);
+        // Local (not UTC) date — satToday() is UTC and lags a day for UTC+7
+        // users between 00:00 and 07:00 local time.
+        const now = new Date();
+        const [todayYear, todayMonthNum, todayDayNum] =
+            `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`.split('-').map(Number);
         const isCurrentMonth = cfState().activeMonth === `${todayYear}-${String(todayMonthNum).padStart(2, '0')}`;
         const todayDay = isCurrentMonth ? todayDayNum : 0;
         const dayCells = (card=null) => Array.from({length:31}, (_,index) => {
