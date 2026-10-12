@@ -1278,27 +1278,17 @@
         body.theme-light .cf-monthly-hero-value, body.theme-light .cf-monthly-stat-value, body.theme-light .cf-monthly-cat input[type="text"] { color:#0F172A; }
         body.theme-light .cf-monthly-cat input[type="number"] { background:#F8FAFC; border-color:#CBD5E1; color:#0F172A; }
         body.theme-light .cf-monthly-cat { border-bottom-color:rgba(148,163,184,.4); }
-        /* ── Card statement & payment dates ── */
-        .cf-dates-head, .cf-dates-row { display:grid; grid-template-columns:minmax(0,1.4fr) repeat(2,172px); align-items:center; gap:10px; padding:6px 0; }
-        .cf-dates-head { color:#64748B; font-size:9px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; padding-top:0; padding-bottom:4px; border-bottom:1px solid #334155; }
-        .cf-dates-head-cell { text-align:right; }
-        .cf-dates-row { border-bottom:1px dashed rgba(71,85,105,.35); }
-        .cf-dates-row:last-child { border-bottom:none; }
-        .cf-dates-name { min-width:0; color:#E2E8F0; font-size:12px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .cf-dates-group { color:#64748B; font-size:9px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; padding:10px 0 3px; }
-        .cf-dates-cell { display:flex; align-items:center; justify-content:flex-end; gap:8px; }
-        .cf-dates-day { width:54px; background:#0B1220; border:1px solid #475569; border-radius:6px; color:#F8FAFC; font-size:12px; padding:5px 6px; text-align:center; outline:none; font-variant-numeric:tabular-nums; }
-        .cf-dates-day:focus { border-color:var(--cf-accent); }
-        .cf-dates-when { width:52px; color:#94A3B8; font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; }
-        body.theme-light .cf-dates-name { color:#0F172A; }
-        body.theme-light .cf-dates-day { background:#F8FAFC; border-color:#CBD5E1; color:#0F172A; }
-        body.theme-light .cf-dates-when { color:#334155; }
-        body.theme-light .cf-dates-row { border-bottom-color:rgba(148,163,184,.4); }
-        @media (max-width:700px) {
-            .cf-dates-head, .cf-dates-row { grid-template-columns:minmax(0,1fr) 96px 96px; gap:6px; }
-            .cf-dates-cell { gap:5px; }
-            .cf-dates-when { width:auto; }
+        /* ── Card statement & payment timeline (legend / controls) ── */
+        .cf-calendar-legend { display:flex; align-items:center; gap:14px; color:#64748B; font-size:9px; }
+        .cf-calendar-legend span { display:inline-flex; align-items:center; gap:5px; }
+        .cf-calendar-toggle {
+            min-height:28px; padding:5px 9px; border:1px solid #334155; border-radius:6px;
+            display:inline-flex; align-items:center; gap:6px; background:transparent;
+            color:#94A3B8; font-size:9px; font-weight:750;
         }
+        .cf-calendar-toggle:hover { color:#F8FAFC; border-color:#64748B; }
+        .cf-calendar-dot { width:9px; height:9px; border-radius:2px; background:#64748B; }
+        .cf-calendar-dot.due { background:#14B8A6; }
         body.theme-light .cf-monthly-cat input[type="text"] { border-bottom-color:#CBD5E1; }
         @media (max-width:640px) { .cf-monthly-grid { grid-template-columns:1fr; } }
         .cf-calendar-wrap { overflow:hidden; border:1px solid #273449; border-radius:8px; background:#0B1220; }
@@ -2084,16 +2074,21 @@
                         </div>
                     </section>
 
-                    <!-- ── Card statement & payment dates ───────────────── -->
-                    <div class="cf-section-label">Credit cards · statement &amp; payment dates</div>
+                    <!-- ── Credit Card Timeline ───────────────────────── -->
+                    <div class="cf-section-label">Credit cards · statement &amp; payment timeline</div>
                     <section class="cf-panel">
                         <div class="cf-panel-head">
-                            <div>
-                                <h4 class="cf-title">Card Dates</h4>
-                                <div class="cf-subtle">Statement date and payment due date for each card. Edit the day if your bank changes it — the date on the right follows the month selected above.</div>
+                            <div><h4 class="cf-title">Credit Card Timeline</h4></div>
+                            <div class="cf-calendar-legend">
+                                <span><i class="cf-calendar-dot"></i> STATE</span>
+                                <span><i class="cf-calendar-dot due"></i> PAY</span>
+                                <span>Line = billing range · drag a marker to change its day</span>
+                                <button id="cf-toggle-all-banks" class="cf-calendar-toggle" type="button" onclick="cfToggleAllTimelineBanks()"></button>
                             </div>
                         </div>
-                        <div id="cf-card-dates"></div>
+                        <div class="cf-calendar-wrap">
+                            <div id="cf-card-timeline" class="cf-calendar"></div>
+                        </div>
                     </section>
                 </div>
             </div>
@@ -4755,11 +4750,16 @@
         });
     }
 
-    // ── Card statement & payment dates (restored from the old Easybills planner) ──
-    // The card list lives under cashflow_cards_v1 in localStorage — the data was
-    // left in place when Easybills was removed from the UI on 2026-10-03. If a
-    // device never had it, fall back to the seed in cashflow_local_data.js.
+    // ── Credit card timeline (statement & payment dates) ──
+    // Restored from the old Easybills planner (git f1e6c4d) as of 2026-10-13.
+    // Calendar grid: one row per card grouped by bank, days 1–31 across, S =
+    // statement day, P = payment due day, the line between them = billing
+    // range. Drag a marker onto any day to change that date. The card list
+    // lives under cashflow_cards_v1 in localStorage (left in place when
+    // Easybills was removed 2026-10-03); devices without it fall back to the
+    // seed in cashflow_local_data.js.
     const CF_CARDS_KEY = 'cashflow_cards_v1';
+    const CF_COLLAPSED_BANKS_KEY = 'cashflow_collapsed_banks_v1';
 
     function cfRawCards() {
         let cards = null;
@@ -4776,71 +4776,154 @@
         return Math.min(31, Math.max(1, Number.isFinite(n) && n > 0 ? n : (fallback || 1)));
     }
 
-    // Concrete calendar date for a day-of-month, following the active month.
-    // A due day before the statement day (e.g. statement 26, due 14) lands in
-    // the next month. Days past the month's length are clamped.
-    function cfCardDateLabel(month, day, prevDay) {
-        const parts = String(month || '').split('-');
-        if (parts.length !== 2) return '';
-        let year = Number(parts[0]), monthIdx = Number(parts[1]);
-        if (prevDay && day < prevDay) {
-            if (monthIdx === 12) { monthIdx = 1; year += 1; }
-            else monthIdx += 1;
-        }
-        const daysInMonth = new Date(year, monthIdx, 0).getDate();
-        const d = Math.min(Math.max(1, Math.round(day)), daysInMonth);
-        return new Date(year, monthIdx - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
-
-    function cfSetCardDay(cardId, field, input) {
-        const cards = cfRawCards();
-        const card = cards.find(c => c && String(c.id) === String(cardId));
-        if (!card) return;
-        card[field] = cfCardDay(input.value, card[field]);
-        card.updatedAt = new Date().toISOString();
-        localStorage.setItem(CF_CARDS_KEY, JSON.stringify(cards));
-        cfRenderCardDates();
-    }
-
-    function cfRenderCardDates() {
-        const body = document.getElementById('cf-card-dates');
-        if (!body) return;
-        const month = cfState().activeMonth;
-        const cards = cfRawCards()
-            .filter(c => c && c.active !== false && String(c.active).toLowerCase() !== 'false')
+    function cfActiveCards() {
+        return cfRawCards()
+            .filter(card => card && card.active !== false && String(card.active).toLowerCase() !== 'false')
+            .slice()
             .sort((a, b) =>
                 (Math.round(satNumber(a.sortOrder) || 0) - Math.round(satNumber(b.sortOrder) || 0)) ||
+                String(a.issuer || '').localeCompare(String(b.issuer || '')) ||
                 String(a.name || '').localeCompare(String(b.name || '')));
-        if (!cards.length) {
-            body.innerHTML = '<div class="cf-empty">No credit cards found on this device — the card list from the old planner is empty.</div>';
-            return;
+    }
+
+    function cfIssuerOf(card) {
+        return String(card.issuer || 'Other').trim().toUpperCase() || 'Other';
+    }
+
+    function cfTimelineColor(issuer) {
+        return {
+            'CARD X':'139,92,246', KTC:'192,132,252', AEON:'239,68,68',
+            BBL:'34,197,94', UOB:'59,130,246', BAY:'234,179,8', TTB:'96,165,250'
+        }[issuer] || '20,184,166';
+    }
+
+    function cfCollapsedBanks() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(CF_COLLAPSED_BANKS_KEY) || '[]');
+            return new Set(Array.isArray(saved) ? saved : []);
+        } catch (_) {
+            return new Set();
         }
-        const groups = new Map();
-        cards.forEach(card => {
-            const issuer = String(card.issuer || 'Other').trim().toUpperCase() || 'Other';
-            if (!groups.has(issuer)) groups.set(issuer, []);
-            groups.get(issuer).push(card);
-        });
-        let html = '<div class="cf-dates-head"><span>Card</span><span class="cf-dates-head-cell">Statement date</span><span class="cf-dates-head-cell">Payment due</span></div>';
-        groups.forEach((list, issuer) => {
-            html += `<div class="cf-dates-group">${satEsc(issuer)}</div>`;
-            list.forEach(card => {
-                const sd = cfCardDay(card.statementDay);
-                const dd = cfCardDay(card.dueDay);
-                const label = satEsc(card.name || card.id);
-                html += `<div class="cf-dates-row">
-                    <span class="cf-dates-name" title="${label}">${label}</span>
-                    <span class="cf-dates-cell"><input class="cf-dates-day" type="number" min="1" max="31" value="${sd}" onchange="cfSetCardDay('${satEsc(card.id)}','statementDay',this)" aria-label="Statement day for ${label}"><span class="cf-dates-when">${cfCardDateLabel(month, sd)}</span></span>
-                    <span class="cf-dates-cell"><input class="cf-dates-day" type="number" min="1" max="31" value="${dd}" onchange="cfSetCardDay('${satEsc(card.id)}','dueDay',this)" aria-label="Payment due day for ${label}"><span class="cf-dates-when">${cfCardDateLabel(month, dd, sd)}</span></span>
-                </div>`;
-            });
-        });
-        body.innerHTML = html;
+    }
+
+    function cfToggleTimelineBank(encodedIssuer) {
+        const issuer = decodeURIComponent(encodedIssuer);
+        const collapsed = cfCollapsedBanks();
+        if (collapsed.has(issuer)) collapsed.delete(issuer);
+        else collapsed.add(issuer);
+        localStorage.setItem(CF_COLLAPSED_BANKS_KEY, JSON.stringify([...collapsed]));
+        cfRenderTimeline();
+    }
+
+    function cfToggleAllTimelineBanks() {
+        const issuers = [...new Set(cfActiveCards().map(card => cfIssuerOf(card)))];
+        const collapsed = cfCollapsedBanks();
+        const allCollapsed = issuers.length > 0 && issuers.every(issuer => collapsed.has(issuer));
+        localStorage.setItem(CF_COLLAPSED_BANKS_KEY, JSON.stringify(allCollapsed ? [] : issuers));
+        cfRenderTimeline();
+    }
+
+    // Drag a marker (S or P) onto a day cell to change that date.
+    function cfTimelineDragStart(event, cardId, marker) {
+        event.stopPropagation();
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', JSON.stringify({ cardId, marker }));
+    }
+
+    function cfTimelineDragOver(event) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        event.currentTarget.classList.add('drop-target');
+    }
+
+    function cfTimelineDragLeave(event) {
+        event.currentTarget.classList.remove('drop-target');
+    }
+
+    function cfTimelineDrop(event, day) {
+        event.preventDefault();
+        event.currentTarget.classList.remove('drop-target');
+        try {
+            const payload = JSON.parse(event.dataTransfer.getData('text/plain'));
+            const cards = cfRawCards();
+            const card = cards.find(item => item && String(item.id) === String(payload.cardId));
+            if (!card || !['statement','due'].includes(payload.marker)) return;
+            card[payload.marker === 'statement' ? 'statementDay' : 'dueDay'] = Math.min(31, Math.max(1, Math.round(day)));
+            card.updatedAt = new Date().toISOString();
+            localStorage.setItem(CF_CARDS_KEY, JSON.stringify(cards));
+            cfRenderTimeline();
+        } catch (_) {}
+    }
+
+    function cfRenderTimeline() {
+        const container = document.getElementById('cf-card-timeline');
+        if (!container) return;
+        const cards = cfActiveCards();
+        const majorDays = new Set([1,5,10,15,20,25,30,31]);
+        const [todayYear, todayMonthNum, todayDayNum] = satToday().split('-').map(Number);
+        const isCurrentMonth = cfState().activeMonth === `${todayYear}-${String(todayMonthNum).padStart(2, '0')}`;
+        const todayDay = isCurrentMonth ? todayDayNum : 0;
+        const dayCells = (card=null) => Array.from({length:31}, (_,index) => {
+            const day = index + 1;
+            const statementDay = card ? cfCardDay(card.statementDay) : 0;
+            const dueDay = card ? cfCardDay(card.dueDay) : 0;
+            const wrapsMonth = statementDay > dueDay;
+            const inRange = !!card && (wrapsMonth
+                ? day >= statementDay || day <= dueDay
+                : day >= statementDay && day <= dueDay);
+            const rangeClasses = inRange
+                ? ` range${day === statementDay ? ' range-start' : ''}${day === dueDay ? ' range-end' : ''}`
+                : '';
+            const markers = !card ? [] : [
+                day === statementDay ? 'statement' : '',
+                day === dueDay ? 'due' : ''
+            ].filter(Boolean);
+            const sameDay = markers.length === 2;
+            const markerButtons = markers.map(marker => `<button class="cf-calendar-marker ${marker}${sameDay ? ' same-day' : ''}" type="button" draggable="true"
+                ondragstart="cfTimelineDragStart(event,'${satEsc(card.id)}','${marker}')">${marker === 'statement' ? 'S' : 'P'}</button>`).join('');
+            const markersContainer = markerButtons ? `<div class="cf-calendar-markers${sameDay ? ' same-day' : ''}">${markerButtons}</div>` : '';
+            const content = markersContainer || (card ? '' : String(day));
+            return `<div class="cf-calendar-cell day${majorDays.has(day) ? ' major' : ''}${rangeClasses}${day === todayDay ? ' today' : ''}" ondragover="cfTimelineDragOver(event)" ondragleave="cfTimelineDragLeave(event)" ondrop="cfTimelineDrop(event,${day})">${content}</div>`;
+        }).join('');
+        const header = `<div class="cf-calendar-row header">
+            <div class="cf-calendar-cell issuer">BANK</div>
+            <div class="cf-calendar-cell card-name">CARD</div>
+            ${dayCells()}
+        </div>`;
+        const collapsed = cfCollapsedBanks();
+        const groups = cards.reduce((map, card) => {
+            const issuer = cfIssuerOf(card);
+            if (!map.has(issuer)) map.set(issuer, []);
+            map.get(issuer).push(card);
+            return map;
+        }, new Map());
+        const toggleAllButton = document.getElementById('cf-toggle-all-banks');
+        if (toggleAllButton) {
+            const allCollapsed = groups.size > 0 && [...groups.keys()].every(issuer => collapsed.has(issuer));
+            toggleAllButton.innerHTML = `<i class="fa-solid fa-angles-${allCollapsed ? 'down' : 'up'}"></i>${allCollapsed ? 'Expand all' : 'Collapse all'}`;
+            toggleAllButton.classList.toggle('hidden', groups.size === 0);
+        }
+        const body = [...groups.entries()].map(([issuer, bankCards]) => {
+            const rgb = cfTimelineColor(issuer);
+            const isCollapsed = collapsed.has(issuer);
+            const bankHeader = `<button type="button" class="cf-calendar-bank${isCollapsed ? ' collapsed' : ''}" style="--group-rgb:${rgb}" onclick="cfToggleTimelineBank('${encodeURIComponent(issuer)}')">
+                <strong><i class="fa-solid fa-chevron-down"></i>${satEsc(issuer)}</strong>
+                <span>${bankCards.length} card${bankCards.length === 1 ? '' : 's'}</span>
+            </button>`;
+            if (isCollapsed) return bankHeader;
+            return bankHeader + bankCards.map(card => `
+                <div class="cf-calendar-row card-row" style="--group-rgb:${rgb}">
+                    <div class="cf-calendar-cell issuer"></div>
+                    <div class="cf-calendar-cell card-name">${satEsc(card.name || card.id)}</div>
+                    ${dayCells(card)}
+                </div>`).join('');
+        }).join('');
+        container.innerHTML = cards.length ? header + body : '<div class="cf-empty">No credit cards on this device — the card list from the old planner is empty.</div>';
     }
 
     function cfRenderAll() {
         cfRenderMonthly();
-        cfRenderCardDates();
+        cfRenderTimeline();
     }
 
     // ── Sheets sync (kept as no-ops so the global refresh flow keeps working) ──
