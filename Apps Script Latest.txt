@@ -29,6 +29,10 @@ var TAB_CF_SETTINGS   = "Cashflow_settings";
 var TAB_CF_CARDS      = "Cashflow_cards";
 var TAB_CF_WALLETS    = "Cashflow_wallets";
 var TAB_CF_EVENTS     = "Cashflow_events";
+var TAB_CF_MONTHLY    = "Cashflow_monthly";
+var TAB_CF_INVEST     = "Cashflow_invest_returns";
+var TAB_CF_INSURANCE  = "Cashflow_insurance";
+var TAB_CF_TAXFUNDS   = "Cashflow_tax_funds";
 
 function doGet(e) {
   var p = (e && e.parameter) ? e.parameter : {};
@@ -746,6 +750,11 @@ var CF_EVENT_HEADERS = [
   'transferAmount','cashDelta','debtDelta','walletDelta','note','createdAt'
 ];
 
+var CF_MONTHLY_HEADERS = ['month','income','expense'];
+var CF_INVEST_HEADERS = ['year','amount','pct'];
+var CF_INSURANCE_HEADERS = ['id','policyNumber','type','amount','date'];
+var CF_TAXFUNDS_HEADERS = ['id','name','amount','platform','sellable'];
+
 function cashflowRead() {
   try {
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -753,12 +762,23 @@ function cashflowRead() {
     var cardsSheet = ss.getSheetByName(TAB_CF_CARDS);
     var walletsSheet = ss.getSheetByName(TAB_CF_WALLETS);
     var eventsSheet = ss.getSheetByName(TAB_CF_EVENTS);
+    var monthlySheet = ss.getSheetByName(TAB_CF_MONTHLY);
+    var investSheet = ss.getSheetByName(TAB_CF_INVEST);
+    var insuranceSheet = ss.getSheetByName(TAB_CF_INSURANCE);
+    var taxfundsSheet = ss.getSheetByName(TAB_CF_TAXFUNDS);
     return jsonOut({
       initialized: !!settingsSheet && !!cardsSheet && !!walletsSheet && !!eventsSheet,
+      // true once the v2 tabs exist (created by a dashboard push) — after
+      // that, an empty tab is authoritative ("cleared"), not "uninitialized".
+      initializedV2: !!monthlySheet && !!investSheet && !!insuranceSheet && !!taxfundsSheet,
       settings: structuredSheetToJson(settingsSheet, CF_SETTING_HEADERS),
       cards: structuredSheetToJson(cardsSheet, CF_CARD_HEADERS),
       wallets: structuredSheetToJson(walletsSheet, CF_WALLET_HEADERS),
-      events: structuredSheetToJson(eventsSheet, CF_EVENT_HEADERS)
+      events: structuredSheetToJson(eventsSheet, CF_EVENT_HEADERS),
+      monthly: structuredSheetToJson(monthlySheet, CF_MONTHLY_HEADERS),
+      invest: structuredSheetToJson(investSheet, CF_INVEST_HEADERS),
+      insurance: structuredSheetToJson(insuranceSheet, CF_INSURANCE_HEADERS),
+      taxfunds: structuredSheetToJson(taxfundsSheet, CF_TAXFUNDS_HEADERS)
     });
   } catch (err) {
     return jsonOut({ error: err.message });
@@ -768,10 +788,17 @@ function cashflowRead() {
 function cashflowWrite(data) {
   try {
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    writeStructuredSheet(ss, TAB_CF_SETTINGS, CF_SETTING_HEADERS, data.settings || []);
-    writeStructuredSheet(ss, TAB_CF_CARDS, CF_CARD_HEADERS, data.cards || []);
-    writeStructuredSheet(ss, TAB_CF_WALLETS, CF_WALLET_HEADERS, data.wallets || []);
-    writeStructuredSheet(ss, TAB_CF_EVENTS, CF_EVENT_HEADERS, data.events || []);
+    // Written only when provided so older payloads never wipe tabs they
+    // don't carry.
+    if (data.settings !== undefined) writeStructuredSheet(ss, TAB_CF_SETTINGS, CF_SETTING_HEADERS, data.settings || []);
+    if (data.cards !== undefined) writeStructuredSheet(ss, TAB_CF_CARDS, CF_CARD_HEADERS, data.cards || []);
+    if (data.wallets !== undefined) writeStructuredSheet(ss, TAB_CF_WALLETS, CF_WALLET_HEADERS, data.wallets || []);
+    if (data.events !== undefined) writeStructuredSheet(ss, TAB_CF_EVENTS, CF_EVENT_HEADERS, data.events || []);
+    // v2 sections (current Cashflow Planner)
+    if (data.monthly !== undefined) writeStructuredSheet(ss, TAB_CF_MONTHLY, CF_MONTHLY_HEADERS, data.monthly || []);
+    if (data.invest !== undefined) writeStructuredSheet(ss, TAB_CF_INVEST, CF_INVEST_HEADERS, data.invest || []);
+    if (data.insurance !== undefined) writeStructuredSheet(ss, TAB_CF_INSURANCE, CF_INSURANCE_HEADERS, data.insurance || []);
+    if (data.taxfunds !== undefined) writeStructuredSheet(ss, TAB_CF_TAXFUNDS, CF_TAXFUNDS_HEADERS, data.taxfunds || []);
     return jsonOut({ ok: true, timestamp: new Date().toISOString() });
   } catch (err) {
     return jsonOut({ error: err.message });

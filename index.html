@@ -4716,12 +4716,14 @@
     function cfSetIncome(value) {
         cfMonthData(cfState().activeMonth).income = Math.max(0, satNumber(value));
         cfSaveLocal();
+        cfQueuePush();
         cfRenderMonthly();
     }
 
     function cfSetExpense(value) {
         cfMonthData(cfState().activeMonth).expense = Math.max(0, satNumber(value));
         cfSaveLocal();
+        cfQueuePush();
         cfRenderMonthly();
     }
 
@@ -4870,6 +4872,7 @@
             card[payload.marker === 'statement' ? 'statementDay' : 'dueDay'] = Math.min(31, Math.max(1, Math.round(day)));
             card.updatedAt = new Date().toISOString();
             localStorage.setItem(CF_CARDS_KEY, JSON.stringify(cards));
+            cfQueuePush();
             cfRenderTimeline();
         } catch (_) {}
     }
@@ -4969,6 +4972,7 @@
         if (entry.amount === 0 && entry.pct === 0) delete data[year];
         else data[year] = entry;
         localStorage.setItem(CF_INVEST_KEY, JSON.stringify(data));
+        cfQueuePush();
         cfRenderInvest();
     }
 
@@ -5018,11 +5022,13 @@
         const rows = cfInsuranceRows();
         rows.push({ id: `ins_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, policyNumber: '', type: '', amount: 0, date: '' });
         cfSaveInsurance(rows);
+        cfQueuePush();
         cfRenderInsurance();
     }
 
     function cfDeleteInsurance(id) {
         cfSaveInsurance(cfInsuranceRows().filter(row => row.id !== id));
+        cfQueuePush();
         cfRenderInsurance();
     }
 
@@ -5035,6 +5041,7 @@
             return row;
         });
         cfSaveInsurance(rows);
+        cfQueuePush();
         cfRenderInsurance();
     }
 
@@ -5079,11 +5086,13 @@
         const rows = cfTaxFundRows();
         rows.push({ id: `tax_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, name: '', amount: 0, platform: '', sellable: '' });
         cfSaveTaxFunds(rows);
+        cfQueuePush();
         cfRenderTaxFunds();
     }
 
     function cfDeleteTaxFund(id) {
         cfSaveTaxFunds(cfTaxFundRows().filter(row => row.id !== id));
+        cfQueuePush();
         cfRenderTaxFunds();
     }
 
@@ -5096,6 +5105,7 @@
             return row;
         });
         cfSaveTaxFunds(rows);
+        cfQueuePush();
         cfRenderTaxFunds();
     }
 
@@ -5122,18 +5132,148 @@
         cfRenderTimeline();
     }
 
-    // ── Sheets sync (kept as no-ops so the global refresh flow keeps working) ──
-    // The old Easybills cashflow synced to Google Sheets; monthly spending is
-    // local-only for now. Restoring Easybills means restoring the original
-    // cfPullFromSheets / cfPushToSheets implementations from git history.
+    // ── Sheets sync (Cashflow Planner v2) ────────────────────────────
+    // The planner's sections sync with Google Sheets through the unified
+    // Apps Script endpoint (cashflow_read / cashflow_write):
+    //   Cashflow_monthly        month, income, expense
+    //   Cashflow_invest_returns year, amount, pct
+    //   Cashflow_insurance      id, policyNumber, type, amount, date
+    //   Cashflow_tax_funds      id, name, amount, platform, sellable
+    // Pull: the sheet is the source of truth once the v2 tabs exist
+    // (initializedV2); before the first push the tabs don't exist yet and
+    // local data is kept. Push: the whole local set is sent (debounced by
+    // cfQueuePush) after local edits. The old Easybills sheet sections
+    // (settings/wallets/events) are passed through unchanged from the last
+    // pull so a push never wipes them — even on the older deployed script.
+    let cfSheetsLegacy = { settings: [], wallets: [], events: [], hasLegacy: false };
+
+    function cfApplySheetsMonthly(rows) {
+        const clean = {};
+        rows.forEach(row => {
+            // Sheets may reformat 'YYYY-MM' as a date ('YYYY-MM-01') — accept both.
+            let month = String(row.month || '').trim();
+            const m = month.match(/^(\d{4}-\d{2})/);
+            if (!m) return;
+            month = m[1];
+            clean[month] = {
+                income: Math.max(0, satNumber(row.income)),
+                expense: Math.max(0, satNumber(row.expense)),
+                cats: {}
+            };
+        });
+        cfState().monthly = clean;
+        cfSaveLocal();
+    }
+
+    function cfApplySheetsInvest(rows) {
+        const data = {};
+        rows.forEach(row => {
+            const year = String(row.year || '').trim();
+            if (!/^\d{4}$/.test(year)) return;
+            const amount = Math.max(0, satNumber(row.amount));
+            const pct = satNumber(row.pct);
+            if (amount === 0 && pct === 0) return;
+            data[year] = { amount, pct };
+        });
+        localStorage.setItem(CF_INVEST_KEY, JSON.stringify(data));
+    }
+
+    function cfApplySheetsInsurance(rows) {
+        const list = rows.map((row, i) => ({
+            id: String(row.id || `ins_${i + 1}`),
+            policyNumber: String(row.policyNumber || ''),
+            type: String(row.type || ''),
+            amount: Math.max(0, satNumber(row.amount)),
+            date: /^\d{4}-\d{2}-\d{2}$/.test(String(row.date || '')) ? String(row.date) : ''
+        })).filter(row => row.policyNumber || row.type || row.amount > 0 || row.date);
+        localStorage.setItem(CF_INS_KEY, JSON.stringify(list));
+    }
+
+    function cfApplySheetsTaxFunds(rows) {
+        const list = rows.map((row, i) => ({
+            id: String(row.id || `tax_${i + 1}`),
+            name: String(row.name || ''),
+            amount: Math.max(0, satNumber(row.amount)),
+            platform: String(row.platform || ''),
+            sellable: /^\d{4}-\d{2}-\d{2}$/.test(String(row.sellable || '')) ? String(row.sellable) : ''
+        })).filter(row => row.name || row.amount > 0 || row.platform || row.sellable);
+        localStorage.setItem(CF_TAX_KEY, JSON.stringify(list));
+    }
+
     async function cfPullFromSheets(silent=false) {
         cfLoadLocal();
+        try {
+            const data = await fetchGsAction('cashflow_read');
+            if (data && data.initializedV2) {
+                cfApplySheetsMonthly(data.monthly || []);
+                cfApplySheetsInvest(data.invest || []);
+                cfApplySheetsInsurance(data.insurance || []);
+                cfApplySheetsTaxFunds(data.taxfunds || []);
+            }
+            // Keep the old Easybills sections available for pass-through on push.
+            if (data) {
+                cfSheetsLegacy = {
+                    settings: Array.isArray(data.settings) ? data.settings : [],
+                    wallets: Array.isArray(data.wallets) ? data.wallets : [],
+                    events: Array.isArray(data.events) ? data.events : [],
+                    hasLegacy: true
+                };
+                // First run on this spreadsheet: upload local data, which also
+                // creates the four v2 tabs.
+                if (!data.initializedV2) cfQueuePush();
+            }
+        } catch (error) {
+            if (!silent) console.warn('Cashflow pull error:', error.message);
+        }
         cfRenderAll();
         return true;
     }
+
+    let cfPushTimer = null;
+    function cfQueuePush() {
+        if (cfPushTimer) clearTimeout(cfPushTimer);
+        cfPushTimer = setTimeout(() => { cfPushTimer = null; cfPushToSheets(true); }, 1500);
+    }
+
     async function cfPushToSheets(silent=false) {
-        cfSaveLocal();
-        return true;
+        const url = getGsUrl();
+        if (!url) return false;
+        try {
+            const monthly = Object.keys(cfState().monthly || {})
+                .map(month => {
+                    const m = cfState().monthly[month];
+                    return { month, income: Math.max(0, satNumber(m.income)), expense: Math.max(0, satNumber(m.expense)) };
+                })
+                .filter(row => row.income > 0 || row.expense > 0)
+                .sort((a, b) => a.month.localeCompare(b.month));
+            const investData = cfInvestData();
+            const invest = Object.keys(investData)
+                .map(year => {
+                    const entry = investData[year];
+                    return { year, amount: Math.max(0, satNumber(entry.amount)), pct: satNumber(entry.pct) };
+                })
+                .sort((a, b) => a.year.localeCompare(b.year));
+            const payload = {
+                action: 'cashflow_write',
+                monthly,
+                invest,
+                insurance: cfInsuranceRows(),
+                taxfunds: cfTaxFundRows(),
+                // Keep the card-date sheet current (local is the master).
+                cards: cfRawCards()
+            };
+            if (cfSheetsLegacy.hasLegacy) {
+                payload.settings = cfSheetsLegacy.settings;
+                payload.wallets = cfSheetsLegacy.wallets;
+                payload.events = cfSheetsLegacy.events;
+            }
+            await postGsWrite(payload);
+            if (!silent) setSyncPill('ok', 'Cashflow synced');
+            return true;
+        } catch (e) {
+            if (!silent) { console.warn('Cashflow push error:', e.message); setSyncPill('err', 'Cashflow sync failed'); }
+            return false;
+        }
     }
 
     function parseDashboardDate(value) {
