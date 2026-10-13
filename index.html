@@ -1252,6 +1252,11 @@
         .cf-monthly-nav .cf-btn { width:36px; min-height:36px; padding:7px 0; }
         .cf-income-row { display:flex; flex-direction:column; align-items:stretch; gap:4px; }
         .cf-income-row .cf-input { max-width:220px; }
+        .cf-cat-rows { display:grid; grid-template-columns:1fr 110px; gap:7px 10px; align-items:center; margin-bottom:12px; }
+        .cf-cat-rows .cf-label { margin:0; }
+        .cf-expense-total { display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px solid rgba(148,163,184,.15); }
+        .cf-expense-total-label { margin:0; }
+        .cf-expense-total-value { font-weight:800; font-size:14px; font-variant-numeric:tabular-nums; }
         body.theme-light .cf-monthly-hero { background:#FFFFFF; border-color:#CBD5E1; }
         body.theme-light .cf-monthly-hero-value { color:#0F172A; }
         .cf-calendar-wrap { overflow:hidden; border:1px solid #273449; border-radius:8px; background:#0B1220; }
@@ -2042,9 +2047,10 @@
                                 <label class="cf-label" for="cf-income-input">Monthly income</label>
                                 <input id="cf-income-input" class="cf-input" type="text" inputmode="decimal" placeholder="0" oninput="cfFormatAmount(this); cfSetIncome(this.value)">
                             </div>
-                            <div class="cf-income-row">
-                                <label class="cf-label" for="cf-expense-input">Monthly expenses</label>
-                                <input id="cf-expense-input" class="cf-input" type="text" inputmode="decimal" placeholder="0" oninput="cfFormatAmount(this); cfSetExpense(this.value)">
+                            <div id="cf-cat-rows" class="cf-cat-rows"></div>
+                            <div class="cf-expense-total">
+                                <span class="cf-label cf-expense-total-label">Monthly expenses</span>
+                                <span id="cf-expense-total" class="cf-expense-total-value">฿0</span>
                             </div>
                         </section>
 
@@ -4727,6 +4733,40 @@
         cfRenderMonthly();
     }
 
+    // The eight category inputs (the sheet's A4:B11 rows) are built once;
+    // the "Monthly expenses" total is their sum, not a separate input.
+    let cfCatRowsBuilt = false;
+    function cfBuildCatRows() {
+        if (cfCatRowsBuilt) return;
+        const wrap = document.getElementById('cf-cat-rows');
+        if (!wrap) return;
+        CF_MONTHLY_CATS.forEach(c => {
+            const label = document.createElement('label');
+            label.className = 'cf-label';
+            label.textContent = c.label;
+            const input = document.createElement('input');
+            input.id = 'cf-cat-' + c.key;
+            input.className = 'cf-input';
+            input.type = 'text';
+            input.inputMode = 'decimal';
+            input.placeholder = '0';
+            input.oninput = () => { cfFormatAmount(input); cfSetCat(c.key, input.value); };
+            wrap.appendChild(label);
+            wrap.appendChild(input);
+        });
+        cfCatRowsBuilt = true;
+    }
+
+    function cfSetCat(key, value) {
+        const m = cfMonthData(cfState().activeMonth);
+        m.cats = m.cats || {};
+        m.cats[key] = Math.max(0, satNumber(value));
+        m.expense = CF_MONTHLY_CATS.reduce((s, c) => s + (m.cats[c.key] || 0), 0);
+        cfSaveLocal();
+        cfQueuePush();
+        cfRenderMonthly();
+    }
+
     function cfSetActiveMonth(value) {
         if (/^\d{4}-\d{2}$/.test(value || '')) {
             cfState().activeMonth = value;
@@ -4748,10 +4788,16 @@
             incomeInput.value = m.income > 0 ? m.income.toLocaleString('en-US') : '';
         }
 
-        const expenseInput = document.getElementById('cf-expense-input');
-        if (expenseInput && document.activeElement !== expenseInput) {
-            expenseInput.value = m.expense > 0 ? m.expense.toLocaleString('en-US') : '';
-        }
+        cfBuildCatRows();
+        CF_MONTHLY_CATS.forEach(c => {
+            const el = document.getElementById('cf-cat-' + c.key);
+            const v = m.cats ? (m.cats[c.key] || 0) : 0;
+            if (el && document.activeElement !== el) {
+                el.value = v > 0 ? v.toLocaleString('en-US') : '';
+            }
+        });
+        const totalEl = document.getElementById('cf-expense-total');
+        if (totalEl) totalEl.textContent = cfMoney(expense);
 
         const saveEl = document.getElementById('cf-monthly-save');
         const verdictEl = document.getElementById('cf-monthly-verdict');
@@ -5146,14 +5192,15 @@
     // ── Sheets sync (Cashflow Planner v2) ────────────────────────────
     // All planner sections live in ONE Google Sheet tab named
     // "Investment data" (the user's own layout): row 1 section titles,
-    // row 2 headers, row 3+ data; regions Monthly (A-B label/value),
+    // row 2 headers, row 3+ data; regions Monthly (A-B label/value — B2
+    // income, B3 expense, B4:B11 the eight expense categories),
     // Investment return (D-F), Insurance (H-K), Tax funds (M-S).
-    // The Monthly region holds ONE month's income/expense — which month is
+    // The Monthly region holds ONE month's figures — which month is
     // tracked in cell U2 ("synced month"). Pull applies it to that month;
-    // push sends the active month. Category rows (A4:B11) stay on the sheet
-    // untouched. The old Easybills sheet sections (settings/wallets/events)
-    // are passed through unchanged from the last pull so a push never
-    // wipes them — even on the older deployed script.
+    // push sends the active month. The old Easybills sheet sections
+    // (settings/wallets/events) are passed through unchanged from the
+    // last pull so a push never wipes them — even on the older deployed
+    // script.
     let cfSheetsLegacy = { settings: [], wallets: [], events: [], hasLegacy: false };
 
     function cfApplySheetsMonthly(rows, syncedMonth) {
@@ -5162,6 +5209,13 @@
         const entry = cfMonthData(month);
         entry.income = Math.max(0, satNumber(m0.income));
         entry.expense = Math.max(0, satNumber(m0.expense));
+        if (m0.cats) {
+            entry.cats = entry.cats || {};
+            CF_MONTHLY_CATS.forEach(c => { entry.cats[c.key] = Math.max(0, satNumber(m0.cats[c.key])); });
+            // The sheet's Expense cell may be blank — the categories carry
+            // the detail, so fall back to their sum.
+            if (!entry.expense) entry.expense = CF_MONTHLY_CATS.reduce((s, c) => s + entry.cats[c.key], 0);
+        }
         cfSaveLocal();
     }
 
@@ -5260,7 +5314,7 @@
             const payload = {
                 action: 'cashflow_write',
                 // The Monthly region (A-B) holds the active month's figures.
-                monthly: [{ income: Math.max(0, satNumber(m.income)), expense: Math.max(0, satNumber(m.expense)) }],
+                monthly: [{ income: Math.max(0, satNumber(m.income)), expense: Math.max(0, satNumber(m.expense)), cats: CF_MONTHLY_CATS.reduce((acc, c) => { acc[c.key] = Math.max(0, satNumber(m.cats ? m.cats[c.key] : 0)); return acc; }, {}) }],
                 syncedMonth: month,
                 invest: cfInvestPushRows(),
                 insurance: cfInsuranceRows(),

@@ -771,6 +771,12 @@ var INV_MONTHLY_CATEGORIES = [
   'Food & Beverage', 'Coffee', 'Shopping', 'Transportation',
   'Bills', 'Investment', 'Family', 'Others'
 ];
+// Sheet label (lowercase) -> frontend category key, rows 4-11.
+var INV_MONTHLY_CAT_KEYS = {
+  'food & beverage': 'foodbev', 'coffee': 'coffee', 'shopping': 'shopping',
+  'transportation': 'transport', 'bills': 'bills', 'investment': 'invest',
+  'family': 'family', 'others': 'other'
+};
 
 function invNumber(v) {
   if (v === '' || v === null || v === undefined) return '';
@@ -878,7 +884,10 @@ function cashflowRead() {
         var key = label.toLowerCase();
         if (key === 'income') monthly.income = invNumber(values[r][1]);
         else if (key === 'expense') monthly.expense = invNumber(values[r][1]);
-        // category rows (A4:A11) stay on the sheet untouched
+        else if (INV_MONTHLY_CAT_KEYS[key] !== undefined) {
+          if (!monthly.cats) monthly.cats = {};
+          monthly.cats[INV_MONTHLY_CAT_KEYS[key]] = invNumber(values[r][1]);
+        }
       }
       out.monthly = [monthly];
       out.syncedMonth = String(invSheet.getRange(2, 21).getValue() || '');
@@ -913,6 +922,13 @@ function cashflowWrite(data) {
         var m = (data.monthly && data.monthly[0]) || {};
         sheet.getRange(2, 2).setValue(m.income === 0 || m.income === '' ? '' : m.income);
         sheet.getRange(3, 2).setValue(m.expense === 0 || m.expense === '' ? '' : m.expense);
+        // Category rows B4:B11 — same order as INV_MONTHLY_CATEGORIES.
+        var catKeys = ['foodbev', 'coffee', 'shopping', 'transport', 'bills', 'invest', 'family', 'other'];
+        var cats = m.cats || {};
+        for (var i = 0; i < INV_MONTHLY_CATEGORIES.length; i++) {
+          var cv = cats[catKeys[i]];
+          sheet.getRange(4 + i, 2).setValue(cv === 0 || cv === '' || cv == null ? '' : cv);
+        }
         sheet.getRange(2, 21).setValue(String(data.syncedMonth || ''));
       }
       if (data.invest !== undefined) invWriteRegion_(sheet, INV_COL.invest, data.invest || []);
