@@ -1345,12 +1345,14 @@
         .cf-calendar-dot.due { background:#14B8A6; }
         /* ── Two-column panels ── */
         .cf-two-col { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; align-items:start; }
+        .cf-stack { display:grid; grid-template-columns:1fr; gap:14px; align-items:start; }
         @media (max-width:900px) { .cf-two-col { grid-template-columns:1fr; } }
         /* ── Editable mini-tables (invest returns / insurance / tax funds) ── */
-        .cf-mini-table { width:100%; border-collapse:collapse; }
-        .cf-mini-table th { padding:6px 6px; color:#64748B; font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; text-align:left; border-bottom:1px solid #334155; white-space:nowrap; }
+        .cf-mini-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+        .cf-mini-table th { padding:7px 8px; color:#64748B; font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; text-align:left; border-bottom:1px solid #334155; white-space:nowrap; overflow:hidden; }
         .cf-mini-table th.num { text-align:right; }
-        .cf-mini-table td { padding:3px 3px; border-bottom:1px dashed rgba(71,85,105,.35); vertical-align:middle; }
+        .cf-mini-table td { padding:3px 4px; border-bottom:1px dashed rgba(71,85,105,.35); vertical-align:middle; }
+        .cf-mini-table tbody tr:hover { background:rgba(148,163,184,.05); }
         .cf-mini-table tbody tr:last-child td { border-bottom:none; }
         .cf-mini-table .num { text-align:right; }
         .cf-mini-table .year-cell { color:#94A3B8; font-size:11px; font-weight:700; padding-left:6px; font-variant-numeric:tabular-nums; white-space:nowrap; }
@@ -2063,6 +2065,7 @@
                             </div>
                             <div class="cf-table-wrap">
                                 <table class="cf-mini-table">
+                                    <colgroup><col style="width:14%"><col style="width:43%"><col style="width:43%"></colgroup>
                                     <thead><tr><th>Year</th><th class="num">Return (฿)</th><th class="num">Return (%)</th></tr></thead>
                                     <tbody id="cf-invest-tbody"></tbody>
                                     <tfoot><tr><td>Total</td><td class="num" id="cf-invest-total">฿0</td><td class="num"></td></tr></tfoot>
@@ -2072,7 +2075,7 @@
                     </div>
 
                     <!-- ── Insurance + Tax funds ────────────────────── -->
-                    <div class="cf-two-col">
+                    <div class="cf-stack">
                         <section class="cf-panel">
                             <div class="cf-panel-head">
                                 <div>
@@ -2083,6 +2086,7 @@
                             </div>
                             <div class="cf-table-wrap">
                                 <table class="cf-mini-table">
+                                    <colgroup><col style="width:16%"><col style="width:14%"><col style="width:44%"><col style="width:20%"><col style="width:6%"></colgroup>
                                     <thead><tr><th>Policy #</th><th class="num">Amount (฿)</th><th>Description</th><th>Due/Paid</th><th></th></tr></thead>
                                     <tbody id="cf-insurance-tbody"></tbody>
                                 </table>
@@ -2100,6 +2104,7 @@
                             </div>
                             <div class="cf-table-wrap">
                                 <table class="cf-mini-table">
+                                    <colgroup><col style="width:9%"><col style="width:21%"><col style="width:13%"><col style="width:13%"><col style="width:14%"><col style="width:9%"><col style="width:15%"><col style="width:6%"></colgroup>
                                     <thead><tr><th>Type</th><th>Fund</th><th>Start</th><th>End</th><th class="num">Amount (฿)</th><th class="num">Unit</th><th>Platform</th><th></th></tr></thead>
                                     <tbody id="cf-taxfund-tbody"></tbody>
                                 </table>
