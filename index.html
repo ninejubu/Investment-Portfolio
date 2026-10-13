@@ -1344,7 +1344,10 @@
         .cf-calendar-dot { width:9px; height:9px; border-radius:2px; background:#64748B; }
         .cf-calendar-dot.due { background:#14B8A6; }
         /* ── Two-column panels ── */
-        .cf-two-col { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; align-items:start; }
+        .cf-two-col { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; align-items:stretch; }
+        /* Right column: Investment Returns + Insurance stacked; the left
+           Monthly Spending panel stretches to the same total height. */
+        .cf-col-stack { display:flex; flex-direction:column; gap:14px; min-width:0; }
         .cf-stack { display:grid; grid-template-columns:1fr; gap:14px; align-items:start; }
         .cf-half { max-width:calc(50% - 7px); }
         @media (max-width:900px) { .cf-two-col { grid-template-columns:1fr; } }
@@ -2059,6 +2062,7 @@
                             </div>
                         </section>
 
+                        <div class="cf-col-stack">
                         <section class="cf-panel">
                             <div class="cf-panel-head">
                                 <div>
@@ -2075,11 +2079,8 @@
                                 </table>
                             </div>
                         </section>
-                    </div>
 
-                    <!-- ── Insurance + Tax funds ────────────────────── -->
-                    <div class="cf-stack">
-                        <section class="cf-panel cf-half">
+                        <section class="cf-panel">
                             <div class="cf-panel-head">
                                 <div>
                                     <h4 class="cf-title">Insurance Policies</h4>
@@ -2096,7 +2097,11 @@
                             </div>
                             <div id="cf-insurance-empty" class="cf-empty">No policies yet — click Add.</div>
                         </section>
+                        </div>
+                    </div>
 
+                    <!-- ── Tax funds ────────────────────────────────── -->
+                    <div class="cf-stack">
                         <section class="cf-panel">
                             <div class="cf-panel-head">
                                 <div>
