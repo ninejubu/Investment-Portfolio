@@ -1364,6 +1364,10 @@
         .cf-mini-table tfoot .num { font-variant-numeric:tabular-nums; }
         /* Investment Returns: numeric columns centered (header + data + total). */
         .cf-invest-table th.num, .cf-invest-table td.num, .cf-invest-table .cf-mini-input { text-align:center; }
+        /* Insurance / Tax Funds: inputs in numeric cells inherit the cell's
+           right alignment, so header and data line up and can't drift apart.
+           (Invest table keeps the centering rule above.) */
+        .cf-mini-table:not(.cf-invest-table) td.num .cf-mini-input { text-align:right; }
         .cf-mini-input {
             width:100%; min-height:30px; background:transparent; border:1px solid transparent; border-radius:5px;
             color:#F8FAFC; font-size:11px; padding:4px 6px; outline:none; font-variant-numeric:tabular-nums;
