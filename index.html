@@ -1248,8 +1248,7 @@
         .cf-monthly-stat-label { color:#64748B; font-size:9px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
         .cf-table tbody tr:hover td { background:rgba(148,163,184,.05); }
         .cf-table td .cf-btn { min-height:26px; padding:3px 8px; }
-        .cf-monthly-nav { display:flex; align-items:center; gap:8px; }
-        .cf-monthly-nav .cf-btn { width:36px; min-height:36px; padding:7px 0; }
+
         .cf-income-row { display:flex; flex-direction:column; align-items:stretch; gap:4px; }
         .cf-income-row .cf-input { max-width:220px; }
         .cf-cat-rows { display:grid; grid-template-columns:1fr 110px; gap:7px 10px; align-items:center; margin-bottom:12px; }
@@ -2031,11 +2030,6 @@
                         <div>
                             <div class="cf-kicker">Personal Cashflow</div>
                             <h3 class="text-xl font-bold text-white mt-1">Monthly Spending</h3>
-                        </div>
-                        <div class="cf-monthly-nav">
-                            <button class="cf-btn" type="button" onclick="cfShiftMonth(-1)" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
-                            <input id="cf-active-month" class="cf-input" type="month" onchange="cfSetActiveMonth(this.value)">
-                            <button class="cf-btn" type="button" onclick="cfShiftMonth(1)" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
                         </div>
                     </div>
 
@@ -2878,7 +2872,9 @@
             wallets: [],
             events: [],
             monthly: {},
-            activeMonth: localStorage.getItem('cashflow_active_month_v1') || new Date().toISOString().slice(0, 7)
+            // The planner always shows the current month — spending is an
+            // estimate that repeats every month, so there is no month picker.
+            activeMonth: (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`; })()
         },
         computed: { stocks: {}, bonds: {}, crypto: {}, gold: {}, portfolio: {} },
         ui: { expandedQuarters: { q1: false, q2: false, q3: false, q4: false } }
@@ -4685,13 +4681,6 @@
         return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     }
 
-    function cfShiftMonth(delta) {
-        const parts = String(cfState().activeMonth || '').split('-');
-        if (parts.length !== 2) return;
-        const d = new Date(Number(parts[0]), Number(parts[1]) - 1 + delta, 1);
-        cfSetActiveMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-    }
-
     function cfMonthData(month) {
         const data = cfState().monthly || {};
         if (!data[month]) data[month] = { income: 0, expense: 0, cats: {} };
@@ -4700,7 +4689,6 @@
 
     function cfSaveLocal() {
         localStorage.setItem(CF_MONTHLY_KEY, JSON.stringify(cfState().monthly || {}));
-        localStorage.setItem('cashflow_active_month_v1', cfState().activeMonth);
     }
 
     function cfLoadLocal() {
@@ -4724,8 +4712,6 @@
                 };
             });
             cfState().monthly = clean;
-            const savedMonth = localStorage.getItem('cashflow_active_month_v1');
-            if (/^\d{4}-\d{2}$/.test(savedMonth || '')) cfState().activeMonth = savedMonth;
         } catch (error) {
             console.warn('Monthly spending data reset:', error.message);
             cfState().monthly = {};
@@ -4787,21 +4773,10 @@
         cfRenderMonthly();
     }
 
-    function cfSetActiveMonth(value) {
-        if (/^\d{4}-\d{2}$/.test(value || '')) {
-            cfState().activeMonth = value;
-            cfSaveLocal();
-            cfRenderAll();
-        }
-    }
-
     function cfRenderMonthly() {
         const month = cfState().activeMonth;
         const m = (cfState().monthly || {})[month] || { income: 0, expense: 0 };
         const { income, expense, savings } = cfMonthlyTotals(month);
-
-        const monthInput = document.getElementById('cf-active-month');
-        if (monthInput && monthInput.value !== month) monthInput.value = month;
 
         const incomeInput = document.getElementById('cf-income-input');
         if (incomeInput && document.activeElement !== incomeInput) {
@@ -4953,8 +4928,7 @@
         const now = new Date();
         const [todayYear, todayMonthNum, todayDayNum] =
             `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`.split('-').map(Number);
-        const isCurrentMonth = cfState().activeMonth === `${todayYear}-${String(todayMonthNum).padStart(2, '0')}`;
-        const todayDay = isCurrentMonth ? todayDayNum : 0;
+        const todayDay = todayDayNum;
         const dayCells = (card=null) => Array.from({length:31}, (_,index) => {
             const day = index + 1;
             const statementDay = card ? cfCardDay(card.statementDay) : 0;
