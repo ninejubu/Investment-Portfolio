@@ -519,6 +519,8 @@
             transition: color .15s ease, border-color .15s ease, background .15s ease;
         }
         .sidebar-collapse-btn:hover { color: #F8FAFC; border-color: #3B82F6; background: #1E293B; }
+        body.theme-light .sidebar-collapse-btn { border-color: #CBD5E1; color: #475569; background: #FFFFFF; }
+        body.theme-light .sidebar-collapse-btn:hover { color: #1D4ED8; border-color: #60A5FA; background: #F1F5F9; }
         #sidebar-port-toggle-collapsed {
             display: none; width: 44px; height: 44px; padding: 4px; gap: 4px;
             border: 1px solid #334155; border-radius: 10px; background: #0F172A;
@@ -1425,6 +1427,7 @@
 
         body.theme-light { background-color: #F6F8FB; color: #0F172A; }
         body.theme-light.theme-port2 { background-color: #F3F4F6 !important; }
+        body.theme-light.theme-port3 { background-color: #F6F8FB !important; }
         body.theme-light .bg-card,
         body.theme-light.theme-port2 .bg-card,
         body.theme-light .wheel-card,
@@ -1479,6 +1482,10 @@
         body.theme-light .btc-live-chip,
         body.theme-light .w-btn-secondary,
         body.theme-light .w-btn-icon { background: #F8FAFC; border-color: #CBD5E1; }
+        body.theme-light #strikeRows > div { background: #F8FAFC !important; border-color: #CBD5E1 !important; }
+        body.theme-light #strikeRows > div > span { color: #334155 !important; }
+        body.theme-light #strikeRows > div > input { background: #FFFFFF !important; border-color: #CBD5E1 !important; color: #334155 !important; }
+        body.theme-light #strikeRows > div > button:last-child { border-color: #CBD5E1 !important; color: #475569 !important; }
         body.theme-light .filter-btn.active,
         body.theme-light .filter-btn:hover { background: #EAF2FF; color: #1D4ED8; }
         body.theme-light .wheel-order-metric { background: #F8FAFC; border-color: #CBD5E1; color: #334155; }
