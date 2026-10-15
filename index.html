@@ -1486,6 +1486,42 @@
         body.theme-light #strikeRows > div > span { color: #334155 !important; }
         body.theme-light #strikeRows > div > input { background: #FFFFFF !important; border-color: #CBD5E1 !important; color: #334155 !important; }
         body.theme-light #strikeRows > div > button:last-child { border-color: #CBD5E1 !important; color: #475569 !important; }
+        /* Holdings Breakdown — light mode (dark surfaces → light) */
+        body.theme-light .hb-ctrl-sep { background: #CBD5E1; }
+        body.theme-light .hb-btn { background: #FFFFFF; border-color: #CBD5E1; color: #475569; }
+        body.theme-light .hb-btn:hover { background: #F1F5F9; color: #0F172A; border-color: #94A3B8; }
+        body.theme-light .hb-btn.is-active { background: #EAF2FF; border-color: #3B82F6; color: #1D4ED8; }
+        body.theme-light .hb-btn-period.is-active { border-color: #A855F7; color: #7C3AED; }
+        body.theme-light #hb-view-ticker,
+        body.theme-light #hb-view-segment,
+        body.theme-light #hb-view-platform { background: #FFFFFF; border-color: #CBD5E1 !important; color: #475569; }
+        body.theme-light #hb-view-ticker:hover,
+        body.theme-light #hb-view-segment:hover,
+        body.theme-light #hb-view-platform:hover { background: #F1F5F9; color: #0F172A; border-color: #94A3B8 !important; }
+        body.theme-light #hb-view-ticker.view-active,
+        body.theme-light #hb-view-segment.view-active,
+        body.theme-light #hb-view-platform.view-active { background: #ECFDF5; border-color: #10B981 !important; color: #059669; }
+        body.theme-light #hb-port-segment { background: #FFFFFF !important; border-color: #CBD5E1 !important; }
+        body.theme-light #hb-port-segment button { color: #475569; }
+        body.theme-light #hb-port-segment button:hover { color: #0F172A; }
+        body.theme-light #hb-port-split { color: #64748B !important; }
+        body.theme-light .hb-footer { border-top-color: #E2E8F0 !important; }
+        body.theme-light #hb-total { color: #0F172A !important; }
+        body.theme-light .hb-legend-item { background: rgba(241,245,249,.85) !important; border-color: #CBD5E1 !important; }
+        body.theme-light .hb-legend-item:hover { background: #F1F5F9 !important; }
+        body.theme-light .hb-legend-item > span:nth-child(2) { color: #0F172A !important; }
+        body.theme-light #hb-ticker-slicer button { background: #FFFFFF !important; border-color: #CBD5E1 !important; color: #475569 !important; }
+        body.theme-light #hb-ticker-slicer button.is-on { background: #EAF2FF !important; color: #1D4ED8 !important; }
+        body.theme-light #hb-list .hb-row { background: #FFFFFF !important; border: 1px solid #E2E8F0; }
+        body.theme-light #hb-list .hb-row:hover,
+        body.theme-light #hb-list .hb-main:hover { background: #F1F5F9 !important; }
+        body.theme-light #hb-list .hb-name { color: #0F172A !important; }
+        body.theme-light #hb-list .hb-theme-chip { background: #F1F5F9 !important; }
+        body.theme-light #hb-list .hb-sub { background: #F8FAFC !important; }
+        body.theme-light #hb-list .hb-sub-row { border-top-color: #E2E8F0 !important; }
+        body.theme-light #hb-list .hb-sub-row > div:first-child { color: #475569 !important; }
+        body.theme-light #hb-list .hb-back span { color: #475569 !important; }
+        body.theme-light #hb-list .hb-back span:last-child { color: #0F172A !important; }
         body.theme-light .filter-btn.active,
         body.theme-light .filter-btn:hover { background: #EAF2FF; color: #1D4ED8; }
         body.theme-light .wheel-order-metric { background: #F8FAFC; border-color: #CBD5E1; color: #334155; }
@@ -1851,7 +1887,7 @@
                             <!-- Holdings list -->
                             <div class="hb-list-col">
                                 <div id="hb-list" class="hb-list-grid"></div>
-                                <div style="margin-top:10px;padding-top:8px;border-top:1px solid #1E293B;display:flex;justify-content:space-between;font-size:10px;color:#64748b">
+                                <div class="hb-footer" style="margin-top:10px;padding-top:8px;border-top:1px solid #1E293B;display:flex;justify-content:space-between;font-size:10px;color:#64748b">
                                     <span id="hb-hint">Click row to edit</span>
                                     <span id="hb-total" style="color:#F8FAFC;font-weight:600"></span>
                                 </div>
@@ -8701,6 +8737,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                     const chip = document.createElement('button');
                     chip.type = 'button';
                     chip.style.cssText = `display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:4px 9px;border-radius:999px;cursor:pointer;transition:background .15s,border-color .15s;background:${active?'#1E293B':'#0F172A'};border:1px solid ${active?chipColor:'#334155'};color:${active?'#F8FAFC':'#94A3B8'}`;
+                    chip.classList.toggle('is-on', active);
                     chip.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:${chipColor};flex-shrink:0"></span>${theme}`;
                     chip.onclick = (e) => {
                         e.stopPropagation();
@@ -8753,16 +8790,18 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
                 const pct   = assetBal > 0 ? (r.amount/assetBal*100) : 0;
                 const multi = !isUT && r.platforms && r.platforms.length > 1;
                 const el    = document.createElement('div');
+                el.className = 'hb-row';
                 el.style.cssText = 'background:#0F172A;border-radius:6px;overflow:hidden';
 
                 const mainRow = document.createElement('div');
+                mainRow.className = 'hb-main';
                 mainRow.style.cssText = `display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:${isUT?'default':'pointer'};transition:background .15s`;
                 mainRow.onmouseenter = () => { if (!isUT) mainRow.style.background = '#1E293B'; };
                 mainRow.onmouseleave = () => { mainRow.style.background = 'transparent'; };
                 mainRow.innerHTML = `
                     <div style="width:8px;height:8px;border-radius:50%;background:${r._color};flex-shrink:0"></div>
-                    <div style="flex:1;min-width:0;font-size:11px;color:${isUT?'#475569':'#F8FAFC'};font-style:${isUT?'italic':'normal'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
-                    <div style="width:64px;flex-shrink:0;display:flex;justify-content:center">${r.theme ? `<span style="font-size:9px;color:#64748b;background:#1E293B;padding:1px 5px;border-radius:3px;white-space:nowrap">${r.theme}</span>` : ''}</div>
+                    <div class="hb-name" style="flex:1;min-width:0;font-size:11px;color:${isUT?'#475569':'#F8FAFC'};font-style:${isUT?'italic':'normal'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
+                    <div style="width:64px;flex-shrink:0;display:flex;justify-content:center">${r.theme ? `<span class="hb-theme-chip" style="font-size:9px;color:#64748b;background:#1E293B;padding:1px 5px;border-radius:3px;white-space:nowrap">${r.theme}</span>` : ''}</div>
                     <div style="width:44px;flex-shrink:0;text-align:center;font-size:11px;font-weight:600;color:${isUT?'#475569':color};white-space:nowrap">${pct.toFixed(1)}%</div>
                     <div style="width:76px;flex-shrink:0;text-align:right;font-size:10px;color:#64748b;white-space:nowrap">${fmtAmt(r.amount)}</div>
                     <div style="font-size:9px;color:#64748b;width:9px;flex-shrink:0">${multi?'▸':''}</div>`;
@@ -8770,10 +8809,12 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
 
                 if (multi) {
                     const subList = document.createElement('div');
+                    subList.className = 'hb-sub';
                     subList.style.cssText = 'display:none;background:#0A1628;padding:0 8px 6px 24px';
                     r.platforms.forEach(p => {
                         const subPct = r.amount > 0 ? (p.amount/r.amount*100) : 0;
                         const sub    = document.createElement('div');
+                        sub.className = 'hb-sub-row';
                         sub.style.cssText = 'display:flex;align-items:center;gap:8px;padding:3px 0;border-top:1px solid #1E293B';
                         sub.innerHTML = `
                             <div style="flex:1;min-width:0;font-size:10px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.platform||'—'}</div>
@@ -8817,6 +8858,7 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             hbDrawDonut(inSeg.map(r=>r.name), inSeg.map(r=>r.amount), colors, segTotal, asset, quarter);
 
             const backEl = document.createElement('div');
+            backEl.className = 'hb-back';
             backEl.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 0 8px;cursor:pointer;grid-column:1 / -1';
             backEl.innerHTML = `<span style="font-size:11px;color:#64748b">←</span><span style="font-size:11px;color:#94A3B8">Back</span><span style="font-size:11px;color:#F8FAFC;font-weight:600;margin-left:4px">${hbSegmentDrill}</span>`;
             backEl.onclick = () => { hbSegmentDrill = null; renderHoldingsBreakdown(); };
@@ -8825,13 +8867,14 @@ onkeypress="if(event.key==='Enter'){this.blur()}" />`;
             inSeg.forEach((r, i) => {
                 const pct = segTotal > 0 ? (r.amount/segTotal*100) : 0;
                 const el  = document.createElement('div');
+                el.className = 'hb-row';
                 el.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;background:#0F172A;cursor:pointer;transition:background .15s';
                 el.onmouseenter = () => el.style.background = '#1E293B';
                 el.onmouseleave = () => el.style.background = '#0F172A';
                 el.onclick = () => openDrillDown(asset, quarter);
                 el.innerHTML = `
                     <div style="width:8px;height:8px;border-radius:50%;background:${colors[i]};flex-shrink:0"></div>
-                    <div style="flex:1;min-width:0;font-size:11px;color:#F8FAFC;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
+                    <div class="hb-name" style="flex:1;min-width:0;font-size:11px;color:#F8FAFC;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
                     <div style="width:44px;flex-shrink:0;text-align:center;font-size:11px;font-weight:600;color:${color}">${pct.toFixed(1)}%</div>
                     <div style="width:76px;flex-shrink:0;text-align:right;font-size:10px;color:#64748b">${fmtAmt(r.amount)}</div>`;
                 listEl.appendChild(el);
@@ -8935,6 +8978,7 @@ Click to see tickers`;
             hbDrawDonut(rowsInPlat.map(r=>r.name), rowsInPlat.map(r=>r.amount), drillColors, assetBal, asset, quarter);
 
             const backEl = document.createElement('div');
+            backEl.className = 'hb-back';
             backEl.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 0 8px;cursor:pointer;grid-column:1 / -1';
             backEl.innerHTML = `<span style="font-size:12px;color:#94A3B8">←</span><span style="font-size:11px;color:#94A3B8">All platforms</span>`;
             backEl.onclick = () => { hbPlatformDrill = null; renderHoldingsBreakdown(); };
@@ -8949,13 +8993,14 @@ Click to see tickers`;
                 rowsInPlat.forEach((r,i) => {
                     const pct = assetBal > 0 ? (r.amount/assetBal*100) : 0;
                     const el  = document.createElement('div');
+                    el.className = 'hb-row';
                     el.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;background:#0F172A;cursor:pointer;transition:background .15s';
                     el.onmouseenter = () => el.style.background = '#1E293B';
                     el.onmouseleave = () => el.style.background = '#0F172A';
                     el.onclick = () => openDrillDown(asset, quarter);
                     el.innerHTML = `
                         <div style="width:8px;height:8px;border-radius:50%;background:${drillColors[i]};flex-shrink:0"></div>
-                        <div style="flex:1;min-width:0;font-size:11px;color:#F8FAFC;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
+                        <div class="hb-name" style="flex:1;min-width:0;font-size:11px;color:#F8FAFC;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
                         <div style="width:44px;flex-shrink:0;text-align:center;font-size:11px;font-weight:600;color:${color}">${pct.toFixed(1)}%</div>
                         <div style="width:76px;flex-shrink:0;text-align:right;font-size:10px;color:#64748b">${fmtAmt(r.amount)}</div>`;
                     listEl.appendChild(el);
