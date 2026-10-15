@@ -1659,9 +1659,15 @@
                             <h4 class="text-white font-bold flex items-center gap-2">
                                 <i class="fa-solid fa-bullseye text-red-500"></i> Financial Goal
                             </h4>
-                            <div class="bg-slate-800/80 p-0.5 rounded-lg flex space-x-0.5 border border-slate-700">
-                                <button id="goal-v1-btn" onclick="switchGoalView('v1')" class="px-3 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">Graph</button>
-                                <button id="goal-v2-btn" onclick="switchGoalView('v2')" class="px-3 py-1 text-[10px] font-bold rounded-md bg-blue-600 text-white shadow transition-all">Heat map</button>
+                            <div class="flex items-center gap-2">
+                                <div class="bg-slate-800/80 p-0.5 rounded-lg flex space-x-0.5 border border-slate-700">
+                                    <button id="goal-sat-all-btn" onclick="goalSetExcludeSatellite(false)" title="Include Satellite Port value" class="px-3 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">All</button>
+                                    <button id="goal-sat-core-btn" onclick="goalSetExcludeSatellite(true)" title="Exclude Satellite Port value" class="px-3 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">Core</button>
+                                </div>
+                                <div class="bg-slate-800/80 p-0.5 rounded-lg flex space-x-0.5 border border-slate-700">
+                                    <button id="goal-v1-btn" onclick="switchGoalView('v1')" class="px-3 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">Graph</button>
+                                    <button id="goal-v2-btn" onclick="switchGoalView('v2')" class="px-3 py-1 text-[10px] font-bold rounded-md bg-blue-600 text-white shadow transition-all">Heat map</button>
+                                </div>
                             </div>
                         </div>
                         <div class="flex items-center gap-4 text-xs mb-4 flex-wrap">
@@ -1676,6 +1682,7 @@
                                 <input type="number" id="goal-return-input" onchange="updateGoal()" class="bg-slate-800 border-none text-white rounded px-2 py-1 w-20 focus:ring-1 focus:ring-blue-500" step="0.1">
                             </div>
                         </div>
+                        <p id="goal-sat-note" class="hidden text-[10px] text-amber-400 mb-2"></p>
                         <div id="goal-view-v1" class="hidden flex-col flex-1">
                             <div class="flex items-start gap-4 mb-3">
                                 <div class="flex-1 flex flex-col justify-center">
@@ -5838,10 +5845,46 @@
         return bal;
     }
 
+    // ── Financial Goal: Satellite Port include/exclude toggle ──
+    const GOAL_EXCLUDE_SATELLITE_KEY = 'goal_exclude_satellite';
+    let goalExcludeSatellite = localStorage.getItem(GOAL_EXCLUDE_SATELLITE_KEY) === 'true';
+
+    // Satellite Port value = sum of Satellite-tagged holdings (port1 sheet) across asset classes,
+    // read from the same period each asset's current balance reflects (latest quarter with an ending balance).
+    function getGoalSatelliteValue() {
+        let sat = 0;
+        ['stocks','bonds','crypto','gold'].forEach(a => {
+            let period = 'Beg';
+            for (let q = 4; q >= 1; q--) { if (state.computed[a]?.[`q${q}`]?.hasEnd) { period = `Q${q}`; break; } }
+            let rows = [];
+            try { rows = JSON.parse(localStorage.getItem(`holdings_port1_${a}_${period}`)) || []; } catch (e) { rows = []; }
+            rows.forEach(r => { if (hbIsSatellite(r)) sat += (r.amount || 0); });
+        });
+        return sat;
+    }
+
+    function goalSetExcludeSatellite(exclude) {
+        goalExcludeSatellite = !!exclude;
+        localStorage.setItem(GOAL_EXCLUDE_SATELLITE_KEY, goalExcludeSatellite ? 'true' : 'false');
+        updateGoalCalculation();
+    }
+
+    function goalSyncSatToggleBtn() {
+        const base = 'px-3 py-1 text-[10px] font-bold rounded-md transition-all';
+        const off = base + ' text-slate-400 hover:text-white hover:bg-slate-700/50';
+        const on  = base + ' bg-blue-600 text-white shadow';
+        const allBtn = document.getElementById('goal-sat-all-btn');
+        const coreBtn = document.getElementById('goal-sat-core-btn');
+        if (allBtn) allBtn.className = goalExcludeSatellite ? off : on;
+        if (coreBtn) coreBtn.className = goalExcludeSatellite ? on : off;
+    }
+
     function updateGoalCalculation() {
         const goalAmt = pState().goal.amount; const goalYear = pState().goal.year;
         const tiers = (pState().goal.monthlyTiers && pState().goal.monthlyTiers.length > 0) ? pState().goal.monthlyTiers : [{ year: new Date().getFullYear(), amount: pState().goal.monthly || 0 }];
-        const annualReturn = pState().goal.return; const currentBal = state.computed.portfolio.currentBal || 0;
+        const annualReturn = pState().goal.return;
+        const satValue = goalExcludeSatellite ? getGoalSatelliteValue() : 0;
+        const currentBal = Math.max(0, (state.computed.portfolio.currentBal || 0) - satValue);
         const now = new Date(); const currentYear = now.getFullYear(); const currentMonth = now.getMonth();
         const totalRemainingMonths = ((goalYear - currentYear) * 12) + (11 - currentMonth) + 1;
         let futureValue = currentBal; let requiredMonthly = 0; let isAchievable = false;
@@ -5856,6 +5899,16 @@
         else { badge.innerText = "Needs Adjustment"; badge.className = "mt-2 px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/10 text-red-400"; const diff = goalAmt - futureValue; text.innerHTML = `Projected: <span class="text-white font-medium">฿${futureValue.toLocaleString(undefined, {maximumFractionDigits:0})}</span> (Short by ฿${diff.toLocaleString(undefined, {maximumFractionDigits:0})})<br><span class="text-[10px] text-blue-400 mt-1 inline-block">Suggestion: Increase monthly to <span class="font-bold">฿${requiredMonthly.toLocaleString(undefined, {maximumFractionDigits:0})}</span></span>`; }
         const beEl = document.getElementById('goal-breakeven-display');
         if (beEl && goalAmt > 0 && totalRemainingMonths > 0) { if (projectWithTiers(currentBal, tiers, goalYear, 0) >= goalAmt) { beEl.innerHTML = '<span style="color:#34D399;">0.0%</span>'; } else if (projectWithTiers(currentBal, tiers, goalYear, 100) < goalAmt) { beEl.innerHTML = '<span style="color:#F87171;">&gt;100%</span>'; } else { let lo = 0, hi = 100; for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; projectWithTiers(currentBal, tiers, goalYear, mid) >= goalAmt ? hi = mid : lo = mid; } const be = ((lo + hi) / 2); const beColor = be <= annualReturn ? '#34D399' : '#F87171'; beEl.innerHTML = `<span style="color:${beColor};font-weight:700;">${be.toFixed(1)}%</span>`; } } else if (beEl) { beEl.innerHTML = '—'; }
+        goalSyncSatToggleBtn();
+        const satNote = document.getElementById('goal-sat-note');
+        if (satNote) {
+            if (goalExcludeSatellite && satValue > 0) {
+                satNote.classList.remove('hidden');
+                satNote.innerHTML = `Core only — excluding Satellite Port <span class="font-bold">฿${satValue.toLocaleString(undefined,{maximumFractionDigits:0})}</span> from current balance`;
+            } else {
+                satNote.classList.add('hidden');
+            }
+        }
         renderGoalChart(goalAmt, totalRemainingMonths, currentBal, tiers[0]?.amount || 0, annualReturn, tiers, goalYear);
         if (currentGoalView === 'v2') renderGoalHeatmap();
     }
@@ -6314,7 +6367,7 @@
     function renderGoalHeatmap() {
         const goalAmt = getRawValue(document.getElementById('goal-amt-input').value) || 0; const goalYear = parseInt(document.getElementById('goal-year-input').value) || 2030;
         const currentMonthly = (pState().goal.monthlyTiers && pState().goal.monthlyTiers.length > 0) ? pState().goal.monthlyTiers[0].amount : (pState().goal.monthly || 0); const currentReturn = parseFloat(document.getElementById('goal-return-input').value) || 0;
-        const currentBal = state.computed.portfolio.currentBal || 0; const now = new Date(); const months = Math.max(1, ((goalYear - now.getFullYear()) * 12) + (11 - now.getMonth()) + 1);
+        const currentBal = Math.max(0, (state.computed.portfolio.currentBal || 0) - (goalExcludeSatellite ? getGoalSatelliteValue() : 0)); const now = new Date(); const months = Math.max(1, ((goalYear - now.getFullYear()) * 12) + (11 - now.getMonth()) + 1);
         const fmtK = v => v >= 1000000 ? (v/1000000).toFixed(1)+'M' : v >= 1000 ? (v/1000).toFixed(0)+'K' : v.toFixed(0);
         const monthlySteps = [0, 5000, 10000, 20000, 30000, 50000, 75000, 100000]; if (currentMonthly > 0 && !monthlySteps.includes(currentMonthly)) { monthlySteps.push(currentMonthly); monthlySteps.sort((a,b)=>a-b); }
         const returnSteps = [0, 3, 5, 8, 10, 12, 15, 20]; if (currentReturn > 0 && !returnSteps.includes(currentReturn)) { returnSteps.push(currentReturn); returnSteps.sort((a,b)=>a-b); }
