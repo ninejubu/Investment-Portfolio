@@ -1184,6 +1184,18 @@
         .cf-panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
         .cf-title { color:#F8FAFC; font-size:14px; font-weight:750; }
         .cf-subtle { color:#64748B; font-size:10px; line-height:1.45; }
+        .cf-collapse-btn {
+            width:28px; height:28px; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center;
+            border-radius:6px; border:1px solid #334155; background:#0F172A; color:#94A3B8; cursor:pointer;
+            transition:color .15s, border-color .15s;
+        }
+        .cf-collapse-btn:hover { color:#F8FAFC; border-color:var(--cf-accent); }
+        .cf-collapse-btn i { font-size:11px; transition:transform .2s; }
+        .cf-panel.cf-collapsed > *:not(.cf-panel-head) { display:none; }
+        .cf-panel.cf-collapsed .cf-panel-head { margin-bottom:0; }
+        .cf-panel.cf-collapsed .cf-collapse-btn i { transform:rotate(180deg); }
+        body.theme-light .cf-collapse-btn { background:#F8FAFC; border-color:#CBD5E1; color:#475569; }
+        body.theme-light .cf-collapse-btn:hover { color:#0F172A; }
         .cf-grid-2 { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; }
         .cf-overview-grid { display:grid; grid-template-columns:minmax(300px,.78fr) minmax(0,1.22fr); gap:14px; align-items:stretch; }
         .cf-snapshot-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; align-items:end; }
@@ -2085,12 +2097,13 @@
 
                     <!-- ── Monthly spending + Investment returns ──────── -->
                     <div class="cf-two-col">
-                        <section class="cf-panel">
+                        <section class="cf-panel" id="cf-panel-monthly">
                             <div class="cf-panel-head">
                                 <div>
                                     <h4 class="cf-title">Monthly Spending</h4>
                                     <div class="cf-subtle">Income and total expenses for the month — see how much you can save.</div>
                                 </div>
+                                <button class="cf-collapse-btn" type="button" title="Collapse" onclick="cfTogglePanel('monthly')"><i class="fa-solid fa-chevron-up"></i></button>
                             </div>
                             <div class="cf-monthly-hero mb-3">
                                 <div>
@@ -2111,12 +2124,13 @@
                         </section>
 
                         <div class="cf-col-stack">
-                        <section class="cf-panel">
+                        <section class="cf-panel" id="cf-panel-invest">
                             <div class="cf-panel-head">
                                 <div>
                                     <h4 class="cf-title">Investment Returns</h4>
                                     <div class="cf-subtle">Annual return since 2021 — amount and %.</div>
                                 </div>
+                                <button class="cf-collapse-btn" type="button" title="Collapse" onclick="cfTogglePanel('invest')"><i class="fa-solid fa-chevron-up"></i></button>
                             </div>
                             <div class="cf-table-wrap">
                                 <table class="cf-mini-table cf-invest-table">
@@ -2128,13 +2142,14 @@
                             </div>
                         </section>
 
-                        <section class="cf-panel">
+                        <section class="cf-panel" id="cf-panel-insurance">
                             <div class="cf-panel-head">
                                 <div>
                                     <h4 class="cf-title">Insurance Policies</h4>
                                     <div class="cf-subtle">Your policies — payment amount, description and due/paid.</div>
                                 </div>
                                 <button class="cf-btn" type="button" onclick="cfAddInsurance()"><i class="fa-solid fa-plus"></i> Add</button>
+                                <button class="cf-collapse-btn" type="button" title="Collapse" onclick="cfTogglePanel('insurance')"><i class="fa-solid fa-chevron-up"></i></button>
                             </div>
                             <div class="cf-table-wrap">
                                 <table class="cf-mini-table">
@@ -2150,13 +2165,14 @@
 
                     <!-- ── Tax funds ────────────────────────────────── -->
                     <div class="cf-stack">
-                        <section class="cf-panel">
+                        <section class="cf-panel" id="cf-panel-taxfunds">
                             <div class="cf-panel-head">
                                 <div>
                                     <h4 class="cf-title">Tax Funds</h4>
                                     <div class="cf-subtle">SSF / ESG funds — name, period, amount and platform.</div>
                                 </div>
                                 <button class="cf-btn" type="button" onclick="cfAddTaxFund()"><i class="fa-solid fa-plus"></i> Add</button>
+                                <button class="cf-collapse-btn" type="button" title="Collapse" onclick="cfTogglePanel('taxfunds')"><i class="fa-solid fa-chevron-up"></i></button>
                             </div>
                             <div class="cf-table-wrap">
                                 <table class="cf-mini-table">
@@ -2171,7 +2187,7 @@
 
                     <!-- ── Credit Card Timeline ───────────────────────── -->
                     <div class="cf-section-label">Credit cards · statement &amp; payment timeline</div>
-                    <section class="cf-panel">
+                    <section class="cf-panel" id="cf-panel-timeline">
                         <div class="cf-panel-head">
                             <div><h4 class="cf-title">Credit Card Timeline</h4></div>
                             <div class="cf-calendar-legend">
@@ -2180,6 +2196,7 @@
                                 <span>Line = billing range · drag a marker to change its day</span>
                                 <button id="cf-toggle-all-banks" class="cf-calendar-toggle" type="button" onclick="cfToggleAllTimelineBanks()"></button>
                             </div>
+                            <button class="cf-collapse-btn" type="button" title="Collapse" onclick="cfTogglePanel('timeline')"><i class="fa-solid fa-chevron-up"></i></button>
                         </div>
                         <div class="cf-calendar-wrap">
                             <div id="cf-card-timeline" class="cf-calendar"></div>
@@ -4872,6 +4889,7 @@
     // seed in cashflow_local_data.js.
     const CF_CARDS_KEY = 'cashflow_cards_v1';
     const CF_COLLAPSED_BANKS_KEY = 'cashflow_collapsed_banks_v1';
+    const CF_COLLAPSED_PANELS_KEY = 'cashflow_collapsed_panels_v1';
 
     function cfRawCards() {
         let cards = null;
@@ -5240,12 +5258,41 @@
         </tr>`).join('');
     }
 
+    // ── Panel collapse (per-panel, persisted) ─────────────────────
+    const CF_PANEL_NAMES = ['monthly', 'invest', 'insurance', 'taxfunds', 'timeline'];
+
+    function cfCollapsedPanels() {
+        let list = null;
+        try { list = JSON.parse(localStorage.getItem(CF_COLLAPSED_PANELS_KEY) || ''); } catch (error) { list = null; }
+        return new Set(Array.isArray(list) ? list : []);
+    }
+
+    function cfTogglePanel(name) {
+        const collapsed = cfCollapsedPanels();
+        if (collapsed.has(name)) collapsed.delete(name); else collapsed.add(name);
+        localStorage.setItem(CF_COLLAPSED_PANELS_KEY, JSON.stringify([...collapsed]));
+        cfApplyPanelCollapsed();
+    }
+
+    function cfApplyPanelCollapsed() {
+        const collapsed = cfCollapsedPanels();
+        CF_PANEL_NAMES.forEach(name => {
+            const panel = document.getElementById('cf-panel-' + name);
+            if (!panel) return;
+            const isCollapsed = collapsed.has(name);
+            panel.classList.toggle('cf-collapsed', isCollapsed);
+            const btn = panel.querySelector('.cf-collapse-btn');
+            if (btn) btn.title = isCollapsed ? 'Expand' : 'Collapse';
+        });
+    }
+
     function cfRenderAll() {
         cfRenderMonthly();
         cfRenderInvest();
         cfRenderInsurance();
         cfRenderTaxFunds();
         cfRenderTimeline();
+        cfApplyPanelCollapsed();
     }
 
     // ── Sheets sync (Cashflow Planner v2) ────────────────────────────
