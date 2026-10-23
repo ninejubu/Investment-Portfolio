@@ -5804,19 +5804,24 @@
                 const qData = aKey === 'all' ? state.computed.portfolio[`q${qNum}`] : state.computed[aKey][`q${qNum}`];
                 return qData?.growth !== null && qData?.growth !== undefined ? qData.growth : null;
             }
-            let begBal = 0, totalProfit = 0, hasClosedQuarter = false;
+            let begBal = 0, totalProfit = 0, totalDeposits = 0, hasClosedQuarter = false;
             if (aKey === 'all') {
                 begBal = Object.values(pState().begBalances).reduce((a,b)=>a+b,0);
                 for (let i = 1; i <= qNum; i++) {
-                    if (state.computed.portfolio[`q${i}`].profit !== null) { totalProfit += state.computed.portfolio[`q${i}`].profit; hasClosedQuarter = true; }
+                    const qd = state.computed.portfolio[`q${i}`];
+                    if (qd.profit !== null) { totalProfit += qd.profit; hasClosedQuarter = true; }
+                    totalDeposits += (qd.flow || 0);
                 }
             } else {
                 begBal = pState().begBalances[aKey];
                 for (let i = 1; i <= qNum; i++) {
-                    if (state.computed[aKey][`q${i}`].profit !== null) { totalProfit += state.computed[aKey][`q${i}`].profit; hasClosedQuarter = true; }
+                    const qd = state.computed[aKey][`q${i}`];
+                    if (qd.profit !== null) { totalProfit += qd.profit; hasClosedQuarter = true; }
+                    totalDeposits += (qd.flow || 0);
                 }
             }
-            return hasClosedQuarter && begBal > 0 ? (totalProfit / begBal) * 100 : null;
+            const ytdDenom = begBal + totalDeposits;
+            return hasClosedQuarter && ytdDenom > 0 ? (totalProfit / ytdDenom) * 100 : null;
         };
         const defaultBenchmarks = getEmptyBenchmarks();
         const getSettingBM = (asset, q) => {
