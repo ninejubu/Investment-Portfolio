@@ -63,7 +63,7 @@
     addSeries('2026-06', 'wallet_mom', [10000, 10000, 10000, 10000, 10000], 'June opening progress: completed', 13);
 
     window.CASHFLOW_LOCAL_SEED = {
-        catalogVersion: 4,
+        catalogVersion: 5,
         retiredCardIds: ['aeon_yca_a', 'aeon_yca', 'uob_cashplus', 'kast_kast', 'ether_ether', 'bbl_shopee'],
         activeMonth: '2026-06',
         settings: {
@@ -84,6 +84,7 @@
             card('aeon_next_gen', 'AEON', 'NEXT GEN', 9, 2, 0, 'aeon_main', 5),
             card('aeon_wellness', 'AEON', 'WELLNESS', 9, 2, 0, 'aeon_main', 6),
             card('aeon_primo', 'AEON', 'PRIMO', 9, 2, 0, 'aeon_main', 7),
+            card('aeon_unionpay', 'AEON', 'UNIONPAY', 9, 2, 0, 'aeon_main', 8),
             card('kbank_shopee', 'KBANK', 'SHOPEE', 10, 25, 113000, 'kbank_shopee', 9),
             card('bbl_airasia', 'BBL', 'AirAsia', 9, 25, 110000, 'bbl_shared', 10),
             card('bbl_m_live', 'BBL', 'M Live', 9, 25, 0, 'bbl_shared', 11),

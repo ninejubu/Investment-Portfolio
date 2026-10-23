@@ -4876,11 +4876,23 @@
     function cfRawCards() {
         let cards = null;
         try { cards = JSON.parse(localStorage.getItem(CF_CARDS_KEY) || ''); } catch (error) { cards = null; }
+        const seedCards = window.CASHFLOW_LOCAL_SEED && Array.isArray(window.CASHFLOW_LOCAL_SEED.cards) ? window.CASHFLOW_LOCAL_SEED.cards : [];
         if (!Array.isArray(cards) || !cards.length) {
-            cards = window.CASHFLOW_LOCAL_SEED && Array.isArray(window.CASHFLOW_LOCAL_SEED.cards) ? window.CASHFLOW_LOCAL_SEED.cards : [];
+            cards = seedCards;
             if (cards.length) localStorage.setItem(CF_CARDS_KEY, JSON.stringify(cards));
+            return Array.isArray(cards) ? cards : [];
         }
-        return Array.isArray(cards) ? cards : [];
+        // Merge seed cards missing locally (new cards added to the catalog).
+        // Local cards keep their own dates/order; the one-time silent push
+        // keeps the sheet's card tab current after the merge.
+        const localIds = new Set(cards.map(item => item && item.id));
+        const missing = seedCards.filter(item => item && !localIds.has(item.id));
+        if (missing.length) {
+            cards = cards.concat(missing);
+            localStorage.setItem(CF_CARDS_KEY, JSON.stringify(cards));
+            cfQueuePush();
+        }
+        return cards;
     }
 
     function cfCardDay(value, fallback) {
