@@ -5759,7 +5759,7 @@
         const assets = ['stocks', 'bonds', 'crypto', 'gold']; const quarters = [1, 2, 3, 4];
         state.computed.portfolio = { q1:{}, q2:{}, q3:{}, q4:{}, currentBal: 0, ytdProfit: 0, ytdGrowth: 0 };
         assets.forEach(asset => {
-            state.computed[asset] = {}; let currentBal = pState().begBalances[asset]; let ytdProfit = 0;
+            state.computed[asset] = {}; let currentBal = pState().begBalances[asset]; let ytdProfit = 0; let totalNetFlow = 0;
             quarters.forEach(q => {
                 let netFlow = 0;
                 pState().flows.filter(tx => tx.asset === asset && getQuarterByDate(tx.date) === q).forEach(tx => {
@@ -5767,17 +5767,18 @@
                     if (tx.currency === 'USD') { const rate = parseFloat(state.rates['q' + q] || state.rates.beginning) || 0; amt = tx.amount * rate; }
                     netFlow += (tx.type === 'deposit' ? amt : -amt);
                 });
+                totalNetFlow += netFlow;
                 const qStart = currentBal; let qEndInput = pState().endBalances[asset][`q${q}`]; let qEnd = null;
                 if (asset === 'crypto') {
                     const hasData = qEndInput.thb !== null || qEndInput.usds !== null || qEndInput.usdo !== null;
                     if (hasData) { const rate = parseFloat(state.rates[`q${q}`] || state.rates.beginning) || 0; qEnd = qEndInput.thb !== null ? qEndInput.thb : (((qEndInput.usds || 0) + (qEndInput.usdo || 0)) * rate); }
                 } else if (qEndInput !== null && qEndInput !== '' && !isNaN(qEndInput)) { qEnd = parseFloat(qEndInput); }
                 let profit = null, growth = null;
-                if (qEnd !== null) { profit = qEnd - qStart - netFlow; growth = qStart > 0 ? (profit / qStart) * 100 : 0; currentBal = qEnd; ytdProfit += profit; } else { currentBal = qStart + netFlow; }
+                if (qEnd !== null) { profit = qEnd - qStart - netFlow; growth = (qStart + netFlow) > 0 ? (profit / (qStart + netFlow)) * 100 : 0; currentBal = qEnd; ytdProfit += profit; } else { currentBal = qStart + netFlow; }
                 state.computed[asset][`q${q}`] = { start: qStart, flow: netFlow, end: qEnd, profit, growth, running: currentBal, hasFlow: netFlow !== 0, hasEnd: qEnd !== null };
             });
-            state.computed[asset].currentBal = currentBal; state.computed[asset].ytdProfit = ytdProfit;
-            state.computed[asset].ytdGrowth = pState().begBalances[asset] > 0 ? (ytdProfit / pState().begBalances[asset]) * 100 : 0;
+            state.computed[asset].currentBal = currentBal; state.computed[asset].ytdProfit = ytdProfit; state.computed[asset].totalNetFlow = totalNetFlow;
+            state.computed[asset].ytdGrowth = (pState().begBalances[asset] + totalNetFlow) > 0 ? (ytdProfit / (pState().begBalances[asset] + totalNetFlow)) * 100 : 0;
         });
         let totalCurrentBal = 0;
         quarters.forEach(q => {
@@ -5788,7 +5789,10 @@
         assets.forEach(a => { totalCurrentBal += state.computed[a].currentBal; });
         const totalBeg = Object.values(pState().begBalances).reduce((a,b)=>a+b,0);
         state.computed.portfolio.currentBal = totalCurrentBal;
-        state.computed.portfolio.ytdGrowth = totalBeg > 0 ? (Object.values(state.computed).filter(x => x.ytdProfit !== undefined).reduce((a,b)=>a+b.ytdProfit, 0) / totalBeg) * 100 : 0;
+        const totalNetFlowAll = ['stocks','bonds','crypto','gold'].reduce((a,as)=>a+(state.computed[as].totalNetFlow||0),0);
+        const totalYtdProfit = ['stocks','bonds','crypto','gold'].reduce((a,as)=>a+(state.computed[as].ytdProfit||0),0);
+        const totalCapital = totalBeg + totalNetFlowAll;
+        state.computed.portfolio.ytdGrowth = totalCapital > 0 ? (totalYtdProfit / totalCapital) * 100 : 0;
     }
 
     function renderPerformanceChart() {
